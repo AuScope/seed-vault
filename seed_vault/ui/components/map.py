@@ -152,6 +152,9 @@ def add_circle_area(feature_group, coords):
 
 
 def add_data_points(df, cols_to_disp, step: Steps, selected_idx=[], col_color=None, col_size=None):
+    """
+    Add points to map
+    """
     fg = folium.FeatureGroup(name="Marker " + step.value)
 
     marker_info = {}
@@ -159,6 +162,8 @@ def add_data_points(df, cols_to_disp, step: Steps, selected_idx=[], col_color=No
     # Handling the color map
     fig = None
     if col_color is not None:
+
+        # Create legend with continuous colour range
         if pd.api.types.is_numeric_dtype(df[col_color]):
             fig, ax = plt.subplots(figsize=(1, 22))
             # norm = mcolors.Normalize(vmin=df[col_color].min(), vmax=df[col_color].max())
@@ -171,26 +176,32 @@ def add_data_points(df, cols_to_disp, step: Steps, selected_idx=[], col_color=No
             colorbar.ax.tick_params(labelsize=14)
 
         else:
-            max_display_categories = 15
+            # Create legend with discrete color range
+            max_display_categories = 15 # Max number of categories in legend
 
             unique_categories = df[col_color].unique()
 
+            # If too many categories then truncate
             if len(unique_categories) > max_display_categories:
                 display_cats = unique_categories[:max_display_categories]
-                display_cats.append("...")
+                display_cats = np.append(display_cats, "...")
             else:
                 display_cats = unique_categories
 
+            # Create a colour map using 'display_cats'
             colors = cm.get_cmap('tab10', len(display_cats))
-            category_color_map = {category: mcolors.rgb2hex(colors(i)[:3]) for i, category in enumerate(display_cats)}
+            legend_category_color_map = {category: mcolors.rgb2hex(colors(i)[:3]) for i, category in enumerate(display_cats)}
 
-
+            # Create legend
             fig, ax = plt.subplots(figsize=(2, len(display_cats) * 0.5))
             ax.axis('off')  # Hide the axis for categories
-            legend_labels = [plt.Line2D([0], [0], color=color, lw=4) for color in category_color_map.values()]
-            legend = ax.legend(legend_labels, category_color_map.keys(), loc='center', ncol=1, fontsize=24)
+            legend_labels = [plt.Line2D([0], [0], color=color, lw=4) for color in legend_category_color_map.values()]
+            legend = ax.legend(legend_labels, legend_category_color_map.keys(), loc='center', ncol=1, fontsize=24)
 
+            # Create a colour map for the geospatial map which has all unique categories
+            category_color_map = {category: mcolors.rgb2hex(colors(i)[:3]) for i, category in enumerate(unique_categories)}
 
+    # Loop to create all the map markers
     for index, row in df.iterrows():
         # Determine color
         if col_color is None:
@@ -389,7 +400,7 @@ def create_popup(index, row, cols_to_disp, step: Steps = None):
         html_disp = f"<h4><b>{row['place']}</b></h4>"
         html_disp += f"<h5>{row['magnitude']:.2f} {row['magnitude type']}</h5>"
         html_disp += f"<h5>{row['time']} (UTC)</h5>"
-        html_disp += f"<h5>{row['latitude']:.2f}, {row['longitude']:.2f}, {row['depth (km)']:.2f} km</h5>"
+        html_disp += f"<h5>{row['latitude']:.2f} latitude, {row['longitude']:.2f} longitude, {row['depth (km)']:.2f} km</h5>"
         html_disp += f"<p style='color:black; font-size:2px; opacity:0;'>Event {index + 1}</p>"
 
     if step == Steps.STATION:
@@ -397,7 +408,7 @@ def create_popup(index, row, cols_to_disp, step: Steps = None):
         html_disp += f"<h5>{row['station_name']}</h5>"
         html_disp += f"<h5>({row['start date (UTC)']} - {row['end date (UTC)']})</h5>"
         html_disp += f"<h5>{row['channels']}</h5>"
-        html_disp += f"<h5>{row['latitude']:.2f}, {row['longitude']:.2f}, {row['elevation']:.2f} m</h5>"
+        html_disp += f"<h5>{row['latitude']:.2f} latitude, {row['longitude']:.2f} longitude, {row['elevation']:.2f} m</h5>"
         html_disp += f"<p style='color:black; font-size:2px; opacity:0;'>Station {index + 1}</p>"
 
     return f"""

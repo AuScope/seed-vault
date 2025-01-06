@@ -9,7 +9,7 @@ import multiprocessing
 import configparser
 import pandas as pd
 from tqdm import tqdm
-from tabulate import tabulate # non-standard. this is just to display the db contents
+## NOT USED ANYMORE from tabulate import tabulate # non-standard. this is just to display the db contents
 import random
 from typing import List
 from collections import defaultdict
@@ -28,7 +28,7 @@ from seed_vault.enums.config import DownloadType, GeoConstraintType
 from seed_vault.service.utils import is_in_enum
 from seed_vault.service.db import DatabaseManager
 from seed_vault.service.waveform import get_local_waveform, stream_to_dataframe
-from obspy.clients.fdsn.header import URL_MAPPINGS
+from obspy.clients.fdsn.header import URL_MAPPINGS, FDSNNoDataException
 
 ### request status codes (TBD more:
 # 204 = no data
@@ -42,6 +42,7 @@ class CustomConfigParser(configparser.ConfigParser):
     def optionxform(self, optionstr):
         return optionstr  # Always return the original string
 
+
 def read_config(config_file):
     config = CustomConfigParser(allow_no_value=True)
     config.read(config_file)
@@ -52,7 +53,7 @@ def read_config(config_file):
     for section in config.sections():
         processed_config.add_section(section)
         for key, value in config.items(section):
-            print("YYYYYYYYYY",key,value,section)
+
             if section.upper() in ['AUTH','DATABASE','SDS','WAVEFORM']:
                 processed_key = key
                 processed_value = value if value is not None else None
@@ -65,8 +66,9 @@ def read_config(config_file):
 
     return processed_config
 
+
 def to_timestamp(time_obj):
-    """ Anything to timestamp helper """
+    """ Anything to timestamp helper. """
     if isinstance(time_obj, (int, float)):
         return float(time_obj)
     elif isinstance(time_obj, datetime):
@@ -78,7 +80,9 @@ def to_timestamp(time_obj):
 
 
 def miniseed_to_db_element(file_path):
-    "Create a database element from a miniseed file"
+    """ Create a database element from a miniseed file. """
+    if not os.path.isfile(file_path):
+        return None
     try:
         file = os.path.basename(file_path)
         parts = file.split('.')
@@ -104,11 +108,12 @@ def miniseed_to_db_element(file_path):
         print(f"Error processing file {file_path}: {str(e)}")
         return None
 
+
 def stream_to_db_element(st):
-    """Create a database element from a stream 
+    """ Create a database element from a stream 
     (assuming all traces have same NSLC!)
     just a bit faster than re-opening the file 
-    again via miniseed_to_db_element"""
+    again via miniseed_to_db_element. """
 
     if len(st) == 0:
         print(f"Warning: No traces found in {file_path}")
@@ -124,14 +129,14 @@ def stream_to_db_element(st):
 
 def populate_database_from_sds(sds_path, db_path,
     search_patterns=["??.*.*.???.?.????.???"],
-    newer_than=None,num_processes=None, gap_tolerance = 60):
+    newer_than=None, num_processes=None, gap_tolerance = 60):
 
-    """Utility function to populate the archive_table in our database """
+    """ Utility function to populate the archive_table in our database. """
 
     db_manager = DatabaseManager(db_path)
 
     # Set to possibly the maximum number of CPUs!
-    if num_processes is None or num_processes == 0:
+    if num_processes is None or num_processes <= 0:
         num_processes = multiprocessing.cpu_count()
     
     # Convert newer_than (means to filter only new files) to timestamp
@@ -176,85 +181,73 @@ def populate_database_from_sds(sds_path, db_path,
     db_manager.join_continuous_segments(gap_tolerance)
 
 
-#### now moved to db.py as part of DatabaseManager class
-def join_continuous_segments(db_manager, gap_tolerance=60):
-    """
-    Join continuous data segments in the database, even across day boundaries.
-    
-    :param db_manager: DatabaseManager instance
-    :param gap_tolerance: Maximum allowed gap (in seconds) to still consider segments continuous
-    """
-    with db_manager.connection() as conn:
-        cursor = conn.cursor()
-        
-        # Fetch all data sorted by network, station, location, channel, and starttime
-        cursor.execute('''
-            SELECT id, network, station, location, channel, starttime, endtime
-            FROM archive_data
-            ORDER BY network, station, location, channel, starttime
-        ''')
-        
-        all_data = cursor.fetchall()
-        
-        to_delete = []
-        to_update = []
-        current_segment = None
-        
-        for row in all_data:
-            id, network, station, location, channel, starttime, endtime = row
-            starttime = UTCDateTime(starttime)
-            endtime = UTCDateTime(endtime)
+## maybe this simple version is fine enough... 
+def populate_database_from_files_dumb(cursor, file_paths=[]):
+    """ Quickly insert/update a few SDS archive files into the SQL database. Assume cursor already open! """
+    now = int(datetime.datetime.now().timestamp())
+    for fp in file_paths:
+        result  = miniseed_to_db_element(fp)
+        if result:
+            result = result + (now,)
+            cursor.execute('''
+                INSERT OR REPLACE INTO archive_data
+                (network, station, location, channel, starttime, endtime, importtime)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', result)
+
+
+def populate_database_from_files(cursor, file_paths=[]):
+    """ Quickly insert/update a few SDS archive files into the SQL database. """
+    now = int(datetime.datetime.now().timestamp())
+    for fp in file_paths:
+        result = miniseed_to_db_element(fp)
+        if result:
+            network, station, location, channel, start_timestamp, end_timestamp = result
             
-            if current_segment is None:
-                current_segment = list(row)
-            else:
-                # Check if this segment is continuous with the current one
-                if (network == current_segment[1] and
-                    station == current_segment[2] and
-                    location == current_segment[3] and
-                    channel == current_segment[4] and
-                    starttime - UTCDateTime(current_segment[6]) <= gap_tolerance):
-                    
-                    # Extend the current segment
-                    current_segment[6] = max(endtime, UTCDateTime(current_segment[6])).isoformat()
-                    to_delete.append(id)
-                else:
-                    # Start a new segment
-                    to_update.append(tuple(current_segment))
-                    current_segment = list(row)
-        
-        # Don't forget the last segment
-        if current_segment:
-            to_update.append(tuple(current_segment))
-        
-        # Perform the updates
-        cursor.executemany('''
-            UPDATE archive_data
-            SET endtime = ?
-            WHERE id = ?
-        ''', [(row[6], row[0]) for row in to_update])
-        
-        # Delete the merged segments
-        if to_delete:
-            cursor.execute(f'''
-                DELETE FROM archive_data
-                WHERE id IN ({','.join('?' * len(to_delete))})
-            ''', to_delete)
-        
-    print(f"Joined segments. Deleted {len(to_delete)} rows, updated {len(to_update)} rows.")
+            # First check for existing overlapping spans
+            cursor.execute('''
+                SELECT starttime, endtime FROM archive_data
+                WHERE network = ? AND station = ? AND location = ? AND channel = ?
+                AND NOT (endtime < ? OR starttime > ?)
+            ''', (network, station, location, channel, start_timestamp, end_timestamp))
+            
+            overlaps = cursor.fetchall()
+            if overlaps:
+                # Merge with existing spans
+                start_timestamp = min(start_timestamp, min(row[0] for row in overlaps))
+                end_timestamp = max(end_timestamp, max(row[1] for row in overlaps))
+                
+                # Delete overlapping spans
+                cursor.execute('''
+                    DELETE FROM archive_data
+                    WHERE network = ? AND station = ? AND location = ? AND channel = ?
+                    AND NOT (endtime < ? OR starttime > ?)
+                ''', (network, station, location, channel, start_timestamp, end_timestamp))
+            
+            # Insert the new or merged span
+            cursor.execute('''
+                INSERT INTO archive_data
+                (network, station, location, channel, starttime, endtime, importtime)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', (network, station, location, channel, start_timestamp, end_timestamp, now))
 
 
 # Requests for Continuous Data
 def collect_requests(inv, time0, time1, days_per_request=3):
-    """ Collect all requests required to download everything in inventory, split into X-day periods """
+    """ Collect all requests required to download everything in inventory, split into X-day periods. """
     requests = []  # network, station, location, channel, starttime, endtime
 
+    # Sanity check request times
+    time1 = min(time1, UTCDateTime.now()-120)
+    if time0 >= time1:
+        return None
+    
     for net in inv:
         for sta in net:
             for cha in sta:
                 start_date = max(time0, cha.start_date.date)
                 if cha.end_date:
-                    end_date = min(time1 - (1/cha.sample_rate), cha.end_date.date + datetime.timedelta(days=1))
+                    end_date = min(time1 - (1/cha.sample_rate),cha.end_date.date + datetime.timedelta(days=1))
                 else:
                     end_date = time1
                 
@@ -273,37 +266,44 @@ def collect_requests(inv, time0, time1, days_per_request=3):
                     current_start = current_end
     return requests
 
+
 # Requests for shorter, event-based data
 def get_p_s_times(eq, dist_deg, ttmodel):
-    #eq_lat = eq.origins[0].latitude
-    #eq_lon = eq.origins[0].longitude
+    """ Get first P/S arrivals given an earthquake object, distance, and traveltime model. """
+
     eq_time = eq.origins[0].time
     eq_depth = eq.origins[0].depth / 1000  # depths are in meters for QuakeML
+
     try:
         phasearrivals = ttmodel.get_travel_times(
             source_depth_in_km=eq_depth,
             distance_in_degree=dist_deg,
-            phase_list=['ttbasic'] #can't just look for "P" and "S" as they may not be found depending on distance
+            phase_list=['ttbasic']
         )
     except Exception as e:
         print(f"Error calculating travel times: {str(e)}")
         return None, None
+
     p_arrival_time = None
     s_arrival_time = None
-    # "P" is Whatever the first arrival is.. not necessarily literally uppercase P
+    # "P" is whatever the first arrival is.. not necessarily literally uppercase P
     if phasearrivals[0]:
         p_arrival_time = eq_time + phasearrivals[0].time
-    # Now get S... (or s for local)... (or nothing if > 100deg)
+
+    # Now get "S"...
     for arrival in phasearrivals:
         if arrival.name.upper() == 'S' and s_arrival_time is None:
             s_arrival_time = eq_time + arrival.time
         if p_arrival_time and s_arrival_time:
             break
+
     if p_arrival_time is None:
         print(f"No direct P-wave arrival found for distance {dist_deg} degrees")
     if s_arrival_time is None:
         print(f"No direct S-wave arrival found for distance {dist_deg} degrees")
+
     return p_arrival_time, s_arrival_time
+
 
 def select_highest_samplerate(inv, time=None, minSR=10):
     """
@@ -324,6 +324,8 @@ def select_highest_samplerate(inv, time=None, minSR=10):
             ]
     return inv
 
+
+### probably cut this function entirely for now
 # TODO function to sort by maximum available sampling rate (have written this already somewhere)
 cha_rank = ['CH','HH','BH','EH','HN','EN','SH','LH']
 loc_rank = ['','10','00','20'] # sort of dangerous as no one does these in the same way
@@ -347,109 +349,25 @@ def TOFIX__output_best_channels(nn,sta,t):
         print("no valid channels found in output_best_channels")
         return []
 
-def collect_requests_event__OLD(eq, inv, min_dist_deg=30, max_dist_deg=90, 
-                           before_p_sec=20, after_p_sec=160, model=None):
-    """
-    Collect all requests for data in inventory for given event eq.
-    
-    Args:
-        eq: An earthquake object (one element of the array collected in a "catalog" object)
-        inv: Inventory object
-        min_dist_deg: Minimum distance in degrees
-        max_dist_deg: Maximum distance in degrees
-        before_p_sec: Seconds before P wave arrival
-        after_p_sec: Seconds after P wave arrival
-        model: Velocity model for travel time calculations
-    
-    Returns:
-        Tuple of requests_per_eq and arrivals_per_eq
-    """
-    origin = eq.origins[0]  # Default to the primary origin
-    ot = origin.time
-    sub_inv = select_highest_samplerate(inv, time=ot)
-    requests_per_eq = []
-    arrivals_per_eq = []
 
-    # Failsafe to ensure a model is loaded
-    if not model:
-        model = TauPyModel('IASP91')
-
-    for net in sub_inv:
-        for sta in net:
-            # Check if we've already calculated this event-station pair
-            fetched_arrivals = db_manager.fetch_arrivals(
-                str(eq.preferred_origin_id), net.code, sta.code
-            )
-            
-            if fetched_arrivals:
-                p_time, s_time = fetched_arrivals  # timestamps
-                t_start = p_time - abs(before_p_sec)
-                t_end = s_time + abs(after_p_sec)
-            else:
-                dist_deg = locations2degrees(
-                    origin.latitude, origin.longitude, sta.latitude, sta.longitude
-                )
-                dist_m, azi, backazi = gps2dist_azimuth(
-                    origin.latitude, origin.longitude, sta.latitude, sta.longitude
-                )
-                
-                if dist_deg < min_dist_deg or dist_deg > max_dist_deg:
-                    continue
-                
-                p_time, s_time = get_p_s_times(eq, dist_deg, sta.latitude, sta.longitude, model)
-                
-                if not p_time:
-                    continue  # TODO:need error msg also
-                
-                t_start = (p_time - abs(before_p_sec)).timestamp()
-                t_end = (p_time + abs(after_p_sec)).timestamp()
-                
-                # Add to our arrival database
-                arrivals_per_eq.append((
-                    str(eq.preferred_origin_id),
-                    eq.magnitudes[0].mag,
-                    origin.latitude, origin.longitude, origin.depth / 1000,
-                    ot.timestamp,
-                    net.code, sta.code, sta.latitude, sta.longitude, sta.elevation / 1000,
-                    sta.start_date.timestamp(), sta.end_date.timestamp(),
-                    dist_deg, dist_m / 1000, azi, p_time.timestamp(),
-                    s_time.timestamp(), settings.event.model 
-                ))
-
-            # Add to our requests
-            for cha in sta:  # TODO: will have to filter channels prior to this, else will grab them all
-                requests_per_eq.append((
-                    net.code,
-                    sta.code,
-                    cha.location_code,
-                    cha.code,
-                    datetime.datetime.fromtimestamp(t_start).isoformat() + "Z",
-                    datetime.datetime.fromtimestamp(t_end).isoformat() + "Z"
-                ))
-
-    return requests_per_eq, arrivals_per_eq
-
-
-def collect_requests_event(eq,inv,min_dist_deg=30,max_dist_deg=90,before_p_sec=20,after_p_sec=160,model=None,settings=None):
-    """ 
-    @Review: Rob please review this
-    
-    This method is revised as followings:
-
-    1. No more need for params: `min_dist_deg` and `max_dist_deg`. This function will accept a shortlist of selected 
-    events and stations.
-    """
+def collect_requests_event(eq,inv,min_dist_deg=30,max_dist_deg=90,
+                           before_p_sec=20,after_p_sec=160,
+                           model=None,settings=None,highest_sr_only=True):
+    """ Collect requests for event eq for stations in inv. """
     settings, db_manager = setup_paths(settings)
-    origin = eq.origins[0] # default to the primary I suppose (possible TODO but don't see why anyone would want anything else)
+    origin = eq.origins[0] # defaulting to preferred origin
     ot = origin.time
-    sub_inv = inv.select(time = ot) # Loose filter to select only stations that were running during the earthquake start
+    
+    if highest_sr_only:
+        sub_inv = select_highest_samplerate(inv,time=ot,minSR=5) #filter by time and also select highest samplerate
+    else:
+        sub_inv = inv.select(time = ot) #only filter by time
     before_p_sec = settings.event.before_p_sec
     after_p_sec = settings.event.after_p_sec
+
     # Failsafe to ensure a model is loaded
     if not model:
         model = TauPyModel('IASP91')
-
-    # TODO: further filter by selecting best available channels
 
     requests_per_eq = []
     arrivals_per_eq = []
@@ -465,12 +383,12 @@ def collect_requests_event(eq,inv,min_dist_deg=30,max_dist_deg=90,before_p_sec=2
                 sta_end = None
             # Check if we've already calculated this event-station pair
             fetched_arrivals = db_manager.fetch_arrivals(str(eq.preferred_origin_id), \
-                               net.code,sta.code) #TODO also check models are consistent? not critical. in fact we might be better off just forcing everything to IASP91
+                               net.code,sta.code) #TODO also check models are consistent? not critical..
             if fetched_arrivals:
                 p_time,s_time = fetched_arrivals # timestamps
                 t_start = p_time - abs(before_p_sec)
                 t_end = p_time + abs(after_p_sec)
-                # add the already-fetched arrivals to our dictionary
+                # Add the already-fetched arrivals to our dictionary
                 p_arrivals[f"{net.code}.{sta.code}"] = p_time
             else:
                 dist_deg = locations2degrees(origin.latitude,origin.longitude,\
@@ -503,24 +421,25 @@ def collect_requests_event(eq,inv,min_dist_deg=30,max_dist_deg=90,before_p_sec=2
                                     sta_start,sta_end,
                                     dist_deg,dist_m/1000,azi,p_time.timestamp,
                                     s_time_timestamp,settings.event.model))
+
             # Add to our requests
             for cha in sta: # TODO will have to had filtered channels prior to this, else will grab them all
+                t_end = min(t_end, datetime.datetime.now().timestamp() - 120)
+                t_start = min(t_start,t_end)
                 requests_per_eq.append((
                     net.code,
                     sta.code,
                     cha.location_code,
                     cha.code,
-                    # fix the time difference, it will always have 8 hours difference. 
+                    # NEED REVIEW: not sure if this is needed, all times should be assumed UTC
                     datetime.datetime.fromtimestamp(t_start, tz=datetime.timezone.utc).isoformat(),
-                    datetime.datetime.fromtimestamp(t_end, tz=datetime.timezone.utc).isoformat() ))
+                    datetime.datetime.fromtimestamp(t_end,   tz=datetime.timezone.utc).isoformat() ))
 
     return requests_per_eq, arrivals_per_eq, p_arrivals
 
 
 def combine_requests(requests):
-    """
-    Combine requests to reduce the volume of requests to the server
-    """
+    """ Combine requests for efficiency. """
 
     # Group requests by network and time range
     groups = defaultdict(list)
@@ -551,7 +470,23 @@ def combine_requests(requests):
     
     return combined_requests
 
-def prune_requests(requests, db_manager, min_request_window=3):
+def get_sds_filenames(n, s, l, c, time_start, time_end, sds_path):
+    current_time = time_start
+    filenames = []
+    while current_time <= time_end:
+        year = str(current_time.year)
+        doy = str(current_time.julday).zfill(3)
+        
+        path = f"{sds_path}/{year}/{n}/{s}/{c}.D/{n}.{s}.{l}.{c}.D.{year}.{doy}"
+        
+        filenames.append(path)
+        
+        current_time += 86400
+    
+    return filenames
+
+
+def prune_requests(requests, db_manager, sds_path, min_request_window=3):
     """
     Remove any overlapping requests where already-archived data may exist.
     Ignore requests that are less than min_request_window seconds.
@@ -573,6 +508,10 @@ def prune_requests(requests, db_manager, min_request_window=3):
             network, station, location, channel, start_time, end_time = req
             start_time = UTCDateTime(start_time)
             end_time = UTCDateTime(end_time)
+
+            # Check if target filenames exist already.. may need to do a quick database update
+            existing_filenames = get_sds_filenames(network, station, location, channel, 
+                start_time, end_time, sds_path)
             
             # Query the database for existing data
             cursor.execute('''
@@ -583,9 +522,24 @@ def prune_requests(requests, db_manager, min_request_window=3):
             ''', (network, station, location, channel, start_time.isoformat(), end_time.isoformat()))
             
             existing_data = cursor.fetchall()
+
+
+            # If SDS filenames are there, but database is empty.. need to update db before continuing
+            if existing_filenames and len(existing_data) < len(existing_filenames):
+                populate_database_from_files(cursor, file_paths=existing_filenames)
+                
+                # RE-Query the newly-updated database
+                cursor.execute('''
+                    SELECT starttime, endtime FROM archive_data
+                    WHERE network = ? AND station = ? AND location = ? AND channel = ?
+                    AND endtime >= ? AND starttime <= ?
+                    ORDER BY starttime
+                ''', (network, station, location, channel, start_time.isoformat(), end_time.isoformat()))
+                
+                existing_data = cursor.fetchall()
             
-            if not existing_data:
-                # If no existing data, keep the entire request
+            if not existing_data and not existing_filenames:
+                # If no evidence we have this data already, keep the entire request
                 pruned_requests.append(req)
             else:
                 # Process gaps in existing data
@@ -618,8 +572,8 @@ def prune_requests(requests, db_manager, min_request_window=3):
 
 def archive_request(request, waveform_clients, sds_path, db_manager):
     """ Send a request to an FDSN center, parse it, save to archive, and update database """
-
     try:
+        time0 = time.time()
         if request[0] in waveform_clients.keys():  # Per-network authentication
             wc = waveform_clients[request[0]]
         elif request[0]+'.'+request[1] in waveform_clients.keys():  # Per-station e.g. NN.SSSSS (not currently working TODO)
@@ -628,15 +582,15 @@ def archive_request(request, waveform_clients, sds_path, db_manager):
             wc = waveform_clients['open']
 
         kwargs = {
-            'network':request[0],
-            'station':request[1],
-            'location':request[2],
-            'channel':request[3],
+            'network':request[0].upper(),
+            'station':request[1].upper(),
+            'location':request[2].upper(),
+            'channel':request[3].upper(),
             'starttime':UTCDateTime(request[4]),
             'endtime':UTCDateTime(request[5])
         }
-        # issue here if any of these array values are too long (probably station list)
-        # if so, break them apart
+
+        # If the request is too long, break it apart 
         if len(request[1]) > 24:  # Assuming station is the field that might be too long
             st = obspy.Stream()
             split_stations = request[1].split(',')
@@ -648,9 +602,14 @@ def archive_request(request, waveform_clients, sds_path, db_manager):
         else:
             st = wc.get_waveforms(**kwargs)
 
+        # Download info
+        download_time = time.time() - time0
+        download_size = sum(tr.data.nbytes for tr in st)/1024**2 # MB
+        print(f"      Downloaded {download_size:.2f} MB @ {download_size/download_time:.2f} MB/s")    
+
     except Exception as e:
-        print(f"Error fetching data ---------------: {request} {str(e)}")
-        # >> TODO add failure & denied to database also? will require DB structuring and logging HTTP error response
+        print(f" Error fetching data ---------------: {request} {str(e)}")
+        # TODO add failure & denied to database also? will require DB structuring and logging HTTP error response
         return 
 
     # A means to group traces by day to avoid slowdowns with highly fractured data
@@ -664,7 +623,7 @@ def archive_request(request, waveform_clients, sds_path, db_manager):
         starttime = tr.stats.starttime
         endtime = tr.stats.endtime
 
-        # address instances where trace start leaks into previous date
+        # Address instances where trace start leaks into previous date
         day_boundary = UTCDateTime(starttime.date + datetime.timedelta(days=1))
         if (day_boundary - starttime) <= tr.stats.delta:
             starttime = day_boundary
@@ -700,22 +659,23 @@ def archive_request(request, waveform_clients, sds_path, db_manager):
                 continue
             existing_st += day_stream
             existing_st.merge(method=-1, fill_value=None)
-            existing_st._cleanup()
+            existing_st._cleanup(misalignment_threshold=0.25)
             if existing_st:
-                print(f"  merging {full_path}")
+                print(f"  ... Merging {full_path}")
         else:
             existing_st = day_stream
             if existing_st:
-                print(f"  writing {full_path}")
+                print(f"  ... Writing {full_path}")
 
         existing_st = obspy.Stream([tr for tr in existing_st if len(tr.data) > 0])
 
         if existing_st:
             try:
-                existing_st.write(full_path, format="MSEED", encoding='STEIM2') #MSEED/STEIM2 are normal but users may want to change these... someday
+                existing_st.write(full_path, format="MSEED", encoding='STEIM2') # MSEED/STEIM2 are very sensible defaults
                 to_insert_db.append(stream_to_db_element(existing_st))
             except Exception as e:
                 print(f"! Could not write {full_path}: {e}")
+
     # Update database
     try:
         num_inserted = db_manager.bulk_insert_archive_data(to_insert_db)
@@ -726,8 +686,9 @@ def archive_request(request, waveform_clients, sds_path, db_manager):
 
 # MAIN RUN FUNCTIONS
 # ==================================================================
+
 def setup_paths(settings: SeismoLoaderSettings):
-    sds_path = settings.sds_path # config['SDS']['sds_path']  <<<<<<<<< should this be settings.sds.sds_path?
+    sds_path = settings.sds_path
     if not sds_path:
         raise ValueError("SDS Path not set!!!")
 
@@ -736,14 +697,9 @@ def setup_paths(settings: SeismoLoaderSettings):
         os.makedirs(sds_path)
 
     # Setup database directory
-    db_path = settings.db_path # config['DATABASE']['db_path'] <<<<<<< should this be settings.database.db_path?
-
-    # Setup database
-    #if not os.path.exists(db_path):
-    #    setup_database(db_path)
+    db_path = settings.db_path
 
     # Setup database manager (& database if non-existent)
-    # ******** is this the best place to do this???
     db_manager = DatabaseManager(db_path)
 
     settings.sds_path = sds_path
@@ -752,11 +708,11 @@ def setup_paths(settings: SeismoLoaderSettings):
     return settings, db_manager
 
 
-## ***use ObsPy for the below functions
+## TODO TODO  ***use ObsPy for the below functions
 from obspy.geodetics import kilometer2degrees, degrees2kilometers
 
 def convert_radius_to_degrees(radius_meters):
-    #Convert radius from meters to degrees.
+    # Convert radius from meters to degrees.
     kilometers = radius_meters / 1000
     degrees = kilometers / 111.32
     return degrees
@@ -767,12 +723,13 @@ def convert_degress_to_radius_km(radius_degree):
 def convert_degrees_to_radius_meter(radius_degree):
     return convert_degress_to_radius_km(radius_degree) * 1000
 
-
-
 def get_selected_stations_at_channel_level(settings: SeismoLoaderSettings):
+    
+    print("Running get_selected_stations_at_channel_level")
+    
     waveform_client = Client(settings.waveform.client)
-    if settings.station and settings.station.client: # config['STATION']['client']:
-        station_client = Client(settings.station.client) # Client(config['STATION']['client'])
+    if settings.station and settings.station.client:
+        station_client = Client(settings.station.client)
     else:
         station_client = waveform_client
 
@@ -784,7 +741,7 @@ def get_selected_stations_at_channel_level(settings: SeismoLoaderSettings):
                     network=network.code,
                     station=station.code,
                     level="channel"
-                )
+                ) ### it will be faster to also filter start/end times here (review needed)
                 
                 invs += updated_inventory
                 
@@ -797,16 +754,14 @@ def get_selected_stations_at_channel_level(settings: SeismoLoaderSettings):
 
 
 def get_stations(settings: SeismoLoaderSettings):
-    """
-    Refine input args to what is needed for get_stations
-    """
-    print("Running get_stations") #debug for now
+    """ Refine input args to what is needed for get_stations. """
+    print("Running get_stations")
 
     starttime = UTCDateTime(settings.station.date_config.start_time)
     endtime = UTCDateTime(settings.station.date_config.end_time)
     waveform_client = Client(settings.waveform.client)
-    if settings.station and settings.station.client: # config['STATION']['client']:
-        station_client = Client(settings.station.client) # Client(config['STATION']['client'])
+    if settings.station and settings.station.client:
+        station_client = Client(settings.station.client)
     else:
         station_client = waveform_client
 
@@ -838,55 +793,71 @@ def get_stations(settings: SeismoLoaderSettings):
     if 'station' not in station_client.services.keys():
         print("Station service not available at %s, no stations returned" % station_client.base_url)
         return None
+
+    # Remove kwargs keys not in station_client
+    new_kwargs = kwargs.copy()
     for key in kwargs.keys():
         if key not in station_client.services['station'].keys():
-            del kwargs[key]
+            del new_kwargs[key]
+    kwargs = new_kwargs
 
     inv = None
     inventory = settings.station.local_inventory
     if inventory:
         # User has specified this specific pre-existing (filepath) inventory to use
-        inv = obspy.read_inventory(inventory)
+        inv = obspy.read_inventory(inventory,level='channel')
 
     elif (not inventory and settings.station.geo_constraint):
         for geo in settings.station.geo_constraint:
-            if geo.geo_type == GeoConstraintType.BOUNDING:
-                ## TODO Test if all variables exist / error if not
-                curr_inv = station_client.get_stations(
-                    minlatitude =geo.coords.min_lat,
-                    maxlatitude =geo.coords.max_lat,
-                    minlongitude=geo.coords.min_lng,
-                    maxlongitude=geo.coords.max_lng,
-                    **kwargs
-                )
-            elif geo.geo_type == GeoConstraintType.CIRCLE:
-                ## TODO Test if all variables exist / error if not
-                curr_inv = station_client.get_stations(
-                    minradius=geo.coords.min_radius,
-                    maxradius=geo.coords.max_radius,
-                    latitude=geo.coords.lat,
-                    longitude=geo.coords.lng,
-                    **kwargs
-                )
-            else:
-                print(f"Unknown Geometry type: {geo.geo_type}")
+            curr_inv = None
+            try:
+                if geo.geo_type == GeoConstraintType.BOUNDING:
+                    ## TODO Test if all variables exist / error if not
+                    curr_inv = station_client.get_stations(
+                        minlatitude =geo.coords.min_lat,
+                        maxlatitude =geo.coords.max_lat,
+                        minlongitude=geo.coords.min_lng,
+                        maxlongitude=geo.coords.max_lng,
+                        **kwargs
+                    )
+                elif geo.geo_type == GeoConstraintType.CIRCLE:
+                    ## TODO Test if all variables exist / error if not
+                    curr_inv = station_client.get_stations(
+                        minradius=geo.coords.min_radius,
+                        maxradius=geo.coords.max_radius,
+                        latitude=geo.coords.lat,
+                        longitude=geo.coords.lng,
+                        **kwargs
+                    )
+                else:
+                    print(f"Unknown Geometry type: {geo.geo_type}")
+            except FDSNNoDataException:
+                print(f"No stations found in {station_client.base_url} with given geographic bounds")
+                pass
 
-            if inv:
-                inv += curr_inv
-            else:
-                inv = curr_inv
+            if curr_inv is not None:
+                if inv:
+                    inv += curr_inv
+                else:
+                    inv = curr_inv
+
     else: # No geographic constraint, search via inventory alone
-        inv = station_client.get_stations(**kwargs)
+        try:
+            inv = station_client.get_stations(**kwargs)
+        except FDSNNoDataException:
+            print(f"No stations found in {station_client.base_url} with given parameters")
+            return None
+
 
     # Remove unwanted stations or networks
-    if settings.station.exclude_stations: # config['STATION']['exclude_stations']:
+    if settings.station.exclude_stations:
         # exclude_list = config['STATION']['exclude_stations'].split(',') #format is NN.STA
         for ns in settings.station.exclude_stations:
             n,s = ns.upper().split('.') #this is necessary as format is n.s
             inv = inv.remove(network=n,station=s)
 
     # Add anything else we were told to
-    if settings.station.force_stations: # config['STATION']['force_stations']:
+    if settings.station.force_stations: 
         # add_list = config['STATION']['force_stations'].split(',') #format is NN.STA
         for ns in settings.station.force_stations:
             n,s = ns.upper().split('.')
@@ -894,8 +865,8 @@ def get_stations(settings: SeismoLoaderSettings):
                 inv += station_client.get_stations(
                     network=n,
                     station=s,
-                    location='*',
-                    channel='[FGDCESHBML][HN]?',
+                    location='*', # may be an issue... should probably follow the location filter NEEDS REVIEW
+                    channel='[FGDCESHBML][HN]?', # we are somewhat dangerously assuming that seismic data follows conventional channel naming... think it's OK though
                     level=settings.station.level.value
                 )
             except:
@@ -907,7 +878,7 @@ def get_stations(settings: SeismoLoaderSettings):
 
 def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
 
-    print("Running get_events") #debug for now
+    print("Running get_events")
 
     starttime = UTCDateTime(settings.event.date_config.start_time)
     endtime = UTCDateTime(settings.event.date_config.end_time)
@@ -930,7 +901,7 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
 
     catalog = Catalog(events=None)
 
-    # todo add more e.g. catalog, contributor
+    # TODO add more e.g. catalog, contributor
     kwargs = {
         'starttime':starttime,
         'endtime':endtime,
@@ -943,13 +914,17 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
         'includearrivals':settings.event.include_arrivals,
     }
 
-    # check event_client for compatibility
+    # Check event_client for compatibility
     if 'event' not in event_client.services.keys():
         print("Event service not available at %s, no events returned" % event_client.base_url)
         return catalog
+
+    # Remove kwargs entries not in event_client
+    new_kwargs = kwargs.copy()
     for key in kwargs.keys():
         if key not in event_client.services['event'].keys():
-            del kwargs[key]
+            del new_kwargs[key]
+    kwargs = new_kwargs
 
     if len(settings.event.geo_constraint) == 0:
         try:
@@ -1038,18 +1013,26 @@ def run_continuous(settings: SeismoLoaderSettings):
     - The function logs detailed information about the processing steps and errors to aid
       in debugging and monitoring of data retrieval processes.
     """
+    print("Running run_continuous")
+    
     settings, db_manager = setup_paths(settings)
 
     starttime = UTCDateTime(settings.station.date_config.start_time)
     endtime = UTCDateTime(settings.station.date_config.end_time)
     waveform_client = Client(settings.waveform.client)
 
+    # Sanity check times
+    endtime = min(endtime, UTCDateTime.now()-120)
+    if starttime >= endtime:
+        print("Starttime greater than than endtime!")
+        return
+
     # Collect requests
-    requests = collect_requests(settings.station.selected_invs,starttime,endtime,
-        days_per_request=settings.waveform.days_per_request)
+    requests = collect_requests(settings.station.selected_invs, 
+        starttime, endtime, days_per_request=settings.waveform.days_per_request)
 
     # Remove any for data we already have (requires updated db)
-    pruned_requests= prune_requests(requests, db_manager)
+    pruned_requests= prune_requests(requests, db_manager, settings.sds_path)
 
     # Break if nothing to do
     if len(pruned_requests) < 1:
@@ -1061,21 +1044,23 @@ def run_continuous(settings: SeismoLoaderSettings):
     waveform_clients= {'open':waveform_client} #now a dictionary
     requested_networks = [ele[0] for ele in combined_requests]
 
-    ## cred structure is: AuthConfig(nslc_code='2P', username='username', password='password_for_2P')
-    # right now this probably only works for network-based credentials only (TODO)
+    # May only work for network-wide credentials at the moment (99% use case)
     for cred in settings.auths:
+        cred_net = cred.nslc_code.split('.')[0].upper()
         if cred_net not in requested_networks:
             continue
         try:
-            new_client = Client(settings.waveform.client,user=cred.username.upper(),password=cred.password)
+            new_client = Client(settings.waveform.client, 
+                user=cred.username.upper(), password=cred.password)
             waveform_clients.update({cred_net:new_client})
         except:
-            print("Issue creating client: %s %s via %s:%s" % (settings.waveform.client,cred.nslc_code,cred.username,cred.password))
+            print("Issue creating client: %s %s via %s:%s" % (settings.waveform.client, 
+                cred.nslc_code, cred.username, cred.password))
             continue
 
     # Archive to disk and updated database
     for request in combined_requests:
-        print("\n Requesting: %s", request)
+        print("\n Requesting: ", request)
         time.sleep(0.05) #to help ctrl-C out if needed
         try:
             archive_request(request, waveform_clients, settings.sds_path, db_manager)
@@ -1088,10 +1073,10 @@ def run_continuous(settings: SeismoLoaderSettings):
     for req in requests:
         data = pd.DataFrame()
         query = SeismoQuery(
-            network = req[0],
-            station = req[1],
-            location = req[2],
-            channel = req[3],
+            network = req[0].upper(),
+            station = req[1].upper(),
+            location = req[2].upper(),
+            channel = req[3].upper(),
             starttime = req[4],
             endtime = req[5]
         )
@@ -1109,7 +1094,6 @@ def run_continuous(settings: SeismoLoaderSettings):
         })
 
     return time_series
-
 
 
 def run_event(settings: SeismoLoaderSettings):
@@ -1144,6 +1128,8 @@ def run_event(settings: SeismoLoaderSettings):
     - Care should be taken when modifying settings and handling authentication to ensure the integrity and security
       of data access and retrieval.
     """
+    print("Running run_event")
+    
     settings, db_manager = setup_paths(settings)
 
     waveform_client = Client(settings.waveform.client)
@@ -1151,100 +1137,92 @@ def run_event(settings: SeismoLoaderSettings):
     try:
         ttmodel = TauPyModel(settings.event.model)
     except Exception as e:
-        print("Issue loading TauPyModel ",settings.event.model, e, "defaulting to IASP91")
         ttmodel = TauPyModel('IASP91')
+    event_streams = []
 
-    #now loop through events
-    # NOTE: Why "inv" collections from STATION block is included in EVENTS?
-    #       Isn't it the STATIONS have their own searching settings?
-    #       If the search settings such as map search and time search are the
-    #       same, why separate parameters are defined for events?
-    for i,eq in enumerate(settings.event.selected_catalogs):
-        print("--> Downloading event (%d/%d) %s (%.4f lat %.4f lon %.1f km dep) ...\n" % (i+1,len(settings.event.selected_catalogs),
-            eq.origins[0].time,eq.origins[0].latitude,eq.origins[0].longitude,eq.origins[0].depth/1000))
-
+    for i, eq in enumerate(settings.event.selected_catalogs):
         # Collect requests
-        requests,new_arrivals,p_arrivals = collect_requests_event(
+        requests, new_arrivals, p_arrivals = collect_requests_event(
             eq, settings.station.selected_invs,
             model=ttmodel,
             settings=settings
         )
 
-        # Import any new arrival info into our database
+        # Import any new arrival info into database
         if new_arrivals:
             db_manager.bulk_insert_arrival_data(new_arrivals)
-            print(" ~ %d new arrivals added to database" % len(new_arrivals))        
-        # Remove any for data we already have (requires db be updated)
-        pruned_requests= prune_requests(requests, db_manager)
 
-        if len(pruned_requests) < 1:
-            print("--> Event already downloaded (%d/%d) %s (%.4f lat %.4f lon %.1f km depth) ...\n" % (i+1,len(settings.event.selected_catalogs),
-            eq.origins[0].time,eq.origins[0].latitude,eq.origins[0].longitude,eq.origins[0].depth/1000))
-            continue
+        # Remove requests for data we already have
+        pruned_requests = prune_requests(requests, db_manager)
 
-        # Combine these into fewer (but larger) requests
-        # this probably makes little for sense EVENTS, but its inexpensive and good for testing purposes
-        combined_requests = combine_requests(pruned_requests)
+        # Process new data if needed
+        if pruned_requests:
+            combined_requests = combine_requests(pruned_requests)
+            
+            # Setup clients for restricted data
+            waveform_clients = {'open': waveform_client}
+            requested_networks = [ele[0] for ele in combined_requests]
+            
+            for cred in settings.auths:
+                cred_net = cred.nslc_code.split('.')[0].upper()
+                if cred_net not in requested_networks:
+                    continue
+                try:
+                    new_client = Client(settings.waveform.client, 
+                                     user=cred.username.upper(),
+                                     password=cred.password)
+                    waveform_clients.update({cred_net: new_client})
+                except Exception as e:
+                    print(f"Issue creating client for {cred_net}: {str(e)}")
 
-        # Add additional clients if user is requesting any restricted data
-        waveform_clients= {'open':waveform_client}
-        requested_networks = [ele[0] for ele in combined_requests]
-        print('settings.waveform.client:', settings.waveform.client)
+            # Archive new data
+            for request in combined_requests:
+                try:
+                    archive_request(request, waveform_clients, settings.sds_path, db_manager)
+                except Exception as e:
+                    print(f"Error archiving request {request}: {str(e)}")
 
-        ## cred structure is: AuthConfig(nslc_code='2P', username='username', password='password_for_2P')
-        # right now this probably only works for network-based credentials only
-        for cred in settings.auths:
-            cred_net = cred.nslc_code.split('.')[0].upper()
-            print("warning! implementing forced uppercase cred hack until can figure out why they're lowercase")            
-            if cred_net not in requested_networks:
-                continue
+        # Now read all data for this event using get_local_waveform
+        event_stream = obspy.Stream()
+        for req in requests:  # Use original requests to get all data
+            query = SeismoQuery(
+                network=req[0],
+                station=req[1],
+                location=req[2],
+                channel=req[3],
+                starttime=req[4],
+                endtime=req[5]
+            )
+            
             try:
-                new_client = Client(settings.waveform.client,user=cred.username.upper(),password=cred.password)
-                waveform_clients.update({cred_net:new_client})
-            except:
-                print("Issue creating client: %s %s via %s:%s" % (settings.waveform.client,cred.nslc_code,cred.username,cred.password))
-
-        # Archive to disk and update database
-        for request in combined_requests:
-            time.sleep(0.05) #to help ctrl-C out if needed
-            print(request)
-            try: 
-                archive_request(request,waveform_clients,settings.sds_path,db_manager)
+                st = get_local_waveform(query, settings)
+                if st:
+                    # Get arrival information from database
+                    arrivals = db_manager.fetch_arrivals_distances(
+                        str(eq.preferred_origin_id),
+                        query.network,
+                        query.station
+                    )
+                    
+                    if arrivals:
+                        # Add metadata to each trace
+                        for tr in st:
+                            tr.stats.event_id = str(eq.resource_id)
+                            tr.stats.p_arrival = arrivals[0]
+                            tr.stats.s_arrival = arrivals[1]
+                            tr.stats.distance_km = arrivals[2]
+                            tr.stats.distance_deg = arrivals[3]
+                            tr.stats.azimuth = arrivals[4]
+                    
+                    event_stream += st
             except Exception as e:
-                print("Event request not successful: ",request, str(e))
-        
-    # The below is for plotting (?) PLEASE REVIEW!
-    time_series = []
-    for req in requests:
-        data = pd.DataFrame()
-        query = SeismoQuery(
-            network = req[0],
-            station = req[1],
-            location = req[2],
-            channel = req[3],
-            starttime = req[4],
-            endtime = req[5]
-        )
-        try:
-            data = stream_to_dataframe(get_local_waveform(query, settings))
-        except Exception as e:
-            print(str(e))
-        
-        # Get P arrival time for this waveform
-        station_id = f"{query.network}.{query.station}"
-        p_arrival = p_arrivals.get(station_id)
-        time_series.append({
-            'Network': query.network,
-            'Station': query.station,
-            'Location': query.location,
-            'Channel': query.channel,
-            'Data': data,
-            'P_Arrival': p_arrival
-        })
-        
-    return time_series
+                print(f"Error reading data for {query.network}.{query.station}: {str(e)}")
+                continue
 
+        if len(event_stream) > 0:
+            event_streams.append(event_stream)
 
+    return event_streams
 
 def run_main(settings: SeismoLoaderSettings = None, from_file=None):
     if not settings and from_file:
@@ -1275,10 +1253,11 @@ def run_main(settings: SeismoLoaderSettings = None, from_file=None):
 
 
 
-################ end function declarations, start program
+# # # # # # # # # # # # # # # # # # #
+
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("Usage: python3 seismoloader.py input.cfg")
+        print("Usage: python3 seismoloader.py input.cfg") ### TODO / REVIEW I assume this needs updating to new -cli version
         sys.exit(1)
     
     config_file = sys.argv[1]
@@ -1288,6 +1267,3 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Error occured while running: {str(e)}")
         raise e
-
-    
-

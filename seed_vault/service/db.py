@@ -252,7 +252,7 @@ class DatabaseManager:
                         # Extend the current segment
                         current_segment[6] = max(endtime, UTCDateTime(current_segment[6])).isoformat()
                         # Keep the latest importtime
-                        current_segment[7] = max(importtime, current_segment[7])
+                        current_segment[7] = max(importtime, current_segment[7]) ### bug if database was deleted and both are None
                         to_delete.append(id)
                     else:
                         # Start a new segment
@@ -438,11 +438,24 @@ class DatabaseManager:
                 return (result[0], result[1])
         return None
 
+    # expanded version of the above to include distances and azimth
+    def fetch_arrivals_distances(self, event_id, netcode, stacode):
+        with self.connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT p_arrival, s_arrival, dist_km, dist_deg, azimuth 
+                FROM arrival_data 
+                WHERE event_id = ? AND s_netcode = ? AND s_stacode = ?
+            ''', (event_id, netcode, stacode))
+            result = cursor.fetchone()
+            if result:
+                return (result[0], result[1], result[2], result[3], result[4])
+        return None
 
 
 
 ###### Legacy functions below
-
+"""
 def setup_database(db_path):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -467,7 +480,7 @@ def setup_database(db_path):
 
 @contextlib.contextmanager
 def safe_db_connection(db_path, max_retries=3, initial_delay=1):
-    """Context manager for safe database connections with retry mechanism."""
+    #Context manager for safe database connections with retry mechanism.
     retry_count = 0
     delay = initial_delay
     while retry_count < max_retries:
@@ -490,3 +503,4 @@ def safe_db_connection(db_path, max_retries=3, initial_delay=1):
         finally:
             if 'conn' in locals():
                 conn.close()
+"""                
