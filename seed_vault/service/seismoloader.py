@@ -1153,7 +1153,7 @@ def run_event(settings: SeismoLoaderSettings):
             db_manager.bulk_insert_arrival_data(new_arrivals)
 
         # Remove requests for data we already have
-        pruned_requests = prune_requests(requests, db_manager)
+        pruned_requests = prune_requests(requests, db_manager, settings.sds_path)
 
         # Process new data if needed
         if pruned_requests:
