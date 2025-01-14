@@ -13,6 +13,7 @@ from obspy.geodetics import degrees2kilometers
 from obspy.geodetics.base import locations2degrees
 import numpy as np
 import matplotlib.pyplot as plt
+from seed_vault.ui.components.continuous_waveform import ContinuousComponents
 
 class WaveformFilterMenu:
     settings: SeismoLoaderSettings
@@ -561,39 +562,18 @@ class WaveformComponents:
     settings: SeismoLoaderSettings
     filter_menu: WaveformFilterMenu
     waveform_display: WaveformDisplay
+    continuous_components: ContinuousComponents
     
     def __init__(self, settings: SeismoLoaderSettings):
         self.settings = settings
         self.filter_menu = WaveformFilterMenu(settings)
         self.waveform_display = WaveformDisplay(settings, self.filter_menu)
-        self.console_display = ConsoleDisplay()
+        self.continuous_components = ContinuousComponents(settings)
         
     def render(self):
         if self.settings.selected_workflow == WorkflowType.CONTINUOUS:
-            st.title("Continuous Waveform Processing")
-            
-            # Add calendar selection for start_time and end_time
-            st.sidebar.subheader("Time Selection")
-            self.settings.station.date_config.start_time = st.sidebar.date_input(
-                "Start Time",
-                value=self.settings.station.date_config.start_time,
-                help="Select the start time for processing"
-            )
-            self.settings.station.date_config.end_time = st.sidebar.date_input(
-                "End Time",
-                value=self.settings.station.date_config.end_time,
-                help="Select the end time for processing"
-            )
-            
-            st.write('settings: ', self.settings)            
-            if st.button("Start Processing", key="start_continuous"):
-                result = self.console_display.run_with_logs(
-                    process_func=lambda: run_continuous(self.settings),
-                    status_message="Processing continuous waveform data..."
-                )
-                
-                if result:
-                    st.success("Processing completed successfully!")
+            # Use continuous components
+            self.continuous_components.render()
         else:
             st.title("Waveform Analysis")
             
