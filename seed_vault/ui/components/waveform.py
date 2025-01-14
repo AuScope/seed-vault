@@ -14,6 +14,7 @@ from obspy.geodetics.base import locations2degrees
 import numpy as np
 import matplotlib.pyplot as plt
 from seed_vault.ui.components.continuous_waveform import ContinuousComponents
+from seed_vault.service.utils import check_client_services
 
 class WaveformFilterMenu:
     settings: SeismoLoaderSettings
@@ -70,9 +71,13 @@ class WaveformFilterMenu:
                 'Choose a client:', 
                 client_options, 
                 index=client_options.index(self.settings.waveform.client), 
-                key="event-pg-client-event",
-                help="Select the data source server"
+                key="event-pg-client-event"
             )
+            
+            # Check services for selected client
+            services = check_client_services(self.settings.waveform.client)
+            if not services['dataselect']:
+                st.warning(f"⚠️ Warning: Selected client '{self.settings.waveform.client}' does not support WAVEFORM service. Please choose another client.")
 
         # Step 2: Display Filters (enabled after data retrieval)
         with st.sidebar.expander("Step 2: Display Filters", expanded=True):
