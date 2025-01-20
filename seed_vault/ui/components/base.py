@@ -295,6 +295,9 @@ class BaseComponent:
                         self.settings.station.network = ""
                         st.session_state["event-pg-net-txt-station"] = self.settings.station.network
 
+                        self.settings.station.station = ""
+                        st.session_state["event-pg-sta-txt-station"] = self.settings.station.network
+
                 except ValueError as e:
                     st.error(f"Error: {str(e)}. Station client is set to {self.settings.station.client}, which seems does not exists. Please navigate to the settings page and use the Clients tab to add the client or fix the stored config.cfg file.")
 
