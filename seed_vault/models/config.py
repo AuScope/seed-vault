@@ -328,7 +328,7 @@ class SeismoLoaderSettings(BaseModel):
         # gap_tolerance = config.get('PROCESSING', 'gap_tolerance', fallback=60)
 
 
-        download_type_str = cls._check_val(config.get('PROCESSING', 'download_type'), DownloadType.CONTINUOUS.value, "str")
+        download_type_str = cls._check_val(config.get('PROCESSING', 'download_type'), DownloadType.EVENT.value, "str")
         download_type = DownloadType(download_type_str.lower())
 
         # Parse the AUTH section
