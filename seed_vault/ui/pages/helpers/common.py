@@ -1,6 +1,7 @@
 
-from typing import List
+from typing import List, Union
 import numpy as np
+from seed_vault.ui.components.map import normalize_circle, normalize_bounds
 import streamlit as st
 import os
 
@@ -16,6 +17,9 @@ from seed_vault.service.seismoloader import convert_radius_to_degrees
 current_directory = os.path.dirname(os.path.abspath(__file__))
 target_file = os.path.join(current_directory, '../../../service/config.cfg')
 target_file = os.path.abspath(target_file)
+
+target_file_direct = os.path.join(current_directory, '../../../service/config_direct.cfg')
+target_file_direct = os.path.abspath(target_file_direct)
 
 
 def empty_settings_geo_constraints(settings: SeismoLoaderSettings):
@@ -47,6 +51,26 @@ def get_app_settings(create_new: bool = True, empty_geo: bool = True):
 def set_app_settings(settings: SeismoLoaderSettings):
     st.session_state.app_settings = settings
 
+
+def get_direct_settings(create_new: bool = True, empty_geo: bool = True):
+    if "direct_settings" not in st.session_state:
+        settings = SeismoLoaderSettings.from_cfg_file(target_file_direct)
+        settings.load_url_mapping()
+        st.session_state.direct_settings = settings
+    else:
+        if create_new:
+            settings = SeismoLoaderSettings.from_cfg_file(target_file_direct)
+            settings.load_url_mapping()
+            st.session_state.direct_settings = settings
+    
+    if empty_geo:
+        st.session_state.direct_settings = empty_settings_geo_constraints(st.session_state.direct_settings)
+
+    return st.session_state.direct_settings
+
+
+def set_direct_settings(settings: SeismoLoaderSettings):
+    st.session_state.direct_settings = settings
 
 
 def save_filter(settings:  SeismoLoaderSettings):
@@ -103,7 +127,7 @@ def handle_circle(geo) -> GeometryConstraint:
     )
 
 
-def get_selected_areas(map_output) -> List[RectangleArea | CircleArea ]:
+def get_selected_areas(map_output) -> List[Union[RectangleArea, CircleArea]]:
     lst_locs = []
     k = "all_drawings"
     
@@ -112,12 +136,18 @@ def get_selected_areas(map_output) -> List[RectangleArea | CircleArea ]:
             geom_type = geo.get("geometry").get('type')
             
             if geom_type == GeometryType.POLYGON:
-                lst_locs.append(handle_polygon(geo))
+                geometry_constraint = handle_polygon(geo)                
+                split_constraints = normalize_bounds(geometry_constraint)
+                for constraint in split_constraints:
+                    lst_locs.append(constraint)
                 continue
 
             if geom_type == GeometryType.POINT:
-                lst_locs.append(handle_circle(geo))
-                continue
+                geometry_constraint = handle_circle(geo)                
+                split_constraints = normalize_circle(geometry_constraint)
+                for constraint in split_constraints:
+                    lst_locs.append(constraint)
+                continue                
 
             raise ValueError(f"Geometry Type {geom_type} not supported!")
         
