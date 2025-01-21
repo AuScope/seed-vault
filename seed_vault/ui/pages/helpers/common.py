@@ -18,6 +18,9 @@ current_directory = os.path.dirname(os.path.abspath(__file__))
 target_file = os.path.join(current_directory, '../../../service/config.cfg')
 target_file = os.path.abspath(target_file)
 
+target_file_direct = os.path.join(current_directory, '../../../service/config_direct.cfg')
+target_file_direct = os.path.abspath(target_file_direct)
+
 
 def empty_settings_geo_constraints(settings: SeismoLoaderSettings):
     """
@@ -48,6 +51,26 @@ def get_app_settings(create_new: bool = True, empty_geo: bool = True):
 def set_app_settings(settings: SeismoLoaderSettings):
     st.session_state.app_settings = settings
 
+
+def get_direct_settings(create_new: bool = True, empty_geo: bool = True):
+    if "direct_settings" not in st.session_state:
+        settings = SeismoLoaderSettings.from_cfg_file(target_file_direct)
+        settings.load_url_mapping()
+        st.session_state.direct_settings = settings
+    else:
+        if create_new:
+            settings = SeismoLoaderSettings.from_cfg_file(target_file_direct)
+            settings.load_url_mapping()
+            st.session_state.direct_settings = settings
+    
+    if empty_geo:
+        st.session_state.direct_settings = empty_settings_geo_constraints(st.session_state.direct_settings)
+
+    return st.session_state.direct_settings
+
+
+def set_direct_settings(settings: SeismoLoaderSettings):
+    st.session_state.direct_settings = settings
 
 
 def save_filter(settings:  SeismoLoaderSettings):

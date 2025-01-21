@@ -60,8 +60,8 @@ def convert_to_str(val):
         return ''  # Return empty string if conversion fails
             
 class ProcessingConfig(BaseModel):
-    num_processes: Optional    [  int         ] = 4
-    gap_tolerance: Optional    [  int         ] = 60
+    num_processes: Optional    [  int         ] | None = 4
+    gap_tolerance: Optional    [  int         ] | None = 60
     logging      : Optional    [  str         ] = None
 
 class AuthConfig(BaseModel):
@@ -115,13 +115,9 @@ class DateConfig(BaseModel):
 
 class WaveformConfig(BaseModel):
     client           : Optional     [str]   = "IRIS"
-    channel_pref     : Optional     [List[Channels]]  = [
-        Channels.CH, Channels.HH, Channels.BH, Channels.EH,
-        Channels.HN, Channels.EN, Channels.SH, Channels.LH
-    ]
-    location_pref    : Optional     [List[Locations]] = [
-        Locations("10"), Locations("00"), Locations("20"), Locations("30")
-    ]
+    channel_pref     : Optional     [str]  = None
+    location_pref    : Optional     [str] = None
+
     days_per_request : Optional     [int]             = 1
 
     def set_default(self):
@@ -188,7 +184,7 @@ class EventConfig(BaseModel):
         start_time=datetime(2024, 8, 20),
         end_time=datetime(2024, 9, 20)
     )
-    model               : EventModels = EventModels.IASP91
+    model               : str = 'iasp91'
     min_depth           : float = 0.0
     max_depth           : float = 6800.0
     min_magnitude       : float = 5.0
@@ -261,10 +257,49 @@ class SeismoLoaderSettings(BaseModel):
             self.download_type = DownloadType.CONTINUOUS
 
 
+
+    @classmethod
+    def _check_val(cls, val, default_val, val_type: str = "int", return_empty_str: bool = False):
+        if val is not None and not isinstance(val, str):
+            return val
+        
+        if val is None or val.strip().lower() == 'none':
+            return default_val
+        
+        # For cases where user purposedly is passing empty string
+        if val.strip() == '':
+            if return_empty_str:
+                return ''
+            return default_val
+
+        else:            
+            if val_type == "int":
+                return int(val)
+            if val_type == "float":
+                return float(val)
+            return val
+        
+
+    @classmethod
+    def _is_none(cls, val):
+        if val is None or isinstance(val, str): 
+            if val.strip() == '' or val.strip().lower() == 'none':
+                return True
+        return False
+            
+            
+
     @classmethod
     def from_cfg_file(cls, cfg_source: Union[str, IO])  -> "SeismoLoaderSettings":
+
+
         config = configparser.ConfigParser()
         config.optionxform = str
+
+        default = cls()
+        default.event = EventConfig()
+        default.station = StationConfig()
+        default.waveform = WaveformConfig()
 
         # If cfg_source is a string, assume it's a file path
         if isinstance(cfg_source, str):
@@ -285,9 +320,15 @@ class SeismoLoaderSettings(BaseModel):
         db_path = config.get('DATABASE', 'db_path', fallback=f'{sds_path}/database.sqlite')
 
         # Parse the PROCESSING section
-        num_processes = config.getint('PROCESSING', 'num_processes', fallback=4)
-        gap_tolerance = config.getint('PROCESSING', 'gap_tolerance', fallback=60)
-        download_type_str = config.get('PROCESSING', 'download_type', fallback='event')
+        
+        num_processes = cls._check_val(config.get('PROCESSING', 'num_processes'), 0, "int")
+        gap_tolerance = cls._check_val(config.get('PROCESSING', 'gap_tolerance'), 60, "int")
+
+        # num_processes = config.get('PROCESSING', 'num_processes', fallback=None)
+        # gap_tolerance = config.get('PROCESSING', 'gap_tolerance', fallback=60)
+
+
+        download_type_str = cls._check_val(config.get('PROCESSING', 'download_type'), DownloadType.CONTINUOUS.value, "str")
         download_type = DownloadType(download_type_str.lower())
 
         # Parse the AUTH section
@@ -305,14 +346,12 @@ class SeismoLoaderSettings(BaseModel):
 
         # Parse the WAVEFORM section
         client = config.get('WAVEFORM', 'client', fallback='IRIS').upper()
-        channel_pref = config.get('WAVEFORM', 'channel_pref', fallback='').split(',')
-        location_pref = config.get('WAVEFORM', 'location_pref', fallback='').split(',')
-        days_per_request = config.getint('WAVEFORM', 'days_per_request', fallback=1)
+        days_per_request = cls._check_val(config.get('WAVEFORM', 'days_per_request'), 1, "int")
 
         waveform = WaveformConfig(
             client = client,
-            channel_pref=[Channels(channel.strip()) for channel in channel_pref if channel],
-            location_pref=[Locations(loc.strip()) for loc in location_pref if loc],
+            channel_pref=config.get('WAVEFORM', 'channel_pref', fallback=''),
+            location_pref=config.get('WAVEFORM', 'location_pref', fallback=''),
             days_per_request=days_per_request
         )
 
@@ -338,27 +377,27 @@ class SeismoLoaderSettings(BaseModel):
         if config.get('STATION', 'geo_constraint', fallback=None) == GeoConstraintType.BOUNDING:
             geo_constraint_station = GeometryConstraint(
                 coords=RectangleArea(
-                    min_lat=config.getfloat('STATION', 'minlatitude', fallback=None),
-                    max_lat=config.getfloat('STATION', 'maxlatitude', fallback=None),
-                    min_lng=config.getfloat('STATION', 'minlongitude', fallback=None),
-                    max_lng=config.getfloat('STATION', 'maxlongitude', fallback=None)
+                    min_lat=cls._check_val(config.get('STATION', 'minlatitude'), None, "float"),
+                    max_lat=cls._check_val(config.get('STATION', 'maxlatitude'), None, "float"),
+                    min_lng=cls._check_val(config.get('STATION', 'minlongitude'), None, "float"),
+                    max_lng=cls._check_val(config.get('STATION', 'maxlongitude'), None, "float")
                 )
             )
 
         if config.get('STATION', 'geo_constraint', fallback=None) == GeoConstraintType.CIRCLE:
             geo_constraint_station = GeometryConstraint(
                 coords=CircleArea(
-                    lat=config.getfloat('STATION', 'latitude', fallback=None),
-                    lng=config.getfloat('STATION', 'longitude', fallback=None),
-                    min_radius=config.getfloat('STATION', 'minsearchradius', fallback=None),
-                    max_radius=config.getfloat('STATION', 'maxsearchradius', fallback=None)
+                    lat=cls._check_val(config.get('STATION', 'latitude'), None, "float"),
+                    lng=cls._check_val(config.get('STATION', 'longitude'), None, "float"),
+                    min_radius=cls._check_val(config.get('STATION', 'minsearchradius'), None, "float"),
+                    max_radius=cls._check_val(config.get('STATION', 'maxsearchradius'), None, "float")
                 )
             )
 
 
         station_config = StationConfig(
             client=station_client.upper() if station_client else None,
-            local_inventory=config.get("STATION","local_inventory", fallback=None),
+            local_inventory=cls._check_val(config.get("STATION","local_inventory"), None, "str"),
             force_stations=force_stations,
             exclude_stations=exclude_stations,
             date_config=DateConfig(
@@ -369,13 +408,13 @@ class SeismoLoaderSettings(BaseModel):
                 end_before   = parse_time(config.get('STATION', 'endbefore'  , fallback=None)),
                 end_after    = parse_time(config.get('STATION', 'endafter'   , fallback=None)),
             ),
-            network =config.get('STATION', 'network' , fallback=None),
-            station =config.get('STATION', 'station' , fallback=None),
-            location=config.get('STATION', 'location', fallback=None),
-            channel =config.get('STATION', 'channel' , fallback=None),
+            network =cls._check_val(config.get('STATION', 'network'), None, "str"),
+            station =cls._check_val(config.get('STATION', 'station'), None, "str"),
+            location=cls._check_val(config.get('STATION', 'location'), None, "str"),
+            channel =cls._check_val(config.get('STATION', 'channel' ), None, "str", return_empty_str=True),
             geo_constraint=[geo_constraint_station] if geo_constraint_station else [],
-            include_restricted=config.get('STATION', 'includerestricted' , fallback=False),
-            level = config.get('STATION', 'level' , fallback=None)
+            include_restricted= cls._check_val(config.get('STATION', 'includerestricted'), False, val_type="str"),
+            level = cls._check_val(config.get('STATION', 'level'), Levels.CHANNEL, val_type="str"),
         )
 
         if download_type not in DownloadType:
@@ -389,54 +428,56 @@ class SeismoLoaderSettings(BaseModel):
             event_config.set_default()  
         else:    
             event_client = config.get('EVENT', 'client', fallback=None    )
-            model        = config.get('EVENT', 'model' , fallback='iasp91')
+            model        = cls._check_val(config.get('EVENT', 'model'), 'iasp91', "str")
 
             # MAP SEARCH
             geo_constraint_event = []
             if config.get('EVENT', 'geo_constraint', fallback=None) == GeoConstraintType.BOUNDING:
                 geo_constraint_event = GeometryConstraint(
                     coords=RectangleArea(
-                        min_lat=config.getfloat('EVENT', 'minlatitude', fallback=None),
-                        max_lat=config.getfloat('EVENT', 'maxlatitude', fallback=None),
-                        min_lng=config.getfloat('EVENT', 'minlongitude', fallback=None),
-                        max_lng=config.getfloat('EVENT', 'maxlongitude', fallback=None)
+                        min_lat=cls._check_val(config.get('EVENT', 'minlatitude'), None, "float"),
+                        max_lat=cls._check_val(config.get('EVENT', 'maxlatitude'), None, "float"),
+                        min_lng=cls._check_val(config.get('EVENT', 'minlongitude'), None, "float"),
+                        max_lng=cls._check_val(config.get('EVENT', 'maxlongitude'), None, "float")
                     )
                 )
 
             if config.get('EVENT', 'geo_constraint', fallback=None) == GeoConstraintType.CIRCLE:
                 geo_constraint_event = GeometryConstraint(
                     coords=CircleArea(
-                        lat        = config.getfloat('EVENT', 'latitude', fallback=None),
-                        lng        = config.getfloat('EVENT', 'longitude', fallback=None),
-                        min_radius = config.getfloat('EVENT', 'minsearchradius', fallback=None),
-                        max_radius = config.getfloat('EVENT', 'maxsearchradius', fallback=None)
+                        lat        = cls._check_val(config.get('EVENT', 'latitude'), None, "float"),
+                        lng        = cls._check_val(config.get('EVENT', 'longitude'), None, "float"),
+                        min_radius = cls._check_val(config.get('EVENT', 'minsearchradius'), None, "float"),
+                        max_radius = cls._check_val(config.get('EVENT', 'maxsearchradius'), None, "float")
                     )
                 )
+            
 
+            
             event_config = EventConfig(
                 client                 = event_client.upper() if event_client else None,
-                model                  = EventModels[model.upper()],
+                model                  = cls._check_val(model, EventModels.IASP91.value, "str"),
                 date_config            = DateConfig(
                     start_time         = parse_time(config.get('EVENT', 'starttime'  , fallback=None)),
                     end_time           = parse_time(config.get('EVENT', 'endtime'    , fallback=None)),
                 ),
-                min_depth              = config.getfloat('EVENT', 'min_depth', fallback=None),
-                max_depth              = config.getfloat('EVENT', 'max_depth', fallback=None),
-                min_magnitude          = config.getfloat('EVENT', 'minmagnitude', fallback=None),
-                max_magnitude          = config.getfloat('EVENT', 'maxmagnitude', fallback=None),
-                min_radius             = config.getfloat('EVENT', 'minradius', fallback=None),
-                max_radius             = config.getfloat('EVENT', 'maxradius', fallback=None),
-                before_p_sec           = config.get('STATION', 'before_p_sec' , fallback=False),
-                after_p_sec            = config.get('STATION', 'after_p_sec' , fallback=False),
+                min_depth              = cls._check_val(config.get('EVENT', 'min_depth'), default.event.min_depth, "float"),
+                max_depth              = cls._check_val(config.get('EVENT', 'max_depth'), default.event.max_depth, "float"),
+                min_magnitude          = cls._check_val(config.get('EVENT', 'minmagnitude'), default.event.min_magnitude, "float"),
+                max_magnitude          = cls._check_val(config.get('EVENT', 'maxmagnitude'), default.event.max_magnitude, "float"),
+                min_radius             = cls._check_val(config.get('EVENT', 'minradius'), default.event.min_radius, "float"),
+                max_radius             = cls._check_val(config.get('EVENT', 'maxradius'), default.event.max_radius, "float"),
+                before_p_sec           = cls._check_val(config.get('EVENT', 'before_p_sec'), default.event.before_p_sec , "int"),
+                after_p_sec            = cls._check_val(config.get('EVENT', 'after_p_sec'), default.event.after_p_sec , "int"),
                 geo_constraint=[geo_constraint_event] if geo_constraint_event else [],
-                include_all_origins    = config.get('STATION', 'includeallorigins' , fallback=False),
-                include_all_magnitudes = config.get('STATION', 'includeallmagnitudes' , fallback=False),
-                include_arrivals       = config.get('STATION', 'includearrivals' , fallback=False),
-                limit                  = config.get('STATION', 'limit' , fallback=None),
-                offset                 = config.get('STATION', 'offset' , fallback=None),
-                local_catalog          = config.get('STATION', 'local_catalog' , fallback=None),
-                contributor            = config.get('STATION', 'contributor' , fallback=None),
-                updatedafter           = config.get('STATION', 'updatedafter' , fallback=None),
+                include_all_origins    = cls._check_val(config.get('EVENT', 'includeallorigins'), False , "bool"),
+                include_all_magnitudes = cls._check_val(config.get('EVENT', 'includeallmagnitudes'), False , "bool"),
+                include_arrivals       = cls._check_val(config.get('EVENT', 'includearrivals'), False , "bool"),
+                limit                  = cls._check_val(config.get('EVENT', 'limit'), None , "str"),
+                offset                 = cls._check_val(config.get('EVENT', 'offset'), None , "str"),
+                local_catalog          = cls._check_val(config.get('EVENT', 'local_catalog'), None , "str"),
+                contributor            = cls._check_val(config.get('EVENT', 'contributor'), None , "str"),
+                updatedafter           = cls._check_val(config.get('EVENT', 'updatedafter'), None , "str"),
             )
 
         # Return the populated SeismoLoaderSettings
@@ -446,7 +487,7 @@ class SeismoLoaderSettings(BaseModel):
             download_type=download_type,
             proccess=ProcessingConfig(
                 num_processes=num_processes,
-                gap_tolerance=gap_tolerance
+                gap_tolerance=gap_tolerance 
             ),
             auths=lst_auths,
             waveform=waveform,
@@ -481,8 +522,8 @@ class SeismoLoaderSettings(BaseModel):
         # Populate the [WAVEFORM] section
         config['WAVEFORM'] = {}
         safe_add_to_config(config, 'WAVEFORM', 'client', self.waveform.client)
-        safe_add_to_config(config, 'WAVEFORM', 'channel_pref', ','.join([convert_to_str(channel.value) for channel in self.waveform.channel_pref]))
-        safe_add_to_config(config, 'WAVEFORM', 'location_pref', ','.join([convert_to_str(loc.value) for loc in self.waveform.location_pref]))
+        safe_add_to_config(config, 'WAVEFORM', 'channel_pref', self.waveform.channel_pref)
+        safe_add_to_config(config, 'WAVEFORM', 'location_pref', self.waveform.location_pref)
         safe_add_to_config(config, 'WAVEFORM', 'days_per_request', self.waveform.days_per_request)
 
         # Populate the [STATION] section
@@ -570,14 +611,16 @@ class SeismoLoaderSettings(BaseModel):
         config_dict = {
             'sds_path': self.sds_path,
             'db_path': self.db_path,
-            'num_processes': self.proccess.num_processes,
-            'gap_tolerance': self.proccess.gap_tolerance,
+            'proccess': {
+                'num_processes': self.proccess.num_processes,
+                'gap_tolerance': self.proccess.gap_tolerance,
+            },            
             'download_type': self.download_type.value if self.download_type else None,
             'auths': self.auths if self.auths else [],
             'waveform': {
                 'client': self.waveform.client if self.waveform and self.waveform.client else None,
-                'channel_pref': [channel.value for channel in self.waveform.channel_pref] if self.waveform and isinstance(self.waveform.channel_pref, list) else [],
-                'location_pref': [loc.value for loc in self.waveform.location_pref] if self.waveform and isinstance(self.waveform.location_pref, list) else [],
+                'channel_pref': self.waveform.channel_pref if self.waveform else None,
+                'location_pref': self.waveform.location_pref if self.waveform else None,
                 'days_per_request': self.waveform.days_per_request if self.waveform and self.waveform.days_per_request is not None else None,
             },
             'station': {
@@ -601,7 +644,7 @@ class SeismoLoaderSettings(BaseModel):
             },
             'event': {
                 'client': self.event.client if self.event and self.event.client else None,
-                'model': self.event.model.value if self.event and self.event.model else None,
+                'model': self.event.model if self.event and self.event.model else None,
                 'before_p_sec': self.event.before_p_sec if self.event and self.event.before_p_sec is not None else None,
                 'after_p_sec': self.event.after_p_sec if self.event and self.event.after_p_sec is not None else None,
                 'starttime': self.event.date_config.start_time if self.event and self.event.date_config else None,

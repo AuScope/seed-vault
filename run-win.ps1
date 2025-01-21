@@ -13,4 +13,4 @@ $env:PYTHONPATH = "${env:PYTHONPATH};$(Get-Location)"
 
 # Run Streamlit app
 Write-Output "Running Streamlit app..."
-streamlit run seed_vault/ui/1_🌎_main.py
+streamlit run seed_vault/ui/1_🌎_main_flows.py
