@@ -25,7 +25,7 @@ from seed_vault.models.common import CircleArea, RectangleArea
 from seed_vault.enums.config import GeoConstraintType, Levels
 from seed_vault.enums.ui import Steps
 
-from seed_vault.service.utils import convert_to_date
+from seed_vault.service.utils import convert_to_date, check_client_services
 import io
 import os
 
@@ -226,14 +226,17 @@ class BaseComponent:
             self.render_map_right_menu()
             with st.expander("### Filters", expanded=True):
                 client_options = list(self.settings.client_url_mapping.keys())
-                try:
-                    self.settings.event.client = st.selectbox(
-                        'Choose a client:', client_options, 
-                        index=client_options.index(self.settings.event.client), 
-                        key="event-pg-client-event"
-                    )
-                except ValueError as e:
-                    st.error(f"Error: {str(e)}. Event client is set to {self.settings.event.client}, which seems does not exists. Please navigate to the settings page and use the Clients tab to add the client or fix the stored config.cfg file.")
+                self.settings.event.client = st.selectbox(
+                    'Choose a client:',
+                    client_options,
+                    index=client_options.index(self.settings.event.client),
+                    key=f"{self.TXT.STEP}-pg-client-event"
+                )
+
+                # Check services for selected client
+                services = check_client_services(self.settings.event.client)
+                if not services['event']:
+                    st.warning(f"⚠️ Warning: Selected client '{self.settings.event.client}' does not support EVENT service. Please choose another client.")
 
                 c1, c2 = st.columns([1,1])
 
@@ -284,22 +287,17 @@ class BaseComponent:
                 
             with st.expander("### Filters", expanded=True):
                 client_options = list(self.settings.client_url_mapping.keys())
-                try:
-                    previous_client = self.settings.station.client
-                    self.settings.station.client = st.selectbox(
-                        'Choose a client:', client_options, 
-                        index=client_options.index(self.settings.station.client), 
-                        key="event-pg-client-station"
-                    )
-                    if self.settings.station.client != previous_client:
-                        self.settings.station.network = ""
-                        st.session_state["event-pg-net-txt-station"] = self.settings.station.network
-
-                        self.settings.station.station = ""
-                        st.session_state["event-pg-sta-txt-station"] = self.settings.station.network
-
-                except ValueError as e:
-                    st.error(f"Error: {str(e)}. Station client is set to {self.settings.station.client}, which seems does not exists. Please navigate to the settings page and use the Clients tab to add the client or fix the stored config.cfg file.")
+                self.settings.station.client = st.selectbox(
+                    'Choose a client:', 
+                    client_options,
+                    index=client_options.index(self.settings.station.client),
+                    key=f"{self.TXT.STEP}-pg-client-station"
+                )
+                
+                # Check services for selected client
+                services = check_client_services(self.settings.station.client)
+                if not services['station']:
+                    st.warning(f"⚠️ Warning: Selected client '{self.settings.station.client}' does not support STATION service. Please choose another client.")
 
                 c11, c12 = st.columns([1,1])
                 with c11:
