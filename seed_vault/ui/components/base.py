@@ -862,7 +862,10 @@ class BaseComponent:
             st.warning(self.warning)
         
         if self.error:
-            st.error(self.error)
+            if self.error == "Error: 'TimeoutError' object has no attribute 'splitlines'":
+                st.error("server timeout, try again in a minute")
+            else:
+                st.error(self.error)
 
 
     def render_marker_select(self):
