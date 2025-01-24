@@ -1,6 +1,7 @@
+import re
 from pydantic import BaseModel
 import json
-from typing import IO, Dict, Optional, List, Union, Any
+from typing import IO, Dict, Optional, List, Tuple, Union, Any
 from datetime import date, timedelta, datetime
 from enum import Enum
 import os
@@ -16,7 +17,7 @@ from seed_vault.enums.config import DownloadType, WorkflowType, GeoConstraintTyp
 # TODO: Not sure if these values are controlled values
 # check to see if should we use controlled values or
 # rely on free inputs from users.
-from seed_vault.enums.stations import Channels, Locations
+
 from seed_vault.utils.clients import load_extra_client, load_original_client
 
 
@@ -287,214 +288,550 @@ class SeismoLoaderSettings(BaseModel):
                 return True
         return False
             
-            
-
     @classmethod
-    def from_cfg_file(cls, cfg_source: Union[str, IO])  -> "SeismoLoaderSettings":
-
-
+    def from_cfg_file(cls, cfg_source: Union[str, IO]) -> "SeismoLoaderSettings":
         config = configparser.ConfigParser()
         config.optionxform = str
+        warnings: List[str] = []
+        errors: List[str] = []  # Track errors
 
-        default = cls()
-        default.event = EventConfig()
-        default.station = StationConfig()
-        default.waveform = WaveformConfig()
+        # Load configuration file
+        cls._load_config_file(cfg_source, config)
 
-        # If cfg_source is a string, assume it's a file path
-        if isinstance(cfg_source, str):
-            cfg_path = os.path.abspath(cfg_source)
+        # Parse sections
+        sds_path = cls._parse_sds_section(config, warnings, errors)
+        db_path = cls._parse_database_section(config, sds_path, warnings, errors)
+        processing_config, download_type = cls._parse_processing_section(config, warnings, errors)
+        lst_auths = cls._parse_auth_section(config, warnings, errors)
+        waveform = cls._parse_waveform_section(config, warnings, errors)
+        station_config = cls._parse_station_section(config, warnings, errors)
+        event_config = cls._parse_event_section(config, warnings, errors)
 
-            if not os.path.exists(cfg_path):
-                raise ValueError(f"File not found in the following path: {cfg_path}")
-
-            config.read(cfg_path)
-        else:
-            config.read_file(cfg_source)
-
-
-        # Parse values from the [SDS] section
-        sds_path = config.get('SDS', 'sds_path')
-
-        # Parse the DATABASE section
-        db_path = config.get('DATABASE', 'db_path', fallback=f'{sds_path}/database.sqlite')
-
-        # Parse the PROCESSING section
-        
-        num_processes = cls._check_val(config.get('PROCESSING', 'num_processes'), 0, "int")
-        gap_tolerance = cls._check_val(config.get('PROCESSING', 'gap_tolerance'), 60, "int")
-
-        # num_processes = config.get('PROCESSING', 'num_processes', fallback=None)
-        # gap_tolerance = config.get('PROCESSING', 'gap_tolerance', fallback=60)
-
-
-        download_type_str = cls._check_val(config.get('PROCESSING', 'download_type'), DownloadType.EVENT.value, "str")
-        download_type = DownloadType(download_type_str.lower())
-
-        # Parse the AUTH section
-        credentials = list(config['AUTH'].items())
-        lst_auths   = []
-        for nslc, cred in credentials:
-            username, password = cred.split(':')
-            lst_auths.append(
-                AuthConfig(
-                    nslc_code = nslc,
-                    username = username,
-                    password = password
-                )
-            )
-
-        # Parse the WAVEFORM section
-        client = config.get('WAVEFORM', 'client', fallback='IRIS').upper()
-        days_per_request = cls._check_val(config.get('WAVEFORM', 'days_per_request'), 1, "int")
-
-        waveform = WaveformConfig(
-            client = client,
-            channel_pref=config.get('WAVEFORM', 'channel_pref', fallback=''),
-            location_pref=config.get('WAVEFORM', 'location_pref', fallback=''),
-            days_per_request=days_per_request
-        )
-
-        # STATION CONFIG
-        # ==============================
-        # Parse the STATION section
-        station_client = config.get('STATION', 'client', fallback=None)
-
-        force_stations_cmb_n_s   = config.get('STATION', 'force_stations', fallback='').split(',')
-        force_stations           = []
-        for cmb_n_s in force_stations_cmb_n_s:
-            if cmb_n_s != '':
-                force_stations.append(SeismoQuery(cmb_str_n_s=cmb_n_s))
-
-        exclude_stations_cmb_n_s = config.get('STATION', 'exclude_stations', fallback='').split(',')
-        exclude_stations         = []
-        for cmb_n_s in exclude_stations_cmb_n_s:
-            if cmb_n_s != '':
-                exclude_stations.append(SeismoQuery(cmb_str_n_s=cmb_n_s))
-
-        # MAP SEAARCH            
-        geo_constraint_station = []
-        if config.get('STATION', 'geo_constraint', fallback=None) == GeoConstraintType.BOUNDING:
-            geo_constraint_station = GeometryConstraint(
-                coords=RectangleArea(
-                    min_lat=cls._check_val(config.get('STATION', 'minlatitude'), None, "float"),
-                    max_lat=cls._check_val(config.get('STATION', 'maxlatitude'), None, "float"),
-                    min_lng=cls._check_val(config.get('STATION', 'minlongitude'), None, "float"),
-                    max_lng=cls._check_val(config.get('STATION', 'maxlongitude'), None, "float")
-                )
-            )
-
-        if config.get('STATION', 'geo_constraint', fallback=None) == GeoConstraintType.CIRCLE:
-            geo_constraint_station = GeometryConstraint(
-                coords=CircleArea(
-                    lat=cls._check_val(config.get('STATION', 'latitude'), None, "float"),
-                    lng=cls._check_val(config.get('STATION', 'longitude'), None, "float"),
-                    min_radius=cls._check_val(config.get('STATION', 'minsearchradius'), None, "float"),
-                    max_radius=cls._check_val(config.get('STATION', 'maxsearchradius'), None, "float")
-                )
-            )
-
-
-        station_config = StationConfig(
-            client=station_client.upper() if station_client else None,
-            local_inventory=cls._check_val(config.get("STATION","local_inventory"), None, "str"),
-            force_stations=force_stations,
-            exclude_stations=exclude_stations,
-            date_config=DateConfig(
-                start_time   = parse_time(config.get('STATION', 'starttime'  , fallback=None)),
-                end_time     = parse_time(config.get('STATION', 'endtime'    , fallback=None)),                    
-                start_before = parse_time(config.get('STATION', 'startbefore', fallback=None)),
-                start_after  = parse_time(config.get('STATION', 'startafter' , fallback=None)),
-                end_before   = parse_time(config.get('STATION', 'endbefore'  , fallback=None)),
-                end_after    = parse_time(config.get('STATION', 'endafter'   , fallback=None)),
-            ),
-            network =cls._check_val(config.get('STATION', 'network'), None, "str"),
-            station =cls._check_val(config.get('STATION', 'station'), None, "str"),
-            location=cls._check_val(config.get('STATION', 'location'), None, "str"),
-            channel =cls._check_val(config.get('STATION', 'channel' ), None, "str", return_empty_str=True),
-            geo_constraint=[geo_constraint_station] if geo_constraint_station else [],
-            include_restricted= cls._check_val(config.get('STATION', 'includerestricted'), False, val_type="str"),
-            level = cls._check_val(config.get('STATION', 'level'), Levels.CHANNEL, val_type="str"),
-        )
-
-        if download_type not in DownloadType:
-            raise ValueError(f"Incorrect value for download_type. Possible values are: {DownloadType.EVENT} or {DownloadType.CONTINUOUS}.")
-            
-
-        # Parse the EVENT section
-        event_config = None
-        if not config.has_section("EVENT"):
-            event_config = EventConfig()
-            event_config.set_default()  
-        else:    
-            event_client = config.get('EVENT', 'client', fallback=None    )
-            model        = cls._check_val(config.get('EVENT', 'model'), 'iasp91', "str")
-
-            # MAP SEARCH
-            geo_constraint_event = []
-            if config.get('EVENT', 'geo_constraint', fallback=None) == GeoConstraintType.BOUNDING:
-                geo_constraint_event = GeometryConstraint(
-                    coords=RectangleArea(
-                        min_lat=cls._check_val(config.get('EVENT', 'minlatitude'), None, "float"),
-                        max_lat=cls._check_val(config.get('EVENT', 'maxlatitude'), None, "float"),
-                        min_lng=cls._check_val(config.get('EVENT', 'minlongitude'), None, "float"),
-                        max_lng=cls._check_val(config.get('EVENT', 'maxlongitude'), None, "float")
-                    )
-                )
-
-            if config.get('EVENT', 'geo_constraint', fallback=None) == GeoConstraintType.CIRCLE:
-                geo_constraint_event = GeometryConstraint(
-                    coords=CircleArea(
-                        lat        = cls._check_val(config.get('EVENT', 'latitude'), None, "float"),
-                        lng        = cls._check_val(config.get('EVENT', 'longitude'), None, "float"),
-                        min_radius = cls._check_val(config.get('EVENT', 'minsearchradius'), None, "float"),
-                        max_radius = cls._check_val(config.get('EVENT', 'maxsearchradius'), None, "float")
-                    )
-                )
-            
-
-            
-            event_config = EventConfig(
-                client                 = event_client.upper() if event_client else None,
-                model                  = cls._check_val(model, EventModels.IASP91.value, "str"),
-                date_config            = DateConfig(
-                    start_time         = parse_time(config.get('EVENT', 'starttime'  , fallback=None)),
-                    end_time           = parse_time(config.get('EVENT', 'endtime'    , fallback=None)),
-                ),
-                min_depth              = cls._check_val(config.get('EVENT', 'min_depth'), default.event.min_depth, "float"),
-                max_depth              = cls._check_val(config.get('EVENT', 'max_depth'), default.event.max_depth, "float"),
-                min_magnitude          = cls._check_val(config.get('EVENT', 'minmagnitude'), default.event.min_magnitude, "float"),
-                max_magnitude          = cls._check_val(config.get('EVENT', 'maxmagnitude'), default.event.max_magnitude, "float"),
-                min_radius             = cls._check_val(config.get('EVENT', 'minradius'), default.event.min_radius, "float"),
-                max_radius             = cls._check_val(config.get('EVENT', 'maxradius'), default.event.max_radius, "float"),
-                before_p_sec           = cls._check_val(config.get('EVENT', 'before_p_sec'), default.event.before_p_sec , "int"),
-                after_p_sec            = cls._check_val(config.get('EVENT', 'after_p_sec'), default.event.after_p_sec , "int"),
-                geo_constraint=[geo_constraint_event] if geo_constraint_event else [],
-                include_all_origins    = cls._check_val(config.get('EVENT', 'includeallorigins'), False , "bool"),
-                include_all_magnitudes = cls._check_val(config.get('EVENT', 'includeallmagnitudes'), False , "bool"),
-                include_arrivals       = cls._check_val(config.get('EVENT', 'includearrivals'), False , "bool"),
-                limit                  = cls._check_val(config.get('EVENT', 'limit'), None , "str"),
-                offset                 = cls._check_val(config.get('EVENT', 'offset'), None , "str"),
-                local_catalog          = cls._check_val(config.get('EVENT', 'local_catalog'), None , "str"),
-                contributor            = cls._check_val(config.get('EVENT', 'contributor'), None , "str"),
-                updatedafter           = cls._check_val(config.get('EVENT', 'updatedafter'), None , "str"),
-            )
+        # Display warnings and errors
+        if warnings:
+            for warning in warnings:
+                print(f"Warning: {warning}")
+        if errors:
+            for error in errors:
+                print(f"Error: {error}")
+            # raise ValueError("Errors encountered during configuration parsing. Please check the logs.")
 
         # Return the populated SeismoLoaderSettings
         return cls(
             sds_path=sds_path,
             db_path=db_path,
             download_type=download_type,
-            proccess=ProcessingConfig(
-                num_processes=num_processes,
-                gap_tolerance=gap_tolerance 
-            ),
+            proccess=processing_config,
             auths=lst_auths,
             waveform=waveform,
             station=station_config,
-            event= event_config
+            event=event_config,
         )
     
+    @classmethod
+    def _load_config_file(cls, cfg_source, config):
+        if isinstance(cfg_source, str):
+            cfg_path = os.path.abspath(cfg_source)
+            if not os.path.exists(cfg_path):
+                raise ValueError(f"File not found in the following path: {cfg_path}")
+            config.read(cfg_path)
+        else:
+            try:
+                config.read_file(cfg_source)
+            except Exception as e:
+                raise ValueError(f"Failed to read configuration file: {str(e)}")
+
+    @classmethod
+    def _parse_sds_section(cls, config, warnings, errors):
+        try:
+            sds_path = config.get('SDS', 'sds_path', fallback=None)
+            if not sds_path:
+                sds_path = "data/SDS"
+                warnings.append("Warning: 'sds_path' is missing in the [SDS] section. Using default value: 'data/SDS'.")
+            return sds_path
+        except Exception as e:
+            errors.append(f"Error parsing [SDS] section: {str(e)}")
+            return None            
+
+    @classmethod
+    def _parse_database_section(cls, config, sds_path, warnings, errors):
+        try:
+            db_path = config.get('DATABASE', 'db_path', fallback=None).strip()
+            if not db_path:
+                db_path = f'{sds_path}/database.sqlite'
+                warnings.append(f"Warning: 'db_path' is missing or empty in the [DATABASE] section. Using default value: '{db_path}'.")
+            return db_path
+        except Exception as e:
+            errors.append(f"Error parsing [DATABASE] section: {str(e)}")
+            return None
+                    
+    @classmethod
+    def _parse_processing_section(cls, config, warnings, errors):
+        # Parse num_processes
+        num_processes = config.get('PROCESSING', 'num_processes', fallback=None)
+        try:
+            num_processes = cls._check_val(num_processes, 2, "int")
+        except ValueError:
+            num_processes = 2  # Default value
+            warnings.append("Warning: 'num_processes' is missing or invalid in the [PROCESSING] section. Using default value: '2'.")
+
+        # Parse gap_tolerance
+        gap_tolerance = config.get('PROCESSING', 'gap_tolerance', fallback=None)
+        try:
+            gap_tolerance = cls._check_val(gap_tolerance, 60, "int")
+        except ValueError:
+            gap_tolerance = 60  # Default value
+            warnings.append("Warning: 'gap_tolerance' is missing or invalid in the [PROCESSING] section. Using default value: '60'.")
+
+        # Parse and validate download_type
+        download_type_str = config.get('PROCESSING', 'download_type', fallback='').strip().lower()
+        if download_type_str not in DownloadType._value2member_map_:
+            warnings.append(f"Warning: Invalid download_type '{download_type_str}' found in config. Defaulting to 'event'.")
+            download_type_str = DownloadType.EVENT.value  # Default to 'event'
+        download_type = DownloadType(download_type_str)
+
+        # Return the ProcessingConfig object
+        return ProcessingConfig(
+            num_processes=num_processes,
+            gap_tolerance=gap_tolerance,
+        ), download_type
+
+
+    @classmethod
+    def _parse_auth_section(cls, config, warnings, errors):
+        try:
+            credentials = list(config['AUTH'].items())
+            return [
+                AuthConfig(nslc_code=nslc, username=cred.split(':')[0], password=cred.split(':')[1])
+                for nslc, cred in credentials
+            ]
+        except Exception as e:
+            errors.append(f"Error parsing [AUTH] section: {str(e)}")
+            return []
+        
+
+    @classmethod
+    def _parse_waveform_section(cls, config, warnings, errors):
+        waveform_section = 'WAVEFORM'
+        if not config.has_section(waveform_section):
+            errors.append(f"Error: The [{waveform_section}] section is missing in the configuration file.")
+
+        client = config.get(waveform_section, 'client', fallback=None)
+        if client is None or not client.strip():
+            client = "EARTHSCOPE"
+            warnings.append(f"Warning: 'client' is missing or empty in the [{waveform_section}] section. Defaulting to 'EARTHSCOPE'.")
+
+        days_per_request = config.get(waveform_section, 'days_per_request', fallback=None)
+        if days_per_request is None:
+            errors.append(f"Error: 'days_per_request' is missing in the [{waveform_section}] section.")
+        days_per_request = cls._check_val(days_per_request, 1, "int")
+
+        channel_pref = config.get(waveform_section, 'channel_pref', fallback='').strip()
+        location_pref = config.get(waveform_section, 'location_pref', fallback='').strip()
+
+        return WaveformConfig(
+            client=client,
+            channel_pref=channel_pref,
+            location_pref=location_pref,
+            days_per_request=days_per_request,
+        )
+            
+    @classmethod
+    def _parse_station_section(cls, config, warnings, errors):
+        station_section = 'STATION'
+        if not config.has_section(station_section):
+            errors.append(f"Error: The [{station_section}] section is missing in the configuration file. Please provide station details.")
+        
+        station_client = cls._parse_param(
+            config=config,
+            section=station_section,
+            key='client',
+            default="EARTHSCOPE",
+            warnings=warnings,
+            errors=errors,
+            error_message=f"Error: 'client' is missing in the [{station_section}] section. Specify the client for station data retrieval.",
+            warning_message=f"Warning: 'client' is empty in the [{station_section}] section. Defaulting to 'EARTHSCOPE'.",
+            validation_fn=lambda x: bool(x.strip())  # Ensure the value is not empty after stripping
+        )
+
+        network = cls._parse_param(
+            config=config,
+            section=station_section,
+            key='network',
+            default="GSN",
+            warnings=warnings,
+            errors=errors,
+            error_message=f"Error: 'network' is missing in the [{station_section}] section. Please specify a network.",
+            warning_message=f"Warning: 'network' is empty in the [{station_section}] section. Defaulting to 'GSN'."
+        )
+
+        station = cls._parse_param(
+            config=config,
+            section=station_section,
+            key='station',
+            default="",
+            warnings=warnings,
+            errors=errors,
+            error_message=f"Error: 'station' is missing in the [{station_section}] section. Please specify a station.",
+            warning_message=f"Warning: 'station' is empty in the [{station_section}] section. Defaulting to an empty string."
+        )
+
+        location = cls._parse_param(
+            config=config,
+            section=station_section,
+            key='location',
+            default="*",
+            warnings=warnings,
+            errors=errors,
+            error_message=f"Error: 'location' is missing in the [{station_section}] section. Please specify a location.",
+            warning_message=f"Warning: 'location' is empty in the [{station_section}] section. Defaulting to '*'."
+        )
+
+        channel = cls._parse_param(
+            config=config,
+            section=station_section,
+            key='channel',
+            default="?H?,?N?",
+            warnings=warnings,
+            errors=errors,
+            error_message=f"Error: 'channel' is missing in the [{station_section}] section. Please specify a channel.",
+            warning_message=f"Warning: 'channel' is empty in the [{station_section}] section. Defaulting to '?H?,?N?'.",
+            validation_fn=lambda x: bool(re.match(r'^(\?[\w]\?,?)+$', x))
+        )
+        
+        geo_constraint_station = cls._parse_geo_constraint(config, 'STATION', warnings, errors)
+
+        # Parse force_stations
+        force_stations_cmb_n_s = config.get(station_section, 'force_stations', fallback='').split(',')
+        force_stations = [SeismoQuery(cmb_str_n_s=cmb_n_s) for cmb_n_s in force_stations_cmb_n_s if cmb_n_s.strip()]
+
+        # Parse exclude_stations
+        exclude_stations_cmb_n_s = config.get(station_section, 'exclude_stations', fallback='').split(',')
+        exclude_stations = [SeismoQuery(cmb_str_n_s=cmb_n_s) for cmb_n_s in exclude_stations_cmb_n_s if cmb_n_s.strip()]
+
+        # Parse local_inventory
+        local_inventory = config.get(station_section, 'local_inventory', fallback=None)
+
+ 
+
+        # Parse include_restricted
+        include_restricted = cls._check_val(
+            config.get(station_section, 'include_restricted', fallback='False'), False, "bool"
+        )
+
+        # Parse level
+        level = config.get(station_section, 'level', fallback=None)
+        if level is None:  # Key is missing
+            errors.append(f"Error: 'level' is missing in the [{station_section}] section. Please specify a level (e.g., 'channel').")
+        else:
+            level = level.strip()
+            if not level:  # Value is empty
+                level= Levels.CHANNEL
+                warnings.append(f"Warning: 'level' is empty in the [{station_section}] section. Defaulting to 'channel'.")
+
+        # Parse date configurations
+        date_config = DateConfig(
+            start_time=parse_time(config.get(station_section, 'starttime', fallback=None)),
+            end_time=parse_time(config.get(station_section, 'endtime', fallback=None)),
+            start_before=parse_time(config.get(station_section, 'startbefore', fallback=None)),
+            start_after=parse_time(config.get(station_section, 'startafter', fallback=None)),
+            end_before=parse_time(config.get(station_section, 'endbefore', fallback=None)),
+            end_after=parse_time(config.get(station_section, 'endafter', fallback=None)),
+        )
+
+        # Build the StationConfig object
+        return StationConfig(
+            client=station_client,
+            local_inventory=local_inventory,
+            force_stations=force_stations,
+            exclude_stations=exclude_stations,
+            date_config=date_config,
+            network=network,
+            station=station,
+            location=location,
+            channel=channel,
+            geo_constraint=[geo_constraint_station] if geo_constraint_station else [],
+            include_restricted=include_restricted,
+            level=level,
+        )
+
+    @classmethod
+    def _parse_event_section(cls, config, warnings, errors):
+        """
+        Parse and validate the EVENT section of the configuration file.
+
+        Args:
+            config: ConfigParser object.
+            warnings: List to append warnings.
+            errors: List to append errors.
+
+        Returns:
+            EventConfig object.
+        """
+        event_section = "EVENT"
+
+        # Ensure the EVENT section exists
+        if not config.has_section(event_section):
+            errors.append(f"Error: The [{event_section}] section is missing in the configuration file.")
+            return None
+
+        # Parse required parameters
+        event_client = cls._parse_param(
+            config=config,
+            section=event_section,
+            key="client",
+            default="EARTHSCOPE",
+            warnings=warnings,
+            errors=errors,
+            error_message=f"Error: 'client' is missing in the [{event_section}] section. Specify a client.",
+            warning_message=f"Warning: 'client' is empty in the [{event_section}] section. Defaulting to 'EARTHSCOPE'.",
+            validation_fn=lambda x: bool(x.strip())
+        )
+
+        model = cls._parse_param(
+            config=config,
+            section=event_section,
+            key="model",
+            default="iasp91",
+            warnings=warnings,
+            errors=errors,
+            error_message=f"Error: 'model' is missing in the [{event_section}] section. Specify a model.",
+            warning_message=f"Warning: 'model' is empty in the [{event_section}] section. Defaulting to 'iasp91'."
+        )
+
+        start_time = cls._parse_param(
+            config=config,
+            section=event_section,
+            key="starttime",
+            default=(datetime.now() - timedelta(days=30)).isoformat(),
+            warnings=warnings,
+            errors=errors,
+            error_message=f"Error: 'starttime' is missing in the [{event_section}] section. Specify a valid start time.",
+            warning_message=f"Warning: 'starttime' is empty in the [{event_section}] section. Defaulting to 1 month before the current time.",
+            validation_fn=lambda x: parse_time(x) is not None
+        )
+        start_time = parse_time(start_time)
+
+        end_time = cls._parse_param(
+            config=config,
+            section=event_section,
+            key="endtime",
+            default=datetime.now().isoformat(),
+            warnings=warnings,
+            errors=errors,
+            error_message=f"Error: 'endtime' is missing in the [{event_section}] section. Specify a valid end time.",
+            warning_message=f"Warning: 'endtime' is empty in the [{event_section}] section. Defaulting to the current time.",
+            validation_fn=lambda x: parse_time(x) is not None
+        )
+        end_time = parse_time(end_time)
+
+        before_p_sec = cls._parse_param(
+            config=config,
+            section=event_section,
+            key="before_p_sec",
+            default=20,
+            warnings=warnings,
+            errors=errors,
+            error_message=f"Error: 'before_p_sec' is missing in the [{event_section}] section. Specify a valid integer.",
+            warning_message=f"Warning: 'before_p_sec' is empty in the [{event_section}] section. Defaulting to '20'.",
+            validation_fn=lambda x: x.isdigit()
+        )
+        before_p_sec = int(before_p_sec)
+
+        after_p_sec = cls._parse_param(
+            config=config,
+            section=event_section,
+            key="after_p_sec",
+            default=130,
+            warnings=warnings,
+            errors=errors,
+            error_message=f"Error: 'after_p_sec' is missing in the [{event_section}] section. Specify a valid integer.",
+            warning_message=f"Warning: 'after_p_sec' is empty in the [{event_section}] section. Defaulting to '130'.",
+            validation_fn=lambda x: x.isdigit()
+        )
+        after_p_sec = int(after_p_sec)
+
+        # Parse optional numerical parameters
+        min_depth = cls._check_val(config.get(event_section, "min_depth", fallback=-3), -3, "float")
+        max_depth = cls._check_val(config.get(event_section, "max_depth", fallback=600), 600, "float")
+        min_magnitude = cls._check_val(config.get(event_section, "minmagnitude", fallback=5.5), 5.5, "float")
+        max_magnitude = cls._check_val(config.get(event_section, "maxmagnitude", fallback=7.7), 7.7, "float")
+        min_radius = cls._check_val(config.get(event_section, "minradius", fallback=30.0), 30.0, "float")
+        max_radius = cls._check_val(config.get(event_section, "maxradius", fallback=90.0), 90.0, "float")
+
+        if min_radius < 0 or max_radius < 0:
+            errors.append(f"Error: 'min_radius' and 'max_radius' must be positive values in the [{event_section}] section.")
+        if min_radius >= max_radius:
+            errors.append(f"Error: 'min_radius' must be less than 'max_radius' in the [{event_section}] section.")
+
+        # Parse boolean flags
+        include_all_origins = cls._check_val(config.get(event_section, "includeallorigins", fallback=False), False, "bool")
+        include_all_magnitudes = cls._check_val(config.get(event_section, "includeallmagnitudes", fallback=False), False, "bool")
+        include_arrivals = cls._check_val(config.get(event_section, "includearrivals", fallback=False), False, "bool")
+
+        # Parse optional strings
+        limit = config.get(event_section, "limit", fallback=None)
+        offset = config.get(event_section, "offset", fallback=None)
+        local_catalog = config.get(event_section, "local_catalog", fallback=None)
+        contributor = config.get(event_section, "contributor", fallback=None)
+        updated_after = config.get(event_section, "updated_after", fallback=None)
+
+        # Parse geo_constraint
+        geo_constraint_event = cls._parse_geo_constraint(config, event_section, warnings, errors)
+
+        # Return EventConfig object
+        return EventConfig(
+            client=event_client,
+            model=model,
+            date_config=DateConfig(start_time=start_time, end_time=end_time),
+            min_depth=min_depth,
+            max_depth=max_depth,
+            min_magnitude=min_magnitude,
+            max_magnitude=max_magnitude,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            before_p_sec=before_p_sec,
+            after_p_sec=after_p_sec,
+            geo_constraint=[geo_constraint_event] if geo_constraint_event else [],
+            include_all_origins=include_all_origins,
+            include_all_magnitudes=include_all_magnitudes,
+            include_arrivals=include_arrivals,
+            limit=limit,
+            offset=offset,
+            local_catalog=local_catalog,
+            contributor=contributor,
+            updated_after=updated_after,
+        )
+
+
+
+    @staticmethod
+    def _parse_param(
+        config,
+        section,
+        key,
+        default=None,
+        validation_fn=None,
+        warnings=None,
+        errors=None,
+        error_message=None,
+        warning_message=None,
+    ):
+        """
+        Parse and validate a parameter from the configuration.
+
+        Args:
+            config: ConfigParser object.
+            section: Section name (e.g., 'STATION' or 'EVENT').
+            key: Parameter key to parse.
+            default: Default value to use if the parameter is missing or invalid.
+            validation_fn: Optional function to validate the parameter's value.
+            warnings: List to append warnings.
+            errors: List to append errors.
+            error_message: Custom error message for missing parameters.
+            warning_message: Custom warning message for empty parameters.
+
+        Returns:
+            The parsed and validated parameter value.
+        """
+        try:
+            value = config.get(section, key, fallback=None)
+            if value is None:  # Key is missing
+                if error_message and errors is not None:
+                    errors.append(error_message)
+                return default
+            value = value.strip()
+            if not value:  # Value is empty
+                if warning_message and warnings is not None:
+                    warnings.append(warning_message)
+                return default
+            if validation_fn and not validation_fn(value):
+                if error_message and errors is not None:
+                    errors.append(error_message)
+                return default
+            return value
+        except Exception as e:
+            if errors is not None:
+                errors.append(f"Error parsing '{key}' in the [{section}] section: {str(e)}")
+            return default
+
+    @staticmethod
+    def _parse_geo_constraint(config, section, warnings, errors):
+        """
+        Parse and validate the geo_constraint for a given section.
+
+        Args:
+            config: ConfigParser object.
+            section: Section name (e.g., 'STATION' or 'EVENT').
+            warnings: List to append warnings.
+            errors: List to append errors.
+
+        Returns:
+            A GeometryConstraint object if valid geo_constraint is found; otherwise, an empty list.
+        """
+        geo_constraint_type = config.get(section, 'geo_constraint', fallback=None)
+        geo_constraint = []
+
+        if geo_constraint_type == GeoConstraintType.BOUNDING:
+            # Parse bounding box coordinates
+            min_lat = cls._check_val(config.get(section, 'minlatitude'), None, "float")
+            max_lat = cls._check_val(config.get(section, 'maxlatitude'), None, "float")
+            min_lng = cls._check_val(config.get(section, 'minlongitude'), None, "float")
+            max_lng = cls._check_val(config.get(section, 'maxlongitude'), None, "float")
+
+            # Validate longitude range and adjust if necessary
+            if max_lng is not None and max_lng > 180:
+                max_lng -= 360
+                warnings.append(f"Warning: 'maxlongitude' exceeded 180 in the [{section}] section. Adjusted to {max_lng}.")
+            if min_lng is not None and min_lng < -180:
+                min_lng += 360
+                warnings.append(f"Warning: 'minlongitude' was below -180 in the [{section}] section. Adjusted to {min_lng}.")
+
+            # Create bounding box constraint
+            geo_constraint = GeometryConstraint(
+                coords=RectangleArea(
+                    min_lat=min_lat,
+                    max_lat=max_lat,
+                    min_lng=min_lng,
+                    max_lng=max_lng,
+                )
+            )
+
+        elif geo_constraint_type == GeoConstraintType.CIRCLE:
+            # Parse circle area coordinates
+            lat = cls._check_val(config.get(section, 'latitude'), None, "float")
+            lng = cls._check_val(config.get(section, 'longitude'), None, "float")
+            min_radius = cls._check_val(config.get(section, 'minsearchradius'), None, "float")
+            max_radius = cls._check_val(config.get(section, 'maxsearchradius'), None, "float")
+
+            # Validate longitude range and adjust if necessary
+            if lng is not None and lng > 180:
+                lng -= 360
+                warnings.append(f"Warning: 'longitude' exceeded 180 in the [{section}] section. Adjusted to {lng}.")
+            if lng is not None and lng < -180:
+                lng += 360
+                warnings.append(f"Warning: 'longitude' was below -180 in the [{section}] section. Adjusted to {lng}.")
+
+            # Create circular area constraint
+            geo_constraint = GeometryConstraint(
+                coords=CircleArea(
+                    lat=lat,
+                    lng=lng,
+                    min_radius=min_radius,
+                    max_radius=max_radius,
+                )
+            )
+
+        elif geo_constraint_type is not None:  # Invalid type provided
+            # Log error for invalid geo_constraint types
+            errors.append(
+                f"Error: Invalid 'geo_constraint' type '{geo_constraint_type}' in the [{section}] section. "
+                f"Allowed values are 'BOUNDING' or 'CIRCLE'."
+            )
+
+        return geo_constraint
+
+
     def to_cfg(self) -> ConfigParser:
         config = ConfigParser()
 
