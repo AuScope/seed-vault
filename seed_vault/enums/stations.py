@@ -13,23 +13,6 @@ class Stations(str, Enum):
     TPSO    = "TPSO"
 
 
-class Channels(str, Enum):
-    CH = "CH"
-    HH = "HH"   
-    BH = "BH"   
-    EH = "EH"   
-    HN = "HN"   
-    EN = "EN"   
-    SH = "SH"   
-    LH = "LH"   
-    Q_HZ = "?HZ"
-    Q_HN = "?HN"
-    Q_HE = "?HE"
 
-class Locations(str, Enum):
-    LOC_10 = "10"
-    LOC_00 = "00"
-    LOC_20 = "20"
-    LOC_30 = "30"
 
 
