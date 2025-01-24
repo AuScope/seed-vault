@@ -163,7 +163,6 @@ class BaseComponent:
                     st.session_state['import_setting_processed'] = False
                     st.session_state['uploaded_file_info'] = uploaded_file_info  
 
-
         # st.sidebar.markdown("### Import/Export Settings")
         
         with st.expander("Import & Export", expanded=False):
@@ -200,16 +199,32 @@ class BaseComponent:
                         file_like_object = io.BytesIO(uploaded_file.getvalue())
                         text_file_object = io.TextIOWrapper(file_like_object, encoding='utf-8')
 
-                        self.clear_all_data()
-                        self.settings = SeismoLoaderSettings.from_cfg_file(text_file_object)
-                        self.settings.load_url_mapping()
+                        settings = SeismoLoaderSettings.from_cfg_file(text_file_object)
+                        if(settings.status_handler.has_errors()):
+                            errors = settings.status_handler.generate_status_report("errors")                           
+                            st.error(f"{errors}\n\n**Please review the errors in the imported file. Resolve them before proceeding.**")
 
-                        self.settings.event.geo_constraint = []
-                        self.settings.station.geo_constraint = []
-                        self.refresh_map(reset_areas=True, clear_draw=True)
+                            if(settings.status_handler.has_warnings()):
+                                warning = settings.status_handler.generate_status_report("warnings")                           
+                                st.warning(warning)                            
+                            settings.status_handler.display()
 
-                        st.session_state['import_setting_processed'] = True                    
-                        st.success("Settings imported successfully!")   
+                        else:    
+                            self.clear_all_data()
+                            self.settings = settings
+                            self.settings.load_url_mapping()
+
+                            self.settings.event.geo_constraint = []
+                            self.settings.station.geo_constraint = []
+                            self.refresh_map(reset_areas=True, clear_draw=True)
+
+                            st.session_state['import_setting_processed'] = True   
+                            
+                            if(settings.status_handler.has_warnings()):
+                                warning = settings.status_handler.generate_status_report("warnings")                           
+                                st.warning(warning) 
+
+                            st.success("Settings imported successfully!")   
             with tab2:
                 c2_export = self.render_export_import()
 

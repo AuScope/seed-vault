@@ -307,7 +307,7 @@ class SeismoLoaderSettings(BaseModel):
         station_config = cls._parse_station_section(config, status_handler)
         event_config = cls._parse_event_section(config, status_handler)
 
-        status_handler.display()
+        # status_handler.display()
 
 
         # Return the populated SeismoLoaderSettings
@@ -411,15 +411,26 @@ class SeismoLoaderSettings(BaseModel):
         if not config.has_section(waveform_section):
             status_handler.add_error("input_parameters", f"The [{waveform_section}] section is missing in the configuration file.")
 
-        client = config.get(waveform_section, 'client', fallback=None)
-        if client is None or not client.strip():
-            client = "EARTHSCOPE"
-            status_handler.add_warning("input_parameters", f"'client' is missing or empty in the [{waveform_section}] section. Defaulting to 'EARTHSCOPE'.")
-
-        days_per_request = config.get(waveform_section, 'days_per_request', fallback=None)
-        if days_per_request is None:
-            status_handler.add_error("input_parameters", f"'days_per_request' is missing in the [{waveform_section}] section.")
-        days_per_request = cls._check_val(days_per_request, 1, "int")
+        client = cls._parse_param(
+            config=config,
+            section=waveform_section,
+            key='client',
+            default="EARTHSCOPE",
+            status_handler =status_handler,
+            error_message=f"'client' is missing in the [{waveform_section}] section. Specify the client for station data retrieval.",
+            warning_message=f"'client' is empty in the [{waveform_section}] section. Defaulting to 'EARTHSCOPE'.",
+            validation_fn=lambda x: bool(x.strip())  # Ensure the value is not empty after stripping
+        )
+        days_per_request = cls._parse_param(
+            config=config,
+            section=waveform_section,
+            key="days_per_request",
+            default=1,
+            validation_fn=lambda x: x.isdigit() and int(x) > 0,  # Ensure it's a positive integer
+            status_handler=status_handler,
+            error_message=f"'days_per_request' is missing or invalid in the [{waveform_section}] section.",
+            warning_message=f"'days_per_request' is empty in the [{waveform_section}] section. Using default value: 1.",
+        )
 
         channel_pref = config.get(waveform_section, 'channel_pref', fallback='').strip()
         location_pref = config.get(waveform_section, 'location_pref', fallback='').strip()
