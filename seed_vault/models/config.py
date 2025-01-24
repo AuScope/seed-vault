@@ -11,7 +11,7 @@ import pickle
 
 from obspy import UTCDateTime
 
-from .common import RectangleArea, CircleArea
+from .common import RectangleArea, CircleArea, StatusHandler
 from seed_vault.enums.config import DownloadType, WorkflowType, GeoConstraintType, Levels, EventModels
 
 # TODO: Not sure if these values are controlled values
@@ -237,7 +237,7 @@ class SeismoLoaderSettings(BaseModel):
     station           : StationConfig                         = None
     event             : EventConfig                           = None
     predictions       : Dict            [str, PredictionData] = {}
-
+    status_handler    : StatusHandler                         = StatusHandler()
 
     def load_url_mapping(self):
         from obspy.clients.fdsn.header import URL_MAPPINGS
@@ -290,31 +290,25 @@ class SeismoLoaderSettings(BaseModel):
             
     @classmethod
     def from_cfg_file(cls, cfg_source: Union[str, IO]) -> "SeismoLoaderSettings":
+        status_handler= StatusHandler()       
         config = configparser.ConfigParser()
         config.optionxform = str
-        warnings: List[str] = []
-        errors: List[str] = []  # Track errors
 
         # Load configuration file
         cls._load_config_file(cfg_source, config)
 
-        # Parse sections
-        sds_path = cls._parse_sds_section(config, warnings, errors)
-        db_path = cls._parse_database_section(config, sds_path, warnings, errors)
-        processing_config, download_type = cls._parse_processing_section(config, warnings, errors)
-        lst_auths = cls._parse_auth_section(config, warnings, errors)
-        waveform = cls._parse_waveform_section(config, warnings, errors)
-        station_config = cls._parse_station_section(config, warnings, errors)
-        event_config = cls._parse_event_section(config, warnings, errors)
 
-        # Display warnings and errors
-        if warnings:
-            for warning in warnings:
-                print(f"Warning: {warning}")
-        if errors:
-            for error in errors:
-                print(f"Error: {error}")
-            # raise ValueError("Errors encountered during configuration parsing. Please check the logs.")
+        # Parse sections
+        sds_path = cls._parse_sds_section(config, status_handler)
+        db_path = cls._parse_database_section(config, sds_path, status_handler)
+        processing_config, download_type = cls._parse_processing_section(config, status_handler)
+        lst_auths = cls._parse_auth_section(config, status_handler)
+        waveform = cls._parse_waveform_section(config, status_handler)
+        station_config = cls._parse_station_section(config, status_handler)
+        event_config = cls._parse_event_section(config, status_handler)
+
+        status_handler.display()
+
 
         # Return the populated SeismoLoaderSettings
         return cls(
@@ -326,6 +320,7 @@ class SeismoLoaderSettings(BaseModel):
             waveform=waveform,
             station=station_config,
             event=event_config,
+            status_handler =status_handler
         )
     
     @classmethod
@@ -342,38 +337,38 @@ class SeismoLoaderSettings(BaseModel):
                 raise ValueError(f"Failed to read configuration file: {str(e)}")
 
     @classmethod
-    def _parse_sds_section(cls, config, warnings, errors):
+    def _parse_sds_section(cls, config, status_handler ):
         try:
             sds_path = config.get('SDS', 'sds_path', fallback=None)
             if not sds_path:
                 sds_path = "data/SDS"
-                warnings.append("Warning: 'sds_path' is missing in the [SDS] section. Using default value: 'data/SDS'.")
+                status_handler.add_warning("input_parameters" , "'sds_path' is missing in the [SDS] section. Using default value: 'data/SDS'.")
             return sds_path
         except Exception as e:
-            errors.append(f"Error parsing [SDS] section: {str(e)}")
+            status_handler.add_error("input_parameters" , f"Error parsing [SDS] section: {str(e)}")
             return None            
 
     @classmethod
-    def _parse_database_section(cls, config, sds_path, warnings, errors):
+    def _parse_database_section(cls, config, sds_path, status_handler):
         try:
             db_path = config.get('DATABASE', 'db_path', fallback=None).strip()
             if not db_path:
                 db_path = f'{sds_path}/database.sqlite'
-                warnings.append(f"Warning: 'db_path' is missing or empty in the [DATABASE] section. Using default value: '{db_path}'.")
+                status_handler.add_warning("input_parameters", f": 'db_path' is missing or empty in the [DATABASE] section. Using default value: '{db_path}'.")
             return db_path
         except Exception as e:
-            errors.append(f"Error parsing [DATABASE] section: {str(e)}")
+            status_handler.add_error("input_parameters", f"Error parsing [DATABASE] section: {str(e)}")
             return None
                     
     @classmethod
-    def _parse_processing_section(cls, config, warnings, errors):
+    def _parse_processing_section(cls, config, status_handler):
         # Parse num_processes
         num_processes = config.get('PROCESSING', 'num_processes', fallback=None)
         try:
             num_processes = cls._check_val(num_processes, 2, "int")
         except ValueError:
             num_processes = 2  # Default value
-            warnings.append("Warning: 'num_processes' is missing or invalid in the [PROCESSING] section. Using default value: '2'.")
+            status_handler.add_warning("input_parameters", "'num_processes' is missing or invalid in the [PROCESSING] section. Using default value: '2'.")
 
         # Parse gap_tolerance
         gap_tolerance = config.get('PROCESSING', 'gap_tolerance', fallback=None)
@@ -381,12 +376,12 @@ class SeismoLoaderSettings(BaseModel):
             gap_tolerance = cls._check_val(gap_tolerance, 60, "int")
         except ValueError:
             gap_tolerance = 60  # Default value
-            warnings.append("Warning: 'gap_tolerance' is missing or invalid in the [PROCESSING] section. Using default value: '60'.")
+            status_handler.add_warning("input_parameters", "'gap_tolerance' is missing or invalid in the [PROCESSING] section. Using default value: '60'.")
 
         # Parse and validate download_type
         download_type_str = config.get('PROCESSING', 'download_type', fallback='').strip().lower()
         if download_type_str not in DownloadType._value2member_map_:
-            warnings.append(f"Warning: Invalid download_type '{download_type_str}' found in config. Defaulting to 'event'.")
+            status_handler.add_warning("input_parameters", f"Invalid download_type '{download_type_str}' found in config. Defaulting to 'event'.")
             download_type_str = DownloadType.EVENT.value  # Default to 'event'
         download_type = DownloadType(download_type_str)
 
@@ -398,7 +393,7 @@ class SeismoLoaderSettings(BaseModel):
 
 
     @classmethod
-    def _parse_auth_section(cls, config, warnings, errors):
+    def _parse_auth_section(cls, config, status_handler ):
         try:
             credentials = list(config['AUTH'].items())
             return [
@@ -406,24 +401,24 @@ class SeismoLoaderSettings(BaseModel):
                 for nslc, cred in credentials
             ]
         except Exception as e:
-            errors.append(f"Error parsing [AUTH] section: {str(e)}")
+            status_handler.add_error("input_parameters", f"Error parsing [AUTH] section: {str(e)}")
             return []
         
 
     @classmethod
-    def _parse_waveform_section(cls, config, warnings, errors):
+    def _parse_waveform_section(cls, config, status_handler ):
         waveform_section = 'WAVEFORM'
         if not config.has_section(waveform_section):
-            errors.append(f"Error: The [{waveform_section}] section is missing in the configuration file.")
+            status_handler.add_error("input_parameters", f"The [{waveform_section}] section is missing in the configuration file.")
 
         client = config.get(waveform_section, 'client', fallback=None)
         if client is None or not client.strip():
             client = "EARTHSCOPE"
-            warnings.append(f"Warning: 'client' is missing or empty in the [{waveform_section}] section. Defaulting to 'EARTHSCOPE'.")
+            status_handler.add_warning("input_parameters", f"'client' is missing or empty in the [{waveform_section}] section. Defaulting to 'EARTHSCOPE'.")
 
         days_per_request = config.get(waveform_section, 'days_per_request', fallback=None)
         if days_per_request is None:
-            errors.append(f"Error: 'days_per_request' is missing in the [{waveform_section}] section.")
+            status_handler.add_error("input_parameters", f"'days_per_request' is missing in the [{waveform_section}] section.")
         days_per_request = cls._check_val(days_per_request, 1, "int")
 
         channel_pref = config.get(waveform_section, 'channel_pref', fallback='').strip()
@@ -437,20 +432,19 @@ class SeismoLoaderSettings(BaseModel):
         )
             
     @classmethod
-    def _parse_station_section(cls, config, warnings, errors):
+    def _parse_station_section(cls, config, status_handler):
         station_section = 'STATION'
         if not config.has_section(station_section):
-            errors.append(f"Error: The [{station_section}] section is missing in the configuration file. Please provide station details.")
+            status_handler.add_error("input_parameters", f"The [{station_section}] section is missing in the configuration file. Please provide station details.")
         
         station_client = cls._parse_param(
             config=config,
             section=station_section,
             key='client',
             default="EARTHSCOPE",
-            warnings=warnings,
-            errors=errors,
-            error_message=f"Error: 'client' is missing in the [{station_section}] section. Specify the client for station data retrieval.",
-            warning_message=f"Warning: 'client' is empty in the [{station_section}] section. Defaulting to 'EARTHSCOPE'.",
+            status_handler =status_handler,
+            error_message=f"'client' is missing in the [{station_section}] section. Specify the client for station data retrieval.",
+            warning_message=f"'client' is empty in the [{station_section}] section. Defaulting to 'EARTHSCOPE'.",
             validation_fn=lambda x: bool(x.strip())  # Ensure the value is not empty after stripping
         )
 
@@ -459,10 +453,9 @@ class SeismoLoaderSettings(BaseModel):
             section=station_section,
             key='network',
             default="GSN",
-            warnings=warnings,
-            errors=errors,
-            error_message=f"Error: 'network' is missing in the [{station_section}] section. Please specify a network.",
-            warning_message=f"Warning: 'network' is empty in the [{station_section}] section. Defaulting to 'GSN'."
+            status_handler =status_handler,
+            error_message=f"'network' is missing in the [{station_section}] section. Please specify a network.",
+            warning_message=f"'network' is empty in the [{station_section}] section. Defaulting to 'GSN'."
         )
 
         station = cls._parse_param(
@@ -470,10 +463,9 @@ class SeismoLoaderSettings(BaseModel):
             section=station_section,
             key='station',
             default="",
-            warnings=warnings,
-            errors=errors,
-            error_message=f"Error: 'station' is missing in the [{station_section}] section. Please specify a station.",
-            warning_message=f"Warning: 'station' is empty in the [{station_section}] section. Defaulting to an empty string."
+            status_handler =status_handler,
+            error_message=f"'station' is missing in the [{station_section}] section. Please specify a station.",
+            warning_message=f"'station' is empty in the [{station_section}] section. Defaulting to an empty string."
         )
 
         location = cls._parse_param(
@@ -481,10 +473,9 @@ class SeismoLoaderSettings(BaseModel):
             section=station_section,
             key='location',
             default="*",
-            warnings=warnings,
-            errors=errors,
-            error_message=f"Error: 'location' is missing in the [{station_section}] section. Please specify a location.",
-            warning_message=f"Warning: 'location' is empty in the [{station_section}] section. Defaulting to '*'."
+            status_handler =status_handler,
+            error_message=f"'location' is missing in the [{station_section}] section. Please specify a location.",
+            warning_message=f"'location' is empty in the [{station_section}] section. Defaulting to '*'."
         )
 
         channel = cls._parse_param(
@@ -492,14 +483,13 @@ class SeismoLoaderSettings(BaseModel):
             section=station_section,
             key='channel',
             default="?H?,?N?",
-            warnings=warnings,
-            errors=errors,
-            error_message=f"Error: 'channel' is missing in the [{station_section}] section. Please specify a channel.",
-            warning_message=f"Warning: 'channel' is empty in the [{station_section}] section. Defaulting to '?H?,?N?'.",
+            status_handler =status_handler,
+            error_message=f"'channel' is missing in the [{station_section}] section. Please specify a channel.",
+            warning_message=f"'channel' is empty in the [{station_section}] section. Defaulting to '?H?,?N?'.",
             validation_fn=lambda x: bool(re.match(r'^(\?[\w]\?,?)+$', x))
         )
         
-        geo_constraint_station = cls._parse_geo_constraint(config, 'STATION', warnings, errors)
+        geo_constraint_station = cls._parse_geo_constraint(config, 'STATION', status_handler)
 
         # Parse force_stations
         force_stations_cmb_n_s = config.get(station_section, 'force_stations', fallback='').split(',')
@@ -522,12 +512,12 @@ class SeismoLoaderSettings(BaseModel):
         # Parse level
         level = config.get(station_section, 'level', fallback=None)
         if level is None:  # Key is missing
-            errors.append(f"Error: 'level' is missing in the [{station_section}] section. Please specify a level (e.g., 'channel').")
+            status_handler.add_error("input_parameters", f"'level' is missing in the [{station_section}] section. Please specify a level (e.g., 'channel').")
         else:
             level = level.strip()
             if not level:  # Value is empty
                 level= Levels.CHANNEL
-                warnings.append(f"Warning: 'level' is empty in the [{station_section}] section. Defaulting to 'channel'.")
+                status_handler.add_warning("input_parameters", f"'level' is empty in the [{station_section}] section. Defaulting to 'channel'.")
 
         # Parse date configurations
         date_config = DateConfig(
@@ -556,7 +546,7 @@ class SeismoLoaderSettings(BaseModel):
         )
 
     @classmethod
-    def _parse_event_section(cls, config, warnings, errors):
+    def _parse_event_section(cls, config, status_handler):
         """
         Parse and validate the EVENT section of the configuration file.
 
@@ -572,7 +562,7 @@ class SeismoLoaderSettings(BaseModel):
 
         # Ensure the EVENT section exists
         if not config.has_section(event_section):
-            errors.append(f"Error: The [{event_section}] section is missing in the configuration file.")
+            status_handler.add_error("input_parameters", f"The [{event_section}] section is missing in the configuration file.")
             return None
 
         # Parse required parameters
@@ -581,10 +571,9 @@ class SeismoLoaderSettings(BaseModel):
             section=event_section,
             key="client",
             default="EARTHSCOPE",
-            warnings=warnings,
-            errors=errors,
-            error_message=f"Error: 'client' is missing in the [{event_section}] section. Specify a client.",
-            warning_message=f"Warning: 'client' is empty in the [{event_section}] section. Defaulting to 'EARTHSCOPE'.",
+            status_handler=status_handler,
+            error_message=f"'client' is missing in the [{event_section}] section. Specify a client.",
+            warning_message=f"'client' is empty in the [{event_section}] section. Defaulting to 'EARTHSCOPE'.",
             validation_fn=lambda x: bool(x.strip())
         )
 
@@ -593,10 +582,9 @@ class SeismoLoaderSettings(BaseModel):
             section=event_section,
             key="model",
             default="iasp91",
-            warnings=warnings,
-            errors=errors,
-            error_message=f"Error: 'model' is missing in the [{event_section}] section. Specify a model.",
-            warning_message=f"Warning: 'model' is empty in the [{event_section}] section. Defaulting to 'iasp91'."
+            status_handler=status_handler,
+            error_message=f"'model' is missing in the [{event_section}] section. Specify a model.",
+            warning_message=f"'model' is empty in the [{event_section}] section. Defaulting to 'iasp91'."
         )
 
         start_time = cls._parse_param(
@@ -604,10 +592,9 @@ class SeismoLoaderSettings(BaseModel):
             section=event_section,
             key="starttime",
             default=(datetime.now() - timedelta(days=30)).isoformat(),
-            warnings=warnings,
-            errors=errors,
-            error_message=f"Error: 'starttime' is missing in the [{event_section}] section. Specify a valid start time.",
-            warning_message=f"Warning: 'starttime' is empty in the [{event_section}] section. Defaulting to 1 month before the current time.",
+            status_handler=status_handler,
+            error_message=f"'starttime' is missing in the [{event_section}] section. Specify a valid start time.",
+            warning_message=f"'starttime' is empty in the [{event_section}] section. Defaulting to 1 month before the current time.",
             validation_fn=lambda x: parse_time(x) is not None
         )
         start_time = parse_time(start_time)
@@ -617,10 +604,9 @@ class SeismoLoaderSettings(BaseModel):
             section=event_section,
             key="endtime",
             default=datetime.now().isoformat(),
-            warnings=warnings,
-            errors=errors,
-            error_message=f"Error: 'endtime' is missing in the [{event_section}] section. Specify a valid end time.",
-            warning_message=f"Warning: 'endtime' is empty in the [{event_section}] section. Defaulting to the current time.",
+            status_handler=status_handler,
+            error_message=f"'endtime' is missing in the [{event_section}] section. Specify a valid end time.",
+            warning_message=f"'endtime' is empty in the [{event_section}] section. Defaulting to the current time.",
             validation_fn=lambda x: parse_time(x) is not None
         )
         end_time = parse_time(end_time)
@@ -630,10 +616,9 @@ class SeismoLoaderSettings(BaseModel):
             section=event_section,
             key="before_p_sec",
             default=20,
-            warnings=warnings,
-            errors=errors,
-            error_message=f"Error: 'before_p_sec' is missing in the [{event_section}] section. Specify a valid integer.",
-            warning_message=f"Warning: 'before_p_sec' is empty in the [{event_section}] section. Defaulting to '20'.",
+            status_handler=status_handler,
+            error_message=f"'before_p_sec' is missing in the [{event_section}] section. Specify a valid integer.",
+            warning_message=f"'before_p_sec' is empty in the [{event_section}] section. Defaulting to '20'.",
             validation_fn=lambda x: x.isdigit()
         )
         before_p_sec = int(before_p_sec)
@@ -643,10 +628,9 @@ class SeismoLoaderSettings(BaseModel):
             section=event_section,
             key="after_p_sec",
             default=130,
-            warnings=warnings,
-            errors=errors,
-            error_message=f"Error: 'after_p_sec' is missing in the [{event_section}] section. Specify a valid integer.",
-            warning_message=f"Warning: 'after_p_sec' is empty in the [{event_section}] section. Defaulting to '130'.",
+            status_handler=status_handler,
+            error_message=f"'after_p_sec' is missing in the [{event_section}] section. Specify a valid integer.",
+            warning_message=f"'after_p_sec' is empty in the [{event_section}] section. Defaulting to '130'.",
             validation_fn=lambda x: x.isdigit()
         )
         after_p_sec = int(after_p_sec)
@@ -660,9 +644,9 @@ class SeismoLoaderSettings(BaseModel):
         max_radius = cls._check_val(config.get(event_section, "maxradius", fallback=90.0), 90.0, "float")
 
         if min_radius < 0 or max_radius < 0:
-            errors.append(f"Error: 'min_radius' and 'max_radius' must be positive values in the [{event_section}] section.")
+            status_handler.add_error("input_parameters" , f"'min_radius' and 'max_radius' must be positive values in the [{event_section}] section.")
         if min_radius >= max_radius:
-            errors.append(f"Error: 'min_radius' must be less than 'max_radius' in the [{event_section}] section.")
+            status_handler.add_error("input_parameters" ,f"'min_radius' must be less than 'max_radius' in the [{event_section}] section.")
 
         # Parse boolean flags
         include_all_origins = cls._check_val(config.get(event_section, "includeallorigins", fallback=False), False, "bool")
@@ -677,7 +661,7 @@ class SeismoLoaderSettings(BaseModel):
         updated_after = config.get(event_section, "updated_after", fallback=None)
 
         # Parse geo_constraint
-        geo_constraint_event = cls._parse_geo_constraint(config, event_section, warnings, errors)
+        geo_constraint_event = cls._parse_geo_constraint(config, event_section, status_handler,)
 
         # Return EventConfig object
         return EventConfig(
@@ -712,8 +696,7 @@ class SeismoLoaderSettings(BaseModel):
         key,
         default=None,
         validation_fn=None,
-        warnings=None,
-        errors=None,
+        status_handler=None,
         error_message=None,
         warning_message=None,
     ):
@@ -726,8 +709,7 @@ class SeismoLoaderSettings(BaseModel):
             key: Parameter key to parse.
             default: Default value to use if the parameter is missing or invalid.
             validation_fn: Optional function to validate the parameter's value.
-            warnings: List to append warnings.
-            errors: List to append errors.
+            status_handler: StatusHandler object to handle warnings and errors.
             error_message: Custom error message for missing parameters.
             warning_message: Custom warning message for empty parameters.
 
@@ -737,26 +719,26 @@ class SeismoLoaderSettings(BaseModel):
         try:
             value = config.get(section, key, fallback=None)
             if value is None:  # Key is missing
-                if error_message and errors is not None:
-                    errors.append(error_message)
+                if error_message and status_handler:
+                    status_handler.add_error("input_parameters", error_message)
                 return default
             value = value.strip()
             if not value:  # Value is empty
-                if warning_message and warnings is not None:
-                    warnings.append(warning_message)
+                if warning_message and status_handler:
+                    status_handler.add_warning("input_parameters", warning_message)
                 return default
             if validation_fn and not validation_fn(value):
-                if error_message and errors is not None:
-                    errors.append(error_message)
+                if error_message and status_handler:
+                    status_handler.add_error("input_parameters", error_message)
                 return default
             return value
         except Exception as e:
-            if errors is not None:
-                errors.append(f"Error parsing '{key}' in the [{section}] section: {str(e)}")
+            if status_handler:
+                status_handler.add_error("input_parameters", f"Error parsing '{key}' in the [{section}] section: {str(e)}")
             return default
 
     @staticmethod
-    def _parse_geo_constraint(config, section, warnings, errors):
+    def _parse_geo_constraint(config, section, status_handler):
         """
         Parse and validate the geo_constraint for a given section.
 
@@ -782,10 +764,10 @@ class SeismoLoaderSettings(BaseModel):
             # Validate longitude range and adjust if necessary
             if max_lng is not None and max_lng > 180:
                 max_lng -= 360
-                warnings.append(f"Warning: 'maxlongitude' exceeded 180 in the [{section}] section. Adjusted to {max_lng}.")
+                status_handler.add_warning("input_parameters" ,f"'maxlongitude' exceeded 180 in the [{section}] section. Adjusted to {max_lng}.")
             if min_lng is not None and min_lng < -180:
                 min_lng += 360
-                warnings.append(f"Warning: 'minlongitude' was below -180 in the [{section}] section. Adjusted to {min_lng}.")
+                status_handler.add_warning("input_parameters" ,f"'minlongitude' was below -180 in the [{section}] section. Adjusted to {min_lng}.")
 
             # Create bounding box constraint
             geo_constraint = GeometryConstraint(
@@ -807,10 +789,10 @@ class SeismoLoaderSettings(BaseModel):
             # Validate longitude range and adjust if necessary
             if lng is not None and lng > 180:
                 lng -= 360
-                warnings.append(f"Warning: 'longitude' exceeded 180 in the [{section}] section. Adjusted to {lng}.")
+                status_handler.add_warning("input_parameters" ,f"'longitude' exceeded 180 in the [{section}] section. Adjusted to {lng}.")
             if lng is not None and lng < -180:
                 lng += 360
-                warnings.append(f"Warning: 'longitude' was below -180 in the [{section}] section. Adjusted to {lng}.")
+                status_handler.add_warning("input_parameters" ,f"'longitude' was below -180 in the [{section}] section. Adjusted to {lng}.")
 
             # Create circular area constraint
             geo_constraint = GeometryConstraint(
@@ -824,8 +806,8 @@ class SeismoLoaderSettings(BaseModel):
 
         elif geo_constraint_type is not None:  # Invalid type provided
             # Log error for invalid geo_constraint types
-            errors.append(
-                f"Error: Invalid 'geo_constraint' type '{geo_constraint_type}' in the [{section}] section. "
+            status_handler.add_error("input_parameters" ,
+                f"Invalid 'geo_constraint' type '{geo_constraint_type}' in the [{section}] section. "
                 f"Allowed values are 'BOUNDING' or 'CIRCLE'."
             )
 
@@ -1019,6 +1001,7 @@ class SeismoLoaderSettings(BaseModel):
         key = f"{event_id}|{station_id}"
         return self.predictions.get(key)
     class Config:
+        arbitrary_types_allowed = True       
         json_encoders = {
             datetime: lambda v: v.isoformat()
         }
