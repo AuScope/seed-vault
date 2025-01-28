@@ -1135,7 +1135,15 @@ def run_continuous(settings: SeismoLoaderSettings):
         # TODO should be settings.waveform,channel_pref,settings.waveform.location_pref
 
     # Remove any for data we already have (requires updated db)
-    pruned_requests= prune_requests(requests, db_manager, settings.sds_path)
+    # If force_redownload is flagged, then ignore pruning and 
+    # download all data.
+    if settings.waveform.force_redownload:
+        print("Pruning: Force re-download is flagged, hence ignoring pruning.")
+        pruned_requests = request
+    else:
+        print("Pruning: Pruning the request to avoid duplicate data downloads.")
+        pruned_requests= prune_requests(requests, db_manager, settings.sds_path)
+        
 
     # Break if nothing to do
     if len(pruned_requests) < 1:
@@ -1256,7 +1264,13 @@ def run_event(settings: SeismoLoaderSettings):
             db_manager.bulk_insert_arrival_data(new_arrivals)
 
         # Remove requests for data we already have
-        pruned_requests = prune_requests(requests, db_manager, settings.sds_path)
+        if settings.waveform.force_redownload:
+            print("Pruning: Force re-download is flagged, hence ignoring pruning.")
+            pruned_requests = requests
+        else:
+            print("Pruning: Pruning the request to avoid duplicate data downloads.")
+            pruned_requests= prune_requests(requests, db_manager, settings.sds_path)
+            
 
         # Process new data if needed
         if pruned_requests:

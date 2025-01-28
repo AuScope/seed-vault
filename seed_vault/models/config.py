@@ -117,6 +117,7 @@ class WaveformConfig(BaseModel):
     client           : Optional     [str]   = "IRIS"
     channel_pref     : Optional     [str]  = None
     location_pref    : Optional     [str] = None
+    force_redownload : Optional    [bool] = False
 
     days_per_request : Optional     [int]             = 1
 
@@ -958,6 +959,7 @@ class SeismoLoaderSettings(BaseModel):
                 'channel_pref': self.waveform.channel_pref if self.waveform else None,
                 'location_pref': self.waveform.location_pref if self.waveform else None,
                 'days_per_request': self.waveform.days_per_request if self.waveform and self.waveform.days_per_request is not None else None,
+                'force_redownload': self.waveform.force_redownload if self.waveform else None, 
             },
             'station': {
                 'client': self.station.client if self.station and self.station.client else None,

@@ -581,7 +581,13 @@ class WaveformComponents:
             self.continuous_components.render()
         else:
             st.title("Waveform Analysis")
-            
+            self.settings.waveform.force_redownload =  st.toggle(
+                "Force Re-download", 
+                value=self.settings.waveform.force_redownload, 
+                help= "If turned off, the app will try to avoid "
+                "downloading data that are already available locally."
+                " If flagged, it will redownload the data again."
+            )
             # Get Waveforms button should be before filter menu render
             if st.button("Get Waveforms", key="get_waveforms"):
                 self.waveform_display.retrieve_waveforms()
