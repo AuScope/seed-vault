@@ -900,7 +900,6 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
 
     catalog = Catalog(events=None)
 
-    # TODO add more e.g. catalog, contributor
     kwargs = {
         'starttime':starttime,
         'endtime':endtime,
