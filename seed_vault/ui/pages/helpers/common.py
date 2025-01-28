@@ -55,7 +55,7 @@ def set_app_settings(settings: SeismoLoaderSettings):
 def get_direct_settings(create_new: bool = True, empty_geo: bool = True):
     if "direct_settings" not in st.session_state:
         settings = SeismoLoaderSettings.from_cfg_file(target_file_direct)
-        settings.load_url_mapping()
+        settings.client_url_mapping.load()
         st.session_state.direct_settings = settings          
     else:
         if create_new:
