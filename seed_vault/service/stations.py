@@ -80,7 +80,7 @@ def station_response_to_df(inventory):
             elevation = station.elevation
             channels = ",".join([channel.code for channel in station])
             start_date = str(station.start_date.strftime("%Y-%m-%d"))
-            end_date = str(station.end_date.strftime("%Y-%m-%d") if station.end_date else "in operation")
+            end_date = str(station.end_date.strftime("%Y-%m-%d") if station.end_date else "ongoing")
 
 
             record = {
