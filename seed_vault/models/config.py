@@ -495,7 +495,7 @@ class SeismoLoaderSettings(BaseModel):
             status_handler =status_handler,
             error_message=f"'channel' is missing in the [{station_section}] section. Please specify a channel.",
             warning_message=f"'channel' is empty in the [{station_section}] section. Defaulting to '?H?,?N?'.",
-            validation_fn=lambda x: bool(re.match(r'^(\?[\w]\?,?)+$', x))
+            # validation_fn=lambda x: bool(re.match(r'^(\?[\w]\?,?)+$', x))
         )
         
         geo_constraint_station = cls._parse_geo_constraint(cls, config, 'STATION', status_handler)
