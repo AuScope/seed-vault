@@ -27,15 +27,29 @@ class UrlMappings(BaseModel):
 
     def check_saved_clients(self, df: pd.DataFrame) -> pd.DataFrame:
         chk_clients = []
+        # Check if an original saved client yet exist
+        # in the latest URL_MAPPINGS
         for row in df.to_dict('records'):
-            # Check if an original saved client yet exist
-            # in the latest URL_MAPPINGS
+            
             if row['client'] not in URL_MAPPINGS and row['is_original']:
                 continue
 
             chk_clients.append(row)
 
-        return pd.DataFrame(chk_clients)
+        df_chk = pd.DataFrame(chk_clients)
+
+        curr_clients = list(df_chk.client)
+        # Check if a client exist in URL_MAPPINGS that does not exist
+        # in saved clients
+        for client, url in URL_MAPPINGS.items():
+            if client not in curr_clients:
+                df_chk.loc[len(df_chk)] = {
+                    'client': client, 
+                    'url': url,
+                    'is_original': True
+                }
+
+        return df_chk
 
 
     def save(self, extra_clients: List[dict] = None):
@@ -59,16 +73,16 @@ class UrlMappings(BaseModel):
         if extra_clients is not None:
 
             # Remove not present extra clients
-            curr_extra_clients = [c for c in df.to_dict('records') if not c['is_original']]
-            lst_extras = [e['client'] for e in extra_clients]
-            for curr_ex in curr_extra_clients:
-                if curr_ex['client'] not in lst_extras:
-                    idx = list(df.client).index(curr_ex['client'])
+            saved_extra_clients = [c for c in df.to_dict('records') if not c['is_original']]
+            lst_curr_extras = [e['client'] for e in extra_clients]
+            for saved_ex in saved_extra_clients:
+                if saved_ex['client'] not in lst_curr_extras:
+                    idx = list(df.client).index(saved_ex['client'])
                     df = df.drop(index=idx)
                     df = df.reset_index(drop=True)
 
-                if curr_ex['client'] in URL_MAPPINGS:
-                    del URL_MAPPINGS[curr_ex['client']]
+                if saved_ex['client'] in URL_MAPPINGS:
+                    del URL_MAPPINGS[saved_ex['client']]
 
 
             # Add inputted extra clients                
@@ -77,7 +91,6 @@ class UrlMappings(BaseModel):
                     idx = list(df.client).index(e['client'])
                     df.loc[idx, 'url'] = e['url']
                 except Exception as err: 
-                    print(err)
                     df.loc[len(df)] = {
                         'client': e['client'], 
                         'url': e['url'],
@@ -85,7 +98,7 @@ class UrlMappings(BaseModel):
                     }
             
 
-        df.to_csv(self.save_path, index=False)
+        df.sort_values('client').to_csv(self.save_path, index=False)
 
         self.sync_maps(df)
 
