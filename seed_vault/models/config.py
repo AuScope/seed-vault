@@ -502,7 +502,7 @@ class SeismoLoaderSettings(BaseModel):
             validation_fn=lambda x: bool(re.match(r'^(\?[\w]\?,?)+$', x))
         )
         
-        geo_constraint_station = cls._parse_geo_constraint(config, 'STATION', status_handler)
+        geo_constraint_station = cls._parse_geo_constraint(cls, config, 'STATION', status_handler)
 
         # Parse force_stations
         force_stations_cmb_n_s = config.get(station_section, 'force_stations', fallback='').split(',')
@@ -674,7 +674,7 @@ class SeismoLoaderSettings(BaseModel):
         updated_after = config.get(event_section, "updated_after", fallback=None)
 
         # Parse geo_constraint
-        geo_constraint_event = cls._parse_geo_constraint(config, event_section, status_handler,)
+        geo_constraint_event = cls._parse_geo_constraint(cls, config, event_section, status_handler,)
 
         # Return EventConfig object
         return EventConfig(
@@ -751,7 +751,7 @@ class SeismoLoaderSettings(BaseModel):
             return default
 
     @staticmethod
-    def _parse_geo_constraint(config, section, status_handler):
+    def _parse_geo_constraint(cls, config, section, status_handler):
         """
         Parse and validate the geo_constraint for a given section.
 
