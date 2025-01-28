@@ -232,7 +232,7 @@ def populate_database_from_files(cursor, file_paths=[]):
 
 
 # Requests for Continuous Data
-def collect_requests(inv, time0, time1, days_per_request=3):
+def collect_requests_old(inv, time0, time1, days_per_request=3):
     """ Collect all requests required to download everything in inventory, split into X-day periods. """
     requests = []  # network, station, location, channel, starttime, endtime
 
@@ -265,6 +265,39 @@ def collect_requests(inv, time0, time1, days_per_request=3):
                     current_start = current_end
     return requests
 
+def collect_requests(inv, time0, time1, days_per_request=3, 
+                     cha_pref=None, loc_pref=None):
+    """ Collect all requests required to download everything in inventory, split into X-day periods. """
+
+    requests = []  # network, station, location, channel, starttime, endtime
+
+    # Sanity check request times
+    time1 = min(time1, UTCDateTime.now()-120)
+    if time0 >= time1:
+        return None
+    
+    current_start = time0
+    while current_start < time1:
+        current_end = min(current_start + datetime.timedelta(days=days_per_request), time1)
+        
+        if cha_pref or loc_pref:
+            sub_inv = get_preferred_channels(inv, current_start, cha_pref, loc_pref)
+        
+        # Collect requests for the best channels
+        for net in sub_inv:
+            for sta in net:
+                for cha in sta:
+                    requests.append((
+                        net.code,
+                        sta.code,
+                        cha.location_code,
+                        cha.code,
+                        current_start.isoformat() + "Z",
+                        current_end.isoformat() + "Z" ))
+        
+        current_start = current_end
+    
+    return requests
 
 # Requests for shorter, event-based data
 def get_p_s_times(eq, dist_deg, ttmodel):
@@ -304,7 +337,7 @@ def get_p_s_times(eq, dist_deg, ttmodel):
     return p_arrival_time, s_arrival_time
 
 
-def select_highest_samplerate(inv, time=None, minSR=10):
+def select_highest_samplerate(inv, minSR=10, time=None):
     """
     Where overlapping channels exist (e.g. 100 hz and 10 hz), filter out anything other than highest available samplerate.
     Presumably, users will always want the highest samplerate for events.
@@ -324,43 +357,108 @@ def select_highest_samplerate(inv, time=None, minSR=10):
     return inv
 
 
-### probably cut this function entirely for now
-# TODO function to sort by maximum available sampling rate (have written this already somewhere)
-cha_rank = ['CH','HH','BH','EH','HN','EN','SH','LH']
-loc_rank = ['','10','00','20'] # sort of dangerous as no one does these in the same way
-def TOFIX__output_best_channels(nn,sta,t):
-        if type(sta) != obspy.core.inventory.station.Station:
-                print("get_best_nslc: not station input!")
-                return sta.channels
-        if len(sta) <=1 : return sta.channels
-        CHs = set([ele.code[0:2] for ele in sta.channels])
-        if len(CHs) == 1:
-                return [sta.channels[0]]
+# examples
+# cha_rank = ['FH', 'CH','HH','BH','EH','HN','EN','SH','LH']
+# loc_rank = ['','10','00','20']
+def get_preferred_channels(inv,cha_rank=None,loc_rank=None,time=None):
+    """
+    Select the best available channels from an FDSN inventory based on channel and location code rankings.
+    If everything is filtered, returns the original station object.
+    Channel order before location order.
+    """
 
-        # Re-assess what channels are avail. these should be sorted by samplerate with the highest first. that should be enough for most cases, but...
+    if not cha_rank and not loc_rank:
+        return inv
 
-        for cha in sta.channels:
-            if cha.end_date is None: cha.end_date = UTCDateTime(2099,1,1) # Easiest to replace all "None" with "far off into future"
-        CHs = set([tr.stats.channel[0:2] for tr in st])
-        for ch in cha_rank:
-            selection = [ele for ele in sta.channels if ele.code[0:2] == ch and ele.start_date <= t <= ele.end_date]
-            if selection: return selection
-        print("no valid channels found in output_best_channels")
-        return []
+    # '--' may exist in loc_rank instead of '', if so replace it
+    loc_rank = [lc if lc != '--' else '' for lc in loc_rank]
+
+    new_inv = Inventory(networks=[], source=inv.source)
+
+    if time:
+        inv = inv.select(time=time)
+    
+    for net in inv:
+        new_net = net.copy()
+        new_net.stations = []
+        
+        for sta in net:
+            new_sta = sta.copy()
+            new_sta.channels = []
+            
+            # Group channels by component (Z, N, E)
+            components = {}
+            for chan in sta:
+                comp = chan.code[-1]  # Get last character (component)
+                if comp not in components:
+                    components[comp] = []
+                components[comp].append(chan)
+            
+            # For each component, find the best channel
+            for comp, chan_list in components.items():
+                best_chan = None
+                best_cha_rank = float('inf')
+                best_loc_rank = float('inf')
+                
+                # Check each channel's availability at time
+                for chan in chan_list:
+                    if not chan.is_active(time):
+                        continue
+                    
+                    # Get channel code without component (e.g., 'BH' from 'BHZ')
+                    cha_code = chan.code[:-1]
+                    
+                    # Find ranking positions
+                    try:
+                        cha_position = cha_rank.index(cha_code)
+                        loc_position = loc_rank.index(chan.location_code)
+                    except ValueError:
+                        # If channel or location code not in ranking, put it at the end
+                        cha_position = len(cha_rank)
+                        loc_position = len(loc_rank)
+                    
+                    # Update best channel if this one has better ranking
+                    if cha_position < best_cha_rank or \
+                       (cha_position == best_cha_rank and loc_position < best_loc_rank):
+                        best_chan = chan
+                        best_cha_rank = cha_position
+                        best_loc_rank = loc_position
+                
+                # Add the best channel for this component if found
+                if best_chan is not None:
+                    new_sta.channels.append(best_chan)
+            
+            # If we have a sucessful filter, add new_sta, otherwise keep the old sta
+            if new_sta.channels:
+                new_net.stations.append(new_sta)
+            else:
+                new_net.stations.append(sta)
+        
+        # Only add network if it has stations
+        if new_net.stations:
+            new_inv.networks.append(new_net)
+    
+    return new_inv
 
 
 def collect_requests_event(eq,inv,min_dist_deg=30,max_dist_deg=90,
                            before_p_sec=20,after_p_sec=160,
-                           model=None,settings=None,highest_sr_only=True):
+                           model=None,settings=None,highest_sr_only=True,
+                           cha_pref=None,loc_pref=None):
     """ Collect requests for event eq for stations in inv. """
     settings, db_manager = setup_paths(settings)
     origin = eq.origins[0] # defaulting to preferred origin
     ot = origin.time
     
+    sub_inv = inv.select(time=ot)
+
     if highest_sr_only:
-        sub_inv = select_highest_samplerate(inv,time=ot,minSR=5) #filter by time and also select highest samplerate
-    else:
-        sub_inv = inv.select(time = ot) #only filter by time
+        sub_inv = select_highest_samplerate(sub_inv,minSR=5) #filter by time and also select highest samplerate
+    
+    if cha_pref or loc_pref:
+        sub_inv = get_preferred_channels(sub_inv, cha_pref, loc_pref)
+        # TODO should be (sub_inv,settings.waveform,channel_pref,settings.waveform.location_pref)
+
     before_p_sec = settings.event.before_p_sec
     after_p_sec = settings.event.after_p_sec
 
@@ -804,7 +902,10 @@ def get_stations(settings: SeismoLoaderSettings):
     inventory = settings.station.local_inventory
     if inventory:
         # User has specified this specific pre-existing (filepath) inventory to use
-        inv = obspy.read_inventory(inventory,level='channel')
+        try: 
+            inv = obspy.read_inventory(inventory,level='channel')
+        except Exception as e:
+            print(f"Could not read {inventory}: {e}")
 
     elif (not inventory and settings.station.geo_constraint):
         for geo in settings.station.geo_constraint:
@@ -847,10 +948,8 @@ def get_stations(settings: SeismoLoaderSettings):
             print(f"No stations found in {station_client.base_url} with given parameters")
             return None
 
-
     # Remove unwanted stations or networks
     if settings.station.exclude_stations:
-        # exclude_list = config['STATION']['exclude_stations'].split(',') #format is NN.STA
         for ns in settings.station.exclude_stations:
             n,s = ns.upper().split('.') #this is necessary as format is n.s
             inv = inv.remove(network=n,station=s)
@@ -864,7 +963,7 @@ def get_stations(settings: SeismoLoaderSettings):
                 inv += station_client.get_stations(
                     network=n,
                     station=s,
-                    location='*', # may be an issue... should probably follow the location filter NEEDS REVIEW
+                    location='*', # may be an issue... for manual stations we are just grabbing everything
                     channel='[FGDCESHBML][HN]?', # we are somewhat dangerously assuming that seismic data follows conventional channel naming... think it's OK though
                     level=settings.station.level.value
                 )
@@ -1031,7 +1130,9 @@ def run_continuous(settings: SeismoLoaderSettings):
 
     # Collect requests
     requests = collect_requests(settings.station.selected_invs, 
-        starttime, endtime, days_per_request=settings.waveform.days_per_request)
+        starttime, endtime, days_per_request=settings.waveform.days_per_request,
+        cha_pref=None,loc_pref=None)
+        # TODO should be settings.waveform,channel_pref,settings.waveform.location_pref
 
     # Remove any for data we already have (requires updated db)
     pruned_requests= prune_requests(requests, db_manager, settings.sds_path)
@@ -1147,7 +1248,7 @@ def run_event(settings: SeismoLoaderSettings):
         requests, new_arrivals, p_arrivals = collect_requests_event(
             eq, settings.station.selected_invs,
             model=ttmodel,
-            settings=settings
+            settings=settings,
         )
 
         # Import any new arrival info into database

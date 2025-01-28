@@ -87,7 +87,7 @@ def station_response_to_df(inventory):
             record = {
                 'network': network.code,
                 'station': station_code,
-                'station_name': station_name,
+                'description': station_name,
                 'latitude': latitude,
                 'longitude': longitude,
                 'elevation': elevation,

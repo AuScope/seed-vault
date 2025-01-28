@@ -405,7 +405,7 @@ def create_popup(index, row, cols_to_disp, step: Steps = None):
 
     if step == Steps.STATION:
         html_disp = f"<h4><b>{row['network']}.{row['station']}</b></h4>"
-        html_disp += f"<h5>{row['station_name']}</h5>"
+        html_disp += f"<h5>{row['description']}</h5>"
         html_disp += f"<h5>({row['start date (UTC)']} - {row['end date (UTC)']})</h5>"
         html_disp += f"<h5>{row['channels']}</h5>"
         html_disp += f"<h5>{row['latitude']:.2f} latitude, {row['longitude']:.2f} longitude, {row['elevation']:.2f} m</h5>"
