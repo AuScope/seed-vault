@@ -9,7 +9,6 @@ import multiprocessing
 import configparser
 import pandas as pd
 from tqdm import tqdm
-## NOT USED ANYMORE from tabulate import tabulate # non-standard. this is just to display the db contents
 import random
 from typing import List
 from collections import defaultdict
@@ -901,7 +900,6 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
 
     catalog = Catalog(events=None)
 
-    # TODO add more e.g. catalog, contributor
     kwargs = {
         'starttime':starttime,
         'endtime':endtime,
@@ -912,6 +910,10 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
         'includeallorigins':settings.event.include_all_origins,
         'includeallmagnitudes':settings.event.include_all_magnitudes,
         'includearrivals':settings.event.include_arrivals,
+        'eventtype':settings.event.eventtype,
+        'catalog':settings.event.catalog,
+        'contributor':settings.event.contributor,
+        'updatedafter':settings.event.updatedafter
     }
 
     # Check event_client for compatibility

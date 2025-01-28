@@ -180,15 +180,15 @@ class StationConfig(BaseModel):
     # channel = CH,HH,BH,EH
 
 class EventConfig(BaseModel):
-    client              : Optional   [str] = "IRIS"
+    client              : Optional   [str] = "EARTHSCOPE"
     date_config         : DateConfig                 = DateConfig(
         start_time=datetime(2024, 8, 20),
         end_time=datetime(2024, 9, 20)
     )
     model               : str = 'iasp91'
-    min_depth           : float = 0.0
-    max_depth           : float = 6800.0
-    min_magnitude       : float = 5.0
+    min_depth           : float = -5.0
+    max_depth           : float = 1000.0
+    min_magnitude       : float = 5.5
     max_magnitude       : float = 10.0
     min_radius          : float = 30.0
     max_radius          : float = 90.0
@@ -197,11 +197,13 @@ class EventConfig(BaseModel):
     include_all_origins : bool = False
     include_all_magnitudes: bool = False
     include_arrivals    : bool = False
+    local_catalog       : Optional[str] = None
+    eventtype           : Optional[str] = None
+    catalog             : Optional[str] = None
+    contributor         : Optional[str] = None
+    updatedafter        : Optional[str] = None #this is a UTCDateTime object fwiw
     limit               : Optional[str] = None
     offset              : Optional[str] = None
-    local_catalog       : Optional[str] = None
-    contributor         : Optional[str] = None
-    updated_after       : Optional[str] = None
 
     selected_catalogs   : Optional[Any] = None
 
@@ -914,7 +916,7 @@ class SeismoLoaderSettings(BaseModel):
             safe_add_to_config(config, 'EVENT', 'offset', self.event.offset)
             safe_add_to_config(config, 'EVENT', 'local_catalog', self.event.local_catalog)
             safe_add_to_config(config, 'EVENT', 'contributor', self.event.contributor)
-            safe_add_to_config(config, 'EVENT', 'updatedafter', self.event.updated_after)
+            safe_add_to_config(config, 'EVENT', 'updatedafter', self.event.updatedafter)
 
             # FIXME: The settings are updated such that they support multiple geometries.
             # But config file only accepts one geometry at a time.For now we just get
@@ -992,8 +994,10 @@ class SeismoLoaderSettings(BaseModel):
                 'includearrivals': self.event.include_arrivals if self.event else None,
                 'limit': self.event.limit if self.event and self.event.limit is not None else None,
                 'offset': self.event.offset if self.event and self.event.offset is not None else None,
-                'contributor': self.event.contributor if self.event else None,
-                'updatedafter': self.event.updated_after if self.event else None,
+                'contributor': self.event.contributor if self.event and self.event.contributor else None,
+                'eventtype': self.event.eventtype if self.event and self.event.eventtype else None,
+                'catalog': self.event.catalog if self.event and self.event.catalog else None,
+                'updatedafter': self.event.updatedafter if self.event and self.event.updatedafter else None,
             }
         }
         return config_dict
