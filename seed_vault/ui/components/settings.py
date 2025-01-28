@@ -2,11 +2,12 @@ import streamlit as st
 import pandas as pd
 import time
 
+from copy import deepcopy
+from seed_vault.enums.common import ClientType
 from seed_vault.models.config import AuthConfig, SeismoLoaderSettings
 from seed_vault.ui.pages.helpers.common import save_filter
 
 from seed_vault.service.seismoloader import populate_database_from_sds
-from seed_vault.utils.clients import load_original_client, load_extra_client, save_extra_client
 
 
 
@@ -123,8 +124,8 @@ class SettingsComponent:
 
     def render_clients(self):
         c1, c2 = st.columns([1,1])
-        extra_clients = load_extra_client()
-        orig_clients  = load_original_client()
+        extra_clients = self.settings.client_url_mapping.get_clients(client_type = ClientType.EXTRA) # load_extra_client()
+        orig_clients  = self.settings.client_url_mapping.get_clients(client_type = ClientType.ORIGINAL)
         with c1:
             st.write("## Extra Clients")
             df = pd.DataFrame([{"Client Name": k, "Url": v} for k,v in extra_clients.items()])
@@ -148,8 +149,11 @@ class SettingsComponent:
                 try:
                     self.reset_is_new_cred_added()
                     save_filter(self.settings)
-                    extra_clients = {item["Client Name"]: item["Url"] for item in self.df_clients.to_dict(orient='records')}
-                    save_extra_client(extra_clients)
+                    df_copy = deepcopy(self.df_clients)
+                    df_copy = df_copy.rename(columns={"Client Name": 'client', "Url": 'url'})
+                    self.settings.client_url_mapping.save(df_copy.to_dict('records'))
+                    # extra_clients = {item["Client Name"]: item["Url"] for item in self.df_clients.to_dict(orient='records')}
+                    # save_extra_client(extra_clients)
                     with c3:
                         st.text("")
                         st.success("Config is successfully saved.")
@@ -157,6 +161,7 @@ class SettingsComponent:
                     with c3:
                         st.text("")
                         st.error(f"An error occured. Make sure there is no null value in the table.")
+                        st.error(e)
 
         tab1, tab2, tab3 = st.tabs(["Data", "Credentials", "Clients"])
         with tab1:

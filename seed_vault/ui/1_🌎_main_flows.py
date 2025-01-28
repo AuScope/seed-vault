@@ -1,5 +1,4 @@
 import streamlit as st
-from seed_vault.utils.clients import save_original_client
 
 st.set_page_config(
     page_title="Seed Vault",
@@ -7,9 +6,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
-
-save_original_client()
-
 
 st.markdown(
     """

@@ -9,6 +9,7 @@ from obspy.core.event import Catalog, read_events
 from obspy.core.inventory import Inventory, read_inventory
 from io import BytesIO
 
+from obspy.clients.fdsn.header import URL_MAPPINGS
 
 
 from seed_vault.ui.components.card import create_card
@@ -212,7 +213,7 @@ class BaseComponent:
                         else:    
                             self.clear_all_data()
                             self.settings = settings
-                            self.settings.load_url_mapping()
+                            self.settings.client_url_mapping.load()
 
                             self.settings.event.geo_constraint = []
                             self.settings.station.geo_constraint = []
@@ -240,7 +241,7 @@ class BaseComponent:
         with st.sidebar:
             self.render_map_right_menu()
             with st.expander("### Filters", expanded=True):
-                client_options = list(self.settings.client_url_mapping.keys())
+                client_options = list(self.settings.client_url_mapping.get_clients())
                 self.settings.event.client = st.selectbox(
                     'Choose a client:',
                     client_options,
@@ -301,7 +302,7 @@ class BaseComponent:
             self.render_map_right_menu()
                 
             with st.expander("### Filters", expanded=True):
-                client_options = list(self.settings.client_url_mapping.keys())
+                client_options = list(self.settings.client_url_mapping.get_clients())
                 self.settings.station.client = st.selectbox(
                     'Choose a client:', 
                     client_options,
@@ -494,43 +495,43 @@ class BaseComponent:
     def handle_get_data(self, is_import: bool = False, uploaded_file = None):
         self.warning = None
         self.error   = None
-        try:
-            if self.step_type == Steps.EVENT:
-                self.catalogs = Catalog()
-                # self.catalogs = get_event_data(self.settings.model_dump_json())
-                if is_import:
-                    self.import_xml(uploaded_file)
-                else:
-                    self.catalogs = get_event_data(self.settings)
-
-                if self.catalogs:
-                    self.df_markers = event_response_to_df(self.catalogs)
-                else:
-                    self.reset_markers()
-
-            if self.step_type == Steps.STATION:
-                self.inventories = Inventory()
-                # self.inventories = get_station_data(self.settings.model_dump_json())
-                if is_import:
-                    self.import_xml(uploaded_file)
-                else:
-                    self.inventories = get_station_data(self.settings)
-                if self.inventories:
-                    self.df_markers = station_response_to_df(self.inventories)
-                else:
-                    self.reset_markers()
-                
-            if not self.df_markers.empty:
-                cols = self.df_markers.columns                
-                cols_to_disp = {c:c.capitalize() for c in cols if c not in self.cols_to_exclude}
-                self.map_fg_marker, self.marker_info, self.fig_color_bar = add_data_points( self.df_markers, cols_to_disp, step=self.step_type, col_color=self.col_color, col_size=self.col_size)
-
+        # try:
+        if self.step_type == Steps.EVENT:
+            self.catalogs = Catalog()
+            # self.catalogs = get_event_data(self.settings.model_dump_json())
+            if is_import:
+                self.import_xml(uploaded_file)
             else:
-                self.warning = "No data available."
+                self.catalogs = get_event_data(self.settings)
 
-        except Exception as e:
-            print(f"An unexpected error occurred: {str(e)}")
-            self.error = f"Error: {str(e)}"
+            if self.catalogs:
+                self.df_markers = event_response_to_df(self.catalogs)
+            else:
+                self.reset_markers()
+
+        if self.step_type == Steps.STATION:
+            self.inventories = Inventory()
+            # self.inventories = get_station_data(self.settings.model_dump_json())
+            if is_import:
+                self.import_xml(uploaded_file)
+            else:
+                self.inventories = get_station_data(self.settings)
+            if self.inventories:
+                self.df_markers = station_response_to_df(self.inventories)
+            else:
+                self.reset_markers()
+            
+        if not self.df_markers.empty:
+            cols = self.df_markers.columns                
+            cols_to_disp = {c:c.capitalize() for c in cols if c not in self.cols_to_exclude}
+            self.map_fg_marker, self.marker_info, self.fig_color_bar = add_data_points( self.df_markers, cols_to_disp, step=self.step_type, col_color=self.col_color, col_size=self.col_size)
+
+        else:
+            self.warning = "No data available."
+
+        # except Exception as e:
+        #     print(f"An unexpected error occurred: {str(e)}")
+        #     self.error = f"Error: {str(e)}"
 
 
     def clear_all_data(self):
@@ -959,7 +960,7 @@ class BaseComponent:
         if self.df_markers.empty:
             st.warning("No data available.")
         else:
-            st.info(self.TXT.SELECT_DATA_TABLE_MSG)
+            # st.info(self.TXT.SELECT_DATA_TABLE_MSG)
             cols = self.df_markers.columns
             orig_cols   = [col for col in cols if col != 'is_selected']
             ordered_col = ['is_selected'] + orig_cols

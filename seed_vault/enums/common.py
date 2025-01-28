@@ -14,3 +14,10 @@ class DescribedEnum(Enum):
 class GeometryType(str, Enum):
     POLYGON = 'Polygon'
     POINT   = 'Point'
+
+
+
+class ClientType(str, Enum):
+    ALL = "ALL"
+    ORIGINAL = "ORIGINAL"
+    EXTRA = "EXTRA"

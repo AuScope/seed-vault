@@ -66,7 +66,7 @@ class WaveformFilterMenu:
             )
             
             st.subheader("📡 Data Source")
-            client_options = list(self.settings.client_url_mapping.keys())
+            client_options = list(self.settings.client_url_mapping.get_clients())
             self.settings.waveform.client = st.selectbox(
                 'Choose a client:', 
                 client_options, 

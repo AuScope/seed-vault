@@ -34,12 +34,12 @@ def empty_settings_geo_constraints(settings: SeismoLoaderSettings):
 def get_app_settings(create_new: bool = True, empty_geo: bool = True):
     if "app_settings" not in st.session_state:
         settings = SeismoLoaderSettings.from_cfg_file(target_file)
-        settings.load_url_mapping()
+        settings.client_url_mapping.load()
         st.session_state.app_settings = settings
     else:
         if create_new:
             settings = SeismoLoaderSettings.from_cfg_file(target_file)
-            settings.load_url_mapping()
+            settings.client_url_mapping.load()
             st.session_state.app_settings = settings
     
     if empty_geo:
@@ -60,7 +60,7 @@ def get_direct_settings(create_new: bool = True, empty_geo: bool = True):
     else:
         if create_new:
             settings = SeismoLoaderSettings.from_cfg_file(target_file_direct)
-            settings.load_url_mapping()
+            settings.client_url_mapping.load()
             st.session_state.direct_settings = settings
    
     if empty_geo:
