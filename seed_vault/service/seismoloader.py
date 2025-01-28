@@ -1009,10 +1009,10 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
         'includeallorigins':settings.event.include_all_origins,
         'includeallmagnitudes':settings.event.include_all_magnitudes,
         'includearrivals':settings.event.include_arrivals,
-        'eventtype':settings.event.eventtype,
-        'catalog':settings.event.catalog,
-        'contributor':settings.event.contributor,
-        'updatedafter':settings.event.updatedafter
+        # 'eventtype':settings.event.eventtype,
+        # 'catalog':settings.event.catalog,
+        # 'contributor':settings.event.contributor,
+        # 'updatedafter':settings.event.updatedafter
     }
 
     # Check event_client for compatibility
@@ -1334,8 +1334,8 @@ def run_main(settings: SeismoLoaderSettings = None, from_file=None):
 
     settings, db_manager = setup_paths(settings)
 
-    settings.load_url_mapping()
-    URL_MAPPINGS = settings.client_url_mapping
+    settings.client_url_mapping.load()
+    URL_MAPPINGS = settings.client_url_mapping.maps
 
     download_type = settings.download_type.value
     if not is_in_enum(download_type, DownloadType):
