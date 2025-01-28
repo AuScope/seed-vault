@@ -429,6 +429,8 @@ class SeismoLoaderSettings(BaseModel):
 
         channel_pref = config.get(waveform_section, 'channel_pref', fallback='').strip()
         location_pref = config.get(waveform_section, 'location_pref', fallback='').strip()
+        # channel_pref = cls.parse_optional (config.get(waveform_section, 'channel_pref', fallback=None))
+        # location_pref =cls.parse_optional(config.get(waveform_section, 'location_pref', fallback=None))
 
         return WaveformConfig(
             client=client,
@@ -506,7 +508,7 @@ class SeismoLoaderSettings(BaseModel):
         exclude_stations = [SeismoQuery(cmb_str_n_s=cmb_n_s) for cmb_n_s in exclude_stations_cmb_n_s if cmb_n_s.strip()]
 
         # Parse local_inventory
-        local_inventory = config.get(station_section, 'local_inventory', fallback=None)
+        local_inventory = cls.parse_optional(config.get(station_section, 'local_inventory', fallback=None))
 
  
 
@@ -525,14 +527,15 @@ class SeismoLoaderSettings(BaseModel):
                 level= Levels.CHANNEL
                 status_handler.add_warning("input_parameters", f"'level' is empty in the [{station_section}] section. Defaulting to 'channel'.")
 
+
         # Parse date configurations
         date_config = DateConfig(
-            start_time=parse_time(config.get(station_section, 'starttime', fallback=None)),
-            end_time=parse_time(config.get(station_section, 'endtime', fallback=None)),
-            start_before=parse_time(config.get(station_section, 'startbefore', fallback=None)),
-            start_after=parse_time(config.get(station_section, 'startafter', fallback=None)),
-            end_before=parse_time(config.get(station_section, 'endbefore', fallback=None)),
-            end_after=parse_time(config.get(station_section, 'endafter', fallback=None)),
+            start_time=cls.parse_optional(parse_time(config.get(station_section, 'starttime', fallback=None))),
+            end_time=cls.parse_optional(parse_time(config.get(station_section, 'endtime', fallback=None))),
+            start_before=cls.parse_optional(parse_time(config.get(station_section, 'startbefore', fallback=None))),
+            start_after=cls.parse_optional(parse_time(config.get(station_section, 'startafter', fallback=None))),
+            end_before=cls.parse_optional(parse_time(config.get(station_section, 'endbefore', fallback=None))),
+            end_after=cls.parse_optional(parse_time(config.get(station_section, 'endafter', fallback=None))),
         )
 
         # Build the StationConfig object
@@ -660,11 +663,13 @@ class SeismoLoaderSettings(BaseModel):
         include_arrivals = cls._check_val(config.get(event_section, "includearrivals", fallback=False), False, "bool")
 
         # Parse optional strings
-        limit = config.get(event_section, "limit", fallback=None)
-        offset = config.get(event_section, "offset", fallback=None)
-        local_catalog = config.get(event_section, "local_catalog", fallback=None)
-        contributor = config.get(event_section, "contributor", fallback=None)
-        updated_after = config.get(event_section, "updated_after", fallback=None)
+        limit = cls.parse_optional(config.get(event_section, "limit", fallback=None))
+        offset = cls.parse_optional(config.get(event_section, "offset", fallback=None))
+        local_catalog = cls.parse_optional(config.get(event_section, "local_catalog", fallback=None))
+        contributor = cls.parse_optional(config.get(event_section, "contributor", fallback=None))
+        updatedafter = cls.parse_optional(config.get(event_section, "updatedafter", fallback=None))
+        catalog = cls.parse_optional(config.get(event_section, "catalog", fallback=None))
+        eventtype = cls.parse_optional(config.get(event_section, "eventtype", fallback=None))
 
         # Parse geo_constraint
         geo_constraint_event = cls._parse_geo_constraint(cls, config, event_section, status_handler,)
@@ -690,10 +695,14 @@ class SeismoLoaderSettings(BaseModel):
             offset=offset,
             local_catalog=local_catalog,
             contributor=contributor,
-            updated_after=updated_after,
+            updatedafter=updatedafter,
+            catalog =catalog,
+            eventtype=eventtype,
         )
 
-
+    @staticmethod
+    def parse_optional(value):
+        return value if value and value.strip() else None
 
     @staticmethod
     def _parse_param(
@@ -910,6 +919,8 @@ class SeismoLoaderSettings(BaseModel):
             safe_add_to_config(config, 'EVENT', 'local_catalog', self.event.local_catalog)
             safe_add_to_config(config, 'EVENT', 'contributor', self.event.contributor)
             safe_add_to_config(config, 'EVENT', 'updatedafter', self.event.updatedafter)
+            safe_add_to_config(config, 'EVENT', 'eventtype', self.event.eventtype)
+            safe_add_to_config(config, 'EVENT', 'catalog', self.event.catalog)
 
             # FIXME: The settings are updated such that they support multiple geometries.
             # But config file only accepts one geometry at a time.For now we just get
