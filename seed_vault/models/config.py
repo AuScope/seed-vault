@@ -12,13 +12,12 @@ import pickle
 from obspy import UTCDateTime
 
 from .common import RectangleArea, CircleArea, StatusHandler
+from .url_mapping import UrlMappings
 from seed_vault.enums.config import DownloadType, WorkflowType, GeoConstraintType, Levels, EventModels
 
 # TODO: Not sure if these values are controlled values
 # check to see if should we use controlled values or
 # rely on free inputs from users.
-
-from seed_vault.utils.clients import load_extra_client, load_original_client
 
 
 # Convert start and end times to datetime
@@ -232,7 +231,7 @@ class SeismoLoaderSettings(BaseModel):
     download_type     : DownloadType                          = DownloadType.EVENT
     selected_workflow : WorkflowType                          = WorkflowType.EVENT_BASED
     proccess          : ProcessingConfig                      = None
-    client_url_mapping: Optional[dict]                        = {}
+    client_url_mapping: Optional[UrlMappings]                 = UrlMappings()
     extra_clients     : Optional[dict]                        = {}
     auths             : Optional        [List[AuthConfig]]    = []
     waveform          : WaveformConfig                        = None
@@ -241,12 +240,6 @@ class SeismoLoaderSettings(BaseModel):
     predictions       : Dict            [str, PredictionData] = {}
     status_handler    : StatusHandler                         = StatusHandler()
 
-    def load_url_mapping(self):
-        from obspy.clients.fdsn.header import URL_MAPPINGS
-        self.client_url_mapping = load_original_client()
-        self.extra_clients = load_extra_client()
-        self.client_url_mapping.update(self.extra_clients)
-        URL_MAPPINGS.update(self.client_url_mapping)
 
 
     def set_download_type_from_workflow(self):
