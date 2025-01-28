@@ -1354,19 +1354,3 @@ def run_main(settings: SeismoLoaderSettings = None, from_file=None):
     print("\n ~~ Cleaning up database ~~")
     db_manager.join_continuous_segments(settings.proccess.gap_tolerance)
 
-
-
-# # # # # # # # # # # # # # # # # # #
-
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python3 seismoloader.py input.cfg") ### TODO / REVIEW I assume this needs updating to new -cli version
-        sys.exit(1)
-    
-    config_file = sys.argv[1]
-
-    try:
-        run_main(from_file=config_file)
-    except Exception as e:
-        print(f"Error occured while running: {str(e)}")
-        raise e
