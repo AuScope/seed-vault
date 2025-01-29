@@ -105,6 +105,9 @@ class BaseComponent:
 
     cols_to_exclude             = ['detail', 'is_selected']
 
+    has_error: bool = False
+    err_message: str = ""
+
     @property
     def page_type(self) -> str:
         if self.prev_step_type is not None and self.prev_step_type != Steps.NONE:
@@ -134,6 +137,9 @@ class BaseComponent:
             self.col_color = "network"
             self.col_size  = None
             self.config =  self.settings.station
+
+        self.has_error = False
+        self.err_message = ""
 
     def get_key_element(self, name):        
         return f"{name}-{self.step_type.value}-{self.stage}"
@@ -763,15 +769,21 @@ class BaseComponent:
         
 
     def import_xml(self, uploaded_file):
-        if uploaded_file is not None:
-            if self.step_type == Steps.STATION:
-                inv = read_inventory(uploaded_file)
-                self.inventories = Inventory()
-                self.inventories += inv
-            if self.step_type == Steps.EVENT:
-                cat = read_events(uploaded_file)
-                self.catalogs = Catalog()
-                self.catalogs.extend(cat)
+        st.session_state["show_error_workflow_combined"] = False
+        try:
+            if uploaded_file is not None:
+                if self.step_type == Steps.STATION:
+                    inv = read_inventory(uploaded_file)
+                    self.inventories = Inventory()
+                    self.inventories += inv
+                if self.step_type == Steps.EVENT:
+                    cat = read_events(uploaded_file)
+                    self.catalogs = Catalog()
+                    self.catalogs.extend(cat)
+        except Exception as e:
+            if "unknown format" in str(e).lower():
+                self.trigger_error(f"Unknown format for file {uploaded_file.name}. Please ensure the file is in correct format and **do not forget to remove the pending file from upload.**")
+            self.trigger_error(f"An error occured when importing {uploaded_file.name}. Please ensure the file is in correct format and **do not forget to remove the pending file from upload.**")
                 
 
     # ===================
@@ -782,6 +794,15 @@ class BaseComponent:
             self.all_current_drawings = all_drawings
             self.refresh_map(rerun=True, get_data=True)
 
+
+
+    # ===================
+    #  ERROR HANDLES
+    # ===================
+    def trigger_error(self, message):
+        """Set an error message in session state to be displayed."""
+        self.has_error = True
+        self.err_message = message
 
     # ===================
     # RENDER
@@ -1042,6 +1063,16 @@ class BaseComponent:
 
 
     def render(self):
+
+        if self.has_error:
+            c1_err, c2_err = st.columns([4,1])
+            with c1_err:
+                st.error(self.err_message)
+            with c2_err:
+                if st.button(":material/close:"): # ❌
+                    self.has_error = False
+                    self.err_message = ""
+                    st.rerun()
 
         if self.step_type == Steps.EVENT:
             c2_export = self.event_filter()

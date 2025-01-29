@@ -21,6 +21,8 @@ class CombinedBasedWorkflow:
     event_components: BaseComponent
     station_components: BaseComponent
     waveform_components: WaveformComponents
+    has_error: bool = False
+    err_message: str = ""
 
     def __init__(self):
         self.settings = get_app_settings()
@@ -44,8 +46,8 @@ class CombinedBasedWorkflow:
         """      
         
         self.settings = get_app_settings()
-        st.session_state["show_error"] = False
-        st.session_state["error_message"] = ""
+        self.err_message = ""
+        self.has_error = False
 
         st.session_state.selected_flow_type = selected_flow_type
 
@@ -98,8 +100,9 @@ class CombinedBasedWorkflow:
 
     def trigger_error(self, message):
         """Set an error message in session state to be displayed."""
-        st.session_state["show_error"] = True
-        st.session_state["error_message"] = message
+
+        self.err_message = message
+        self.has_error   = True
 
     def validate_and_adjust_selection(self, workflow_type):
         """Validate selection based on workflow type and return True if valid, else trigger error."""
@@ -141,8 +144,9 @@ class CombinedBasedWorkflow:
                 if selected_catalogs is None or len(selected_catalogs) == 0:
                     self.trigger_error("Please select an event to proceed to the next step.")
                     return False         
-                               
-        st.session_state["show_error"] = False
+
+        self.has_error = False       
+        
         return True
     
     def render_stage_1(self):
@@ -162,16 +166,16 @@ class CombinedBasedWorkflow:
                 if self.validate_and_adjust_selection(self.settings.selected_workflow):
                     self.next_stage()
 
-            if st.session_state.get("show_error", False):
+            if self.has_error:
                 if self.settings.selected_workflow == WorkflowType.EVENT_BASED:
                     selected_catalogs = self.event_components.settings.event.selected_catalogs
                     if selected_catalogs is None or len(selected_catalogs) <= 0:
-                        st.error(st.session_state["error_message"])
+                        st.error(self.err_message)
 
                 elif self.settings.selected_workflow in [WorkflowType.STATION_BASED, WorkflowType.CONTINUOUS]:
                     selected_invs = self.station_components.settings.station.selected_invs
                     if selected_invs is None or len(selected_invs) <= 0:
-                        st.error(st.session_state["error_message"])                           
+                        st.error(self.err_message)                           
 
         # Render components based on selected workflow
         if self.settings.selected_workflow == WorkflowType.EVENT_BASED:
@@ -215,15 +219,15 @@ class CombinedBasedWorkflow:
                     if self.validate_and_adjust_selection(self.settings.selected_workflow):
                         self.next_stage()
                     
-                if st.session_state.get("show_error", False):
+                if self.has_error:
                     if self.settings.selected_workflow == WorkflowType.EVENT_BASED:
                         selected_invs = self.station_components.settings.station.selected_invs
                         if selected_invs is None or len(selected_invs) <= 0:
-                            st.error(st.session_state["error_message"])
+                            st.error(self.err_message)
                     elif self.settings.selected_workflow == WorkflowType.STATION_BASED:
                         selected_catalogs = self.event_components.settings.event.selected_catalogs
                         if selected_catalogs is None or len(selected_catalogs) <= 0:
-                            st.error(st.session_state["error_message"])
+                            st.error(self.err_message)
 
         if self.settings.selected_workflow == WorkflowType.EVENT_BASED:
             self.station_components.render()
