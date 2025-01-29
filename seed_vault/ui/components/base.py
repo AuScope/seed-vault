@@ -106,7 +106,7 @@ class BaseComponent:
     cols_to_exclude             = ['detail', 'is_selected']
 
     has_error: bool = False
-    err_message: str = ""
+    error: str = ""
 
     @property
     def page_type(self) -> str:
@@ -139,7 +139,7 @@ class BaseComponent:
             self.config =  self.settings.station
 
         self.has_error = False
-        self.err_message = ""
+        self.error = ""
 
     def get_key_element(self, name):        
         return f"{name}-{self.step_type.value}-{self.stage}"
@@ -509,43 +509,44 @@ class BaseComponent:
     def handle_get_data(self, is_import: bool = False, uploaded_file = None):
         self.warning = None
         self.error   = None
-        # try:
-        if self.step_type == Steps.EVENT:
-            self.catalogs = Catalog()
-            # self.catalogs = get_event_data(self.settings.model_dump_json())
-            if is_import:
-                self.import_xml(uploaded_file)
-            else:
-                self.catalogs = get_event_data(self.settings)
+        try:
+            if self.step_type == Steps.EVENT:
+                self.catalogs = Catalog()
+                # self.catalogs = get_event_data(self.settings.model_dump_json())
+                if is_import:
+                    self.import_xml(uploaded_file)
+                else:
+                    self.catalogs = get_event_data(self.settings)
 
-            if self.catalogs:
-                self.df_markers = event_response_to_df(self.catalogs)
-            else:
-                self.reset_markers()
+                if self.catalogs:
+                    self.df_markers = event_response_to_df(self.catalogs)
+                else:
+                    self.reset_markers()
 
-        if self.step_type == Steps.STATION:
-            self.inventories = Inventory()
-            # self.inventories = get_station_data(self.settings.model_dump_json())
-            if is_import:
-                self.import_xml(uploaded_file)
-            else:
-                self.inventories = get_station_data(self.settings)
-            if self.inventories:
-                self.df_markers = station_response_to_df(self.inventories)
-            else:
-                self.reset_markers()
-            
-        if not self.df_markers.empty:
-            cols = self.df_markers.columns                
-            cols_to_disp = {c:c.capitalize() for c in cols if c not in self.cols_to_exclude}
-            self.map_fg_marker, self.marker_info, self.fig_color_bar = add_data_points( self.df_markers, cols_to_disp, step=self.step_type, col_color=self.col_color, col_size=self.col_size)
+            if self.step_type == Steps.STATION:
+                self.inventories = Inventory()
+                # self.inventories = get_station_data(self.settings.model_dump_json())
+                if is_import:
+                    self.import_xml(uploaded_file)
+                else:
+                    self.inventories = get_station_data(self.settings)
+                if self.inventories:
+                    self.df_markers = station_response_to_df(self.inventories)
+                else:
+                    self.reset_markers()
+                
+            if not self.df_markers.empty:
+                cols = self.df_markers.columns                
+                cols_to_disp = {c:c.capitalize() for c in cols if c not in self.cols_to_exclude}
+                self.map_fg_marker, self.marker_info, self.fig_color_bar = add_data_points( self.df_markers, cols_to_disp, step=self.step_type, col_color=self.col_color, col_size=self.col_size)
 
-        else:
-            self.warning = "No data available."
+            else:
+                self.warning = "No data available for the selected settings."
 
-        # except Exception as e:
-        #     print(f"An unexpected error occurred: {str(e)}")
-        #     self.error = f"Error: {str(e)}"
+        except Exception as e:
+            print(f"An unexpected error occurred: {str(e)}")
+            self.has_error = True
+            self.error = f"Error: {str(e)}"
 
 
     def clear_all_data(self):
@@ -802,7 +803,7 @@ class BaseComponent:
     def trigger_error(self, message):
         """Set an error message in session state to be displayed."""
         self.has_error = True
-        self.err_message = message
+        self.error = message
 
     # ===================
     # RENDER
@@ -836,7 +837,7 @@ class BaseComponent:
                 data=self.export_xml_bytes(export_selected=False),
                 file_name = f"{self.TXT.STEP}s.xml",
                 mime="application/xml",
-                disabled=(len(self.catalogs.events) == 0 and len(self.inventories.get_contents().get('stations')) == 0)
+                disabled=(len(self.catalogs.events) == 0 and (self.inventories is None or len(self.inventories.get_contents().get('stations')) == 0))
             )
 
         def reset_uploaded_file_processed():
@@ -930,12 +931,6 @@ class BaseComponent:
 
         if self.warning:
             st.warning(self.warning)
-        
-        if self.error:
-            if self.error == "Error: 'TimeoutError' object has no attribute 'splitlines'":
-                st.error("server timeout, try again in a minute")
-            else:
-                st.error(self.error)
 
 
     def render_marker_select(self):
@@ -978,7 +973,7 @@ class BaseComponent:
                     handle_marker_select()
 
             else:                
-                st.warning("No data available.")
+                st.warning("No data available for the selected settings.")
                     
         # if not self.df_markers.empty:
         map_tools_card()
@@ -987,7 +982,7 @@ class BaseComponent:
 
     def render_data_table(self, c5_map):
         if self.df_markers.empty:
-            st.warning("No data available.")
+            st.warning("No data available for the selected settings.")
         else:
             # st.info(self.TXT.SELECT_DATA_TABLE_MSG)
             cols = self.df_markers.columns
@@ -1067,11 +1062,13 @@ class BaseComponent:
         if self.has_error:
             c1_err, c2_err = st.columns([4,1])
             with c1_err:
-                st.error(self.err_message)
+                if self.error == "Error: 'TimeoutError' object has no attribute 'splitlines'":
+                    st.error("server timeout, try again in a minute")
+                st.error(self.error)
             with c2_err:
                 if st.button(":material/close:"): # ❌
                     self.has_error = False
-                    self.err_message = ""
+                    self.error = ""
                     st.rerun()
 
         if self.step_type == Steps.EVENT:
