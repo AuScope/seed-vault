@@ -336,11 +336,19 @@ class BaseComponent:
                 with c32:
                     self.settings.station.channel = st.text_input("Channel",   self.settings.station.channel, key="event-pg-cha-txt-station")
 
+                self.settings.event.highest_samplerate_only = st.checkbox(
+                    "Highest Sample Rate Only", 
+                    value=self.settings.event.highest_samplerate_only,  # Default to unchecked
+                    key="station-pg-highest-sample-rate"
+                )
+                
                 self.settings.station.include_restricted = st.checkbox(
                     "Include Restricted Data", 
-                    value=False,  # Default to unchecked
+                    value=self.settings.station.include_restricted,  # Default to unchecked
                     key="event-pg-include-restricted-station"
                 )
+
+                
 
                 self.settings.station.level = Levels.CHANNEL
 

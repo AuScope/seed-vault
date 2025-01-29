@@ -230,42 +230,7 @@ def populate_database_from_files(cursor, file_paths=[]):
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             ''', (network, station, location, channel, start_timestamp, end_timestamp, now))
 
-
-# Requests for Continuous Data
-"""
-def collect_requests_old(inv, time0, time1, days_per_request=3):
-    #Collect all requests required to download everything in inventory, split into X-day periods.
-    requests = []  # network, station, location, channel, starttime, endtime
-
-    # Sanity check request times
-    time1 = min(time1, UTCDateTime.now()-120)
-    if time0 >= time1:
-        return None
-    
-    for net in inv:
-        for sta in net:
-            for cha in sta:
-                start_date = max(time0, cha.start_date.date)
-                if cha.end_date:
-                    end_date = min(time1 - (1/cha.sample_rate),cha.end_date.date + datetime.timedelta(days=1))
-                else:
-                    end_date = time1
-                
-                current_start = start_date
-                while current_start < end_date:
-                    current_end = min(current_start + datetime.timedelta(days=days_per_request), end_date)
-                    
-                    requests.append((
-                        net.code,
-                        sta.code,
-                        cha.location_code,
-                        cha.code,
-                        current_start.isoformat() + "Z",
-                        current_end.isoformat() + "Z" ))
-                    
-                    current_start = current_end
-    return requests
-"""    
+ 
 
 def collect_requests(inv, time0, time1, days_per_request=3, 
                      cha_pref=None, loc_pref=None):
@@ -443,9 +408,7 @@ def get_preferred_channels(inv,cha_rank=None,loc_rank=None,time=None):
     return new_inv
 
 
-def collect_requests_event(eq,inv,min_dist_deg=30,max_dist_deg=90,
-                           before_p_sec=20,after_p_sec=160,
-                           model=None,settings=None):
+def collect_requests_event(eq,inv, model=None,settings=None):
     """ Collect requests for event eq for stations in inv. """
     settings, db_manager = setup_paths(settings)
 
@@ -1018,10 +981,10 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
         'includeallorigins':settings.event.include_all_origins,
         'includeallmagnitudes':settings.event.include_all_magnitudes,
         'includearrivals':settings.event.include_arrivals,
-        # 'eventtype':settings.event.eventtype,                            /// THESE SHOULD BE RETURNED NOW YES? (REVIEW!)
-        # 'catalog':settings.event.catalog,
-        # 'contributor':settings.event.contributor,
-        # 'updatedafter':settings.event.updatedafter
+        'eventtype':settings.event.eventtype,                            # THESE SHOULD BE RETURNED NOW YES? (REVIEW!)
+        'catalog':settings.event.catalog,
+        'contributor':settings.event.contributor,
+        'updatedafter':settings.event.updatedafter
     }
 
     # Check event_client for compatibility
