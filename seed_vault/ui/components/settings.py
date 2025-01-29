@@ -104,10 +104,10 @@ class SettingsComponent:
                 else:
                     newer_than = st.date_input("Update Since")
         with c2:
-            self.settings.proccess.num_processes = int(st.text_input("Number of Processors", value=self.settings.proccess.num_processes, help="Number of Processors >= 0. If set to zero, the app will use all available cpu to perform the operation."))
+            self.settings.processing.num_processes = int(st.text_input("Number of Processors", value=self.settings.processing.num_processes, help="Number of Processors >= 0. If set to zero, the app will use all available cpu to perform the operation."))
 
         with c3:
-            self.settings.proccess.gap_tolerance = int(st.text_input("Gap Tolerance (s)", value=self.settings.proccess.gap_tolerance))
+            self.settings.processing.gap_tolerance = int(st.text_input("Gap Tolerance (s)", value=self.settings.processing.gap_tolerance))
 
         if st.button("Sync Database", help="Synchronizes your SDS archive given the above parameters."):
             self.reset_is_new_cred_added()
@@ -117,8 +117,8 @@ class SettingsComponent:
                 db_path=self.settings.db_path,
                 search_patterns=search_patterns,
                 newer_than=newer_than,
-                num_processes=self.settings.proccess.num_processes,
-                gap_tolerance=self.settings.proccess.gap_tolerance
+                num_processes=self.settings.processing.num_processes,
+                gap_tolerance=self.settings.processing.gap_tolerance
             )
 
 

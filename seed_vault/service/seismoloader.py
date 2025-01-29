@@ -1337,5 +1337,5 @@ def run_main(settings: SeismoLoaderSettings = None, from_file=None):
 
     # Now we can optionally clean up our database (stich continous segments, etc)
     print("\n ~~ Cleaning up database ~~")
-    db_manager.join_continuous_segments(settings.proccess.gap_tolerance)
+    db_manager.join_continuous_segments(settings.processing.gap_tolerance)
 
