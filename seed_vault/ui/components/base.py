@@ -387,6 +387,23 @@ class BaseComponent:
 
         self.set_geo_constraint(new_geo)
 
+    def is_valid_rectangle(self, min_lat, max_lat, min_lng, max_lng):
+        """Check if min/max latitude and longitude values are valid."""
+        return (-90 <= min_lat <= 90 and -90 <= max_lat <= 90 and
+                -180 <= min_lng <= 180 and -180 <= max_lng <= 180 and
+                min_lat <= max_lat and min_lng <= max_lng)
+
+    def is_valid_circle(self, lat, lng, max_radius, min_radius):
+        """Check if circle data is valid."""
+        return (
+            -90 <= lat <= 90 and
+            -180 <= lng <= 180 and
+            max_radius > 0 and
+            min_radius >= 0 and
+            min_radius <= max_radius
+        )
+
+
     def update_circle_areas(self):
         geo_constraint = self.get_geo_constraint()
         lst_circ = [area.coords.model_dump() for area in geo_constraint
@@ -396,6 +413,25 @@ class BaseComponent:
             st.write(f"Circle Areas (Degree)")
             original_df_circ = pd.DataFrame(lst_circ, columns=CircleArea.model_fields)
             self.df_circ = st.data_editor(original_df_circ, key=f"circ_area", hide_index=True)
+
+            # Validate column names before applying validation
+            if {"lat", "lng", "max_radius", "min_radius"}.issubset(self.df_circ.columns):
+                invalid_entries = self.df_circ[
+                    ~self.df_circ.apply(lambda row: self.is_valid_circle(
+                        row["lat"], row["lng"], row["max_radius"], row["min_radius"]
+                    ), axis=1)
+                ]
+
+                if not invalid_entries.empty:
+                    st.warning(
+                        "Invalid circle data detected. Ensure lat is between -90 and 90, lng is between -180 and 180, "
+                        "max_radius is positive, and min_radius ≤ max_radius."
+                    )
+                    return  # Stop further processing if validation fails
+
+            else:
+                st.error("Error: Missing required columns. Check CircleArea.model_fields.")
+                return  # Stop execution if column names are incorrect
 
             circ_changed = not original_df_circ.equals(self.df_circ)
 
@@ -412,6 +448,23 @@ class BaseComponent:
             st.write(f"Rectangle Areas")
             original_df_rect = pd.DataFrame(lst_rect, columns=RectangleArea.model_fields)
             self.df_rect = st.data_editor(original_df_rect, key=f"rect_area", hide_index=True)
+
+            # Validate column names before applying validation
+            if {"min_lat", "max_lat", "min_lng", "max_lng"}.issubset(self.df_rect.columns):
+                invalid_entries = self.df_rect[
+                    ~self.df_rect.apply(lambda row: self.is_valid_rectangle(
+                        row["min_lat"], row["max_lat"], row["min_lng"], row["max_lng"]
+                    ), axis=1)
+                ]
+
+                if not invalid_entries.empty:
+                    st.warning("Invalid rectangle coordinates detected. Ensure min_lat ≤ max_lat and min_lng ≤ max_lng, with values within valid ranges (-90 to 90 for lat, -180 to 180 for lng).")
+                    return  
+
+            else:
+                st.error("Error: Missing required columns. Check RectangleArea.model_fields.")
+                return 
+
 
             rect_changed = not original_df_rect.equals(self.df_rect)
 
