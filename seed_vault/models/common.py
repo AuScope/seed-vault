@@ -91,14 +91,14 @@ class StatusHandler:
             if category not in self.status:
                 continue
             report_lines.append(f"**{category.capitalize()}**")  # Category header
-            report_lines.append("") 
+            # report_lines.append("") 
             for subcategory, messages in self.status[category].items():
                 report_lines.append("") 
                 if messages:
                     # report_lines.append(f"  *{subcategory.capitalize()}*")  
                     for i, message in enumerate(messages, start=1):
                         report_lines.append(f"    {i}. {message}")  # Numbered messages
-                        report_lines.append("")  # Add a blank line between categories
+                        # report_lines.append("")  # Add a blank line between categories
 
 
         return "\n".join(report_lines) if report_lines else "No status messages available."

@@ -56,26 +56,13 @@ def get_direct_settings(create_new: bool = True, empty_geo: bool = True):
     if "direct_settings" not in st.session_state:
         settings = SeismoLoaderSettings.from_cfg_file(target_file_direct)
         settings.client_url_mapping.load()
-        st.session_state.direct_settings = settings
-
-        if(settings.status_handler.has_errors()):
-            errors = settings.status_handler.generate_status_report("errors")                           
-            st.error(f"{errors}\n\n**Please review the errors. Default values have been used to resolve some of them. Before proceeding, verify and save the updated config.**")
-        if(settings.status_handler.has_warnings()):
-            warning = settings.status_handler.generate_status_report("warnings")                           
-            st.warning(warning)                
+        st.session_state.direct_settings = settings          
     else:
         if create_new:
             settings = SeismoLoaderSettings.from_cfg_file(target_file_direct)
             settings.client_url_mapping.load()
             st.session_state.direct_settings = settings
-            if(settings.status_handler.has_errors()):
-                errors = settings.status_handler.generate_status_report("errors")                           
-                st.error(f"{errors}\n\n**Please review the errors. Default values have been used to resolve some of them. Before proceeding, verify and save the updated config.**")
-            if(settings.status_handler.has_warnings()):
-                warning = settings.status_handler.generate_status_report("warnings")                           
-                st.warning(warning)             
-    
+   
     if empty_geo:
         st.session_state.direct_settings = empty_settings_geo_constraints(st.session_state.direct_settings)
 
