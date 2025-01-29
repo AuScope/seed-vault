@@ -232,8 +232,9 @@ def populate_database_from_files(cursor, file_paths=[]):
 
 
 # Requests for Continuous Data
+"""
 def collect_requests_old(inv, time0, time1, days_per_request=3):
-    """ Collect all requests required to download everything in inventory, split into X-day periods. """
+    #Collect all requests required to download everything in inventory, split into X-day periods.
     requests = []  # network, station, location, channel, starttime, endtime
 
     # Sanity check request times
@@ -264,6 +265,7 @@ def collect_requests_old(inv, time0, time1, days_per_request=3):
                     
                     current_start = current_end
     return requests
+"""    
 
 def collect_requests(inv, time0, time1, days_per_request=3, 
                      cha_pref=None, loc_pref=None):
@@ -397,8 +399,8 @@ def get_preferred_channels(inv,cha_rank=None,loc_rank=None,time=None):
             # For each component, find the best channel
             for comp, chan_list in components.items():
                 best_chan = None
-                best_cha_rank = float('inf')
-                best_loc_rank = float('inf')
+                best_cha_rank = 9999
+                best_loc_rank = 9999
                 
                 # Check each channel's availability at time
                 for chan in chan_list:
@@ -443,32 +445,39 @@ def get_preferred_channels(inv,cha_rank=None,loc_rank=None,time=None):
 
 def collect_requests_event(eq,inv,min_dist_deg=30,max_dist_deg=90,
                            before_p_sec=20,after_p_sec=160,
-                           model=None,settings=None,highest_sr_only=True,
-                           cha_pref=None,loc_pref=None):
+                           model=None,settings=None):
     """ Collect requests for event eq for stations in inv. """
     settings, db_manager = setup_paths(settings)
+
+    # Set variables from config 
+    model_name = settings.event.model
+    before_p_sec = settings.event.before_p_sec
+    after_p_sec = settings.event.after_p_sec
+    highest_sr_only = settings.event.highest_samplerate_only
+    cha_pref = settings.waveform.channel_pref
+    loc_pref = settings.waveform.location_pref
+
     origin = eq.origins[0] # defaulting to preferred origin
     ot = origin.time
     
     sub_inv = inv.select(time=ot)
 
     if highest_sr_only:
-        sub_inv = select_highest_samplerate(sub_inv,minSR=5) #filter by time and also select highest samplerate
+        sub_inv = select_highest_samplerate(sub_inv,minSR=5) # presumably we aren't interested in any data below ~5 hz for events
     
     if cha_pref or loc_pref:
         sub_inv = get_preferred_channels(sub_inv, cha_pref, loc_pref)
-        # TODO should be (sub_inv,settings.waveform,channel_pref,settings.waveform.location_pref)
 
-    before_p_sec = settings.event.before_p_sec
-    after_p_sec = settings.event.after_p_sec
-
-    # Failsafe to ensure a model is loaded
+    # Failsafe to ensure SOME model is loaded
     if not model:
-        model = TauPyModel('IASP91')
+        try:
+            model = TauPyModel(model_name.upper())
+        except:
+            model = TauPyModel('IASP91')
 
     requests_per_eq = []
     arrivals_per_eq = []
-    p_arrivals = {}  # Dictionary to store P arrivals
+    p_arrivals = {}  # Dictionary to store first arrivals
 
     for net in sub_inv:
         for sta in net:
@@ -517,7 +526,7 @@ def collect_requests_event(eq,inv,min_dist_deg=30,max_dist_deg=90,
                                     net.code,sta.code,sta.latitude,sta.longitude,sta.elevation/1000,
                                     sta_start,sta_end,
                                     dist_deg,dist_m/1000,azi,p_time.timestamp,
-                                    s_time_timestamp,settings.event.model))
+                                    s_time_timestamp,model_name))
 
             # Add to our requests
             for cha in sta: # TODO will have to had filtered channels prior to this, else will grab them all
@@ -1009,7 +1018,7 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
         'includeallorigins':settings.event.include_all_origins,
         'includeallmagnitudes':settings.event.include_all_magnitudes,
         'includearrivals':settings.event.include_arrivals,
-        # 'eventtype':settings.event.eventtype,
+        # 'eventtype':settings.event.eventtype,                            /// THESE SHOULD BE RETURNED NOW YES? (REVIEW!)
         # 'catalog':settings.event.catalog,
         # 'contributor':settings.event.contributor,
         # 'updatedafter':settings.event.updatedafter
@@ -1131,8 +1140,7 @@ def run_continuous(settings: SeismoLoaderSettings):
     # Collect requests
     requests = collect_requests(settings.station.selected_invs, 
         starttime, endtime, days_per_request=settings.waveform.days_per_request,
-        cha_pref=None,loc_pref=None)
-        # TODO should be settings.waveform,channel_pref,settings.waveform.location_pref
+        cha_pref=settings.waveform.channel_pref,loc_pref=settings.waveform.location_pref)
 
     # Remove any for data we already have (requires updated db)
     # If force_redownload is flagged, then ignore pruning and 
