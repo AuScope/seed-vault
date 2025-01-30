@@ -29,6 +29,8 @@ from seed_vault.service.db import DatabaseManager
 from seed_vault.service.waveform import get_local_waveform, stream_to_dataframe
 from obspy.clients.fdsn.header import URL_MAPPINGS, FDSNNoDataException
 
+import threading
+
 ### request status codes (TBD more:
 # 204 = no data
 # ??4 = denied
@@ -1178,7 +1180,7 @@ def run_continuous(settings: SeismoLoaderSettings):
     return time_series
 
 
-def run_event(settings: SeismoLoaderSettings):
+def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None):
     """
     Processes and downloads seismic event data for each event in the provided catalog using the specified
     settings and station inventory. The function handles data requests, filters out already available data,
@@ -1220,8 +1222,8 @@ def run_event(settings: SeismoLoaderSettings):
         ttmodel = TauPyModel(settings.event.model)
     except Exception as e:
         ttmodel = TauPyModel('IASP91')
-    event_streams = []
 
+    event_streams = []
     for i, eq in enumerate(settings.event.selected_catalogs):
         # Collect requests
         requests, new_arrivals, p_arrivals = collect_requests_event(
@@ -1229,6 +1231,10 @@ def run_event(settings: SeismoLoaderSettings):
             model=ttmodel,
             settings=settings,
         )
+
+        if stop_event and stop_event.is_set():
+            print("Run canceled!")
+            return None
 
         # Import any new arrival info into database
         if new_arrivals:
@@ -1241,7 +1247,10 @@ def run_event(settings: SeismoLoaderSettings):
         else:
             print("Pruning: Pruning the request to avoid duplicate data downloads.")
             pruned_requests= prune_requests(requests, db_manager, settings.sds_path)
-            
+        
+        if stop_event and stop_event.is_set():
+            print("Run canceled!")
+            return None
 
         # Process new data if needed
         if pruned_requests:
@@ -1266,7 +1275,15 @@ def run_event(settings: SeismoLoaderSettings):
             # Archive new data
             for request in combined_requests:
                 try:
+                    if stop_event and stop_event.is_set():
+                        print("Run canceled!")
+                        return None
+                    
                     archive_request(request, waveform_clients, settings.sds_path, db_manager)
+
+                    if stop_event and stop_event.is_set():
+                        print("Run canceled!")
+                        return None
                 except Exception as e:
                     print(f"Error archiving request {request}: {str(e)}")
 
@@ -1281,6 +1298,9 @@ def run_event(settings: SeismoLoaderSettings):
                 starttime=req[4],
                 endtime=req[5]
             )
+            if stop_event and stop_event.is_set():
+                print("Run canceled!")
+                return None
             
             try:
                 st = get_local_waveform(query, settings)
@@ -1337,5 +1357,5 @@ def run_main(settings: SeismoLoaderSettings = None, from_file=None):
 
     # Now we can optionally clean up our database (stich continous segments, etc)
     print("\n ~~ Cleaning up database ~~")
-    db_manager.join_continuous_segments(settings.proccess.gap_tolerance)
+    db_manager.join_continuous_segments(settings.processing.gap_tolerance)
 

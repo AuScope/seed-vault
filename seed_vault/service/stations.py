@@ -30,7 +30,9 @@ def remove_duplicate_inventories(inventories):
 
     # Create lists to store the filtered networks and stations
     filtered_networks = []
-
+    if inventories is None:
+        return None
+    
     for network in inventories:
         unique_stations = []
         

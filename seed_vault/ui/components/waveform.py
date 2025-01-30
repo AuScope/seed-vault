@@ -1,6 +1,7 @@
 from typing import List
 from obspy import Stream
 from obspy import UTCDateTime
+import threading
 from seed_vault.enums.config import WorkflowType
 from seed_vault.models.config import SeismoLoaderSettings
 from seed_vault.service.seismoloader import run_continuous, run_event
@@ -15,6 +16,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 from seed_vault.ui.components.continuous_waveform import ContinuousComponents
 from seed_vault.service.utils import check_client_services
+
+
+query_thread = None
+stop_event = threading.Event()
+
+
+if "query_done" not in st.session_state:
+    st.session_state["query_done"] = False
+if "trigger_rerun" not in st.session_state:
+    st.session_state["trigger_rerun"] = False
 
 class WaveformFilterMenu:
     settings: SeismoLoaderSettings
@@ -160,6 +171,42 @@ class WaveformDisplay:
                 filtered_stream += tr
                 
         return filtered_stream
+    
+
+    def fetch_data(self):
+        self.streams = run_event(self.settings, stop_event)
+        # st.session_state["query_done"] = True  # Mark as done
+        # st.session_state["trigger_rerun"] = True  # 🔹 Set flag for rerun
+
+        st.session_state.update({
+        "query_done": True,   # Mark query as done
+        "trigger_rerun": True # 🚀 Set flag for UI to trigger rerun
+    })
+        # if self.streams:
+        #     # Update filter menu with first stream
+        #     self.filter_menu.update_available_channels(self.streams[0])
+        #     st.success(f"Successfully retrieved waveforms for {len(self.streams)} events.")
+        # else:
+        #     st.warning("No waveforms retrieved. Please check your selection criteria.")
+
+        # st.rerun()  # Refresh UI after completion
+
+    # def retrieve_waveforms(self):
+    #     """Retrieve waveforms and store as ObsPy streams"""
+    #     global query_thread, stop_event
+    #     if not self.settings.event.selected_catalogs or not self.settings.station.selected_invs:
+    #         st.warning("Please select events and stations before downloading waveforms.")
+    #         return
+        
+    #     stop_event.clear()  # Reset the cancellation flag
+
+    #     query_thread = threading.Thread(target=self.fetch_data, daemon=True)
+    #     query_thread.start() 
+
+    #     st.session_state["query_done"] = False  # Reset query flag
+    #     st.session_state["trigger_rerun"] = False  # Reset rerun flag
+
+
     def retrieve_waveforms(self):
         """Retrieve waveforms and store as ObsPy streams"""
         if not self.settings.event.selected_catalogs or not self.settings.station.selected_invs:
@@ -174,6 +221,7 @@ class WaveformDisplay:
             st.success(f"Successfully retrieved waveforms for {len(self.streams)} events.")
         else:
             st.warning("No waveforms retrieved. Please check your selection criteria.")
+
             
     def _get_trace_color(self, index: int) -> str:
         """Get color for trace based on index"""
@@ -512,7 +560,17 @@ class WaveformComponents:
             if st.button("Get Waveforms", key="get_waveforms"):
                 self.waveform_display.retrieve_waveforms()
                 # Force a rerun to update the UI immediately
-                st.rerun()
+                # st.rerun()
+
+
+            if st.button("Cancel Download", key="cancel_download"):
+                stop_event.set()  # Signal cancellation
+                st.warning("Cancelling query...")
+
+                if query_thread and query_thread.is_alive():
+                    query_thread.join()  # Wait for thread to exit
+
+                # st.rerun()  # Refresh UI
             
             # Render filter menu with current stream
             current_stream = self.waveform_display.streams[0] if self.waveform_display.streams else None
@@ -590,3 +648,8 @@ class SeismicDistanceDisplay:
             st.subheader("Station Distances")
             df = pd.DataFrame(distances)
             st.dataframe(df)
+
+
+if st.session_state.get("trigger_rerun", False):
+    st.session_state["trigger_rerun"] = False  # Reset flag to prevent infinite loops
+    st.rerun()  # 🔹 Force UI update

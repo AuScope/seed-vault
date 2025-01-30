@@ -105,6 +105,9 @@ class BaseComponent:
 
     cols_to_exclude             = ['detail', 'is_selected']
 
+    has_error: bool = False
+    error: str = ""
+
     @property
     def page_type(self) -> str:
         if self.prev_step_type is not None and self.prev_step_type != Steps.NONE:
@@ -134,6 +137,9 @@ class BaseComponent:
             self.col_color = "network"
             self.col_size  = None
             self.config =  self.settings.station
+
+        self.has_error = False
+        self.error = ""
 
     def get_key_element(self, name):        
         return f"{name}-{self.step_type.value}-{self.stage}"
@@ -397,6 +403,23 @@ class BaseComponent:
 
         self.set_geo_constraint(new_geo)
 
+    def is_valid_rectangle(self, min_lat, max_lat, min_lng, max_lng):
+        """Check if min/max latitude and longitude values are valid."""
+        return (-90 <= min_lat <= 90 and -90 <= max_lat <= 90 and
+                -180 <= min_lng <= 180 and -180 <= max_lng <= 180 and
+                min_lat <= max_lat and min_lng <= max_lng)
+
+    def is_valid_circle(self, lat, lng, max_radius, min_radius):
+        """Check if circle data is valid."""
+        return (
+            -90 <= lat <= 90 and
+            -180 <= lng <= 180 and
+            max_radius > 0 and
+            min_radius >= 0 and
+            min_radius <= max_radius
+        )
+
+
     def update_circle_areas(self):
         geo_constraint = self.get_geo_constraint()
         lst_circ = [area.coords.model_dump() for area in geo_constraint
@@ -406,6 +429,25 @@ class BaseComponent:
             st.write(f"Circle Areas (Degree)")
             original_df_circ = pd.DataFrame(lst_circ, columns=CircleArea.model_fields)
             self.df_circ = st.data_editor(original_df_circ, key=f"circ_area", hide_index=True)
+
+            # Validate column names before applying validation
+            if {"lat", "lng", "max_radius", "min_radius"}.issubset(self.df_circ.columns):
+                invalid_entries = self.df_circ[
+                    ~self.df_circ.apply(lambda row: self.is_valid_circle(
+                        row["lat"], row["lng"], row["max_radius"], row["min_radius"]
+                    ), axis=1)
+                ]
+
+                if not invalid_entries.empty:
+                    st.warning(
+                        "Invalid circle data detected. Ensure lat is between -90 and 90, lng is between -180 and 180, "
+                        "max_radius is positive, and min_radius ≤ max_radius."
+                    )
+                    return  # Stop further processing if validation fails
+
+            else:
+                st.error("Error: Missing required columns. Check CircleArea.model_fields.")
+                return  # Stop execution if column names are incorrect
 
             circ_changed = not original_df_circ.equals(self.df_circ)
 
@@ -422,6 +464,23 @@ class BaseComponent:
             st.write(f"Rectangle Areas")
             original_df_rect = pd.DataFrame(lst_rect, columns=RectangleArea.model_fields)
             self.df_rect = st.data_editor(original_df_rect, key=f"rect_area", hide_index=True)
+
+            # Validate column names before applying validation
+            if {"min_lat", "max_lat", "min_lng", "max_lng"}.issubset(self.df_rect.columns):
+                invalid_entries = self.df_rect[
+                    ~self.df_rect.apply(lambda row: self.is_valid_rectangle(
+                        row["min_lat"], row["max_lat"], row["min_lng"], row["max_lng"]
+                    ), axis=1)
+                ]
+
+                if not invalid_entries.empty:
+                    st.warning("Invalid rectangle coordinates detected. Ensure min_lat ≤ max_lat and min_lng ≤ max_lng, with values within valid ranges (-90 to 90 for lat, -180 to 180 for lng).")
+                    return  
+
+            else:
+                st.error("Error: Missing required columns. Check RectangleArea.model_fields.")
+                return 
+
 
             rect_changed = not original_df_rect.equals(self.df_rect)
 
@@ -526,43 +585,44 @@ class BaseComponent:
     def handle_get_data(self, is_import: bool = False, uploaded_file = None):
         self.warning = None
         self.error   = None
-        # try:
-        if self.step_type == Steps.EVENT:
-            self.catalogs = Catalog()
-            # self.catalogs = get_event_data(self.settings.model_dump_json())
-            if is_import:
-                self.import_xml(uploaded_file)
-            else:
-                self.catalogs = get_event_data(self.settings)
+        try:
+            if self.step_type == Steps.EVENT:
+                self.catalogs = Catalog()
+                # self.catalogs = get_event_data(self.settings.model_dump_json())
+                if is_import:
+                    self.import_xml(uploaded_file)
+                else:
+                    self.catalogs = get_event_data(self.settings)
 
-            if self.catalogs:
-                self.df_markers = event_response_to_df(self.catalogs)
-            else:
-                self.reset_markers()
+                if self.catalogs:
+                    self.df_markers = event_response_to_df(self.catalogs)
+                else:
+                    self.reset_markers()
 
-        if self.step_type == Steps.STATION:
-            self.inventories = Inventory()
-            # self.inventories = get_station_data(self.settings.model_dump_json())
-            if is_import:
-                self.import_xml(uploaded_file)
-            else:
-                self.inventories = get_station_data(self.settings)
-            if self.inventories:
-                self.df_markers = station_response_to_df(self.inventories)
-            else:
-                self.reset_markers()
-            
-        if not self.df_markers.empty:
-            cols = self.df_markers.columns                
-            cols_to_disp = {c:c.capitalize() for c in cols if c not in self.cols_to_exclude}
-            self.map_fg_marker, self.marker_info, self.fig_color_bar = add_data_points( self.df_markers, cols_to_disp, step=self.step_type, col_color=self.col_color, col_size=self.col_size)
+            if self.step_type == Steps.STATION:
+                self.inventories = Inventory()
+                # self.inventories = get_station_data(self.settings.model_dump_json())
+                if is_import:
+                    self.import_xml(uploaded_file)
+                else:
+                    self.inventories = get_station_data(self.settings)
+                if self.inventories:
+                    self.df_markers = station_response_to_df(self.inventories)
+                else:
+                    self.reset_markers()
+                
+            if not self.df_markers.empty:
+                cols = self.df_markers.columns                
+                cols_to_disp = {c:c.capitalize() for c in cols if c not in self.cols_to_exclude}
+                self.map_fg_marker, self.marker_info, self.fig_color_bar = add_data_points( self.df_markers, cols_to_disp, step=self.step_type, col_color=self.col_color, col_size=self.col_size)
 
-        else:
-            self.warning = "No data available."
+            else:
+                self.warning = "No data available for the selected settings."
 
-        # except Exception as e:
-        #     print(f"An unexpected error occurred: {str(e)}")
-        #     self.error = f"Error: {str(e)}"
+        except Exception as e:
+            print(f"An unexpected error occurred: {str(e)}")
+            self.has_error = True
+            self.error = f"Error: {str(e)}"
 
 
     def clear_all_data(self):
@@ -786,15 +846,21 @@ class BaseComponent:
         
 
     def import_xml(self, uploaded_file):
-        if uploaded_file is not None:
-            if self.step_type == Steps.STATION:
-                inv = read_inventory(uploaded_file)
-                self.inventories = Inventory()
-                self.inventories += inv
-            if self.step_type == Steps.EVENT:
-                cat = read_events(uploaded_file)
-                self.catalogs = Catalog()
-                self.catalogs.extend(cat)
+        st.session_state["show_error_workflow_combined"] = False
+        try:
+            if uploaded_file is not None:
+                if self.step_type == Steps.STATION:
+                    inv = read_inventory(uploaded_file)
+                    self.inventories = Inventory()
+                    self.inventories += inv
+                if self.step_type == Steps.EVENT:
+                    cat = read_events(uploaded_file)
+                    self.catalogs = Catalog()
+                    self.catalogs.extend(cat)
+        except Exception as e:
+            if "unknown format" in str(e).lower():
+                self.trigger_error(f"Unknown format for file {uploaded_file.name}. Please ensure the file is in correct format and **do not forget to remove the pending file from upload.**")
+            self.trigger_error(f"An error occured when importing {uploaded_file.name}. Please ensure the file is in correct format and **do not forget to remove the pending file from upload.**")
                 
 
     # ===================
@@ -805,6 +871,15 @@ class BaseComponent:
             self.all_current_drawings = all_drawings
             self.refresh_map(rerun=True, get_data=True)
 
+
+
+    # ===================
+    #  ERROR HANDLES
+    # ===================
+    def trigger_error(self, message):
+        """Set an error message in session state to be displayed."""
+        self.has_error = True
+        self.error = message
 
     # ===================
     # RENDER
@@ -838,7 +913,7 @@ class BaseComponent:
                 data=self.export_xml_bytes(export_selected=False),
                 file_name = f"{self.TXT.STEP}s.xml",
                 mime="application/xml",
-                disabled=(len(self.catalogs.events) == 0 and len(self.inventories.get_contents().get('stations')) == 0)
+                disabled=(len(self.catalogs.events) == 0 and (self.inventories is None or len(self.inventories.get_contents().get('stations')) == 0))
             )
 
         def reset_uploaded_file_processed():
@@ -932,12 +1007,6 @@ class BaseComponent:
 
         if self.warning:
             st.warning(self.warning)
-        
-        if self.error:
-            if self.error == "Error: 'TimeoutError' object has no attribute 'splitlines'":
-                st.error("server timeout, try again in a minute")
-            else:
-                st.error(self.error)
 
 
     def render_marker_select(self):
@@ -980,7 +1049,7 @@ class BaseComponent:
                     handle_marker_select()
 
             else:                
-                st.warning("No data available.")
+                st.warning("No data available for the selected settings.")
                     
         # if not self.df_markers.empty:
         map_tools_card()
@@ -989,7 +1058,7 @@ class BaseComponent:
 
     def render_data_table(self, c5_map):
         if self.df_markers.empty:
-            st.warning("No data available.")
+            st.warning("No data available for the selected settings.")
         else:
             # st.info(self.TXT.SELECT_DATA_TABLE_MSG)
             cols = self.df_markers.columns
@@ -1065,6 +1134,18 @@ class BaseComponent:
 
 
     def render(self):
+
+        if self.has_error:
+            c1_err, c2_err = st.columns([4,1])
+            with c1_err:
+                if self.error == "Error: 'TimeoutError' object has no attribute 'splitlines'":
+                    st.error("server timeout, try again in a minute")
+                st.error(self.error)
+            with c2_err:
+                if st.button(":material/close:"): # ❌
+                    self.has_error = False
+                    self.error = ""
+                    st.rerun()
 
         if self.step_type == Steps.EVENT:
             c2_export = self.event_filter()

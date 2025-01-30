@@ -232,7 +232,7 @@ class SeismoLoaderSettings(BaseModel):
     db_path           : str                                   = None
     download_type     : DownloadType                          = DownloadType.EVENT
     selected_workflow : WorkflowType                          = WorkflowType.EVENT_BASED
-    proccess          : ProcessingConfig                      = None
+    processing          : ProcessingConfig                      = None
     client_url_mapping: Optional[UrlMappings]                 = UrlMappings()
     extra_clients     : Optional[dict]                        = {}
     auths             : Optional        [List[AuthConfig]]    = []
@@ -312,7 +312,7 @@ class SeismoLoaderSettings(BaseModel):
             sds_path=sds_path,
             db_path=db_path,
             download_type=download_type,
-            proccess=processing_config,
+            processing=processing_config,
             auths=lst_auths,
             waveform=waveform,
             station=station_config,
@@ -846,8 +846,8 @@ class SeismoLoaderSettings(BaseModel):
 
         # Populate the [PROCESSING] section
         config['PROCESSING'] = {}
-        safe_add_to_config(config, 'PROCESSING', 'num_processes', self.proccess.num_processes)
-        safe_add_to_config(config, 'PROCESSING', 'gap_tolerance', self.proccess.gap_tolerance)
+        safe_add_to_config(config, 'PROCESSING', 'num_processes', self.processing.num_processes)
+        safe_add_to_config(config, 'PROCESSING', 'gap_tolerance', self.processing.gap_tolerance)
         safe_add_to_config(config, 'PROCESSING', 'download_type', self.download_type.value)
 
         # Populate the [AUTH] section
@@ -952,9 +952,9 @@ class SeismoLoaderSettings(BaseModel):
         config_dict = {
             'sds_path': self.sds_path,
             'db_path': self.db_path,
-            'proccess': {
-                'num_processes': self.proccess.num_processes,
-                'gap_tolerance': self.proccess.gap_tolerance,
+            'processing': {
+                'num_processes': self.processing.num_processes,
+                'gap_tolerance': self.processing.gap_tolerance,
             },            
             'download_type': self.download_type.value if self.download_type else None,
             'auths': self.auths if self.auths else [],
