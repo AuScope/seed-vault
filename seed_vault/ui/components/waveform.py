@@ -57,7 +57,6 @@ class WaveformFilterMenu:
     
     def render(self, stream=None):
         st.sidebar.title("Waveform Controls")
-        
         # Step 1: Data Retrieval Settings
         with st.sidebar.expander("Step 1: Data Source", expanded=True):
             st.subheader("🔍 Time Window")
@@ -85,6 +84,49 @@ class WaveformFilterMenu:
             services = check_client_services(self.settings.waveform.client)
             if not services['dataselect']:
                 st.warning(f"⚠️ Warning: Selected client '{self.settings.waveform.client}' does not support WAVEFORM service. Please choose another client.")
+
+            # Add Download Preferences section
+            st.subheader("📊 Download Preferences")
+            
+            # Channel Priority Input
+            channel_pref = st.text_input(
+                "Channel Priority",
+                value=self.settings.waveform.channel_pref or "CH,HH,BH,EH,HN,EN,SH,LH",
+                help="Order of preferred channels (e.g., HH,BH,EH). Data will be downloaded in this priority order.",
+                key="channel_pref"
+            )
+            
+            # Validate and update channel preferences
+            if channel_pref:
+                # Remove spaces and convert to uppercase
+                channel_pref = channel_pref.replace(" ", "").upper()
+                # Basic validation
+                channel_codes = channel_pref.split(",")
+                is_valid = all(len(code) == 2 for code in channel_codes)
+                if is_valid:
+                    self.settings.waveform.channel_pref = channel_pref
+                else:
+                    st.error("Invalid channel format. Each channel code should be 2 characters (e.g., HH,BH,EH)")
+
+            # Location Priority Input
+            location_pref = st.text_input(
+                "Location Priority",
+                value=self.settings.waveform.location_pref or "10,00,20,30",
+                help="Order of preferred location codes (e.g., 00,10,20). Data will be downloaded in this priority order. Use empty string for blank location.",
+                key="location_pref"
+            )
+            
+            # Validate and update location preferences
+            if location_pref:
+                # Remove spaces
+                location_pref = location_pref.replace(" ", "")
+                # Basic validation
+                location_codes = location_pref.split(",")
+                is_valid = all(len(code) <= 2 for code in location_codes)
+                if is_valid:
+                    self.settings.waveform.location_pref = location_pref
+                else:
+                    st.error("Invalid location format. Each location code should be 0-2 characters (e.g., 00,10,20)")
 
         # Step 2: Display Filters (enabled after data retrieval)
         with st.sidebar.expander("Step 2: Display Filters", expanded=True):
