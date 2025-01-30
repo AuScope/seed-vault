@@ -30,10 +30,6 @@ class WaveformFilterMenu:
         self.channel_filter = "All channels"
         self.available_channels = ["All channels"]
         self.display_limit = 5
-        if self.settings.event.before_p_sec is None:
-            self.settings.event.before_p_sec = 20  # Default to 20 seconds before
-        if self.settings.event.after_p_sec is None:
-            self.settings.event.after_p_sec = 160  # Default to 160 seconds after
     def update_available_channels(self, stream: Stream):
         if not stream:
             self.available_channels = ["All channels"]
@@ -56,12 +52,12 @@ class WaveformFilterMenu:
             st.subheader("🔍 Time Window")
             self.settings.event.before_p_sec = st.number_input(
                 "Start (secs before P arrival):", 
-                value=20,
+                value=self.settings.event.before_p_sec or 20,
                 help="Time window before P arrival"
             )
             self.settings.event.after_p_sec = st.number_input(
                 "End (secs after P arrival):", 
-                value=100,
+                value=self.settings.event.after_p_sec or 100,
                 help="Time window after P arrival"
             )
             
@@ -184,7 +180,7 @@ class WaveformDisplay:
         # Define a color cycle - black, red, blue, green
         colors = ['black', 'red', 'blue', 'green']
         return colors[index % len(colors)]
-    def _plot_stream_with_colors(self, stream: Stream, size=(800, 600)):
+    def _plot_stream_with_colors(self, stream: Stream, size=(800, 600), view_type=None):
         """Plot stream with proper time windows and P markers"""
         if not stream:
             return None
@@ -200,78 +196,104 @@ class WaveformDisplay:
             for i, tr in enumerate(stream):
                 ax = axes[i]
                 
-                # Get P arrival time
-                p_time = UTCDateTime(tr.stats.p_arrival) if hasattr(tr.stats, 'p_arrival') else None
-                
-                if p_time:
-                    # Calculate window boundaries
-                    start_time = p_time - self.settings.event.before_p_sec
-                    end_time = p_time + self.settings.event.after_p_sec
-                    
-                    # Ensure trace is trimmed to window
-                    tr.trim(start_time, end_time, pad=True, fill_value=0)
-                    
-                    # Create time vector matching data length
-                    times = np.linspace(-self.settings.event.before_p_sec, 
-                                      self.settings.event.after_p_sec,
-                                      len(tr.data))
-                    
-                    # Plot waveform
-                    ax.plot(times, tr.data, '-', color=self._get_trace_color(i), linewidth=0.8)
-                    
-                    # Add P marker at t=0
-                    ax.axvline(x=0, color='red', linewidth=1, linestyle='-')
-                    ax.text(0, ax.get_ylim()[1], 'P', color='red', fontsize=8,
-                           verticalalignment='bottom')
-                    
-                    # Format axis
-                    ax.set_xlim(-self.settings.event.before_p_sec, 
-                               self.settings.event.after_p_sec)
-                    
-                    # Add trace label
-                    label = f'{tr.stats.network}.{tr.stats.station}.{tr.stats.channel}'
-                    if hasattr(tr.stats, 'distance_km'):
-                        label += f' ({tr.stats.distance_km:.1f} km)'
-                    ax.text(-self.settings.event.before_p_sec * 0.95, 
-                           ax.get_ylim()[1],
-                           label,
-                           fontsize=8)
-                    
-                    # Format time axis
-                    if i == num_traces - 1:  # Only for bottom subplot
-                        ax.set_xlabel('Time relative to P (seconds)')
-                        # Add actual time labels
-                        def format_time(x, p):
-                            t = p_time + x
-                            return t.strftime('%H:%M:%S')
-                        ax.xaxis.set_major_formatter(plt.FuncFormatter(format_time))
-                        plt.setp(ax.xaxis.get_majorticklabels(), rotation=20)
+                if view_type == "station":
+                    if hasattr(tr.stats, 'event_time'):
+                        origin_time = UTCDateTime(tr.stats.event_time)
+                        # Keep original trace plotting
+                        times = np.arange(tr.stats.npts) * tr.stats.delta
+                        relative_times = [(tr.stats.starttime + t - origin_time) for t in times]
+                        
+                        ax.plot(relative_times, tr.data, '-', color=self._get_trace_color(i), linewidth=0.8)
+                        
+                        if hasattr(tr.stats, 'p_arrival'):
+                            p_time = UTCDateTime(tr.stats.p_arrival)
+                            p_relative = p_time - origin_time
+                            ax.axvline(x=p_relative, color='red', linewidth=1, linestyle='-')
+                            ax.text(p_relative, ax.get_ylim()[1], 'P', color='red', fontsize=8,
+                                   verticalalignment='bottom')
+                        
+                        # Format trace label
+                        station_label = f"{tr.stats.network}.{tr.stats.station}.{tr.stats.location or ''}.{tr.stats.channel}"
+                        event_info = ""
+                        if hasattr(tr.stats, 'distance_km'):
+                            event_info += f"{tr.stats.distance_km:.1f} km"
+                        if hasattr(tr.stats, 'event_magnitude'):
+                            event_info += f", M{tr.stats.event_magnitude:.1f}"
+                        if hasattr(tr.stats, 'event_region'):
+                            event_info += f", {tr.stats.event_region}"
+                        label = f"{station_label} - {event_info}"
+                        ax.text(relative_times[0], ax.get_ylim()[1], label, fontsize=8)
+                        
+                        # Only modify x-axis formatting for station view
+                        ax.set_xlabel('Time relative to origin (seconds)')
+                        ax.xaxis.set_major_formatter(plt.ScalarFormatter())
                 else:
-                    # If no P arrival, plot raw data
-                    times = np.arange(len(tr.data)) * tr.stats.delta
-                    ax.plot(times, tr.data, '-', color=self._get_trace_color(i), linewidth=0.8)
-                    ax.text(0, ax.get_ylim()[1], 
-                           f'{tr.stats.network}.{tr.stats.station}.{tr.stats.channel}',
-                           fontsize=8)
+                    # Original plotting logic for other views
+                    # Get P arrival time
+                    p_time = UTCDateTime(tr.stats.p_arrival) if hasattr(tr.stats, 'p_arrival') else None
+                    
+                    if p_time:
+                        # Calculate window boundaries
+                        start_time = p_time - self.settings.event.before_p_sec
+                        end_time = p_time + self.settings.event.after_p_sec
+                        
+                        # Ensure trace is trimmed to window
+                        tr.trim(start_time, end_time, pad=True, fill_value=0)
+                        
+                        # Create time vector matching data length
+                        times = np.linspace(-self.settings.event.before_p_sec, 
+                                          self.settings.event.after_p_sec,
+                                          len(tr.data))
+                        
+                        # Plot waveform
+                        ax.plot(times, tr.data, '-', color=self._get_trace_color(i), linewidth=0.8)
+                        
+                        # Add P marker at t=0
+                        ax.axvline(x=0, color='red', linewidth=1, linestyle='-')
+                        ax.text(0, ax.get_ylim()[1], 'P', color='red', fontsize=8,
+                               verticalalignment='bottom')
+                        
+                        # Format axis
+                        ax.set_xlim(-self.settings.event.before_p_sec, 
+                                   self.settings.event.after_p_sec)
+                        
+                        # Add trace label
+                        label = f'{tr.stats.network}.{tr.stats.station}.{tr.stats.location or ""}.{tr.stats.channel}'
+                        if hasattr(tr.stats, 'distance_km'):
+                            label += f' ({tr.stats.distance_km:.1f} km)'
+                        ax.text(-self.settings.event.before_p_sec * 0.95, 
+                               ax.get_ylim()[1],
+                               label,
+                               fontsize=8)
+                        
+                        # Format time axis
+                        if i == num_traces - 1:  # Only for bottom subplot
+                            ax.set_xlabel('Time relative to P (seconds)')
+                            # Add actual time labels
+                            def format_time(x, p):
+                                t = p_time + x
+                                return t.strftime('%H:%M:%S')
+                            ax.xaxis.set_major_formatter(plt.FuncFormatter(format_time))
+                            plt.setp(ax.xaxis.get_majorticklabels(), rotation=20)
+                    else:
+                        # If no P arrival, plot raw data
+                        times = np.arange(len(tr.data)) * tr.stats.delta
+                        ax.plot(times, tr.data, '-', color=self._get_trace_color(i), linewidth=0.8)
+                        ax.text(0, ax.get_ylim()[1], 
+                               f'{tr.stats.network}.{tr.stats.station}.{tr.stats.location or ""}.{tr.stats.channel}',
+                               fontsize=8)
                 
                 # Remove unnecessary ticks
                 ax.set_yticks([])
                 if i < num_traces - 1:
                     ax.set_xticklabels([])
-                
-                # Add amplitude scale
-                max_amp = np.max(np.abs(tr.data))
-                ax.text(self.settings.event.after_p_sec * 0.95, 
-                       ax.get_ylim()[1],
-                       f'{max_amp:.1e}',
-                       fontsize=8,
-                       horizontalalignment='right')
             
-            # Add title
-            plt.suptitle(f'Event Waveforms (P arrival at 0 seconds)\n'
-                        f'Window: {self.settings.event.before_p_sec}s before to '
-                        f'{self.settings.event.after_p_sec}s after P',
-                        fontsize=10)
+            # Format time axis for station view
+            if view_type == "station":
+                ax.set_xlabel('Time relative to origin (seconds)')
+                ax.xaxis.set_major_formatter(plt.ScalarFormatter())
+                ax.xaxis.set_major_locator(plt.MultipleLocator(20))
+                ax.xaxis.set_major_formatter(lambda x, pos: f'{x:.0f}')
             
             plt.tight_layout()
             return fig
@@ -308,16 +330,17 @@ class WaveformDisplay:
             size=(800, max(400, len(current_stream) * 100))
         )
         
-        # Add event information
-        event_info = (f"Event: {event.origins[0].time} "
-                     f"M{event.magnitudes[0].mag:.1f} "
-                     f"Page {page + 1} of {num_pages}")
-        fig.suptitle(event_info)
+        # Add event information - more concise format
+        event_time = event.origins[0].time.strftime('%Y-%m-%d %H:%M')
+        event_info = f"M{event.magnitudes[0].mag:.1f} {event_time}"
+        if page > 0:  # Only add page info if there are multiple pages
+            event_info += f" (Page {page + 1}/{num_pages})"
+        fig.suptitle(event_info, fontsize=10)
         
         return fig
 
     def plot_station_view(self, station_code: str, stream: Stream, page: int, num_pages: int):
-        """Plot station view with P arrivals"""
+        """Plot station view with event information"""
         if not stream:
             return
         
@@ -329,57 +352,42 @@ class WaveformDisplay:
         end_idx = start_idx + self.filter_menu.display_limit
         current_stream = Stream(traces=stream.traces[start_idx:end_idx])
         
-        # Plot using ObsPy
-        fig = self._plot_stream_with_colors(current_stream, size=(800, max(400, len(current_stream) * 100)))
+        # Add event metadata to traces if not already present
+        for tr in current_stream:
+            if hasattr(tr.stats, 'event_id'):
+                # Find corresponding event in selected catalogs
+                for event in self.settings.event.selected_catalogs:
+                    if str(event.resource_id) == tr.stats.event_id:
+                        tr.stats.event_magnitude = event.magnitudes[0].mag
+                        tr.stats.event_time = event.origins[0].time
+                        # Add location from event extra parameters
+                        if hasattr(event, 'extra') and 'region' in event.extra:
+                            tr.stats.event_region = event.extra['region']['value']
+                        break
         
-        # Add station information
-        fig.suptitle(f"Station: {station_code} Page {page + 1} of {num_pages}")
-        fig.tight_layout()
-        return fig
-
-    def display_waveform_data(self):
-        """Display default view with P arrivals"""
-        if not self.streams:
-            st.info("No waveforms to display. Use the 'Get Waveforms' button to retrieve waveforms.")
-            return
-
-        # Update filter menu channels before displaying
-        self.filter_menu.update_available_channels(self.streams[0])
-        
-        # Apply filters to first stream
-        filtered_stream = self.apply_filters(self.streams[0])
-        
-        if len(filtered_stream) == 0:
-            st.warning("No waveforms match the current filter criteria.")
-            return
-
-        # Calculate pagination
-        num_pages = (len(filtered_stream) - 1) // self.filter_menu.display_limit + 1
-        page = st.sidebar.selectbox(
-            "Page Navigation", 
-            range(1, num_pages + 1),
-            key="default_view_pagination"
-        ) - 1
-
-        # Plot waveforms for current page
-        start_idx = page * self.filter_menu.display_limit
-        end_idx = start_idx + self.filter_menu.display_limit
-        current_stream = Stream(traces=filtered_stream.traces[start_idx:end_idx])
-        
-        fig = self._plot_stream_with_colors(current_stream, size=(800, max(400, len(current_stream) * 100)))
-        
-        fig.suptitle(f'Page {page + 1} of {num_pages}')
-        fig.tight_layout()
+        # Plot using modified _plot_stream_with_colors
+        fig = self._plot_stream_with_colors(
+            current_stream,
+            size=(800, max(400, len(current_stream) * 100)),
+            view_type="station"
+        )
         
         if fig:
-            st.pyplot(fig)
-        else:
-            st.warning("No waveforms to display for the current selection.")
+            # Update title with station information
+            net, sta = station_code.split(".")
+            fig.suptitle(
+                f"Station {station_code} - Multiple Events View\n"
+                f"Page {page + 1} of {num_pages}",
+                fontsize=10
+            )
+            fig.tight_layout()
+            
+        return fig
 
     def render(self):
         view_type = st.radio(
             "Select View Type",
-            ["Default View", "Single Event - Multiple Stations", "Single Station - Multiple Events"],
+            ["Single Event - Multiple Stations", "Single Station - Multiple Events"],
             key="view_selector"
         )
         
@@ -387,10 +395,7 @@ class WaveformDisplay:
             st.info("No waveforms to display. Use the 'Get Waveforms' button to retrieve waveforms.")
             return
 
-        if view_type == "Default View":
-            self.display_waveform_data()
-        
-        elif view_type == "Single Event - Multiple Stations":
+        if view_type == "Single Event - Multiple Stations":
             events = self.settings.event.selected_catalogs
             if not events:
                 st.warning("No events available.")
@@ -419,7 +424,6 @@ class WaveformDisplay:
                         key="event_view_pagination"
                     ) - 1
                     
-                    # Use plot_event_view instead of plot_aligned_traces
                     fig = self.plot_event_view(
                         events[selected_event_idx],
                         filtered_stream,
@@ -430,7 +434,7 @@ class WaveformDisplay:
                         st.pyplot(fig)
                 else:
                     st.warning("No waveforms match the current filter criteria.")
-                
+        
         else:  # Single Station - Multiple Events view
             if not self.streams:
                 st.warning("No streams available.")
@@ -478,90 +482,6 @@ class WaveformDisplay:
                         st.pyplot(fig)
                 else:
                     st.warning("No waveforms available for the selected station.")
-
-    def plot_aligned_traces(self, stream: Stream, time_before: int = 10, time_after: int = 60):
-        """Plot traces aligned on P arrival using ObsPy's native plotting"""
-        if not stream or len(stream) == 0:
-            st.warning("No traces available in stream")
-            return None
-        
-        st_aligned = Stream()
-        
-        # Align traces on P arrival
-        for tr in stream:
-            if not hasattr(tr.stats, 'p_arrival'):
-                st.write(f"❌ No P arrival for this trace")
-                continue
-            
-            try:
-                if isinstance(tr.stats.p_arrival, (int, float)):
-                    p_time = UTCDateTime(tr.stats.p_arrival)
-                else:
-                    p_time = tr.stats.p_arrival
-                    
-                # Calculate P arrival relative to trace start
-                p_relative = p_time - tr.stats.starttime
-                
-                # Calculate trim window
-                start_time = tr.stats.starttime + p_relative - time_before
-                end_time = tr.stats.starttime + p_relative + time_after
-                
-                # Ensure trim window is within trace bounds
-                if start_time < tr.stats.starttime:
-                    start_time = tr.stats.starttime
-                if end_time > tr.stats.endtime:
-                    end_time = tr.stats.endtime
-                
-                tr_cut = tr.copy()
-                tr_cut.trim(start_time, end_time)
-                
-                if tr_cut.stats.npts > 0:
-                    # Normalize the trace
-                    tr_cut.data = tr_cut.data / np.max(np.abs(tr_cut.data))
-                    # Add P arrival time as trace attribute for plotting
-                    tr_cut.stats.p_relative = p_relative
-                    st_aligned += tr_cut
-                else:
-                    st.write("❌ Trimmed trace has zero length")
-                    continue
-                    
-            except Exception as e:
-                st.write(f"❌ Error processing trace: {str(e)}")
-                continue
-        
-        if not st_aligned or len(st_aligned) == 0:
-            st.warning("No traces could be aligned on P arrivals. Please ensure P arrivals are calculated.")
-            return None
-        
-        try:
-            # Sort traces by distance if available
-            st_aligned.traces.sort(key=lambda x: x.stats.distance_km if hasattr(x.stats, 'distance_km') else 0)
-            
-            # Use ObsPy's plot method
-            fig = st_aligned.plot(
-                type='relative',
-                equal_scale=False,
-                show=False,
-                size=(800, max(400, len(st_aligned) * 100)),  # Adjust height based on number of traces
-                method='full'
-            )
-            
-            # Add title and P arrival markers
-            ax = fig.axes[0]
-            ax.set_title(f'P-Wave Aligned View ({len(st_aligned)} traces)\nRed line marks P arrival')
-            
-            # Add vertical line at P arrival (time_before seconds mark)
-            for ax in fig.axes:
-                ax.axvline(x=time_before, color='red', linestyle='-', linewidth=1.5)
-                ax.text(time_before, ax.get_ylim()[1], 'P', color='red', fontsize=8)
-            
-            fig.tight_layout()
-            return fig
-            
-        except Exception as e:
-            st.error(f"Error plotting aligned traces: {str(e)}")
-            st.write(f"Number of aligned traces: {len(st_aligned)}")
-            return None
 
 class WaveformComponents:
     settings: SeismoLoaderSettings

@@ -251,7 +251,10 @@ class BaseComponent:
 
                 # Check services for selected client
                 services = check_client_services(self.settings.event.client)
-                if not services['event']:
+                is_service_available = bool(services.get('event'))
+
+                # Display warning if service is not available
+                if not is_service_available:
                     st.warning(f"⚠️ Warning: Selected client '{self.settings.event.client}' does not support EVENT service. Please choose another client.")
 
                 c1, c2 = st.columns([1,1])
@@ -278,7 +281,12 @@ class BaseComponent:
                     step=1.0, key="event-pg-depth"
                 )
 
-                if st.button(f"Update {self.TXT.STEP.title()}s", key=self.get_key_element(f"Update {self.TXT.STEP}s")):
+                # Update button with disabled state based on service availability
+                if st.button(
+                    f"Update {self.TXT.STEP.title()}s",
+                    key=self.get_key_element(f"Update {self.TXT.STEP}s"),
+                    disabled=not is_service_available
+                ):
                     self.refresh_map(reset_areas=False, clear_draw=False, rerun=False)
                 
             c2_export = self.import_export()
@@ -312,7 +320,10 @@ class BaseComponent:
                 
                 # Check services for selected client
                 services = check_client_services(self.settings.station.client)
-                if not services['station']:
+                is_service_available = bool(services.get('station'))
+
+                # Display warning if service is not available
+                if not is_service_available:
                     st.warning(f"⚠️ Warning: Selected client '{self.settings.station.client}' does not support STATION service. Please choose another client.")
 
                 c11, c12 = st.columns([1,1])
@@ -352,7 +363,12 @@ class BaseComponent:
 
                 self.settings.station.level = Levels.CHANNEL
 
-                if st.button(f"Update {self.TXT.STEP.title()}s", key=self.get_key_element(f"Update {self.TXT.STEP}s")):
+                # Update button with disabled state based on service availability
+                if st.button(
+                    f"Update {self.TXT.STEP.title()}s",
+                    key=self.get_key_element(f"Update {self.TXT.STEP}s"),
+                    disabled=not is_service_available
+                ):
                     self.refresh_map(reset_areas=False, clear_draw=False, rerun=False)
 
             c2_export = self.import_export()
@@ -425,6 +441,13 @@ class BaseComponent:
             self.settings.event.selected_catalogs = Catalog(events=None)
             for i, event in enumerate(self.catalogs):
                 if self.df_markers.loc[i, 'is_selected']:
+                    if 'place' in self.df_markers.columns:
+                        event.extra = {
+                            'region': {
+                                'value': self.df_markers.loc[i, 'place'],
+                                'namespace': 'SEEDVAULT'
+                            }
+                        }
                     self.settings.event.selected_catalogs.append(event)
             return
         if self.step_type == Steps.STATION:
