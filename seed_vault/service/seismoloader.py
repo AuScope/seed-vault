@@ -831,6 +831,11 @@ def get_stations(settings: SeismoLoaderSettings):
     starttime = UTCDateTime(settings.station.date_config.start_time)
     endtime = UTCDateTime(settings.station.date_config.end_time)
     waveform_client = Client(settings.waveform.client)
+
+    highest_sr_only = settings.event.highest_samplerate_only
+    cha_pref = settings.waveform.channel_pref
+    loc_pref = settings.waveform.location_pref
+
     if settings.station and settings.station.client:
         station_client = Client(settings.station.client)
     else:
@@ -944,6 +949,12 @@ def get_stations(settings: SeismoLoaderSettings):
             except:
                 print("Could not find requested station %s at %s" % (f"{n}.{s}",settings.station.client))
                 continue
+
+    if highest_sr_only:
+        inv = select_highest_samplerate(inv,minSR=5)
+    
+    if cha_pref or loc_pref:
+        inv = get_preferred_channels(inv, cha_pref, loc_pref)
 
     return inv
 
@@ -1233,7 +1244,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
         )
 
         if stop_event and stop_event.is_set():
-            print("Run canceled!")
+            print("Run cancelled!")
             return None
 
         # Import any new arrival info into database
@@ -1249,7 +1260,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
             pruned_requests= prune_requests(requests, db_manager, settings.sds_path)
         
         if stop_event and stop_event.is_set():
-            print("Run canceled!")
+            print("Run cancelled!")
             return None
 
         # Process new data if needed
@@ -1276,13 +1287,13 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
             for request in combined_requests:
                 try:
                     if stop_event and stop_event.is_set():
-                        print("Run canceled!")
+                        print("Run cancelled!")
                         return None
                     
                     archive_request(request, waveform_clients, settings.sds_path, db_manager)
 
                     if stop_event and stop_event.is_set():
-                        print("Run canceled!")
+                        print("Run cancelled!")
                         return None
                 except Exception as e:
                     print(f"Error archiving request {request}: {str(e)}")
@@ -1299,7 +1310,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
                 endtime=req[5]
             )
             if stop_event and stop_event.is_set():
-                print("Run canceled!")
+                print("Run cancelled!")
                 return None
             
             try:
