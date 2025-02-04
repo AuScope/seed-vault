@@ -154,6 +154,7 @@ class StationConfig(BaseModel):
     station            : Optional   [ str           ] = None
     location           : Optional   [ str           ] = None
     channel            : Optional   [ str           ] = None
+    highest_samplerate_only : bool = False
     selected_invs      : Optional   [Any] = None
     geo_constraint     : Optional   [ List          [GeometryConstraint]] = None
     include_restricted : bool       = False
@@ -194,7 +195,6 @@ class EventConfig(BaseModel):
     max_radius          : float = 90.0
     before_p_sec        : int = 10
     after_p_sec         : int = 130
-    highest_samplerate_only : bool = False
     include_all_origins : bool = False
     include_all_magnitudes: bool = False
     include_arrivals    : bool = False
@@ -511,6 +511,7 @@ class SeismoLoaderSettings(BaseModel):
 
         # Parse local_inventory
         local_inventory = cls.parse_optional(config.get(station_section, 'local_inventory', fallback=None))
+        highest_samplerate_only = cls._check_val(config.get(station_section, "highest_samplerate_only", fallback=False), False, "bool")
 
  
 
@@ -551,6 +552,7 @@ class SeismoLoaderSettings(BaseModel):
             station=station,
             location=location,
             channel=channel,
+            highest_samplerate_only=highest_samplerate_only, #double check this belongs here
             geo_constraint=[geo_constraint_station] if geo_constraint_station else [],
             include_restricted=include_restricted,
             level=level,
@@ -663,7 +665,7 @@ class SeismoLoaderSettings(BaseModel):
         include_all_origins = cls._check_val(config.get(event_section, "includeallorigins", fallback=False), False, "bool")
         include_all_magnitudes = cls._check_val(config.get(event_section, "includeallmagnitudes", fallback=False), False, "bool")
         include_arrivals = cls._check_val(config.get(event_section, "includearrivals", fallback=False), False, "bool")
-        highest_samplerate_only = cls._check_val(config.get(event_section, "highest_samplerate_only", fallback=False), False, "bool")
+        
 
         # Parse optional strings
         limit = cls.parse_optional(config.get(event_section, "limit", fallback=None))
@@ -690,7 +692,6 @@ class SeismoLoaderSettings(BaseModel):
             max_radius=max_radius,
             before_p_sec=before_p_sec,
             after_p_sec=after_p_sec,
-            highest_samplerate_only=highest_samplerate_only, #double check this belongs here
             geo_constraint=[geo_constraint_event] if geo_constraint_event else [],
             include_all_origins=include_all_origins,
             include_all_magnitudes=include_all_magnitudes,
@@ -871,6 +872,7 @@ class SeismoLoaderSettings(BaseModel):
             safe_add_to_config(config, 'STATION', 'local_inventory', self.station.local_inventory)
             safe_add_to_config(config, 'STATION', 'force_stations', ','.join([convert_to_str(station.cmb_str) for station in self.station.force_stations if station.cmb_str is not None]))
             safe_add_to_config(config, 'STATION', 'exclude_stations', ','.join([convert_to_str(station.cmb_str) for station in self.station.exclude_stations if station.cmb_str is not None]))
+            safe_add_to_config(config, 'STATION', 'highest_samplerate_only', self.station.highest_samplerate_only)
             safe_add_to_config(config, 'STATION', 'starttime', self.station.date_config.start_time)
             safe_add_to_config(config, 'STATION', 'endtime', self.station.date_config.end_time)
             safe_add_to_config(config, 'STATION', 'network', self.station.network)
@@ -915,7 +917,6 @@ class SeismoLoaderSettings(BaseModel):
             safe_add_to_config(config, 'EVENT', 'maxradius', self.event.max_radius)
             safe_add_to_config(config, 'EVENT', 'after_p_sec', self.event.after_p_sec)
             safe_add_to_config(config, 'EVENT', 'before_p_sec', self.event.before_p_sec)
-            safe_add_to_config(config, 'EVENT', 'highest_samplerate_only', self.event.highest_samplerate_only)
             safe_add_to_config(config, 'EVENT', 'includeallorigins', self.event.include_all_origins)
             safe_add_to_config(config, 'EVENT', 'includeallmagnitudes', self.event.include_all_magnitudes)
             safe_add_to_config(config, 'EVENT', 'includearrivals', self.event.include_arrivals)
@@ -970,6 +971,7 @@ class SeismoLoaderSettings(BaseModel):
                 'local_inventory': self.station.local_inventory if self.station else None,
                 'force_stations': [station.cmb_str for station in self.station.force_stations if station.cmb_str is not None] if self.station and isinstance(self.station.force_stations, list) else [],
                 'exclude_stations': [station.cmb_str for station in self.station.exclude_stations if station.cmb_str is not None] if self.station and isinstance(self.station.exclude_stations, list) else [],
+                'highest_samplerate_only': self.station.highest_samplerate_only if self.station else None,
                 'starttime': self.station.date_config.start_time if self.station and self.station.date_config else None,
                 'endtime': self.station.date_config.end_time if self.station and self.station.date_config else None,
                 'startbefore': self.station.date_config.start_before if self.station and self.station.date_config else None,
@@ -997,7 +999,6 @@ class SeismoLoaderSettings(BaseModel):
                 'maxmagnitude': self.event.max_magnitude if self.event and self.event.max_magnitude is not None else None,
                 'minradius': self.event.min_radius if self.event and self.event.min_radius is not None else None,
                 'maxradius': self.event.max_radius if self.event and self.event.max_radius is not None else None,
-                'highest_samplerate_only': self.event.highest_samplerate_only if self.event else None,
                 'local_catalog': self.event.local_catalog if self.event else None,
                 'geo_constraint': self.event.geo_constraint if self.event else None,
                 'includeallorigins': self.event.include_all_origins if self.event else None,

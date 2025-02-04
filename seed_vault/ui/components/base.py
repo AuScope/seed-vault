@@ -354,9 +354,9 @@ class BaseComponent:
                 with c32:
                     self.settings.station.channel = st.text_input("Channel",   self.settings.station.channel, key="event-pg-cha-txt-station")
 
-                self.settings.event.highest_samplerate_only = st.checkbox(
+                self.settings.station.highest_samplerate_only = st.checkbox(
                     "Highest Sample Rate Only", 
-                    value=self.settings.event.highest_samplerate_only,  # Default to unchecked
+                    value=self.settings.station.highest_samplerate_only,  # Default to unchecked
                     key="station-pg-highest-sample-rate"
                 )
                 
@@ -886,9 +886,8 @@ class BaseComponent:
                     self.catalogs.extend(cat)
         except Exception as e:
             if "unknown format" in str(e).lower():
-                self.trigger_error(f"Unknown format for file {uploaded_file.name}. Please ensure the file is in correct format and **do not forget to remove the pending file from upload.**")
-            self.trigger_error(f"An error occured when importing {uploaded_file.name}. Please ensure the file is in correct format and **do not forget to remove the pending file from upload.**")
-                
+                self.trigger_error(f"Import Error: Unknown format for file {uploaded_file.name}. Please ensure the file is in correct format and **do not forget to remove the {uploaded_file.name} file from upload.**")
+            self.trigger_error(f"Import Error: An error occured when importing {uploaded_file.name}. Please ensure the file is in correct format and **do not forget to remove the {uploaded_file.name} file from upload.**")
 
     # ===================
     # WATCHER
@@ -952,6 +951,9 @@ class BaseComponent:
             self.refresh_map(reset_areas=True, clear_draw=True)
             self.handle_get_data(is_import=True, uploaded_file=uploaded_file)
             st.session_state['uploaded_file_processed'] = True
+
+        if self.has_error and "Import Error" in self.error:
+            st.error(self.error)
 
         return c22
         
@@ -1162,11 +1164,11 @@ class BaseComponent:
 
     def render(self):
 
-        if self.has_error:
+        if self.has_error and "Import Error" not in self.error:
             c1_err, c2_err = st.columns([4,1])
             with c1_err:
                 if self.error == "Error: 'TimeoutError' object has no attribute 'splitlines'":
-                    st.error("server timeout, try again in a minute")
+                    st.error("server timeout, try again in a minute")                
                 st.error(self.error)
             with c2_err:
                 if st.button(":material/close:"): # ❌

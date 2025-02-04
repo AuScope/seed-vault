@@ -418,7 +418,7 @@ def collect_requests_event(eq,inv, model=None,settings=None):
     model_name = settings.event.model
     before_p_sec = settings.event.before_p_sec
     after_p_sec = settings.event.after_p_sec
-    highest_sr_only = settings.event.highest_samplerate_only
+    highest_sr_only = settings.station.highest_samplerate_only
     cha_pref = settings.waveform.channel_pref
     loc_pref = settings.waveform.location_pref
 
@@ -832,7 +832,7 @@ def get_stations(settings: SeismoLoaderSettings):
     endtime = UTCDateTime(settings.station.date_config.end_time)
     waveform_client = Client(settings.waveform.client)
 
-    highest_sr_only = settings.event.highest_samplerate_only
+    highest_sr_only = settings.station.highest_samplerate_only
     cha_pref = settings.waveform.channel_pref
     loc_pref = settings.waveform.location_pref
 
@@ -1036,7 +1036,7 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
                 )
                 print("Found %d events from %s" % (len(cat),settings.event.client))
                 catalog.extend(cat)
-            except:
+            except FDSNNoDataException:
                 print("No events found!") #TODO elaborate
                 
         elif geo.geo_type == GeoConstraintType.BOUNDING:
@@ -1050,7 +1050,7 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
                 )
                 print("Found %d events from %s" % (len(cat),settings.event.client))
                 catalog.extend(cat)
-            except:
+            except FDSNNoDataException:
                 print("No events found!") #TODO elaborate
                 return catalog
         else:

@@ -12,7 +12,7 @@ packages = [{ include = "seed_vault" }]
 seed-vault = "seed_vault.cli:cli"
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.14"
+python = ">=3.10,<4.0"
 streamlit = "^1.39.0"
 pandas = "^2.2.2"
 folium = "^0.16.0"
