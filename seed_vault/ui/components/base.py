@@ -29,6 +29,7 @@ from seed_vault.enums.ui import Steps
 from seed_vault.service.utils import convert_to_date, check_client_services
 import io
 import os
+import re
 
 
 class BaseComponentTexts:
@@ -582,7 +583,18 @@ class BaseComponent:
     # GET DATA
     # ====================
 
+
     def handle_get_data(self, is_import: bool = False, uploaded_file = None):
+        http_error = {
+            204: "No data found",
+            400: "Malformed input or unrecognized search parameter",
+            401: "Unauthorized access",
+            403: "Authentication failed for restricted data",
+            413: "Data request is too large for server; try reducing size into several pieces",
+            502: "Server response is invalid; please try again another time",
+            503: "Server appears to be down; please try again another time",
+            504: "Server appears to be down; please try again another time"
+        }        
         self.warning = None
         self.error   = None
         try:
@@ -620,9 +632,26 @@ class BaseComponent:
                 self.warning = "No data available for the selected settings."
 
         except Exception as e:
-            print(f"An unexpected error occurred: {str(e)}")
+            error_message = str(e)
+            http_status_code = None
+
+            # Extract HTTP error code if present
+            match = re.search(r"Error (\d{3})", error_message)
+            if match:
+                http_status_code = int(match.group(1))
+
+            # Lookup user-friendly error message
+            user_friendly_message = http_error.get(http_status_code, "An error has occurred, please check parameters.")
+
+            # Construct detailed error message
             self.has_error = True
-            self.error = f"Error: {str(e)}"
+            self.error = (
+                f"{user_friendly_message}\n\n"
+                f"**Technical details:**\n\n"
+                f"Error: {error_message}"
+            )
+
+            print(self.error)  # Logging for debugging
 
 
     def clear_all_data(self):

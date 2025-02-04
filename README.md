@@ -196,3 +196,23 @@ seed-vault/
 ```
 poetry export -f requirements.txt --output requirements.txt --without-hashes
 ```
+
+
+
+## Publishing the lib to test: pypi
+Define a package name in pyproject.toml (e.g. `seed-vault`).
+Then, run following commands
+
+```bash
+poetry build
+poetry config repositories.testpypi https://test.pypi.org/legacy/
+poetry config pypi-token.test-pypi <YOUR PYPI TOKEN>
+poetry publish -r testpypi
+```
+
+To install from pypi-test:
+
+```bash
+pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple seed-vault
+```
+Note: include both `test` and `official` indexes.
