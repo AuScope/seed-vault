@@ -591,7 +591,9 @@ class BaseComponent:
             401: "Unauthorized access",
             403: "Authentication failed for restricted data",
             413: "Data request is too large for server; try reducing size into several pieces",
-            503: "Server appears to be down"
+            502: "Server response is invalid; please try again another time",
+            503: "Server appears to be down; please try again another time",
+            504: "Server appears to be down; please try again another time"
         }        
         self.warning = None
         self.error   = None
