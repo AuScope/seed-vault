@@ -1,32 +1,26 @@
-from typing import List, Any, Optional, Union
+from typing import List
 import streamlit as st
-import streamlit.components.v1 as components
 from streamlit_folium import st_folium
 import pandas as pd
-from datetime import datetime, timedelta,date
-import uuid
+from datetime import datetime
 from obspy.core.event import Catalog, read_events
 from obspy.core.inventory import Inventory, read_inventory
 from io import BytesIO
 
-from obspy.clients.fdsn.header import URL_MAPPINGS
 
-
-from seed_vault.ui.components.card import create_card
 from seed_vault.ui.components.map import create_map, add_area_overlays, add_data_points, clear_map_layers, clear_map_draw,add_map_draw
 from seed_vault.ui.pages.helpers.common import get_selected_areas, save_filter
 
 from seed_vault.service.events import get_event_data, event_response_to_df
 from seed_vault.service.stations import get_station_data, station_response_to_df
-from seed_vault.service.seismoloader import convert_radius_to_degrees, convert_degrees_to_radius_meter
 
-from seed_vault.models.config import SeismoLoaderSettings, GeometryConstraint, EventConfig, StationConfig
+from seed_vault.models.config import SeismoLoaderSettings, GeometryConstraint
 from seed_vault.models.common import CircleArea, RectangleArea
 
 from seed_vault.enums.config import GeoConstraintType, Levels
 from seed_vault.enums.ui import Steps
 
-from seed_vault.service.utils import convert_to_date, check_client_services
+from seed_vault.service.utils import convert_to_datetime, check_client_services, get_time_interval
 import io
 import os
 import re
@@ -239,8 +233,8 @@ class BaseComponent:
             return c2_export
 
     def event_filter(self):
-        start_time = convert_to_date(self.settings.event.date_config.start_time)
-        end_time = convert_to_date(self.settings.event.date_config.end_time)
+        start_date, start_time = convert_to_datetime(self.settings.event.date_config.start_time)
+        end_date, end_time     = convert_to_datetime(self.settings.event.date_config.end_time)
 
         if 'initial_event_settings' not in st.session_state:
             st.session_state['initial_event_settings'] = self.settings.event.dict()
@@ -263,13 +257,32 @@ class BaseComponent:
                 # Display warning if service is not available
                 if not is_service_available:
                     st.warning(f"⚠️ Warning: Selected client '{self.settings.event.client}' does not support EVENT service. Please choose another client.")
+            
+                c11, c12, c13 = st.columns([1,1,1])
+                with c11:
+                    if st.button('Last Month', key="event-set-last-month"):
+                        self.settings.event.date_config.end_time, self.settings.event.date_config.start_time = get_time_interval('month')
+                        st.rerun()
+                with c12:
+                    if st.button('Last Week', key="event-set-last-week"):
+                        self.settings.event.date_config.end_time, self.settings.event.date_config.start_time = get_time_interval('week')
+                        st.rerun()
+                with c13:
+                    if st.button('Last Day', key="event-set-last-day"):
+                        self.settings.event.date_config.end_time, self.settings.event.date_config.start_time = get_time_interval('day')
+                        st.rerun()
+
 
                 c1, c2 = st.columns([1,1])
 
                 with c1:
-                    self.settings.event.date_config.start_time = st.date_input("Start Date", start_time, key="event-pg-start-date-event")
+                    start_date  = st.date_input("Start Date", start_date, key="event-pg-start-date-event")
+                    start_time  = st.time_input("Start Time", start_time)
+                    self.settings.event.date_config.start_time = datetime.combine(start_date, start_time)
                 with c2:
-                    self.settings.event.date_config.end_time = st.date_input("End Date", end_time, key="event-pg-end-date-event")
+                    end_date  = st.date_input("End Date", end_date, key="event-pg-end-date-event")
+                    end_time  = st.time_input("End Time", end_time)
+                    self.settings.event.date_config.end_time = datetime.combine(end_date, end_time)
 
                 if self.settings.event.date_config.start_time > self.settings.event.date_config.end_time:
                     st.error("Error: End Date must fall after Start Date.")
@@ -310,8 +323,10 @@ class BaseComponent:
 
 
     def station_filter(self):
-        start_time = convert_to_date(self.settings.station.date_config.start_time)
-        end_time = convert_to_date(self.settings.station.date_config.end_time)
+
+        start_date, start_time = convert_to_datetime(self.settings.station.date_config.start_time)
+        end_date, end_time = convert_to_datetime(self.settings.station.date_config.end_time)
+
 
         with st.sidebar:
             self.render_map_right_menu()
@@ -333,11 +348,30 @@ class BaseComponent:
                 if not is_service_available:
                     st.warning(f"⚠️ Warning: Selected client '{self.settings.station.client}' does not support STATION service. Please choose another client.")
 
+
+                c11, c12, c13 = st.columns([1,1,1])
+                with c11:
+                    if st.button('Last Month', key="station-set-last-month"):
+                        self.settings.station.date_config.end_time, self.settings.station.date_config.start_time = get_time_interval('month')
+                        st.rerun()
+                with c12:
+                    if st.button('Last Week', key="station-set-last-week"):
+                        self.settings.station.date_config.end_time, self.settings.station.date_config.start_time = get_time_interval('week')
+                        st.rerun()
+                with c13:
+                    if st.button('Last Day', key="station-set-last-day"):
+                        self.settings.station.date_config.end_time, self.settings.station.date_config.start_time = get_time_interval('day')
+                        st.rerun()
+
                 c11, c12 = st.columns([1,1])
                 with c11:
-                    self.settings.station.date_config.start_time = st.date_input("Start Date", start_time, key="event-pg-start-date-station")
+                    start_date = st.date_input("Start Date", value=start_date)
+                    start_time = st.time_input("Start Time", value=start_time)
+                    self.settings.station.date_config.start_time = datetime.combine(start_date, start_time)
                 with c12:
-                    self.settings.station.date_config.end_time = st.date_input("End Date", end_time, key="event-pg-end-date-station")
+                    end_date = st.date_input("End Date", value=end_date)
+                    end_time = st.time_input("End Time", value=end_time)
+                    self.settings.station.date_config.end_time = datetime.combine(end_date, end_time)
 
                 if self.settings.station.date_config.start_time > self.settings.station.date_config.end_time:
                     st.error("Error: End Date must fall after Start Date.")
@@ -597,6 +631,7 @@ class BaseComponent:
         }        
         self.warning = None
         self.error   = None
+        self.has_error = False
         try:
             if self.step_type == Steps.EVENT:
                 self.catalogs = Catalog()
@@ -616,7 +651,7 @@ class BaseComponent:
                 # self.inventories = get_station_data(self.settings.model_dump_json())
                 if is_import:
                     self.import_xml(uploaded_file)
-                else:
+                else:                    
                     self.inventories = get_station_data(self.settings)
                 if self.inventories:
                     self.df_markers = station_response_to_df(self.inventories)

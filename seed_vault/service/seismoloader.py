@@ -949,6 +949,9 @@ def get_stations(settings: SeismoLoaderSettings):
             except:
                 print("Could not find requested station %s at %s" % (f"{n}.{s}",settings.station.client))
                 continue
+    
+    if inv is None:
+        return None
 
     if highest_sr_only:
         inv = select_highest_samplerate(inv,minSR=5)
@@ -1108,8 +1111,11 @@ def run_continuous(settings: SeismoLoaderSettings):
     waveform_client = Client(settings.waveform.client)
 
     # Sanity check times
+    # print(f"Start time: {starttime}   |  ")
+    # print(f"End time: {endtime}   |  ")
     endtime = min(endtime, UTCDateTime.now()-120)
-    if starttime >= endtime:
+    # print(f"End time after UTCDateTime.now(): {endtime} . ")
+    if starttime > endtime:
         print("Starttime greater than than endtime!")
         return
 

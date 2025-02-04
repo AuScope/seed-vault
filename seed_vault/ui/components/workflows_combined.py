@@ -112,6 +112,8 @@ class CombinedBasedWorkflow:
                 self.event_components.sync_df_markers_with_df_edit()
                 self.event_components.update_selected_data()
                 selected_catalogs = self.event_components.settings.event.selected_catalogs
+                self.station_components.settings.station.date_config.start_time = self.event_components.settings.event.date_config.start_time
+                self.station_components.settings.station.date_config.end_time = self.event_components.settings.event.date_config.end_time
                 if selected_catalogs is None or len(selected_catalogs) <= 0:
                     self.trigger_error("Please select an event to proceed to the next step.")
                     return False
@@ -119,6 +121,8 @@ class CombinedBasedWorkflow:
                 self.station_components.sync_df_markers_with_df_edit()
                 self.station_components.update_selected_data()
                 selected_invs = self.station_components.settings.station.selected_invs
+                self.event_components.settings.event.date_config.start_time = self.station_components.settings.station.date_config.start_time
+                self.event_components.settings.event.date_config.end_time = self.station_components.settings.station.date_config.end_time
                 if selected_invs is None or len(selected_invs) <= 0:
                     self.trigger_error("Please select a station to proceed to the next step.")
                     return False
