@@ -1324,11 +1324,11 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
                 except Exception as e:
                     print(f"Error archiving request {request}: {str(e)}")
 
-            # Cleanup the database
-            try:
-                db_manager.join_continuous_segments(settings.processing.gap_tolerance)
-            except Exception as e:
-                print("! Error with join_continuous_segments: ", e)
+        # Cleanup the database
+        try:
+            db_manager.join_continuous_segments(settings.processing.gap_tolerance)
+        except Exception as e:
+            print("! Error with join_continuous_segments: ", e)
 
         # Now read all data for this event using get_local_waveform
         event_stream = obspy.Stream()

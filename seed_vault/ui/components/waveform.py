@@ -91,8 +91,8 @@ class WaveformFilterMenu:
             # Channel Priority Input
             channel_pref = st.text_input(
                 "Channel Priority",
-                value=self.settings.waveform.channel_pref or "CH,HH,BH,EH,HN,EN,SH,LH",
-                help="Order of preferred channels (e.g., HH,BH,EH). Data will be downloaded in this priority order.",
+                value=self.settings.waveform.channel_pref, # or "CH,HH,BH,EH,HN,EN,SH,LH", ### this should just default to the config settings
+                help="Order of preferred channels (e.g., HH,BH,EH). Only the first existing channel in this list will be downloaded.",
                 key="channel_pref"
             )
             
@@ -111,8 +111,8 @@ class WaveformFilterMenu:
             # Location Priority Input
             location_pref = st.text_input(
                 "Location Priority",
-                value=self.settings.waveform.location_pref or "10,00,20,30",
-                help="Order of preferred location codes (e.g., 00,10,20). Data will be downloaded in this priority order. Use empty string for blank location.",
+                value=self.settings.waveform.location_pref, # or "10,00,20,30", ### this should just default to the config settings
+                help="Order of preferred location codes (e.g., 00,--,10,20). Only the first existing location code in this list will be downloaded.. Use -- or '' for blank location.",
                 key="location_pref"
             )
             
@@ -126,7 +126,7 @@ class WaveformFilterMenu:
                 if is_valid:
                     self.settings.waveform.location_pref = location_pref
                 else:
-                    st.error("Invalid location format. Each location code should be 0-2 characters (e.g., 00,10,20)")
+                    st.error("Invalid location format. Each location code should be 0-2 characters (e.g., 00,--,10,20)")
 
         # Step 2: Display Filters (enabled after data retrieval)
         with st.sidebar.expander("Step 2: Display Filters", expanded=True):
