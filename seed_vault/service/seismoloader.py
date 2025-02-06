@@ -758,6 +758,13 @@ def archive_request(request, waveform_clients, sds_path, db_manager):
     except Exception as e:
         print("! Error with bulk_insert_archive_data: ", e)
 
+    # and CLEAN database
+    try:
+        db_manager.join_continuous_segments(60) # settings.processing.gap_tolerance) #TODO / REVIEW add setting var to function call! right now hardwired to 60
+        print("\n ~~ database updated ~~")
+    except Exception as e:
+        print("! Error with join_continuous_segments: ", e)    
+
 
 
 # MAIN RUN FUNCTIONS
@@ -1130,15 +1137,13 @@ def run_continuous(settings: SeismoLoaderSettings):
         cha_pref=settings.waveform.channel_pref,loc_pref=settings.waveform.location_pref)
 
     # Remove any for data we already have (requires updated db)
-    # If force_redownload is flagged, then ignore pruning and 
-    # download all data.
+    # If force_redownload is flagged, then ignore request pruning
     if settings.waveform.force_redownload:
-        print("Pruning: Force re-download is flagged, hence ignoring pruning.")
+        print("Forcing re-download as requested...")
         pruned_requests = request
     else:
-        print("Pruning: Pruning the request to avoid duplicate data downloads.")
+        # no message needed for default behaviour
         pruned_requests= prune_requests(requests, db_manager, settings.sds_path)
-        
 
     # Break if nothing to do
     if len(pruned_requests) < 1:
@@ -1264,10 +1269,9 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
 
         # Remove requests for data we already have
         if settings.waveform.force_redownload:
-            print("Pruning: Force re-download is flagged, hence ignoring pruning.")
+            print("Forcing re-download as requested...")
             pruned_requests = requests
         else:
-            print("Pruning: Pruning the request to avoid duplicate data downloads.")
             pruned_requests= prune_requests(requests, db_manager, settings.sds_path)
         
         if stop_event and stop_event.is_set():
@@ -1306,6 +1310,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
                     if stop_event and stop_event.is_set():
                         print("Run cancelled!")
                         return None
+
                 except Exception as e:
                     print(f"Error archiving request {request}: {str(e)}")
 
