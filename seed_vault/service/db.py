@@ -279,7 +279,7 @@ class DatabaseManager:
                         [(id,) for id in chunk]
                     )
 
-        print(f"Joined segments. Deleted {len(to_delete)} rows, updated {len(to_update)} rows.")
+        print(f"Database cleaned. Deleted {len(to_delete)} rows, updated {len(to_update)} rows.")
 
 
     def run_query(self,query):

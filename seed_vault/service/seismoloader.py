@@ -669,7 +669,7 @@ def archive_request(request, waveform_clients, sds_path, db_manager):
                 try:
                     st += wc.get_waveforms(station=s, **{k: v for k, v in kwargs.items() if k != 'station'})
                 except Exception as e:
-                    if 'code: 204' in e:
+                    if 'code: 204' in str(e):
                         print(f"No data for station {s}: {str(e)}")
                     else:
                         print(f"Unusual error fetching data for station {s}: {str(e)}")
@@ -682,7 +682,7 @@ def archive_request(request, waveform_clients, sds_path, db_manager):
         print(f"        Downloaded {download_size:.2f} MB @ {download_size/download_time:.2f} MB/s")    
 
     except Exception as e:
-        if 'code: 204' in e: # 99% of the time so clean up the errors a little
+        if 'code: 204' in str(e): # 99% of the time so clean up the errors a little
             print(f"        No data available for request: {request}")
         else:
             print(f"{str(e)}")
@@ -756,14 +756,7 @@ def archive_request(request, waveform_clients, sds_path, db_manager):
     try:
         num_inserted = db_manager.bulk_insert_archive_data(to_insert_db)
     except Exception as e:
-        print("! Error with bulk_insert_archive_data: ", e)
-
-    # and CLEAN database
-    try:
-        db_manager.join_continuous_segments(60) # settings.processing.gap_tolerance) #TODO / REVIEW add setting var to function call! right now hardwired to 60
-        print("\n ~~ database updated ~~")
-    except Exception as e:
-        print("! Error with join_continuous_segments: ", e)    
+        print("! Error with bulk_insert_archive_data: ", e)  
 
 
 
@@ -1179,6 +1172,12 @@ def run_continuous(settings: SeismoLoaderSettings):
             print("Continuous request not successful: ",request, " with exception: ", e)
             continue
 
+    # Cleanup the database
+    try:
+        db_manager.join_continuous_segments(settings.processing.gap_tolerance)
+    except Exception as e:
+        print("! Error with join_continuous_segments: ", e)
+
     # Goint through all original requests
     time_series = []
     for req in requests:
@@ -1313,6 +1312,12 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
 
                 except Exception as e:
                     print(f"Error archiving request {request}: {str(e)}")
+
+            # Cleanup the database
+            try:
+                db_manager.join_continuous_segments(settings.processing.gap_tolerance)
+            except Exception as e:
+                print("! Error with join_continuous_segments: ", e)
 
         # Now read all data for this event using get_local_waveform
         event_stream = obspy.Stream()
