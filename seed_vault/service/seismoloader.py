@@ -1315,6 +1315,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
                         print("Run cancelled!")
                         return None
                     
+                    print("\n Requesting: ", request)
                     archive_request(request, waveform_clients, settings.sds_path, db_manager)
 
                     if stop_event and stop_event.is_set():
@@ -1323,12 +1324,6 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
 
                 except Exception as e:
                     print(f"Error archiving request {request}: {str(e)}")
-
-        # Cleanup the database
-        try:
-            db_manager.join_continuous_segments(settings.processing.gap_tolerance)
-        except Exception as e:
-            print("! Error with join_continuous_segments: ", e)
 
         # Now read all data for this event using get_local_waveform
         event_stream = obspy.Stream()
@@ -1372,6 +1367,12 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
 
         if len(event_stream) > 0:
             event_streams.append(event_stream)
+
+    # Cleanup the database
+    try:
+        db_manager.join_continuous_segments(settings.processing.gap_tolerance)
+    except Exception as e:
+        print(f"! Error with join_continuous_segments: {str(e)}")
 
     return event_streams
 
