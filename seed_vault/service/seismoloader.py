@@ -747,10 +747,21 @@ def archive_request(request, waveform_clients, sds_path, db_manager):
 
         if existing_st:
             try:
-                existing_st.write(full_path, format="MSEED", encoding='STEIM2') # MSEED/STEIM2 are very sensible defaults
+                # First try with STEIM2 compression
+                existing_st.write(full_path, format="MSEED", encoding='STEIM2')
                 to_insert_db.append(stream_to_db_element(existing_st))
+                
             except Exception as e:
-                print(f"! Could not write {full_path}: {e}")
+                if "Wrong dtype" in str(e):
+                    # Fall back to uncompressed MSEED if dtype error
+                    print("Data type not compatible with STEIM2, attempting uncompressed format...")
+                    try:
+                        existing_st.write(full_path, format="MSEED")
+                        to_insert_db.append(stream_to_db_element(existing_st))
+                    except Exception as e:
+                        print(f"Failed to write uncompressed MSEED to {full_path}: {e}")
+                else:
+                    print(f"Failed to write {full_path}: {e}")
 
     # Update database
     try:
