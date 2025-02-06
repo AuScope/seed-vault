@@ -300,8 +300,8 @@ def get_p_s_times(eq, dist_deg, ttmodel):
 
     if p_arrival_time is None:
         print(f"No direct P-wave arrival found for distance {dist_deg} degrees")
-    if s_arrival_time is None:
-        print(f"No direct S-wave arrival found for distance {dist_deg} degrees")
+    if s_arrival_time is None and dist_deg <= 90:
+        print(f"No direct S-wave arrival found for distance {dist_deg} degrees (event {eq_time})")
 
     return p_arrival_time, s_arrival_time
 
@@ -669,18 +669,23 @@ def archive_request(request, waveform_clients, sds_path, db_manager):
                 try:
                     st += wc.get_waveforms(station=s, **{k: v for k, v in kwargs.items() if k != 'station'})
                 except Exception as e:
-                    print(f"Error fetching data for station {s}: {str(e)}")
+                    if 'code: 204' in e:
+                        print(f"No data for station {s}: {str(e)}")
+                    else:
+                        print(f"Unusual error fetching data for station {s}: {str(e)}")
         else:
             st = wc.get_waveforms(**kwargs)
 
         # Download info
         download_time = time.time() - time0
         download_size = sum(tr.data.nbytes for tr in st)/1024**2 # MB
-        print(f"      Downloaded {download_size:.2f} MB @ {download_size/download_time:.2f} MB/s")    
+        print(f"        Downloaded {download_size:.2f} MB @ {download_size/download_time:.2f} MB/s")    
 
     except Exception as e:
-        print(f" Error fetching data ---------------: {request} {str(e)}")
-        # TODO add failure & denied to database also? will require DB structuring and logging HTTP error response
+        if 'code: 204' in e: # 99% of the time so clean up the errors a little
+            print(f"        No data available for request: {request}")
+        else:
+            print(f"{str(e)}")
         return 
 
     # A means to group traces by day to avoid slowdowns with highly fractured data

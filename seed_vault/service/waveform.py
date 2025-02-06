@@ -41,6 +41,8 @@ def get_local_waveform(req: SeismoQuery, settings: SeismoLoaderSettings):
     st = client.get_waveforms(network=req.network,station=req.station,
                             location=req.location,channel=req.channel,
                             starttime=UTCDateTime(req.starttime),endtime=UTCDateTime(req.endtime))
-    if not st:
-        raise NotFoundError("Not Found: the requested data was not found in local archived database.")
+    
+    # let's not raise this as en error. it's a pretty common occurence, it just means no data was downloaded/archived.
+    #if not st:
+    #    raise NotFoundError("Not Found: the requested data was not found in local archived database.")
     return st
