@@ -72,23 +72,23 @@ class ContinuousDisplay:
     def process_continuous_data(self):
         """Process continuous data with console output"""
         def process_func():
-            # No need to set values as they're already in settings
             return run_continuous(self.settings)
             
-        return self.console.run_with_logs(
+        success, error_message = self.console.run_with_logs(
             process_func=process_func,
             status_message="Downloading continuous waveform data..."
         )
+        return success, error_message
         
     def render(self):
         st.title("Continuous Waveform Processing")
         
         if st.button("Download Waveforms", key="download_continuous"):
-            success = self.process_continuous_data()
+            success, error_message = self.process_continuous_data()
             if success:
                 st.success("Continuous data processing completed successfully!")
             else:
-                st.error("Error processing continuous data. Check the logs for details.")
+                st.error(f"Error processing continuous data: {error_message}")
 
 class ContinuousComponents:
     def __init__(self, settings: SeismoLoaderSettings):

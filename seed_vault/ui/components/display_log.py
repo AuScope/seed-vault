@@ -4,6 +4,7 @@ import threading
 import time
 from contextlib import redirect_stdout, redirect_stderr
 from typing import Callable, List
+from queue import Queue
 
 class ConsoleDisplay:
     def __init__(self):
@@ -62,7 +63,7 @@ class ConsoleDisplay:
             # Update buffer position
             self.last_position = output_buffer.tell()
 
-    def run_with_logs(self, process_func: Callable, status_message: str = "Processing...") -> bool:
+    def run_with_logs(self, process_func: Callable, status_message: str = "Processing...") -> tuple[bool, str]:
         """
         Run a process with terminal-style logging
         
@@ -71,17 +72,16 @@ class ConsoleDisplay:
             status_message: Status message to display
             
         Returns:
-            bool: True if process completed successfully, False otherwise
+            tuple[bool, str]: (success status, error message if any)
         """
         output_buffer = StringIO()
         self.last_position = 0
         self.accumulated_output = []
+        error_message = ""
         
         status = st.status(status_message, expanded=True)
         with status:
             self._init_terminal_style()
-            
-            # Create a container for logs with custom styling
             log_container = st.empty()
             log_container.markdown('<div class="terminal"></div>', unsafe_allow_html=True)
             
@@ -89,21 +89,32 @@ class ConsoleDisplay:
                 with redirect_stdout(output_buffer), redirect_stderr(output_buffer):
                     print("Starting process...")
                     
-                    process_thread = threading.Thread(target=process_func)
+                    # Create a queue to get the return value from the thread
+                    result_queue = Queue()
+                    
+                    def wrapped_func():
+                        try:
+                            result = process_func()
+                            result_queue.put(("success", result))
+                        except Exception as e:
+                            result_queue.put(("error", str(e)))
+                    
+                    process_thread = threading.Thread(target=wrapped_func)
                     process_thread.start()
                     
-                    # Update logs while process is running
                     while process_thread.is_alive():
                         self._update_logs(output_buffer, log_container)
                         time.sleep(0.1)
                     
-                    # Wait for process to complete
                     process_thread.join()
-                    
-                    # Final update to catch any remaining output
                     self._update_logs(output_buffer, log_container)
-                    return True
+                    
+                    # Get the result from the queue
+                    status, result = result_queue.get()
+                    if status == "error":
+                        return False, result
+                    return True, ""
 
             except Exception as e:
-                st.error(f"Error in processing: {str(e)}")
-                return False 
+                error_message = str(e)
+                return False, error_message 

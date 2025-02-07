@@ -244,7 +244,7 @@ def collect_requests(inv, time0, time1, days_per_request=3,
     time1 = min(time1, UTCDateTime.now()-120)
     if time0 >= time1:
         return None
-    
+    sub_inv = inv.select(time=time0)
     current_start = time0
     while current_start < time1:
         current_end = min(current_start + datetime.timedelta(days=days_per_request), time1)
@@ -1258,11 +1258,13 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
     try:
         ttmodel = TauPyModel(settings.event.model)
     except Exception as e:
+        print(f"\nFalling back to IASP91 model: {str(e)}")  # Add newline
         ttmodel = TauPyModel('IASP91')
 
     event_streams = []
     for i, eq in enumerate(settings.event.selected_catalogs):
         # Collect requests
+        print(f"\nProcessing event {i+1}/{len(settings.event.selected_catalogs)}")  # Add newline
         requests, new_arrivals, p_arrivals = collect_requests_event(
             eq, settings.station.selected_invs,
             model=ttmodel,
@@ -1270,22 +1272,23 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
         )
 
         if stop_event and stop_event.is_set():
-            print("Run cancelled!")
+            print("\nRun cancelled!")  # Add newline
             return None
 
         # Import any new arrival info into database
         if new_arrivals:
+            print("\nUpdating arrival data in database...")  # Add newline
             db_manager.bulk_insert_arrival_data(new_arrivals)
 
         # Remove requests for data we already have
         if settings.waveform.force_redownload:
-            print("Forcing re-download as requested...")
+            print("\nForcing re-download as requested...")  # Add newline
             pruned_requests = requests
         else:
             pruned_requests= prune_requests(requests, db_manager, settings.sds_path)
         
         if stop_event and stop_event.is_set():
-            print("Run cancelled!")
+            print("\nRun cancelled!")  # Add newline
             return None
 
         # Process new data if needed
@@ -1306,16 +1309,16 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
                                      password=cred.password)
                     waveform_clients.update({cred_net: new_client})
                 except Exception as e:
-                    print(f"Issue creating client for {cred_net}: {str(e)}")
+                    print(f"\nIssue creating client for {cred_net}: {str(e)}")  # Add newline
 
             # Archive new data
             for request in combined_requests:
                 try:
                     if stop_event and stop_event.is_set():
-                        print("Run cancelled!")
+                        print("\nRun cancelled!")  # Add newline
                         return None
                     
-                    print("\n Requesting: ", request)
+                    print(f"\nRequesting: {request}")  # Add newline
                     archive_request(request, waveform_clients, settings.sds_path, db_manager)
 
                     if stop_event and stop_event.is_set():
@@ -1323,7 +1326,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
                         return None
 
                 except Exception as e:
-                    print(f"Error archiving request {request}: {str(e)}")
+                    print(f"\nError archiving request {request}: {str(e)}")
 
         # Now read all data for this event using get_local_waveform
         event_stream = obspy.Stream()
@@ -1337,7 +1340,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
                 endtime=req[5]
             )
             if stop_event and stop_event.is_set():
-                print("Run cancelled!")
+                print("\nRun cancelled!")  # Add newline
                 return None
             
             try:
@@ -1362,7 +1365,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
                     
                     event_stream += st
             except Exception as e:
-                print(f"Error reading data for {query.network}.{query.station}: {str(e)}")
+                print(f"\nError reading data for {query.network}.{query.station}: {str(e)}")  # Add newline
                 continue
 
         if len(event_stream) > 0:
@@ -1370,9 +1373,10 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
 
     # Cleanup the database
     try:
+        print("\n~~ Cleaning up database ~~")  # Add newline
         db_manager.join_continuous_segments(settings.processing.gap_tolerance)
     except Exception as e:
-        print(f"! Error with join_continuous_segments: {str(e)}")
+        print(f"\n! Error with join_continuous_segments: {str(e)}")  # Add newline
 
     return event_streams
 
