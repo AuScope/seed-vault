@@ -40,7 +40,7 @@ class WaveformFilterMenu:
         self.station_filter = "All stations"
         self.channel_filter = "All channels"
         self.available_channels = ["All channels"]
-        self.display_limit = 5
+        self.display_limit = 50
     def update_available_channels(self, stream: Stream):
         if not stream:
             self.available_channels = ["All channels"]
@@ -169,8 +169,8 @@ class WaveformFilterMenu:
                 st.subheader("📊 Display Options")
                 self.display_limit = st.selectbox(
                     "Waveforms per page:",
-                    options=[5, 10, 15],
-                    index=[5, 10, 15].index(self.display_limit),
+                    options=[10, 25, 50],
+                    index=[10, 25, 50].index(self.display_limit),
                     key="waveform_display_limit",
                     help="Number of waveforms to show per page"
                 )
@@ -184,7 +184,7 @@ class WaveformFilterMenu:
                     self.network_filter = "All networks"
                     self.station_filter = "All stations"
                     self.channel_filter = "All channels"
-                    self.display_limit = 5
+                    self.display_limit = 50
             else:
                 st.info("Load data to enable display filters")
 
@@ -265,11 +265,20 @@ class WaveformDisplay:
             st.warning("No waveforms retrieved. Please check your selection criteria.")
 
             
-    def _get_trace_color(self, index: int) -> str:
-        """Get color for trace based on index"""
-        # Define a color cycle - black, red, blue, green
-        colors = ['black', 'red', 'blue', 'green']
-        return colors[index % len(colors)]
+    def _get_trace_color(self, tr) -> str:
+        """Get color based on channel component"""
+        # Extract last character of channel code
+        component = tr.stats.channel[-1].upper()
+        
+        # Standard color scheme for components
+        if component == 'Z':
+            return 'black'
+        elif component in ['N', '1']:
+            return 'blue'
+        elif component in ['E', '2']:
+            return 'green'
+        else:
+            return 'gray'
     def _plot_stream_with_colors(self, stream: Stream, size=(800, 600), view_type=None):
         """Plot stream with proper time windows and P markers"""
         if not stream:
@@ -303,7 +312,7 @@ class WaveformDisplay:
                         
                         # Plot the trace
                         ax.plot(relative_times, tr_windowed.data, '-', 
-                               color=self._get_trace_color(i), linewidth=0.8)
+                               color=self._get_trace_color(tr), linewidth=0.8)
                         
                         # Add P arrival line (now at x=0)
                         ax.axvline(x=0, color='red', linewidth=1, linestyle='-')
@@ -347,7 +356,7 @@ class WaveformDisplay:
                                           len(tr.data))
                         
                         # Plot waveform
-                        ax.plot(times, tr.data, '-', color=self._get_trace_color(i), linewidth=0.8)
+                        ax.plot(times, tr.data, '-', color=self._get_trace_color(tr), linewidth=0.8)
                         
                         # Add P marker at t=0
                         ax.axvline(x=0, color='red', linewidth=1, linestyle='-')
@@ -379,7 +388,7 @@ class WaveformDisplay:
                     else:
                         # If no P arrival, plot raw data
                         times = np.arange(len(tr.data)) * tr.stats.delta
-                        ax.plot(times, tr.data, '-', color=self._get_trace_color(i), linewidth=0.8)
+                        ax.plot(times, tr.data, '-', color=self._get_trace_color(tr), linewidth=0.8)
                         ax.text(0, ax.get_ylim()[1], 
                                f'{tr.stats.network}.{tr.stats.station}.{tr.stats.location or ""}.{tr.stats.channel}',
                                fontsize=8)
@@ -404,16 +413,13 @@ class WaveformDisplay:
             return None
 
     def _calculate_figure_dimensions(self, num_traces: int) -> tuple:
-        """Calculate standardized figure dimensions based on number of traces"""
-        width = 10  # Standard width in inches
-        # Height calculation:
-        # - Base height per trace: 1.2 inches
-        # - Minimum total height: 4 inches
-        # - Maximum total height: 12 inches
-        # - Additional space for title: 0.5 inches
-        height_per_trace = 1.2
+        """Calculate figure dimensions based on number of traces"""
+        width = 12  # Slightly wider for better readability
+        height_per_trace = 1.0  # Reduced slightly to fit more traces
+        
+        # Remove maximum height limit, keep minimum
         total_height = num_traces * height_per_trace + 0.5
-        total_height = max(4, min(12, total_height))  # Clamp between 4 and 12 inches
+        total_height = max(4, total_height)  # Only keep minimum height limit
         
         return (width, total_height)
 
@@ -477,7 +483,7 @@ class WaveformDisplay:
                 
                 # Plot the trace
                 ax.plot(relative_times, tr_windowed.data, '-', 
-                       color=self._get_trace_color(i), linewidth=0.8)
+                       color=self._get_trace_color(tr), linewidth=0.8)
                 
                 # Add P arrival line (now at x=0)
                 ax.axvline(x=0, color='red', linewidth=1, linestyle='-', alpha=0.8)
@@ -583,7 +589,7 @@ class WaveformDisplay:
                 
                 # Plot the trace
                 ax.plot(relative_times, tr_windowed.data, '-', 
-                       color=self._get_trace_color(i), linewidth=0.8)
+                       color=self._get_trace_color(tr), linewidth=0.8)
                 
                 # Add P arrival line (now at x=0)
                 ax.axvline(x=0, color='red', linewidth=1, linestyle='-', alpha=0.8)
