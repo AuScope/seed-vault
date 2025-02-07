@@ -292,12 +292,11 @@ class WaveformDisplay:
             return 'green'
         else:
             return 'gray'
+
     def _plot_stream_with_colors(self, stream: Stream, size=(800, 600), view_type=None):
         """Plot stream with proper time windows and P markers"""
         if not stream:
             return None
-
-        print("OKAYYY")
 
         try:
             # Create figure with subplots
@@ -320,9 +319,7 @@ class WaveformDisplay:
                 tr.filterband = (filter_min,filter_max)
 
                 if view_type == "station":
-                    print("bing!")
                     if hasattr(tr.stats, 'p_arrival') and hasattr(tr.stats, 'event_time'):
-                        print("biiiing!")
                         p_time = UTCDateTime(tr.stats.p_arrival)
                         before_p = self.settings.event.before_p_sec
                         after_p = self.settings.event.after_p_sec
@@ -372,7 +369,6 @@ class WaveformDisplay:
                         ax.set_xlim(-before_p, after_p)
                         
                 else:
-                    print("bang!")
                     # Original plotting logic for other views
                     # Get P arrival time
                     p_time = UTCDateTime(tr.stats.p_arrival) if hasattr(tr.stats, 'p_arrival') else None
