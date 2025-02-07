@@ -27,6 +27,19 @@ if "query_done" not in st.session_state:
 if "trigger_rerun" not in st.session_state:
     st.session_state["trigger_rerun"] = False
 
+def get_tele_filter(distance_km):
+    # get a generic teleseismic filter band
+    if distance_km < 100:
+        return (2.0,16)   
+    elif distance_km < 500:
+        return (1.8,8)
+    elif distance_km < 3000:
+        return (1.3,5)
+    elif distance_degrees < 10000:
+        return (0.7,3)
+    else:
+        return (0.4,1.2)
+
 class WaveformFilterMenu:
     settings: SeismoLoaderSettings
     network_filter: str
@@ -283,20 +296,33 @@ class WaveformDisplay:
         """Plot stream with proper time windows and P markers"""
         if not stream:
             return None
-        
+
+        print("OKAYYY")
+
         try:
             # Create figure with subplots
             num_traces = len(stream)
             fig, axes = plt.subplots(num_traces, 1, figsize=(size[0]/100, size[1]/100), sharex=True)
             if num_traces == 1:
                 axes = [axes]
+
+            # Sort stream by distance
+            for tr in stream:
+                if not hasattr(tr.stats, 'distance_km') or not tr.stats.distance_km:
+                    tr.stats.distance_km = 99999
+            sorted_stream = Stream(sorted(stream, key=lambda tr: tr.stats.distance_km))
             
             # Process each trace
             for i, tr in enumerate(stream):
                 ax = axes[i]
                 
+                filter_min,filter_max = get_tele_filter(tr_windowed.stats.distance_km)
+                tr.filterband = (filter_min,filter_max)
+
                 if view_type == "station":
+                    print("bing!")
                     if hasattr(tr.stats, 'p_arrival') and hasattr(tr.stats, 'event_time'):
+                        print("biiiing!")
                         p_time = UTCDateTime(tr.stats.p_arrival)
                         before_p = self.settings.event.before_p_sec
                         after_p = self.settings.event.after_p_sec
@@ -305,6 +331,12 @@ class WaveformDisplay:
                         window_start = p_time - before_p
                         window_end = p_time + after_p
                         tr_windowed = tr.slice(window_start, window_end)
+
+                        # Pre-process and apply a bandpass filter
+                        tr_windowed.detrend()
+                        tr_windowed.taper(.005)
+                        tr_windowed.filter('bandpass',freqmin=filter_min,freqmax=filter_max,
+                            zerophase=True)
                         
                         # Calculate times relative to P arrival
                         times = np.arange(tr_windowed.stats.npts) * tr_windowed.stats.delta
@@ -326,6 +358,8 @@ class WaveformDisplay:
                             event_info += f", M{tr.stats.event_magnitude:.1f}"
                         if hasattr(tr.stats, 'event_region'):
                             event_info += f", {tr.stats.event_region}"
+                        if hasattr(tr.stats, 'filterband'):
+                            event_info += f", {tr.stats.filterband[0]}-{tr.stats.filterband[1]}Hz"
                         
                         # Position label inside plot in upper left
                         label = f"{station_label} - {event_info}"
@@ -338,6 +372,7 @@ class WaveformDisplay:
                         ax.set_xlim(-before_p, after_p)
                         
                 else:
+                    print("bang!")
                     # Original plotting logic for other views
                     # Get P arrival time
                     p_time = UTCDateTime(tr.stats.p_arrival) if hasattr(tr.stats, 'p_arrival') else None
@@ -349,6 +384,12 @@ class WaveformDisplay:
                         
                         # Ensure trace is trimmed to window
                         tr.trim(start_time, end_time, pad=True, fill_value=0)
+
+                        # Pre-process and apply a bandpass filter
+                        tr.detrend()
+                        tr.taper(.005)
+                        tr.filter('bandpass',freqmin=filter_min,freqmax=filter_max,
+                            zerophase=True)
                         
                         # Create time vector matching data length
                         times = np.linspace(-self.settings.event.before_p_sec, 
@@ -371,6 +412,8 @@ class WaveformDisplay:
                         label = f'{tr.stats.network}.{tr.stats.station}.{tr.stats.location or ""}.{tr.stats.channel}'
                         if hasattr(tr.stats, 'distance_km'):
                             label += f' ({tr.stats.distance_km:.1f} km)'
+                        if hasattr(tr.stats, 'filterband'):
+                            event_info += f", {tr.stats.filterband[0]}-{tr.stats.filterband[1]}Hz"
                         ax.text(-self.settings.event.before_p_sec * 0.95, 
                                ax.get_ylim()[1],
                                label,
@@ -388,9 +431,16 @@ class WaveformDisplay:
                     else:
                         # If no P arrival, plot raw data
                         times = np.arange(len(tr.data)) * tr.stats.delta
+
+                        # Pre-process and apply a bandpass filter
+                        tr.detrend()
+                        tr.taper(.005)
+                        tr.filter('bandpass',freqmin=filter_min,freqmax=filter_max,
+                            zerophase=True)
+
                         ax.plot(times, tr.data, '-', color=self._get_trace_color(tr), linewidth=0.8)
                         ax.text(0, ax.get_ylim()[1], 
-                               f'{tr.stats.network}.{tr.stats.station}.{tr.stats.location or ""}.{tr.stats.channel}',
+                               f'{tr.stats.network}.{tr.stats.station}.{tr.stats.location or ""}.{tr.stats.channel} {tr.stats.filterband[0]}-{tr.stats.filterband[1]}Hz',
                                fontsize=8)
                 
                 # Remove unnecessary ticks

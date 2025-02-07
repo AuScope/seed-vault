@@ -1277,7 +1277,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
 
         # Import any new arrival info into database
         if new_arrivals:
-            print("\nUpdating arrival data in database...")  # Add newline
+            # print("\nUpdating arrival data in database...")  # commented as this is expected behavior
             db_manager.bulk_insert_arrival_data(new_arrivals)
 
         # Remove requests for data we already have
