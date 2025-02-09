@@ -27,18 +27,27 @@ if "query_done" not in st.session_state:
 if "trigger_rerun" not in st.session_state:
     st.session_state["trigger_rerun"] = False
 
-def get_tele_filter(distance_km):
+def get_tele_filter(tr):
     # get a generic teleseismic filter band
+    distance_km = tr.stats.distance_km
+    nyq = tr.stats.sampling_rate/2 - 0.1
+    senstype = tr.stats.channel[1]
+
+    if senstype not in ['H','N']:
+        return 0,0
+
     if distance_km < 100:
-        return (2.0,16)   
+        f0,f1 = 2.0,15
     elif distance_km < 500:
-        return (1.8,8)
+        f0,f1 = 1.8,8
     elif distance_km < 3000:
-        return (1.3,5)
-    elif distance_degrees < 10000:
-        return (0.7,3)
+        f0,f1 = 1.4,5
+    elif distance_km < 10000:
+        f0,f1 = 1.0,3
     else:
-        return (0.4,1.2)
+        f0,f1 = 0.7,2
+    
+    return min(f0,nyq),min(f1,nyq)
 
 class WaveformFilterMenu:
     settings: SeismoLoaderSettings
@@ -282,6 +291,10 @@ class WaveformDisplay:
         """Get color based on channel component"""
         # Extract last character of channel code
         component = tr.stats.channel[-1].upper()
+        sensortype = tr.stats.channel[1].upper()
+
+        if sensortype not in ['H','N']:
+            return 'lightgray'
         
         # Standard color scheme for components
         if component == 'Z':
@@ -306,17 +319,16 @@ class WaveformDisplay:
                 axes = [axes]
 
             # Sort stream by distance
-            for tr in stream:
-                if not hasattr(tr.stats, 'distance_km') or not tr.stats.distance_km:
-                    tr.stats.distance_km = 99999
-            sorted_stream = Stream(sorted(stream, key=lambda tr: tr.stats.distance_km))
+            stream.traces.sort(key=lambda x: x.stats.starttime)
             
             # Process each trace
             for i, tr in enumerate(stream):
                 ax = axes[i]
-                
-                filter_min,filter_max = get_tele_filter(tr_windowed.stats.distance_km)
-                tr.filterband = (filter_min,filter_max)
+
+                # Calculate and add an appropriate filter for plotting              
+                filter_min,filter_max = get_tele_filter(tr)
+                if filter_min < filter_max:
+                    tr.stats.filterband = (filter_min,filter_max)
 
                 if view_type == "station":
                     if hasattr(tr.stats, 'p_arrival') and hasattr(tr.stats, 'event_time'):
@@ -330,10 +342,11 @@ class WaveformDisplay:
                         tr_windowed = tr.slice(window_start, window_end)
 
                         # Pre-process and apply a bandpass filter
-                        tr_windowed.detrend()
-                        tr_windowed.taper(.005)
-                        tr_windowed.filter('bandpass',freqmin=filter_min,freqmax=filter_max,
-                            zerophase=True)
+                        if tr_windowed.stats.sampling_rate/2 > filter_min and filter_min<filter_max:
+                            tr_windowed.detrend()
+                            tr_windowed.taper(.005)
+                            tr_windowed.filter('bandpass',freqmin=filter_min,freqmax=filter_max,
+                                zerophase=True)
                         
                         # Calculate times relative to P arrival
                         times = np.arange(tr_windowed.stats.npts) * tr_windowed.stats.delta
@@ -382,10 +395,11 @@ class WaveformDisplay:
                         tr.trim(start_time, end_time, pad=True, fill_value=0)
 
                         # Pre-process and apply a bandpass filter
-                        tr.detrend()
-                        tr.taper(.005)
-                        tr.filter('bandpass',freqmin=filter_min,freqmax=filter_max,
-                            zerophase=True)
+                        if tr_windowed.stats.sampling_rate/2 > filter_min and filter_min<filter_max:
+                            tr.detrend()
+                            tr.taper(.005)
+                            tr.filter('bandpass',freqmin=filter_min,freqmax=filter_max,
+                                zerophase=True)
                         
                         # Create time vector matching data length
                         times = np.linspace(-self.settings.event.before_p_sec, 
@@ -429,10 +443,11 @@ class WaveformDisplay:
                         times = np.arange(len(tr.data)) * tr.stats.delta
 
                         # Pre-process and apply a bandpass filter
-                        tr.detrend()
-                        tr.taper(.005)
-                        tr.filter('bandpass',freqmin=filter_min,freqmax=filter_max,
-                            zerophase=True)
+                        if tr_windowed.stats.sampling_rate/2 > filter_min and filter_min<filter_max:
+                            tr.detrend()
+                            tr.taper(.005)
+                            tr.filter('bandpass',freqmin=filter_min,freqmax=filter_max,
+                                zerophase=True)
 
                         ax.plot(times, tr.data, '-', color=self._get_trace_color(tr), linewidth=0.8)
                         ax.text(0, ax.get_ylim()[1], 
@@ -473,11 +488,10 @@ class WaveformDisplay:
         """Plot event view with proper time alignment and improved layout"""
         if not stream:
             return
-        
-        # Sort traces by distance if available
-        if hasattr(stream[0].stats, 'distance'):
-            stream.traces.sort(key=lambda x: x.stats.distance)
-        
+
+        # Sort traces by distance (via starttime)
+        stream.traces.sort(key=lambda x: x.stats.starttime)
+
         # Get current page's traces
         start_idx = page * self.filter_menu.display_limit
         end_idx = start_idx + self.filter_menu.display_limit
@@ -492,10 +506,10 @@ class WaveformDisplay:
         gs = plt.GridSpec(num_traces, 1, 
                          height_ratios=[1] * num_traces, 
                          hspace=0.05,
-                         top=0.95,    # Leave space for title
+                         top=0.97,    # Leave space for title
                          bottom=0.08, # Leave space for x-axis label
                          left=0.1,
-                         right=0.95)
+                         right=0.9)
         axes = [plt.subplot(gs[i]) for i in range(num_traces)]
         
         # Get event information
@@ -512,6 +526,11 @@ class WaveformDisplay:
         # Process each trace
         for i, tr in enumerate(current_stream):
             ax = axes[i]
+
+            # Calculate and add an appropriate filter for plotting
+            filter_min,filter_max = get_tele_filter(tr)
+            if filter_min < filter_max:
+                tr.stats.filterband = (filter_min,filter_max)                 
             
             if hasattr(tr.stats, 'p_arrival'):
                 p_time = UTCDateTime(tr.stats.p_arrival)
@@ -522,6 +541,13 @@ class WaveformDisplay:
                 window_start = p_time - before_p
                 window_end = p_time + after_p
                 tr_windowed = tr.slice(window_start, window_end)
+
+                # Pre-process and apply a bandpass filter
+                if tr_windowed.stats.sampling_rate/2 > filter_min and filter_min<filter_max:
+                    tr_windowed.detrend()
+                    tr_windowed.taper(.005)
+                    tr_windowed.filter('bandpass',freqmin=filter_min,freqmax=filter_max,
+                    zerophase=True)
                 
                 # Calculate times relative to P arrival
                 times = np.arange(tr_windowed.stats.npts) * tr_windowed.stats.delta
@@ -538,14 +564,16 @@ class WaveformDisplay:
                 station_info = f"{tr.stats.network}.{tr.stats.station}.{tr.stats.location or ''}.{tr.stats.channel}"
                 if hasattr(tr.stats, 'distance_km'):
                     station_info += f" ({tr.stats.distance_km:.1f} km)"
+                if hasattr(tr.stats, 'filterband'):
+                    station_info += f", {tr.stats.filterband[0]}-{tr.stats.filterband[1]}Hz"
                 
                 # Position label inside plot
                 ax.text(0.02, 0.95, station_info,
                        transform=ax.transAxes,
                        verticalalignment='top',
                        horizontalalignment='left',
-                       fontsize=8,
-                       bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', pad=1))
+                       fontsize=7,
+                       bbox=dict(facecolor='white', alpha=0.6, edgecolor='none', pad=1))
                 
                 # Set consistent x-axis limits
                 ax.set_xlim(-before_p, after_p)
@@ -569,7 +597,7 @@ class WaveformDisplay:
                 ax.spines['bottom'].set_linewidth(0.5)
         
         # Adjust layout
-        plt.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.1)
+        plt.subplots_adjust(left=0.1, right=0.9, top=0.97, bottom=0.1)
         
         return fig
 
@@ -578,8 +606,11 @@ class WaveformDisplay:
         if not stream:
             return
         
-        # Sort traces by time
-        stream.traces.sort(key=lambda x: x.stats.starttime)
+        # Sort traces by distance (can't do via starttime since it's all the same station)
+        for tr in stream:
+            if not hasattr(tr.stats, 'distance_km') or not tr.stats.distance_km:
+                tr.stats.distance_km = 999999
+        stream = Stream(sorted(stream, key=lambda tr: tr.stats.distance_km))
         
         # Get current page's traces
         start_idx = page * self.filter_menu.display_limit
@@ -609,37 +640,49 @@ class WaveformDisplay:
         gs = plt.GridSpec(len(current_stream), 1,
                          height_ratios=[1] * len(current_stream),
                          hspace=0.05,
-                         top=0.95,
+                         top=0.97,
                          bottom=0.08,
                          left=0.1,
-                         right=0.95)
+                         right=0.9)
         axes = [plt.subplot(gs[i]) for i in range(len(current_stream))]
         
         # Process each trace
         for i, tr in enumerate(current_stream):
             ax = axes[i]
-            
+
+            # Calculate and add an appropriate filter for plotting
+            filter_min,filter_max = get_tele_filter(tr)
+            if filter_min < filter_max:
+                tr.stats.filterband = (filter_min,filter_max)
+
             if hasattr(tr.stats, 'p_arrival'):
                 p_time = UTCDateTime(tr.stats.p_arrival)
                 before_p = self.settings.event.before_p_sec
                 after_p = self.settings.event.after_p_sec
-                
+
                 # Trim trace to window around P
                 window_start = p_time - before_p
                 window_end = p_time + after_p
                 tr_windowed = tr.slice(window_start, window_end)
-                
+
+                # Pre-process and apply a bandpass filter
+                if tr_windowed.stats.sampling_rate/2 > filter_min and filter_min<filter_max:
+                    tr_windowed.detrend()
+                    tr_windowed.taper(.005)
+                    tr_windowed.filter('bandpass',freqmin=filter_min,freqmax=filter_max,
+                        zerophase=True)                
+
                 # Calculate times relative to P arrival
                 times = np.arange(tr_windowed.stats.npts) * tr_windowed.stats.delta
                 relative_times = times - before_p  # This makes P arrival at t=0
-                
+
                 # Plot the trace
                 ax.plot(relative_times, tr_windowed.data, '-', 
                        color=self._get_trace_color(tr), linewidth=0.8)
-                
+
                 # Add P arrival line (now at x=0)
                 ax.axvline(x=0, color='red', linewidth=1, linestyle='-', alpha=0.8)
-                
+
                 # Format station label with distance, magnitude, and region
                 station_info = f"{tr.stats.network}.{tr.stats.station}.{tr.stats.location or ''}.{tr.stats.channel}"
                 event_info = []
@@ -650,7 +693,9 @@ class WaveformDisplay:
                     event_info.append(f"M{tr.stats.event_magnitude:.1f}")
                 if hasattr(tr.stats, 'event_region'):
                     event_info.append(tr.stats.event_region)
-                
+                if hasattr(tr.stats, 'filterband'):
+                    event_info.append(f"{tr.stats.filterband[0]}-{tr.stats.filterband[1]}Hz")
+
                 # Combine all information with proper formatting
                 label = f"{station_info} - {', '.join(event_info)}"
                 
@@ -659,34 +704,34 @@ class WaveformDisplay:
                        transform=ax.transAxes,
                        verticalalignment='top',
                        horizontalalignment='left',
-                       fontsize=8,
-                       bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', pad=1))
-                
+                       fontsize=7,
+                       bbox=dict(facecolor='white', alpha=0.6, edgecolor='none', pad=1))
+
                 # Set consistent x-axis limits
                 ax.set_xlim(-before_p, after_p)
-                
+
                 # Remove y-axis ticks and labels
                 ax.set_yticks([])
-                
+
                 # Only show x-axis labels for bottom subplot
                 if i < len(current_stream) - 1:
                     ax.set_xticklabels([])
                 else:
                     ax.set_xlabel('Time relative to P (seconds)')
-                
+
                 # Add subtle grid
                 ax.grid(True, alpha=0.2)
-                
+
                 # Add subtle box around plot
                 ax.spines['top'].set_visible(False)
                 ax.spines['right'].set_visible(False)
                 ax.spines['left'].set_linewidth(0.5)
                 ax.spines['bottom'].set_linewidth(0.5)
-        
+
         # Update title
         net, sta = station_code.split(".")
-        fig.suptitle(f"Station {station_code} - Multiple Events View",
-                    fontsize=10, y=0.98)
+        #fig.suptitle(f"Station {station_code} - Multiple Events View",
+        #            fontsize=10, y=0.98)
         
         return fig
 
@@ -866,7 +911,7 @@ class SeismicDistanceDisplay:
         """Initialize with ObsPy streams instead of waveform dictionaries"""
         self.streams = streams
         self.settings = settings
-        
+    
     def calculate_distances(self):
         """Calculate distances between events and stations using stream metadata"""
         distances = []
@@ -901,13 +946,24 @@ class SeismicDistanceDisplay:
                             else:
                                 dist_deg = tr.stats.distance_deg
                                 dist_km = tr.stats.distance_km
+
+                            if hasattr(tr.stats, 'p_arrival') and tr.stats.p_arrival is not None:
+                                pt = str(UTCDateTime(tr.stats.p_arrival))
+                            else:
+                                pt = "None"
+                            if hasattr(tr.stats, 's_arrival') and tr.stats.s_arrival is not None:
+                                st = str(UTCDateTime(tr.stats.s_arrival))
+                            else:
+                                st = "None"
+                            # probably one for surface waves also eventually
                             
                             distances.append({
                                 'Network': tr.stats.network,
                                 'Station': tr.stats.station,
                                 'Distance_deg': round(dist_deg, 2),
-                                'Distance_km': round(dist_km, 2),
-                                'P_Arrival': tr.stats.p_arrival if hasattr(tr.stats, 'p_arrival') else None,
+                                'Distance_km': round(dist_km, 1),
+                                'P_Arrival': pt,
+                                'S_Arrival': st,
                                 'Station_Lat': station.latitude,
                                 'Station_Lon': station.longitude
                             })
@@ -922,7 +978,8 @@ class SeismicDistanceDisplay:
         if distances:
             st.subheader("Station Distances")
             df = pd.DataFrame(distances)
-            st.dataframe(df)
+            height = len(df) * 35 + 40
+            st.dataframe(df,use_container_width=True,height=height)
 
 
 if st.session_state.get("trigger_rerun", False):
