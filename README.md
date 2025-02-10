@@ -1,5 +1,7 @@
 # seed-vault
 
+![Example of Step 1](docs/screenshots/Step1.png)
+
 #### Seed Vault is a cross platform GUI utility which can search, view and download seismic FDSN data
 
 *  Users can download data via earthquake search (station to event, or event to station)
@@ -21,7 +23,8 @@ Can run:
 
 ----
 
-# Quick Start
+
+# Install from source
 
 ## Step 1: Clone repository
 
@@ -64,7 +67,22 @@ Open a powershell and run following commands:
 
 ----
 
-# Development 
+# Development
+
+## Project Folder structure
+```
+seed-vault/
+│
+├── seed_vault/      # Python package containing application code
+│   ├── models/        # Python modules for data models
+│   ├── service/       # Services for logic and backend processing
+│   ├── ui/            # UI components (Streamlit files)
+│   ├── utils/         # Utility functions and helpers
+│   ├── __init__.py    # 
+│   └── cli.py         # Command Line Interface
+│
+└── pyproject.toml     # Poetry configuration file for the whole project
+```
 
 ## Setting up with Poetry
 
@@ -199,29 +217,10 @@ docker compose up --build
 ```
 The application should now be running and accessible at `http://localhost:8501`.
 
-
-
-## Project Folder structure
-```
-seed-vault/
-│
-├── seed_vault/      # Python package containing application code
-│   ├── models/        # Python modules for data models
-│   ├── service/       # Services for logic and backend processing
-│   ├── ui/            # UI components (Streamlit files)
-│   ├── utils/         # Utility functions and helpers
-│   ├── __init__.py    # 
-│   └── cli.py         # Command Line Interface
-│
-└── pyproject.toml     # Poetry configuration file for the whole project
-```
-
 ## Export poetry packages to requirements.txt
 ```
 poetry export -f requirements.txt --output requirements.txt --without-hashes
 ```
-
-
 
 ## Publishing the lib to test: pypi
 Define a package name in pyproject.toml (e.g. `seed-vault`).
