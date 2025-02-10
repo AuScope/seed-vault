@@ -1,4 +1,4 @@
-from datetime import datetime, date, time, timedelta
+from datetime import datetime, date, time, timedelta, timezone
 from dateutil.relativedelta import relativedelta
 from obspy.clients.fdsn import Client
 import streamlit as st
@@ -19,7 +19,7 @@ def get_time_interval(interval_type: str, amount: int = 1):
     Returns:
         tuple: (current_datetime, past_datetime)
     """
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
 
     if interval_type == "hour":
         past = now - timedelta(hours=amount)

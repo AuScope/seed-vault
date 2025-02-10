@@ -41,11 +41,11 @@ class ContinuousFilterMenu:
             c1,c2 = st.columns([1,1])
             with c1:
                 start_date = st.date_input("Start Date", value=start_date)
-                start_time = st.time_input("Start Time", value=start_time)
+                start_time = st.time_input("Start Time (UTC)", value=start_time)
                 self.settings.station.date_config.start_time = datetime.combine(start_date, start_time)
             with c2:
                 end_date = st.date_input("End Date", value=end_date)                
-                end_time = st.time_input("End Time", value=end_time)
+                end_time = st.time_input("End Time (UTC)", value=end_time)
                 self.settings.station.date_config.end_time = datetime.combine(end_date, end_time)
 
             

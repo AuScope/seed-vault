@@ -2,7 +2,7 @@ from typing import List
 import streamlit as st
 from streamlit_folium import st_folium
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, time
 from obspy.core.event import Catalog, read_events
 from obspy.core.inventory import Inventory, read_inventory
 from io import BytesIO
@@ -277,11 +277,11 @@ class BaseComponent:
 
                 with c1:
                     start_date  = st.date_input("Start Date", start_date, key="event-pg-start-date-event")
-                    start_time  = st.time_input("Start Time", start_time)
+                    start_time  = st.time_input("Start Time (UTC)", start_time)
                     self.settings.event.date_config.start_time = datetime.combine(start_date, start_time)
                 with c2:
                     end_date  = st.date_input("End Date", end_date, key="event-pg-end-date-event")
-                    end_time  = st.time_input("End Time", end_time)
+                    end_time  = st.time_input("End Time (UTC)", end_time)
                     self.settings.event.date_config.end_time = datetime.combine(end_date, end_time)
 
                 if self.settings.event.date_config.start_time > self.settings.event.date_config.end_time:
@@ -327,6 +327,10 @@ class BaseComponent:
         start_date, start_time = convert_to_datetime(self.settings.station.date_config.start_time)
         end_date, end_time = convert_to_datetime(self.settings.station.date_config.end_time)
 
+        # One hour shift
+        if (start_date == end_date and start_time >= end_time):
+            start_time = time(hour=0, minute=0, second=0)
+            end_time   = time(hour=1, minute=0, second=0)
 
         with st.sidebar:
             self.render_map_right_menu()
@@ -366,11 +370,11 @@ class BaseComponent:
                 c11, c12 = st.columns([1,1])
                 with c11:
                     start_date = st.date_input("Start Date", value=start_date)
-                    start_time = st.time_input("Start Time", value=start_time)
+                    # start_time = st.time_input("Start Time (UTC)", value=start_time)
                     self.settings.station.date_config.start_time = datetime.combine(start_date, start_time)
                 with c12:
                     end_date = st.date_input("End Date", value=end_date)
-                    end_time = st.time_input("End Time", value=end_time)
+                    # end_time = st.time_input("End Time (UTC)", value=end_time)
                     self.settings.station.date_config.end_time = datetime.combine(end_date, end_time)
 
                 if self.settings.station.date_config.start_time > self.settings.station.date_config.end_time:
@@ -801,7 +805,7 @@ class BaseComponent:
         with c1:
             min_radius_str = st.text_input("Minimum radius (degree)", value="0")
         with c2:
-            max_radius_str = st.text_input("Maximum radius (degree)", value="15")
+            max_radius_str = st.text_input("Maximum radius (degree)", value="30")
 
         try:
             min_radius = float(min_radius_str)
