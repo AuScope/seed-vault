@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "seed-vault"
 version = "0.1.2"
-description = "seismic data search and query library."
+description = "Seismic FDSN data search, view and download tool."
 package-mode = true
 authors = ["Ben Motevalli <mot032@csiro.au>"]
 readme = "README.md"
