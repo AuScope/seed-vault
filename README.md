@@ -1,8 +1,29 @@
 # seed-vault
 
-Seed Vault is a cross platform GUI and CLI utility to download and archive seismic miniseed data via FDSN. Users can download data via earthquake search (station to event, or event to station) as well as download continuous data in bulk. Users can also search and save earthquake catalogs and station metadata. Seed Vault also supports auth requests / accessing restricted data and syncs local SDS data archives with a local sqlite3 database to avoid redundant downloading. Parameters can also be saved an and loaded via a simple text config file. More to come!
+#### Seed Vault is a cross platform GUI utility which can search, view and download seismic FDSN data
 
-## Clone Repository
+*  Users can download data via earthquake search (station to event, or event to station)
+*  View and download bulk continuous data
+*  Search and save earthquake events and station metadata.
+*  Download restricted data
+*  Caches downloaded data in a local database to speed up future retrievals
+*  Local database editor
+*  Load and save search parameters and configuration
+
+Runs on:
+* Linux
+* Windows
+* MacOS
+
+Can run:
+* As web service
+* From the command line (CLI)
+
+----
+
+# Quick Start
+
+## Step 1: Clone repository
 
 ```bash
 git clone https://github.com/AuScope/seed-vault.git
@@ -12,7 +33,7 @@ or
 git clone git@github.com:AuScope/seed-vault.git
 ```
 
-## Quick Start
+## Step 2: Setup and run
 
 The app requires python >=3.10. For a quick start follow these steps:
 
@@ -21,19 +42,19 @@ git clone https://github.com/AuScope/seed-vault.git
 cd seed-vault
 ```
 
-### Linux/MacOS
+#### Linux/MacOS
 ```
 source setup.sh
 source run.sh
 ```
-### Windows
+#### Windows
 Open a powershell and run following commands:
 ```
 .\setup-win.ps1
 .\run-win.ps1
 ```
 
-**Note:** 
+**NOTES:** 
 1. For Win OS, you would need to convert the shell scripts to PowerShell. Or simply follow the steps in the shell scripts to set up the app.
 2. Requires python3 venv software package e.g. For python v10 on Ubuntu you may need to:
    ```
