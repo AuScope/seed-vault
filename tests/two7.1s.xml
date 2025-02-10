@@ -1,0 +1,75 @@
+<?xml version='1.0' encoding='utf-8'?>
+<q:quakeml xmlns="http://quakeml.org/xmlns/bed/1.2" xmlns:q="http://quakeml.org/xmlns/quakeml/1.2" xmlns:ns0="http://service.iris.edu/fdsnws/event/1/">
+  <eventParameters publicID="smi:local/0ab229ab-06b6-4a25-a084-4a200428d0d7">
+    <event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=11058875">
+      <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=39464537</preferredOriginID>
+      <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=195184803</preferredMagnitudeID>
+      <type>earthquake</type>
+      <description ns0:FEcode="39">
+        <text>CENTRAL CALIFORNIA</text>
+        <type>Flinn-Engdahl region</type>
+      </description>
+      <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=39464537" ns0:contributorOriginId="ci38457511" ns0:contributor="ci" ns0:contributorEventId="us70004bn0,pt19187000,at00pu7alg,ci38457511" ns0:catalog="NEIC PDE">
+        <time>
+          <value>2019-07-06T03:19:53.040000Z</value>
+        </time>
+        <latitude>
+          <value>35.7695</value>
+        </latitude>
+        <longitude>
+          <value>-117.599333</value>
+        </longitude>
+        <depth>
+          <value>8000.0</value>
+        </depth>
+        <creationInfo>
+          <author>ci,us,at,pt,</author>
+        </creationInfo>
+      </origin>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=195184803">
+        <mag>
+          <value>7.1</value>
+        </mag>
+        <type>mw</type>
+        <creationInfo>
+          <author>CI</author>
+        </creationInfo>
+      </magnitude>
+    </event>
+    <event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=11145501">
+      <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=41636037</preferredOriginID>
+      <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=196900923</preferredMagnitudeID>
+      <type>earthquake</type>
+      <description ns0:FEcode="266">
+        <text>NORTHERN MOLUCCA SEA</text>
+        <type>Flinn-Engdahl region</type>
+      </description>
+      <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=41636037" ns0:contributorOriginId="pt19318001" ns0:contributor="us" ns0:contributorEventId="us60006bjl,at00q0yvxj,pt19318001" ns0:catalog="NEIC PDE">
+        <time>
+          <value>2019-11-14T16:17:40.582000Z</value>
+        </time>
+        <latitude>
+          <value>1.6199</value>
+        </latitude>
+        <longitude>
+          <value>126.414</value>
+        </longitude>
+        <depth>
+          <value>33000.0</value>
+        </depth>
+        <creationInfo>
+          <author>pt,at,us</author>
+        </creationInfo>
+      </origin>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=196900923">
+        <mag>
+          <value>7.1</value>
+        </mag>
+        <type>Mww</type>
+        <creationInfo>
+          <author>us</author>
+        </creationInfo>
+      </magnitude>
+    </event>
+  </eventParameters>
+</q:quakeml>
