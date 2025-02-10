@@ -309,36 +309,53 @@ def get_p_s_times(eq, dist_deg, ttmodel):
 def select_highest_samplerate(inv, minSR=10, time=None):
     """
     Where overlapping channels exist (e.g. 100 hz and 10 hz), filter out anything other than highest available samplerate.
-    Only filters when duplicates exist - standalone channels are preserved regardless of sample rate.
-    Setting a time value will also filter by what stations were online then.
+    Channels are considered duplicates if:
+        - When time is specified: same location code and both exist at that time
+        - When time is None: same location code and same time span
+    All channels must meet minSR requirement.
     """
     if time:
         inv = inv.select(time=time)
     
     for net in inv:
         for sta in net:
-            channel_groups = {}
-            for channel in sta.channels:
-                # Create a key that identifies unique channels (e.g. location code + channel code)
-                # This assumes channel codes without sample rate info are unique identifiers
-                key = f"{channel.location_code}.{channel.code}"
-                if key not in channel_groups:
-                    channel_groups[key] = []
-                channel_groups[key].append(channel)
+            channels = [ch for ch in sta.channels if ch.sample_rate >= minSR]
+            
+            loc_groups = {}
+            for channel in channels:
+                loc_code = channel.location_code
+                if loc_code not in loc_groups:
+                    loc_groups[loc_code] = []
+                loc_groups[loc_code].append(channel)
             
             filtered_channels = []
-            for group in channel_groups.values():
-                if len(group) > 1:
-                    # Multiple versions exist - keep only highest sample rate above minSR
-                    max_sr = max(ch.sample_rate for ch in group)
-                    if max_sr > minSR:
-                        filtered_channels.extend([ch for ch in group if ch.sample_rate == max_sr])
+            for loc_group in loc_groups.values():
+                if len(loc_group) == 1:
+                    filtered_channels.extend(loc_group)
+                    continue
+                
+                if time:
+                    active_channels = [ch for ch in loc_group]
+                    if active_channels:
+                        max_sr = max(ch.sample_rate for ch in active_channels)
+                        filtered_channels.extend([ch for ch in active_channels if ch.sample_rate == max_sr])
                 else:
-                    # Single channel - keep it
-                    filtered_channels.extend(group)
+                    time_groups = {}
+                    for channel in loc_group:
+                        time_key = f"{channel.start_date}_{channel.end_date}"
+                        if time_key not in time_groups:
+                            time_groups[time_key] = []
+                        time_groups[time_key].append(channel)
+                    
+                    for time_group in time_groups.values():
+                        if len(time_group) > 1:
+                            max_sr = max(ch.sample_rate for ch in time_group)
+                            filtered_channels.extend([ch for ch in time_group if ch.sample_rate == max_sr])
+                        else:
+                            filtered_channels.extend(time_group)
             
             sta.channels = filtered_channels
-            
+    
     return inv
 
 
