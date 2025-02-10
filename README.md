@@ -1,8 +1,32 @@
 # seed-vault
 
-Seed Vault is a cross platform GUI and CLI utility to download and archive seismic miniseed data via FDSN. Users can download data via earthquake search (station to event, or event to station) as well as download continuous data in bulk. Users can also search and save earthquake catalogs and station metadata. Seed Vault also supports auth requests / accessing restricted data and syncs local SDS data archives with a local sqlite3 database to avoid redundant downloading. Parameters can also be saved an and loaded via a simple text config file. More to come!
+![Example of Step 1](docs/screenshots/Step1.png)
 
-## Clone Repository
+#### Seed Vault is a cross platform GUI utility which can search, view and download seismic FDSN data
+
+*  Users can download data via earthquake search (station to event, or event to station)
+*  View and download bulk continuous data
+*  Search and save earthquake events and station metadata.
+*  Download restricted data
+*  Caches downloaded data in a local database to speed up future retrievals
+*  Local database editor
+*  Load and save search parameters and configuration
+
+Runs on:
+* Linux
+* Windows
+* MacOS
+
+Can run:
+* As web service
+* From the command line (CLI)
+
+----
+
+
+# Install from source
+
+## Step 1: Clone repository
 
 ```bash
 git clone https://github.com/AuScope/seed-vault.git
@@ -12,7 +36,7 @@ or
 git clone git@github.com:AuScope/seed-vault.git
 ```
 
-## Quick Start
+## Step 2: Setup and run
 
 The app requires python >=3.10. For a quick start follow these steps:
 
@@ -21,19 +45,19 @@ git clone https://github.com/AuScope/seed-vault.git
 cd seed-vault
 ```
 
-### Linux/MacOS
+#### Linux/MacOS
 ```
 source setup.sh
 source run.sh
 ```
-### Windows
+#### Windows
 Open a powershell and run following commands:
 ```
 .\setup-win.ps1
 .\run-win.ps1
 ```
 
-**Note:** 
+**NOTES:** 
 1. For Win OS, you would need to convert the shell scripts to PowerShell. Or simply follow the steps in the shell scripts to set up the app.
 2. Requires python3 venv software package e.g. For python v10 on Ubuntu you may need to:
    ```
@@ -41,6 +65,24 @@ Open a powershell and run following commands:
    sudo apt install python3.10-venv
    ``` 
 
+----
+
+# Development
+
+## Project Folder structure
+```
+seed-vault/
+│
+├── seed_vault/      # Python package containing application code
+│   ├── models/        # Python modules for data models
+│   ├── service/       # Services for logic and backend processing
+│   ├── ui/            # UI components (Streamlit files)
+│   ├── utils/         # Utility functions and helpers
+│   ├── __init__.py    # 
+│   └── cli.py         # Command Line Interface
+│
+└── pyproject.toml     # Poetry configuration file for the whole project
+```
 
 ## Setting up with Poetry
 
@@ -175,29 +217,10 @@ docker compose up --build
 ```
 The application should now be running and accessible at `http://localhost:8501`.
 
-
-
-## Project Folder structure
-```
-seed-vault/
-│
-├── seed_vault/      # Python package containing application code
-│   ├── models/        # Python modules for data models
-│   ├── service/       # Services for logic and backend processing
-│   ├── ui/            # UI components (Streamlit files)
-│   ├── utils/         # Utility functions and helpers
-│   ├── __init__.py    # 
-│   └── cli.py         # Command Line Interface
-│
-└── pyproject.toml     # Poetry configuration file for the whole project
-```
-
 ## Export poetry packages to requirements.txt
 ```
 poetry export -f requirements.txt --output requirements.txt --without-hashes
 ```
-
-
 
 ## Publishing the lib to test: pypi
 Define a package name in pyproject.toml (e.g. `seed-vault`).
