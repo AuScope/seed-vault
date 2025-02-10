@@ -309,20 +309,36 @@ def get_p_s_times(eq, dist_deg, ttmodel):
 def select_highest_samplerate(inv, minSR=10, time=None):
     """
     Where overlapping channels exist (e.g. 100 hz and 10 hz), filter out anything other than highest available samplerate.
-    Presumably, users will always want the highest samplerate for events.
-    Best to set time, otherwise will remove regardless of time.
+    Only filters when duplicates exist - standalone channels are preserved regardless of sample rate.
+    Setting a time value will also filter by what stations were online then.
     """
     if time:
         inv = inv.select(time=time)
+    
     for net in inv:
         for sta in net:
-            srs = list(set([ele.sample_rate for ele in sta.channels]))
-            if len(srs) < 2:
-                continue
-            sta.channels = [
-                ele for ele in sta.channels 
-                if ele.sample_rate == max(srs) and ele.sample_rate > minSR
-            ]
+            channel_groups = {}
+            for channel in sta.channels:
+                # Create a key that identifies unique channels (e.g. location code + channel code)
+                # This assumes channel codes without sample rate info are unique identifiers
+                key = f"{channel.location_code}.{channel.code}"
+                if key not in channel_groups:
+                    channel_groups[key] = []
+                channel_groups[key].append(channel)
+            
+            filtered_channels = []
+            for group in channel_groups.values():
+                if len(group) > 1:
+                    # Multiple versions exist - keep only highest sample rate above minSR
+                    max_sr = max(ch.sample_rate for ch in group)
+                    if max_sr > minSR:
+                        filtered_channels.extend([ch for ch in group if ch.sample_rate == max_sr])
+                else:
+                    # Single channel - keep it
+                    filtered_channels.extend(group)
+            
+            sta.channels = filtered_channels
+            
     return inv
 
 
