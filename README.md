@@ -26,6 +26,10 @@ Can run:
 
 # Install from source
 
+### Requirements
+* 8 GB RAM
+* Python v3.10 or more
+
 ## Step 1: Clone repository
 
 ```bash
