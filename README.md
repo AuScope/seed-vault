@@ -62,6 +62,9 @@ Open a powershell and run following commands:
    sudo apt install python3.10-venv
    ``` 
 
+----
+
+# Development 
 
 ## Setting up with Poetry
 
