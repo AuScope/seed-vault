@@ -928,7 +928,7 @@ def get_stations(settings: SeismoLoaderSettings):
                     print(f"Unknown Geometry type: {geo.geo_type}")
             except FDSNNoDataException:
                 print(f"No stations found in {station_client.base_url} with given geographic bounds")
-                pass
+                
 
             if curr_inv is not None:
                 if inv:
