@@ -23,12 +23,15 @@ Can run:
 
 ----
 
-
-# Install from source
-
 ### Requirements
 * 8 GB RAM
-* Python v3.10 or more
+* Python >= 3.10
+* ObsPy (>=1.4.1), Streamlit (>=1.39), Plotly (>-5.24), Pandas (>=2.2.2), Matplotlib (>=3.8.5)
+
+# Install via pip
+$ python3 pip install seed-vault
+
+# Install from source
 
 ## Step 1: Clone repository
 
