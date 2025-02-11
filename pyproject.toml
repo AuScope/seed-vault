@@ -17,16 +17,15 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Physics"
 ]
 readme = "README.md"
-authors = ["Ben Motevalli <mot032@csiro.au>"]
+authors = [
+           {name = "Ben Motevalli", email = "mot032@csiro.au"},
+           {name = "Vincent Fazio", email = "vincent.fazio@csiro.au"}
+]
 keywords = ["seismic", "FDSN", "earthquakes", "miniseed"] 
 
 [tool.poetry]
 package-mode = true
 packages = [{ include = "seed_vault" }]
-name = "seed-vault"
-version = "0.1.2"
-description = "Seismic FDSN data search, view and download tool."
-authors = ["Ben Motevalli <mot032@csiro.au>"]
 
 [tool.poetry.scripts]
 seed-vault = "seed_vault.cli:cli"
