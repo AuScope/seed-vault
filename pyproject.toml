@@ -17,7 +17,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Physics"
 ]
 readme = "README.md"
-authors = ["Ben Motevalli <mot032@csiro.au>"]
+authors = ["Ben Motevalli <b.motevalli@gmail.com>"]
 keywords = ["seismic", "FDSN", "earthquakes", "miniseed"] 
 
 [tool.poetry]

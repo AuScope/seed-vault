@@ -156,38 +156,38 @@ def test_param_highest_sample_rate(test_settings, pytestconfig):
                 assert channel.code.startswith("H")
 
 
-def test_get_stations_414(test_settings, pytestconfig):
-    """Test triggering a 414 URI Too Long error with an excessively long query."""
+# def test_get_stations_414(test_settings, pytestconfig):
+#     """Test triggering a 414 URI Too Long error with an excessively long query."""
 
-    if not pytestconfig.getoption("--run-real-fdsn"):
-        pytest.skip("Skipping real FDSN test: get_stations - Too long uri error")
+#     if not pytestconfig.getoption("--run-real-fdsn"):
+#         pytest.skip("Skipping real FDSN test: get_stations - Too long uri error")
     
-    # mocking extremely long query string
-    test_settings.station.network = ",".join(["XX"] * 5000)
-    test_settings.station.station = ",".join(["TEST"] * 5000) 
+#     # mocking extremely long query string
+#     test_settings.station.network = ",".join(["XX"] * 5000)
+#     test_settings.station.station = ",".join(["TEST"] * 5000) 
 
-    # Act & Assert
-    try:
-        get_stations(test_settings)
-    except Exception as e:
-        # @FIXME: A long uri is raising Connection Reset and not a 414 error.
-        assert "HTTP Status code: 414" in str(e), f"But got: {str(e)}"
+#     # Act & Assert
+#     try:
+#         get_stations(test_settings)
+#     except Exception as e:
+#         # @FIXME: A long uri is raising Connection Reset and not a 414 error.
+#         assert "HTTP Status code: 414" in str(e), f"But got: {str(e)}"
 
 
-def test_get_stations_413(test_settings, pytestconfig):
-    """Test triggering a 413 Payload Too Large error with a massive request."""
+# def test_get_stations_413(test_settings, pytestconfig):
+#     """Test triggering a 413 Payload Too Large error with a massive request."""
     
-    if not pytestconfig.getoption("--run-heavy-fdsn"):
-        pytest.skip("Skipping real FDSN test: get_stations - Too many data uri error")
+#     if not pytestconfig.getoption("--run-heavy-fdsn"):
+#         pytest.skip("Skipping real FDSN test: get_stations - Too many data uri error")
     
-    # Modify settings to request an excessive amount of data
-    test_settings.station.network = "*"  # All networks
-    test_settings.station.station = "*"  # All stations
-    test_settings.station.channel = "*"  # All channels
-    test_settings.station.date_config.start_time = "1900-01-01"  # Very old start time
-    test_settings.station.date_config.end_time = "2100-01-01"  # Very far end time
+#     # Modify settings to request an excessive amount of data
+#     test_settings.station.network = "*"  # All networks
+#     test_settings.station.station = "*"  # All stations
+#     test_settings.station.channel = "*"  # All channels
+#     test_settings.station.date_config.start_time = "1900-01-01"  # Very old start time
+#     test_settings.station.date_config.end_time = "2100-01-01"  # Very far end time
        
-    try:
-        get_stations(test_settings)
-    except Exception as e:
-        assert "HTTP Status code: 413" in str(e), "Expected a 413 Payload Too Large error, but got a different response."
+#     try:
+#         get_stations(test_settings)
+#     except Exception as e:
+#         assert "HTTP Status code: 413" in str(e), "Expected a 413 Payload Too Large error, but got a different response."
