@@ -472,10 +472,10 @@ class SeismoLoaderSettings(BaseModel):
             config=config,
             section=station_section,
             key='station',
-            default="",
+            default="*",
             status_handler =status_handler,
             error_message=f"'station' is missing in the [{station_section}] section. Please specify a station.",
-            warning_message=f"'station' is empty in the [{station_section}] section. Defaulting to an empty string."
+            warning_message=f"'station' is empty in the [{station_section}] section. Defaulting to '*'."
         )
 
         location = cls._parse_param(
@@ -499,6 +499,30 @@ class SeismoLoaderSettings(BaseModel):
             # validation_fn=lambda x: bool(re.match(r'^(\?[\w]\?,?)+$', x))
         )
         
+        start_time = cls._parse_param(
+            config=config,
+            section=station_section,
+            key="starttime",
+            default=(datetime.now() - timedelta(days=30)).isoformat(),
+            status_handler=status_handler,
+            error_message=f"'starttime' is missing in the [{station_section}] section. Specify a valid start time.",
+            warning_message=f"'starttime' is empty in the [{station_section}] section. Defaulting to 1 month before the current time.",
+            validation_fn=lambda x: parse_time(x) is not None
+        )
+        start_time = parse_time(start_time)
+
+        end_time = cls._parse_param(
+            config=config,
+            section=station_section,
+            key="endtime",
+            default=datetime.now().isoformat(),
+            status_handler=status_handler,
+            error_message=f"'endtime' is missing in the [{station_section}] section. Specify a valid end time.",
+            warning_message=f"'endtime' is empty in the [{station_section}] section. Defaulting to the current time.",
+            validation_fn=lambda x: parse_time(x) is not None
+        )
+        end_time = parse_time(end_time)
+
         geo_constraint_station = cls._parse_geo_constraint(cls, config, 'STATION', status_handler)
 
         # Parse force_stations
@@ -533,8 +557,8 @@ class SeismoLoaderSettings(BaseModel):
 
         # Parse date configurations
         date_config = DateConfig(
-            start_time=cls.parse_optional(parse_time(config.get(station_section, 'starttime', fallback=None))),
-            end_time=cls.parse_optional(parse_time(config.get(station_section, 'endtime', fallback=None))),
+            start_time=start_time,
+            end_time=end_time,
             start_before=cls.parse_optional(parse_time(config.get(station_section, 'startbefore', fallback=None))),
             start_after=cls.parse_optional(parse_time(config.get(station_section, 'startafter', fallback=None))),
             end_before=cls.parse_optional(parse_time(config.get(station_section, 'endbefore', fallback=None))),
