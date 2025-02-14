@@ -63,7 +63,7 @@ def not_implement_test():
 # ========================================
 # TEST WITH REAL FDSN API
 # ========================================
-
+@pytest.mark.xfail(reason="Testing live servers is not reliable as they are sometimes unavailable")
 def test_get_fresh_data(test_settings: SeismoLoaderSettings, clean_up_data, check_real_data):
     
     test_settings.download_type = 'event'
@@ -79,6 +79,7 @@ def test_get_fresh_data(test_settings: SeismoLoaderSettings, clean_up_data, chec
     # @FIXME: It would be nice to check if data in db is consistent with downloaded data
 
 
+@pytest.mark.xfail(reason="Testing live servers is not reliable as they are sometimes unavailable")
 def test_redownload_data(test_settings: SeismoLoaderSettings, check_real_data, not_implement_test):
     """
     Not quite sure how to assert it does not redownload (requests are not send to server).
@@ -87,6 +88,7 @@ def test_redownload_data(test_settings: SeismoLoaderSettings, check_real_data, n
     """
 
 
+@pytest.mark.xfail(reason="Testing live servers is not reliable as they are sometimes unavailable")
 def test_force_redownload_data(test_settings: SeismoLoaderSettings, check_real_data, not_implement_test):
     """
     Not quite sure how to assert it does redownload (all requests are send to server).
@@ -98,6 +100,7 @@ def test_force_redownload_data(test_settings: SeismoLoaderSettings, check_real_d
 # ========================
 # REAL CONTINUOUS
 # ========================
+@pytest.mark.xfail(reason="Testing live servers is not reliable as they are sometimes unavailable")
 def test_get_continuous_data(test_cont_settings: SeismoLoaderSettings, clean_up_data, check_real_data, not_implement_test):
     
     event_streams = run_continuous(test_cont_settings)
