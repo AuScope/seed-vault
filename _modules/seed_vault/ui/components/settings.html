@@ -101,17 +101,20 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">jinja2</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
 
 
 <div class="viewcode-block" id="SettingsComponent">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.settings.SettingsComponent">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">SettingsComponent</span><span class="p">:</span>
     <span class="n">settings</span><span class="p">:</span> <span class="n">SeismoLoaderSettings</span>
+    <span class="n">old_settings</span><span class="p">:</span> <span class="n">SeismoLoaderSettings</span>
     <span class="n">is_new_cred_added</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">df_clients</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">:</span> <span class="n">SeismoLoaderSettings</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span>  <span class="o">=</span> <span class="n">settings</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">old_settings</span>   <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
 
     
 <div class="viewcode-block" id="SettingsComponent.add_credential">
@@ -133,6 +136,17 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">is_new_cred_added</span> <span class="o">=</span> <span class="kc">None</span></div>
 
         <span class="c1"># st.rerun()</span>
+
+
+<div class="viewcode-block" id="SettingsComponent.refresh_filters">
+<a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.settings.SettingsComponent.refresh_filters">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">refresh_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">changes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">has_changed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">old_settings</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">changes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;has_changed&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">old_settings</span>      <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+            <span class="n">save_filter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span></div>
+
 
     
 <div class="viewcode-block" id="SettingsComponent.render_auth">
@@ -224,7 +238,9 @@
                 <span class="n">newer_than</span><span class="o">=</span><span class="n">newer_than</span><span class="p">,</span>
                 <span class="n">num_processes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">processing</span><span class="o">.</span><span class="n">num_processes</span><span class="p">,</span>
                 <span class="n">gap_tolerance</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">processing</span><span class="o">.</span><span class="n">gap_tolerance</span>
-            <span class="p">)</span></div>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">refresh_filters</span><span class="p">()</span></div>
 
 
 
