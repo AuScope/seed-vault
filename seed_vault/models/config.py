@@ -243,7 +243,7 @@ class StationConfig(BaseModel):
         end_time=datetime.now().isoformat()
     )
     local_inventory    : Optional   [ str           ] = None
-    network            : Optional   [ str           ] = "GSN"
+    network            : Optional   [ str           ] = "_GSN"
     station            : Optional   [ str           ] = "*"
     location           : Optional   [ str           ] = "*"
     channel            : Optional   [ str           ] = "?H?,?N?"
@@ -683,10 +683,10 @@ class SeismoLoaderSettings(BaseModel):
             config=config,
             section=station_section,
             key='network',
-            default="GSN",
+            default="_GSN",
             status_handler =status_handler,
             error_message=f"'network' is missing in the [{station_section}] section. Please specify a network.",
-            warning_message=f"'network' is empty in the [{station_section}] section. Defaulting to 'GSN'."
+            warning_message=f"'network' is empty in the [{station_section}] section. Defaulting to '_GSN'."
         )
 
         station = cls._parse_param(

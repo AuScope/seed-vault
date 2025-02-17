@@ -579,11 +579,13 @@ class WaveformDisplay:
                 # Add subtle grid
                 ax.grid(True, alpha=0.2)
                 
-                # Add subtle box around plot
-                ax.spines['top'].set_visible(False)
-                ax.spines['right'].set_visible(False)
-                ax.spines['left'].set_linewidth(0.5)
-                ax.spines['bottom'].set_linewidth(0.5)
+                # Update box styling to show all borders
+                for spine in ax.spines.values():
+                    spine.set_visible(True)
+                    spine.set_linewidth(0.5)
+
+                # Add padding to the plot
+                ax.margins(x=0.05)  # Increased padding to 5% on left and right
         
         # Adjust layout
         plt.subplots_adjust(left=0.1, right=0.9, top=0.97, bottom=0.1)
@@ -711,11 +713,13 @@ class WaveformDisplay:
                 # Add subtle grid
                 ax.grid(True, alpha=0.2)
 
-                # Add subtle box around plot
-                ax.spines['top'].set_visible(False)
-                ax.spines['right'].set_visible(False)
-                ax.spines['left'].set_linewidth(0.5)
-                ax.spines['bottom'].set_linewidth(0.5)
+                # Update box styling to show all borders
+                for spine in ax.spines.values():
+                    spine.set_visible(True)
+                    spine.set_linewidth(0.5)
+
+                # Add padding to the plot
+                ax.margins(x=0.05)  # Increased padding to 5% on left and right
 
         # Update title
         net, sta = station_code.split(".")
@@ -778,6 +782,7 @@ class WaveformDisplay:
                         num_pages
                     )
                     if fig:
+                        st.session_state.current_figure = fig
                         st.pyplot(fig)
                 else:
                     st.warning("No waveforms match the current filter criteria.")
@@ -826,6 +831,7 @@ class WaveformDisplay:
                     # Use plot_station_view
                     fig = self.plot_station_view(selected_station, station_stream, page, num_pages)
                     if fig:
+                        st.session_state.current_figure = fig
                         st.pyplot(fig)
                 else:
                     st.warning("No waveforms available for the selected station.")
@@ -848,24 +854,45 @@ class WaveformComponents:
             self.continuous_components.render()
         else:
             st.title("Waveform Analysis")
-            self.settings.waveform.force_redownload =  st.toggle(
-                "Force Re-download", 
-                value=self.settings.waveform.force_redownload, 
-                help= "If turned off, the app will try to avoid "
-                "downloading data that are already available locally."
-                " If flagged, it will redownload the data again."
-            )
 
             # Initialize the download state in session state if not exists
             if "is_downloading" not in st.session_state:
                 st.session_state.is_downloading = False
+            if "current_figure" not in st.session_state:
+                st.session_state.current_figure = None
 
-            # Get Waveforms button with disabled state based on download status
-            get_waveforms_button = st.button(
-                "Get Waveforms",
-                key="get_waveforms",
-                disabled=st.session_state.is_downloading
-            )
+            # Create three columns for the controls (removed the fourth column)
+            col1, col2, col3 = st.columns(3)
+            
+            # Force Re-download toggle in first column
+            with col1:
+                self.settings.waveform.force_redownload = st.toggle(
+                    "Force Re-download", 
+                    value=self.settings.waveform.force_redownload, 
+                    help="If turned off, the app will try to avoid "
+                    "downloading data that are already available locally."
+                    " If flagged, it will redownload the data again."
+                )
+
+            # Get Waveforms button in second column
+            with col2:
+                get_waveforms_button = st.button(
+                    "Get Waveforms",
+                    key="get_waveforms",
+                    disabled=st.session_state.is_downloading,
+                    use_container_width=True
+                )
+
+            # Cancel Download button in third column
+            with col3:
+                if st.button("Cancel Download", 
+                            key="cancel_download",
+                            disabled=not st.session_state.is_downloading,
+                            use_container_width=True):
+                    stop_event.set()  # Signal cancellation
+                    st.warning("Cancelling query...")
+                    st.session_state.is_downloading = False
+                    st.rerun()
 
             if get_waveforms_button:
                 st.session_state.is_downloading = True
@@ -882,12 +909,6 @@ class WaveformComponents:
                         st.session_state.is_downloading = False
                         st.rerun()  # Rerun to update button state
 
-            if st.button("Cancel Download", key="cancel_download"):
-                stop_event.set()  # Signal cancellation
-                st.warning("Cancelling query...")
-                st.session_state.is_downloading = False
-                st.rerun()
-
             # Render filter menu with current stream
             current_stream = self.waveform_display.streams[0] if self.waveform_display.streams else None
             self.filter_menu.render(current_stream)
@@ -895,6 +916,27 @@ class WaveformComponents:
             # Display waveforms if they exist
             if self.waveform_display.streams:
                 self.waveform_display.render()
+
+            # Add download button at the bottom of the sidebar
+            with st.sidebar:
+                # Add some visual separation
+                st.markdown("---")
+                # Download PNG button
+                if st.session_state.current_figure is not None:
+                    import io
+                    buf = io.BytesIO()
+                    st.session_state.current_figure.savefig(buf, format='png', dpi=300, bbox_inches='tight')
+                    buf.seek(0)
+                    
+                    st.download_button(
+                        label="Download PNG",
+                        data=buf,
+                        file_name="waveform_plot.png",
+                        mime="image/png",
+                        use_container_width=True
+                    )
+                else:
+                    st.button("Download PNG", disabled=True, use_container_width=True)
 
 
 class MissingDataDisplay:
