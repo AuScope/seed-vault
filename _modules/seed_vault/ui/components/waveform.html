@@ -694,11 +694,13 @@
                 <span class="c1"># Add subtle grid</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
                 
-                <span class="c1"># Add subtle box around plot</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s1">&#39;top&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s1">&#39;right&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s1">&#39;left&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_linewidth</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s1">&#39;bottom&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_linewidth</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+                <span class="c1"># Update box styling to show all borders</span>
+                <span class="k">for</span> <span class="n">spine</span> <span class="ow">in</span> <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                    <span class="n">spine</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="n">spine</span><span class="o">.</span><span class="n">set_linewidth</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+
+                <span class="c1"># Add padding to the plot</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">margins</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>  <span class="c1"># Increased padding to 5% on left and right</span>
         
         <span class="c1"># Adjust layout</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="mf">0.97</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
@@ -829,11 +831,13 @@
                 <span class="c1"># Add subtle grid</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
 
-                <span class="c1"># Add subtle box around plot</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s1">&#39;top&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s1">&#39;right&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s1">&#39;left&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_linewidth</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s1">&#39;bottom&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_linewidth</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+                <span class="c1"># Update box styling to show all borders</span>
+                <span class="k">for</span> <span class="n">spine</span> <span class="ow">in</span> <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                    <span class="n">spine</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="n">spine</span><span class="o">.</span><span class="n">set_linewidth</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+
+                <span class="c1"># Add padding to the plot</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">margins</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>  <span class="c1"># Increased padding to 5% on left and right</span>
 
         <span class="c1"># Update title</span>
         <span class="n">net</span><span class="p">,</span> <span class="n">sta</span> <span class="o">=</span> <span class="n">station_code</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
@@ -899,6 +903,7 @@
                         <span class="n">num_pages</span>
                     <span class="p">)</span>
                     <span class="k">if</span> <span class="n">fig</span><span class="p">:</span>
+                        <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">current_figure</span> <span class="o">=</span> <span class="n">fig</span>
                         <span class="n">st</span><span class="o">.</span><span class="n">pyplot</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No waveforms match the current filter criteria.&quot;</span><span class="p">)</span>
@@ -947,6 +952,7 @@
                     <span class="c1"># Use plot_station_view</span>
                     <span class="n">fig</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_station_view</span><span class="p">(</span><span class="n">selected_station</span><span class="p">,</span> <span class="n">station_stream</span><span class="p">,</span> <span class="n">page</span><span class="p">,</span> <span class="n">num_pages</span><span class="p">)</span>
                     <span class="k">if</span> <span class="n">fig</span><span class="p">:</span>
+                        <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">current_figure</span> <span class="o">=</span> <span class="n">fig</span>
                         <span class="n">st</span><span class="o">.</span><span class="n">pyplot</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No waveforms available for the selected station.&quot;</span><span class="p">)</span></div>
@@ -975,24 +981,45 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">continuous_components</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">st</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Waveform Analysis&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">waveform</span><span class="o">.</span><span class="n">force_redownload</span> <span class="o">=</span>  <span class="n">st</span><span class="o">.</span><span class="n">toggle</span><span class="p">(</span>
-                <span class="s2">&quot;Force Re-download&quot;</span><span class="p">,</span> 
-                <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">waveform</span><span class="o">.</span><span class="n">force_redownload</span><span class="p">,</span> 
-                <span class="n">help</span><span class="o">=</span> <span class="s2">&quot;If turned off, the app will try to avoid &quot;</span>
-                <span class="s2">&quot;downloading data that are already available locally.&quot;</span>
-                <span class="s2">&quot; If flagged, it will redownload the data again.&quot;</span>
-            <span class="p">)</span>
 
             <span class="c1"># Initialize the download state in session state if not exists</span>
             <span class="k">if</span> <span class="s2">&quot;is_downloading&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">:</span>
                 <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">is_downloading</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="s2">&quot;current_figure&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">:</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">current_figure</span> <span class="o">=</span> <span class="kc">None</span>
 
-            <span class="c1"># Get Waveforms button with disabled state based on download status</span>
-            <span class="n">get_waveforms_button</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span>
-                <span class="s2">&quot;Get Waveforms&quot;</span><span class="p">,</span>
-                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;get_waveforms&quot;</span><span class="p">,</span>
-                <span class="n">disabled</span><span class="o">=</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">is_downloading</span>
-            <span class="p">)</span>
+            <span class="c1"># Create three columns for the controls (removed the fourth column)</span>
+            <span class="n">col1</span><span class="p">,</span> <span class="n">col2</span><span class="p">,</span> <span class="n">col3</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+            
+            <span class="c1"># Force Re-download toggle in first column</span>
+            <span class="k">with</span> <span class="n">col1</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">waveform</span><span class="o">.</span><span class="n">force_redownload</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">toggle</span><span class="p">(</span>
+                    <span class="s2">&quot;Force Re-download&quot;</span><span class="p">,</span> 
+                    <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">waveform</span><span class="o">.</span><span class="n">force_redownload</span><span class="p">,</span> 
+                    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;If turned off, the app will try to avoid &quot;</span>
+                    <span class="s2">&quot;downloading data that are already available locally.&quot;</span>
+                    <span class="s2">&quot; If flagged, it will redownload the data again.&quot;</span>
+                <span class="p">)</span>
+
+            <span class="c1"># Get Waveforms button in second column</span>
+            <span class="k">with</span> <span class="n">col2</span><span class="p">:</span>
+                <span class="n">get_waveforms_button</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span>
+                    <span class="s2">&quot;Get Waveforms&quot;</span><span class="p">,</span>
+                    <span class="n">key</span><span class="o">=</span><span class="s2">&quot;get_waveforms&quot;</span><span class="p">,</span>
+                    <span class="n">disabled</span><span class="o">=</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">is_downloading</span><span class="p">,</span>
+                    <span class="n">use_container_width</span><span class="o">=</span><span class="kc">True</span>
+                <span class="p">)</span>
+
+            <span class="c1"># Cancel Download button in third column</span>
+            <span class="k">with</span> <span class="n">col3</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;Cancel Download&quot;</span><span class="p">,</span> 
+                            <span class="n">key</span><span class="o">=</span><span class="s2">&quot;cancel_download&quot;</span><span class="p">,</span>
+                            <span class="n">disabled</span><span class="o">=</span><span class="ow">not</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">is_downloading</span><span class="p">,</span>
+                            <span class="n">use_container_width</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+                    <span class="n">stop_event</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>  <span class="c1"># Signal cancellation</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Cancelling query...&quot;</span><span class="p">)</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">is_downloading</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span>
 
             <span class="k">if</span> <span class="n">get_waveforms_button</span><span class="p">:</span>
                 <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">is_downloading</span> <span class="o">=</span> <span class="kc">True</span>
@@ -1009,19 +1036,34 @@
                         <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">is_downloading</span> <span class="o">=</span> <span class="kc">False</span>
                         <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span>  <span class="c1"># Rerun to update button state</span>
 
-            <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;Cancel Download&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;cancel_download&quot;</span><span class="p">):</span>
-                <span class="n">stop_event</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>  <span class="c1"># Signal cancellation</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Cancelling query...&quot;</span><span class="p">)</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">is_downloading</span> <span class="o">=</span> <span class="kc">False</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span>
-
             <span class="c1"># Render filter menu with current stream</span>
             <span class="n">current_stream</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">waveform_display</span><span class="o">.</span><span class="n">streams</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">waveform_display</span><span class="o">.</span><span class="n">streams</span> <span class="k">else</span> <span class="kc">None</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">filter_menu</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">current_stream</span><span class="p">)</span>
             
             <span class="c1"># Display waveforms if they exist</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">waveform_display</span><span class="o">.</span><span class="n">streams</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">waveform_display</span><span class="o">.</span><span class="n">render</span><span class="p">()</span></div>
+                <span class="bp">self</span><span class="o">.</span><span class="n">waveform_display</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
+
+            <span class="c1"># Add download button at the bottom of the sidebar</span>
+            <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="p">:</span>
+                <span class="c1"># Add some visual separation</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="s2">&quot;---&quot;</span><span class="p">)</span>
+                <span class="c1"># Download PNG button</span>
+                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">current_figure</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
+                    <span class="n">buf</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">()</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">current_figure</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;png&#39;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+                    <span class="n">buf</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                    
+                    <span class="n">st</span><span class="o">.</span><span class="n">download_button</span><span class="p">(</span>
+                        <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Download PNG&quot;</span><span class="p">,</span>
+                        <span class="n">data</span><span class="o">=</span><span class="n">buf</span><span class="p">,</span>
+                        <span class="n">file_name</span><span class="o">=</span><span class="s2">&quot;waveform_plot.png&quot;</span><span class="p">,</span>
+                        <span class="n">mime</span><span class="o">=</span><span class="s2">&quot;image/png&quot;</span><span class="p">,</span>
+                        <span class="n">use_container_width</span><span class="o">=</span><span class="kc">True</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;Download PNG&quot;</span><span class="p">,</span> <span class="n">disabled</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">use_container_width</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 </div>
 
 
