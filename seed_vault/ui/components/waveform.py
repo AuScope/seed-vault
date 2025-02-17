@@ -506,22 +506,11 @@ class WaveformDisplay:
         gs = plt.GridSpec(num_traces, 1, 
                          height_ratios=[1] * num_traces, 
                          hspace=0.05,
-                         top=0.97,    # Leave space for title
-                         bottom=0.08, # Leave space for x-axis label
+                         top=0.99,    # Adjusted from 0.97 to remove title space
+                         bottom=0.08, 
                          left=0.1,
                          right=0.9)
         axes = [plt.subplot(gs[i]) for i in range(num_traces)]
-        
-        # Get event information
-        origin = event.origins[0]
-        magnitude = event.magnitudes[0].mag
-        region = event.extra.get('region', {}).get('value', 'Unknown Region')
-        depth_km = origin.depth / 1000  # Convert to km
-        
-        # Format event title
-        event_title = (f"M{magnitude:.1f} {origin.time.strftime('%Y-%m-%d %H:%M:%S')} "
-                      f"- {region} (Depth: {depth_km:.1f} km)")
-        fig.suptitle(event_title, fontsize=10, y=0.99)
         
         # Process each trace
         for i, tr in enumerate(current_stream):
@@ -739,8 +728,15 @@ class WaveformDisplay:
         view_type = st.radio(
             "Select View Type",
             ["Single Event - Multiple Stations", "Single Station - Multiple Events"],
-            key="view_selector"
+            key="view_selector_waveform"
         )
+        
+        # Create missing data display before checking streams
+        missing_data_display = MissingDataDisplay(
+            self.streams,
+            self.settings
+        )
+        missing_data_display.render()
         
         if not self.streams:
             st.info("No waveforms to display. Use the 'Get Waveforms' button to retrieve waveforms.")
@@ -899,87 +895,62 @@ class WaveformComponents:
             # Display waveforms if they exist
             if self.waveform_display.streams:
                 self.waveform_display.render()
-                distance_display = SeismicDistanceDisplay(
-                    self.waveform_display.streams,
-                    self.settings
-                )
-                distance_display.render()
 
 
-class SeismicDistanceDisplay:
+class MissingDataDisplay:
     def __init__(self, streams: List[Stream], settings: SeismoLoaderSettings):
-        """Initialize with ObsPy streams instead of waveform dictionaries"""
         self.streams = streams
         self.settings = settings
     
-    def calculate_distances(self):
-        """Calculate distances between events and stations using stream metadata"""
-        distances = []
+    def _format_event_time(self, event) -> str:
+        """Format event time in a readable way"""
+        return event.origins[0].time.strftime('%Y-%m-%d %H:%M:%S')
+    
+    def _get_missing_events(self):
+        """Identify events with no data and their missing channels"""
+        missing_events = []
         
-        if not self.settings.event.selected_catalogs:
-            return []
+        for event in self.settings.event.selected_catalogs:
+            event_id = str(event.resource_id)
             
-        # Get the first event
-        event = self.settings.event.selected_catalogs[0]
-        event_lat = event.origins[0].latitude
-        event_lon = event.origins[0].longitude
-        event_depth = event.origins[0].depth / 1000  # Convert to km
-        
-        # Use the first stream (corresponding to first event)
-        if not self.streams:
-            return []
-            
-        stream = self.streams[0]
-        for tr in stream:
-            # Find corresponding station in inventory
-            for network in self.settings.station.selected_invs:
-                if network.code == tr.stats.network:
-                    for station in network:
-                        if station.code == tr.stats.station:
-                            # Calculate distance if not already in trace stats
-                            if not hasattr(tr.stats, 'distance_deg'):
-                                dist_deg = locations2degrees(
-                                    event_lat, event_lon,
-                                    station.latitude, station.longitude
-                                )
-                                dist_km = degrees2kilometers(dist_deg)
-                            else:
-                                dist_deg = tr.stats.distance_deg
-                                dist_km = tr.stats.distance_km
-
-                            if hasattr(tr.stats, 'p_arrival') and tr.stats.p_arrival is not None:
-                                pt = str(UTCDateTime(tr.stats.p_arrival))
-                            else:
-                                pt = "None"
-                            if hasattr(tr.stats, 's_arrival') and tr.stats.s_arrival is not None:
-                                st = str(UTCDateTime(tr.stats.s_arrival))
-                            else:
-                                st = "None"
-                            # probably one for surface waves also eventually
-                            
-                            distances.append({
-                                'Network': tr.stats.network,
-                                'Station': tr.stats.station,
-                                'Distance_deg': round(dist_deg, 2),
-                                'Distance_km': round(dist_km, 1),
-                                'P_Arrival': pt,
-                                'S_Arrival': st,
-                                'Station_Lat': station.latitude,
-                                'Station_Lon': station.longitude
-                            })
-                            break
+            # Find corresponding stream for this event
+            event_stream = None
+            for stream in self.streams:
+                if stream and stream[0].stats.event_id == event_id:
+                    event_stream = stream
                     break
-                    
-        return distances
-
+            
+            if not event_stream or len(event_stream) == 0:
+                # Event completely missing
+                missing_events.append({
+                    'Event Time': self._format_event_time(event),
+                    'Magnitude': f"M{event.magnitudes[0].mag:.1f}",
+                    'Region': event.extra.get('region', {}).get('value', 'Unknown Region'),
+                    'Missing Channels': self.settings.waveform.channel_pref,
+                    'Depth (km)': event.origins[0].depth / 1000  # Convert to km
+                })
+        
+        return missing_events
+    
     def render(self):
-        """Render the distance display (implement as needed)"""
-        distances = self.calculate_distances()
-        if distances:
-            st.subheader("Station Distances")
-            df = pd.DataFrame(distances)
-            height = len(df) * 35 + 40
-            st.dataframe(df,use_container_width=True,height=height)
+        """Display missing event information in a table format"""
+        missing_events = self._get_missing_events()
+        
+        if missing_events:
+            st.warning("⚠️ Events with No Data:")
+            
+            # Create DataFrame from missing events
+            df = pd.DataFrame(missing_events)
+            
+            # Calculate dynamic height based on number of rows
+            height = len(df) * 35 + 40  # Same formula as distance display
+            
+            # Display the DataFrame
+            st.dataframe(
+                df,
+                use_container_width=True,
+                height=height
+            )
 
 
 if st.session_state.get("trigger_rerun", False):
