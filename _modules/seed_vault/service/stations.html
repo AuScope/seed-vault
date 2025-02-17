@@ -1,0 +1,256 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>seed_vault.service.stations &mdash; Seed Vault 0.1.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=92734c54"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Seed Vault
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../app.html">Seed Vault App</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cli.html">CLI commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../seed_vault.html">seed_vault package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../seed_vault.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../seed_vault.models.html">seed_vault.models package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../seed_vault.service.html">seed_vault.service package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../seed_vault.ui.html">seed_vault.ui package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../seed_vault.utils.html">seed_vault.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../seed_vault.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../seed_vault.html#module-seed_vault.cli">seed_vault.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../seed_vault.html#module-seed_vault">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Seed Vault</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">seed_vault.service.stations</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for seed_vault.service.stations</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">The stations service should get the stations based on a selection (filter) settings.</span>
+<span class="sd">UI should generate the selection and pass it here. We need a single function</span>
+<span class="sd">here that gets the selection and runs Rob&#39;s script.</span>
+
+<span class="sd">We should also be able to support multi-select areas.</span>
+
+<span class="sd">@TODO: For now, dummy scripts are used. @Yunlong to fix.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">streamlit</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">st</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">obspy.core.inventory</span><span class="w"> </span><span class="kn">import</span> <span class="n">Inventory</span><span class="p">,</span> <span class="n">Network</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.models.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">SeismoLoaderSettings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.service.seismoloader</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_stations</span>
+
+
+
+<span class="c1"># @st.cache_data</span>
+<span class="c1"># def get_station_data(settings_json_str: str):</span>
+
+<span class="c1">#     settings = SeismoLoaderSettings.model_validate_json(settings_json_str)</span>
+<span class="c1">#     return get_stations(settings)</span>
+
+<div class="viewcode-block" id="remove_duplicate_inventories">
+<a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.stations.remove_duplicate_inventories">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">remove_duplicate_inventories</span><span class="p">(</span><span class="n">inventories</span><span class="p">):</span>
+    <span class="c1"># Define a set to track unique network-station pairs</span>
+    <span class="n">unique_network_station_pairs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+    <span class="c1"># Create lists to store the filtered networks and stations</span>
+    <span class="n">filtered_networks</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">inventories</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    
+    <span class="k">for</span> <span class="n">network</span> <span class="ow">in</span> <span class="n">inventories</span><span class="p">:</span>
+        <span class="n">unique_stations</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">for</span> <span class="n">station</span> <span class="ow">in</span> <span class="n">network</span><span class="p">:</span>
+            <span class="c1"># Create a tuple representing the network-station pair</span>
+            <span class="n">network_station_pair</span> <span class="o">=</span> <span class="p">(</span><span class="n">network</span><span class="o">.</span><span class="n">code</span><span class="p">,</span> <span class="n">station</span><span class="o">.</span><span class="n">code</span><span class="p">)</span>
+
+            <span class="c1"># If this network-station pair is unique, add it to the set and the list</span>
+            <span class="k">if</span> <span class="n">network_station_pair</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">unique_network_station_pairs</span><span class="p">:</span>
+                <span class="n">unique_network_station_pairs</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">network_station_pair</span><span class="p">)</span>
+                <span class="n">unique_stations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">station</span><span class="p">)</span>
+        
+        <span class="c1"># If there are unique stations for this network, add a new network with filtered stations</span>
+        <span class="k">if</span> <span class="n">unique_stations</span><span class="p">:</span>
+            <span class="n">filtered_network</span> <span class="o">=</span> <span class="n">Network</span><span class="p">(</span>
+                <span class="n">code</span><span class="o">=</span><span class="n">network</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+                <span class="n">stations</span><span class="o">=</span><span class="n">unique_stations</span><span class="p">,</span>
+                <span class="n">description</span><span class="o">=</span><span class="n">network</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+                <span class="n">start_date</span><span class="o">=</span><span class="n">network</span><span class="o">.</span><span class="n">start_date</span><span class="p">,</span>
+                <span class="n">end_date</span><span class="o">=</span><span class="n">network</span><span class="o">.</span><span class="n">end_date</span><span class="p">,</span>
+                <span class="n">total_number_of_stations</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">unique_stations</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="n">filtered_networks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">filtered_network</span><span class="p">)</span>
+
+    <span class="c1"># Create a new Inventory object with the filtered networks</span>
+    <span class="k">return</span> <span class="n">Inventory</span><span class="p">(</span>
+        <span class="n">networks</span><span class="o">=</span><span class="n">filtered_networks</span><span class="p">,</span>
+        <span class="n">source</span><span class="o">=</span><span class="n">inventories</span><span class="o">.</span><span class="n">source</span>
+    <span class="p">)</span></div>
+
+
+<span class="c1"># @st.cache_data</span>
+<div class="viewcode-block" id="get_station_data">
+<a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.stations.get_station_data">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_station_data</span><span class="p">(</span><span class="n">settings</span><span class="p">:</span> <span class="n">SeismoLoaderSettings</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">remove_duplicate_inventories</span><span class="p">(</span><span class="n">get_stations</span><span class="p">(</span><span class="n">settings</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="station_response_to_df">
+<a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.stations.station_response_to_df">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">station_response_to_df</span><span class="p">(</span><span class="n">inventory</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert ObsPy Inventory data into a DataFrame with station information.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">records</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">network</span> <span class="ow">in</span> <span class="n">inventory</span><span class="o">.</span><span class="n">networks</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">station</span> <span class="ow">in</span> <span class="n">network</span><span class="o">.</span><span class="n">stations</span><span class="p">:</span>
+            <span class="n">station_code</span> <span class="o">=</span> <span class="n">station</span><span class="o">.</span><span class="n">code</span>
+            <span class="n">station_name</span> <span class="o">=</span> <span class="n">station</span><span class="o">.</span><span class="n">site</span><span class="o">.</span><span class="n">name</span>
+            <span class="n">latitude</span> <span class="o">=</span> <span class="n">station</span><span class="o">.</span><span class="n">latitude</span>
+            <span class="n">longitude</span> <span class="o">=</span> <span class="n">station</span><span class="o">.</span><span class="n">longitude</span>
+            <span class="n">elevation</span> <span class="o">=</span> <span class="n">station</span><span class="o">.</span><span class="n">elevation</span>
+            <span class="n">locations</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">channel</span><span class="o">.</span><span class="n">location_code</span> <span class="k">if</span> <span class="n">channel</span><span class="o">.</span><span class="n">location_code</span> <span class="k">else</span> <span class="s2">&quot;--&quot;</span> <span class="k">for</span> <span class="n">channel</span> <span class="ow">in</span> <span class="n">station</span><span class="p">]))</span>
+            <span class="n">channels</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">channel</span><span class="o">.</span><span class="n">code</span> <span class="k">for</span> <span class="n">channel</span> <span class="ow">in</span> <span class="n">station</span><span class="p">]))</span>
+            <span class="n">start_date</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">station</span><span class="o">.</span><span class="n">start_date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">))</span>
+            <span class="n">end_date</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">station</span><span class="o">.</span><span class="n">end_date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">station</span><span class="o">.</span><span class="n">end_date</span> <span class="k">else</span> <span class="s2">&quot;ongoing&quot;</span><span class="p">)</span>
+
+
+            <span class="n">record</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;network&#39;</span><span class="p">:</span> <span class="n">network</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+                <span class="s1">&#39;station&#39;</span><span class="p">:</span> <span class="n">station_code</span><span class="p">,</span>
+                <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="n">station_name</span><span class="p">,</span>
+                <span class="s1">&#39;latitude&#39;</span><span class="p">:</span> <span class="n">latitude</span><span class="p">,</span>
+                <span class="s1">&#39;longitude&#39;</span><span class="p">:</span> <span class="n">longitude</span><span class="p">,</span>
+                <span class="s1">&#39;elevation&#39;</span><span class="p">:</span> <span class="n">elevation</span><span class="p">,</span>
+                <span class="s1">&#39;loc. codes&#39;</span><span class="p">:</span> <span class="n">locations</span><span class="p">,</span>
+                <span class="s1">&#39;channels&#39;</span><span class="p">:</span> <span class="n">channels</span><span class="p">,</span>
+                <span class="s1">&#39;start date (UTC)&#39;</span><span class="p">:</span> <span class="n">start_date</span><span class="p">,</span>
+                <span class="s1">&#39;end date (UTC)&#39;</span><span class="p">:</span> <span class="n">end_date</span>
+                <span class="c1"># &#39;detail&#39;: station,</span>
+            <span class="p">}</span>
+
+            <span class="n">records</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+
+            
+            <span class="c1"># for channel in station.channels:</span>
+            <span class="c1">#     channel_code = channel.code</span>
+            <span class="c1">#     channel_location = channel.location_code</span>
+            <span class="c1">#     depth = channel.depth</span>
+            <span class="c1">#     sensor = channel.sensor.description</span>
+
+            <span class="c1">#     record = {</span>
+            <span class="c1">#         &#39;network&#39;: network.code,</span>
+            <span class="c1">#         &#39;station&#39;: station_code,</span>
+            <span class="c1">#         &#39;station_name&#39;: station_name,</span>
+            <span class="c1">#         &#39;latitude&#39;: latitude,</span>
+            <span class="c1">#         &#39;longitude&#39;: longitude,</span>
+            <span class="c1">#         &#39;elevation&#39;: elevation,</span>
+            <span class="c1">#         &#39;channel&#39;: channel_code,</span>
+            <span class="c1">#         &#39;location&#39;: channel_location,</span>
+            <span class="c1">#         &#39;depth&#39;: depth,</span>
+            <span class="c1">#         &#39;sensor&#39;: sensor</span>
+            <span class="c1">#     }</span>
+
+            <span class="c1">#     records.append(record)</span>
+
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">records</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, CSIRO.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

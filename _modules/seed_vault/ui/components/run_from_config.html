@@ -1,0 +1,294 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>seed_vault.ui.components.run_from_config &mdash; Seed Vault 0.1.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=92734c54"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            Seed Vault
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../app.html">Seed Vault App</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../cli.html">CLI commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../seed_vault.html">seed_vault package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../seed_vault.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../seed_vault.models.html">seed_vault.models package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../seed_vault.service.html">seed_vault.service package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../seed_vault.ui.html">seed_vault.ui package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../seed_vault.utils.html">seed_vault.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../seed_vault.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../seed_vault.html#module-seed_vault.cli">seed_vault.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../seed_vault.html#module-seed_vault">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Seed Vault</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">seed_vault.ui.components.run_from_config</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for seed_vault.ui.components.run_from_config</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">streamlit</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">st</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jinja2</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.models.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">SeismoLoaderSettings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.service.seismoloader</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_main</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.display_log</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConsoleDisplay</span>
+
+
+<div class="viewcode-block" id="RunFromConfigComponent">
+<a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.run_from_config.RunFromConfigComponent">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">RunFromConfigComponent</span><span class="p">:</span>
+    <span class="n">settings</span><span class="p">:</span> <span class="n">SeismoLoaderSettings</span>
+    <span class="n">is_editing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">edited_config_str</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">config_str</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">:</span> <span class="n">SeismoLoaderSettings</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span>  <span class="o">=</span> <span class="n">settings</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">console</span>   <span class="o">=</span> <span class="n">ConsoleDisplay</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="RunFromConfigComponent.process_run_main">
+<a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.run_from_config.RunFromConfigComponent.process_run_main">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">process_run_main</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">from_file</span><span class="p">:</span> <span class="n">Path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Process direct run from config with console output&quot;&quot;&quot;</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">process_func</span><span class="p">():</span>
+            <span class="c1"># No need to set values as they&#39;re already in settings</span>
+            <span class="k">return</span> <span class="n">run_main</span><span class="p">(</span><span class="n">settings</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">from_file</span><span class="o">=</span><span class="n">from_file</span><span class="p">)</span>
+            
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">run_with_logs</span><span class="p">(</span>
+            <span class="n">process_func</span><span class="o">=</span><span class="n">process_func</span><span class="p">,</span>
+            <span class="n">status_message</span><span class="o">=</span><span class="s2">&quot;Running the queries...&quot;</span>
+        <span class="p">)</span></div>
+
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_copy_from_main_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+<div class="viewcode-block" id="RunFromConfigComponent.render_config">
+<a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.run_from_config.RunFromConfigComponent.render_config">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">render_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">current_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+        <span class="n">target_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">current_directory</span><span class="p">,</span> <span class="s1">&#39;../../service&#39;</span><span class="p">)</span>
+        <span class="n">target_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">target_file</span><span class="p">)</span>       
+        <span class="n">fileName</span> <span class="o">=</span> <span class="s2">&quot;config_direct.cfg&quot;</span>
+
+        <span class="n">validation_placeholder</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">empty</span><span class="p">()</span>
+
+        <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="s2">&quot;is_editing&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">is_editing</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="s2">&quot;is_running&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">is_running</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="s2">&quot;validation_messages&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">validation_messages</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;errors&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;warnings&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
+        
+        
+        <span class="k">def</span><span class="w"> </span><span class="nf">validate_config</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Validate the configuration file and store messages.&quot;&quot;&quot;</span>
+            <span class="n">settings</span> <span class="o">=</span> <span class="n">SeismoLoaderSettings</span><span class="o">.</span><span class="n">from_cfg_file</span><span class="p">(</span><span class="n">cfg_source</span><span class="o">=</span><span class="n">file_path</span><span class="p">)</span>
+            <span class="n">errors</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">warnings</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">status_handler</span><span class="o">.</span><span class="n">has_errors</span><span class="p">():</span>
+                <span class="n">errors</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">status_handler</span><span class="o">.</span><span class="n">generate_status_report</span><span class="p">(</span><span class="s2">&quot;errors&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">status_handler</span><span class="o">.</span><span class="n">has_warnings</span><span class="p">():</span>
+                <span class="n">warnings</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">status_handler</span><span class="o">.</span><span class="n">generate_status_report</span><span class="p">(</span><span class="s2">&quot;warnings&quot;</span><span class="p">)</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">validation_messages</span><span class="p">[</span><span class="s2">&quot;errors&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">errors</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">validation_messages</span><span class="p">[</span><span class="s2">&quot;warnings&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">warnings</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">display_validation_messages</span><span class="p">():</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Display stored validation messages in the placeholder.&quot;&quot;&quot;</span>
+            <span class="k">with</span> <span class="n">validation_placeholder</span><span class="o">.</span><span class="n">container</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">validation_messages</span><span class="p">[</span><span class="s2">&quot;errors&quot;</span><span class="p">]:</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">validation_messages</span><span class="p">[</span><span class="s2">&quot;errors&quot;</span><span class="p">]</span><span class="si">}</span><span class="se">\n\n</span><span class="s1">**Please review the errors. Resolve them before proceeding.**&#39;</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">validation_messages</span><span class="p">[</span><span class="s2">&quot;warnings&quot;</span><span class="p">]:</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">validation_messages</span><span class="p">[</span><span class="s2">&quot;warnings&quot;</span><span class="p">])</span>
+
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">target_file</span><span class="p">,</span> <span class="n">fileName</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">validation_messages</span><span class="p">[</span><span class="s2">&quot;errors&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">validation_messages</span><span class="p">[</span><span class="s2">&quot;warnings&quot;</span><span class="p">]:</span>
+                <span class="n">validate_config</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">target_file</span><span class="p">,</span> <span class="n">fileName</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">edited_config_str</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edited_config_str</span>
+
+
+        <span class="n">display_validation_messages</span><span class="p">()</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">toggle_editing</span><span class="p">():</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">is_editing</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">is_editing</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">reset_config</span><span class="p">():</span>
+                           
+            <span class="n">settings</span> <span class="o">=</span> <span class="n">SeismoLoaderSettings</span><span class="o">.</span><span class="n">create_default</span><span class="p">()</span>
+            <span class="n">current_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+            <span class="n">target_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">current_directory</span><span class="p">,</span> <span class="s1">&#39;../../service&#39;</span><span class="p">)</span>
+            <span class="n">target_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">target_file</span><span class="p">)</span>
+            
+            <span class="n">template_loader</span> <span class="o">=</span> <span class="n">jinja2</span><span class="o">.</span><span class="n">FileSystemLoader</span><span class="p">(</span><span class="n">searchpath</span><span class="o">=</span><span class="n">target_file</span><span class="p">)</span>  
+            <span class="n">template_env</span> <span class="o">=</span> <span class="n">jinja2</span><span class="o">.</span><span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">template_loader</span><span class="p">)</span>
+            <span class="n">template</span> <span class="o">=</span> <span class="n">template_env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s2">&quot;config_template.cfg&quot;</span><span class="p">)</span>
+            <span class="n">config_dict</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">add_to_config</span><span class="p">()</span>
+            <span class="n">config_str</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="o">**</span><span class="n">config_dict</span><span class="p">)</span>    
+            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">edited_config_str</span> <span class="o">=</span> <span class="n">config_str</span> 
+            <span class="n">save_config</span><span class="p">()</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">save_config</span><span class="p">():</span>
+            <span class="n">save_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">target_file</span><span class="p">,</span> <span class="n">fileName</span><span class="p">)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">edited_config_str</span><span class="p">)</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">is_editing</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">validate_config</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">c1</span><span class="p">:</span>            
+                <span class="n">st</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s2">&quot;Configuration saved.&quot;</span><span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">run_process</span><span class="p">():</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">is_running</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="c1"># Left column</span>
+        <span class="k">with</span> <span class="n">c1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">is_running</span><span class="p">:</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;The configuration is currently running. Editing is disabled.&quot;</span><span class="p">)</span>
+                <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">container</span><span class="p">(</span><span class="n">height</span><span class="o">=</span><span class="mi">600</span><span class="p">):</span>                    
+                    <span class="n">st</span><span class="o">.</span><span class="n">code</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_str</span><span class="p">,</span> <span class="n">language</span><span class="o">=</span><span class="s2">&quot;python&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span>
+                    <span class="s2">&quot;Edit config&quot;</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">is_editing</span> <span class="k">else</span> <span class="s2">&quot;Stop Editing&quot;</span><span class="p">,</span>
+                    <span class="n">on_click</span><span class="o">=</span><span class="n">toggle_editing</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span>
+                    <span class="s2">&quot;Reset&quot;</span><span class="p">,</span>
+                    <span class="n">on_click</span><span class="o">=</span><span class="n">reset_config</span><span class="p">,</span>
+                <span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">is_editing</span><span class="p">:</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">edited_config_str</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">text_area</span><span class="p">(</span>
+                        <span class="s2">&quot;Edit Configuration&quot;</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">edited_config_str</span><span class="p">,</span>
+                        <span class="n">height</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;Save Config&quot;</span><span class="p">,</span> <span class="n">on_click</span><span class="o">=</span><span class="n">save_config</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">container</span><span class="p">(</span><span class="n">height</span><span class="o">=</span><span class="mi">600</span><span class="p">):</span>                    
+                        <span class="n">st</span><span class="o">.</span><span class="n">code</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_str</span><span class="p">,</span> <span class="n">language</span><span class="o">=</span><span class="s2">&quot;python&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">is_running</span><span class="p">:</span>
+                        <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;Run&quot;</span><span class="p">,</span> <span class="n">disabled</span><span class="o">=</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">is_running</span><span class="p">,</span> <span class="n">on_click</span><span class="o">=</span><span class="n">run_process</span><span class="p">)</span>
+
+
+        <span class="k">with</span> <span class="n">c2</span><span class="p">:</span>
+          
+            <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">is_running</span><span class="p">:</span>
+                <span class="n">success</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_run_main</span><span class="p">(</span><span class="n">from_file</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">target_file</span><span class="p">,</span> <span class="n">fileName</span><span class="p">))</span>
+                    <span class="c1"># run_main(settings=None, from_file=os.path.join(target_file, fileName))</span>
+                <span class="k">if</span> <span class="n">success</span><span class="p">:</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s2">&quot;Query data processing completed successfully!&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Error processing the queries. Check the logs for details.&quot;</span><span class="p">)</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">is_running</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="RunFromConfigComponent.render">
+<a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.run_from_config.RunFromConfigComponent.render">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">render_config</span><span class="p">()</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, CSIRO.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

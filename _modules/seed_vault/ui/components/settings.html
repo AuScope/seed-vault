@@ -1,0 +1,328 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>seed_vault.ui.components.settings &mdash; Seed Vault 0.1.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=92734c54"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            Seed Vault
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../app.html">Seed Vault App</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../cli.html">CLI commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../seed_vault.html">seed_vault package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../seed_vault.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../seed_vault.models.html">seed_vault.models package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../seed_vault.service.html">seed_vault.service package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../seed_vault.ui.html">seed_vault.ui package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../seed_vault.utils.html">seed_vault.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../seed_vault.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../seed_vault.html#module-seed_vault.cli">seed_vault.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../seed_vault.html#module-seed_vault">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Seed Vault</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">seed_vault.ui.components.settings</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for seed_vault.ui.components.settings</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">streamlit</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">st</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.enums.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClientType</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.models.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">AuthConfig</span><span class="p">,</span> <span class="n">SeismoLoaderSettings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.ui.pages.helpers.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">save_filter</span><span class="p">,</span> <span class="n">reset_config</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.service.seismoloader</span><span class="w"> </span><span class="kn">import</span> <span class="n">populate_database_from_sds</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jinja2</span>
+
+
+<div class="viewcode-block" id="SettingsComponent">
+<a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.settings.SettingsComponent">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SettingsComponent</span><span class="p">:</span>
+    <span class="n">settings</span><span class="p">:</span> <span class="n">SeismoLoaderSettings</span>
+    <span class="n">is_new_cred_added</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">df_clients</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">:</span> <span class="n">SeismoLoaderSettings</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span>  <span class="o">=</span> <span class="n">settings</span>
+
+    
+<div class="viewcode-block" id="SettingsComponent.add_credential">
+<a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.settings.SettingsComponent.add_credential">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_credential</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">auths</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">nslc_code</span> <span class="o">==</span> <span class="s2">&quot;new&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">auths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">AuthConfig</span><span class="p">(</span><span class="n">nslc_code</span><span class="o">=</span><span class="s2">&quot;new&quot;</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="s2">&quot;new&quot;</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="s2">&quot;new&quot;</span><span class="p">))</span>
+        <span class="n">save_filter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+    
+    
+<div class="viewcode-block" id="SettingsComponent.reset_is_new_cred_added">
+<a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.settings.SettingsComponent.reset_is_new_cred_added">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_is_new_cred_added</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># time.sleep(5)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_new_cred_added</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+        <span class="c1"># st.rerun()</span>
+
+    
+<div class="viewcode-block" id="SettingsComponent.render_auth">
+<a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.settings.SettingsComponent.render_auth">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">render_auth</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;## Auth Records&quot;</span><span class="p">)</span>
+        <span class="c1"># auths_lst = [item.model_dump() for item in settings.auths]</span>
+        <span class="c1"># edited_df = st.data_editor(pd.DataFrame(auths_lst), num_rows=&quot;dynamic&quot;)</span>
+
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">auth</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">auths</span><span class="p">):</span>
+            <span class="n">c1</span><span class="p">,</span><span class="n">c2</span><span class="p">,</span><span class="n">c3</span><span class="p">,</span><span class="n">c4</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span>
+            <span class="c1"># st.write(f&quot;### Credential Set {index + 1}&quot;)</span>
+
+            <span class="k">with</span> <span class="n">c1</span><span class="p">:</span>
+                <span class="n">nslc_code</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">text_input</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;N.S.L.C. code&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;NSLC Code for (Network.Station.Location.Channel)&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">auth</span><span class="o">.</span><span class="n">nslc_code</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;nslc_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">c2</span><span class="p">:</span>
+                <span class="n">username</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">text_input</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Username&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">auth</span><span class="o">.</span><span class="n">username</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;username_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">c3</span><span class="p">:</span>
+                <span class="n">password</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">text_input</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Password&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">auth</span><span class="o">.</span><span class="n">password</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;password&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;password_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Update session state with edited values</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">auths</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">AuthConfig</span><span class="p">(</span><span class="n">nslc_code</span><span class="o">=</span><span class="n">nslc_code</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="n">password</span><span class="p">)</span>
+
+            <span class="k">with</span> <span class="n">c4</span><span class="p">:</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Delete&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;remove_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">):</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">auths</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+                        <span class="n">save_filter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">reset_is_new_cred_added</span><span class="p">()</span>
+                        <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span>
+                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;An error occured: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;Add Credential Set&quot;</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">reset_is_new_cred_added</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">is_new_cred_added</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_credential</span><span class="p">()</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;An error occured: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_new_cred_added</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_new_cred_added</span><span class="p">:</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s2">&quot;Added a new auth. Please fill up the entries.&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;You cannot define duplicate N.S.L.C code.&quot;</span><span class="p">)</span></div>
+
+
+            <span class="c1"># self.reset_is_new_cred_added()</span>
+
+        
+<div class="viewcode-block" id="SettingsComponent.render_db">
+<a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.settings.SettingsComponent.render_db">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">render_db</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">with</span> <span class="n">c1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">db_path</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">text_input</span><span class="p">(</span><span class="s2">&quot;Database Path&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">db_path</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;FULL path to your database, e.g. /archive/database.sqlite&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">sds_path</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">text_input</span><span class="p">(</span><span class="s2">&quot;Local Seismic Data Archive Path in [SDS structure](https://www.seiscomp.de/seiscomp3/doc/applications/slarchive/SDS.html)&quot;</span><span class="p">,</span>
+                                                   <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">sds_path</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;ROOT path of your archive. If you change this you may have to resync your database.&quot;</span><span class="p">)</span>
+
+        <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;## Sync database with existing archive&quot;</span><span class="p">)</span>
+        <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">,</span> <span class="n">c3</span><span class="p">,</span> <span class="n">c4</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span>
+        <span class="k">with</span> <span class="n">c1</span><span class="p">:</span>
+            <span class="n">search_patterns</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">text_input</span><span class="p">(</span><span class="s2">&quot;Search Patterns&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="s2">&quot;??.*.*.???.?.????.???&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;To input multiple values, separate your entries with comma.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">c4</span><span class="p">:</span>
+            <span class="n">c11</span><span class="p">,</span> <span class="n">c22</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">with</span> <span class="n">c11</span><span class="p">:</span>
+                <span class="n">selected_date_type</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span><span class="s2">&quot;Date selection&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;All&quot;</span><span class="p">,</span> <span class="s2">&quot;Custom Time&quot;</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">c22</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">selected_date_type</span> <span class="o">==</span> <span class="s2">&quot;All&quot;</span><span class="p">:</span>
+                    <span class="n">newer_than</span><span class="o">=</span><span class="kc">None</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">newer_than</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">date_input</span><span class="p">(</span><span class="s2">&quot;Update Since&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">c2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">processing</span><span class="o">.</span><span class="n">num_processes</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">text_input</span><span class="p">(</span><span class="s2">&quot;Number of Processors&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">processing</span><span class="o">.</span><span class="n">num_processes</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Number of Processors &gt;= 0. If set to zero, the app will use all available cpu to perform the operation.&quot;</span><span class="p">))</span>
+
+        <span class="k">with</span> <span class="n">c3</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">processing</span><span class="o">.</span><span class="n">gap_tolerance</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">text_input</span><span class="p">(</span><span class="s2">&quot;Gap Tolerance (s)&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">processing</span><span class="o">.</span><span class="n">gap_tolerance</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;Sync Database&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Synchronizes your SDS archive given the above parameters.&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reset_is_new_cred_added</span><span class="p">()</span>
+            <span class="n">save_filter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+            <span class="n">populate_database_from_sds</span><span class="p">(</span>
+                <span class="n">sds_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">sds_path</span><span class="p">,</span>
+                <span class="n">db_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">db_path</span><span class="p">,</span>
+                <span class="n">search_patterns</span><span class="o">=</span><span class="n">search_patterns</span><span class="p">,</span>
+                <span class="n">newer_than</span><span class="o">=</span><span class="n">newer_than</span><span class="p">,</span>
+                <span class="n">num_processes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">processing</span><span class="o">.</span><span class="n">num_processes</span><span class="p">,</span>
+                <span class="n">gap_tolerance</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">processing</span><span class="o">.</span><span class="n">gap_tolerance</span>
+            <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="SettingsComponent.render_clients">
+<a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.settings.SettingsComponent.render_clients">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">render_clients</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">extra_clients</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">client_url_mapping</span><span class="o">.</span><span class="n">get_clients</span><span class="p">(</span><span class="n">client_type</span> <span class="o">=</span> <span class="n">ClientType</span><span class="o">.</span><span class="n">EXTRA</span><span class="p">)</span> <span class="c1"># load_extra_client()</span>
+        <span class="n">orig_clients</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">client_url_mapping</span><span class="o">.</span><span class="n">get_clients</span><span class="p">(</span><span class="n">client_type</span> <span class="o">=</span> <span class="n">ClientType</span><span class="o">.</span><span class="n">ORIGINAL</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">c1</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;## Extra Clients&quot;</span><span class="p">)</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([{</span><span class="s2">&quot;Client Name&quot;</span><span class="p">:</span> <span class="n">k</span><span class="p">,</span> <span class="s2">&quot;Url&quot;</span><span class="p">:</span> <span class="n">v</span><span class="p">}</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">extra_clients</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span>
+            <span class="k">if</span> <span class="n">df</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+                <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Client Name&quot;</span><span class="p">,</span> <span class="s2">&quot;Url&quot;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">df_clients</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">data_editor</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">hide_index</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">num_rows</span> <span class="o">=</span> <span class="s2">&quot;dynamic&quot;</span><span class="p">)</span>            
+            <span class="c1"># st.write(extra_clients)</span>
+        <span class="k">with</span> <span class="n">c2</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;## Existing Clients (via ObsPy)&quot;</span><span class="p">)</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">orig_clients</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SettingsComponent.reset_config">
+<a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.settings.SettingsComponent.reset_config">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">reset_config</span><span class="p">()</span>   
+        <span class="n">save_filter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s2">&quot;Config have been reset to default.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SettingsComponent.render">
+<a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.settings.SettingsComponent.render">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">,</span> <span class="n">c3</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+        <span class="k">with</span> <span class="n">c1</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;# Settings&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">c2</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">button_col1</span><span class="p">,</span> <span class="n">button_col2</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="k">with</span> <span class="n">button_col1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;Save Config&quot;</span><span class="p">):</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">reset_is_new_cred_added</span><span class="p">()</span>
+                        <span class="n">save_filter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+                        <span class="n">df_copy</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_clients</span><span class="p">)</span>
+                        <span class="n">df_copy</span> <span class="o">=</span> <span class="n">df_copy</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;Client Name&quot;</span><span class="p">:</span> <span class="s1">&#39;client&#39;</span><span class="p">,</span> <span class="s2">&quot;Url&quot;</span><span class="p">:</span> <span class="s1">&#39;url&#39;</span><span class="p">})</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">client_url_mapping</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">df_copy</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="s1">&#39;records&#39;</span><span class="p">))</span>
+                        <span class="c1"># extra_clients = {item[&quot;Client Name&quot;]: item[&quot;Url&quot;] for item in self.df_clients.to_dict(orient=&#39;records&#39;)}</span>
+                        <span class="c1"># save_extra_client(extra_clients)</span>
+                        <span class="k">with</span> <span class="n">c3</span><span class="p">:</span>
+                            <span class="n">st</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+                            <span class="n">st</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s2">&quot;Config is successfully saved.&quot;</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="k">with</span> <span class="n">c3</span><span class="p">:</span>
+                            <span class="n">st</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+                            <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;An error occured. Make sure there is no null value in the table.&quot;</span><span class="p">)</span>
+                            <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">button_col2</span><span class="p">:</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;Reset Config&quot;</span><span class="p">,</span> <span class="n">on_click</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reset_config</span><span class="p">)</span>
+
+        <span class="n">tab1</span><span class="p">,</span> <span class="n">tab2</span><span class="p">,</span> <span class="n">tab3</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">tabs</span><span class="p">([</span><span class="s2">&quot;Data&quot;</span><span class="p">,</span> <span class="s2">&quot;Credentials&quot;</span><span class="p">,</span> <span class="s2">&quot;Clients&quot;</span><span class="p">])</span>
+        <span class="k">with</span> <span class="n">tab1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">render_db</span><span class="p">()</span>
+        <span class="k">with</span> <span class="n">tab2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">render_auth</span><span class="p">()</span>
+        <span class="k">with</span> <span class="n">tab3</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">render_clients</span><span class="p">()</span></div>
+</div>
+
+
+        
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, CSIRO.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

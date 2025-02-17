@@ -58,7 +58,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="seed_vault.html#submodules">Submodules</a></li>
-<li class="toctree-l3"><a class="reference internal" href="seed_vault.html#seed-vault-cli-module">seed_vault.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="seed_vault.html#module-seed_vault.cli">seed_vault.cli module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="seed_vault.html#module-seed_vault">Module contents</a></li>
 </ul>
 </li>
@@ -105,8 +105,74 @@
 <section id="seed-vault-ui-pages-helpers-2-station-based-module">
 <h2>seed_vault.ui.pages.helpers.2_station_based module<a class="headerlink" href="#seed-vault-ui-pages-helpers-2-station-based-module" title="Link to this heading"></a></h2>
 </section>
-<section id="seed-vault-ui-pages-helpers-common-module">
-<h2>seed_vault.ui.pages.helpers.common module<a class="headerlink" href="#seed-vault-ui-pages-helpers-common-module" title="Link to this heading"></a></h2>
+<section id="module-seed_vault.ui.pages.helpers.common">
+<span id="seed-vault-ui-pages-helpers-common-module"></span><h2>seed_vault.ui.pages.helpers.common module<a class="headerlink" href="#module-seed_vault.ui.pages.helpers.common" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.ui.pages.helpers.common.empty_settings_geo_constraints">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.ui.pages.helpers.common.</span></span><span class="sig-name descname"><span class="pre">empty_settings_geo_constraints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/pages/helpers/common.html#empty_settings_geo_constraints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.pages.helpers.common.empty_settings_geo_constraints" title="Link to this definition"></a></dt>
+<dd><p>TODO: a function that reads the latest app settings</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.ui.pages.helpers.common.get_app_settings">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.ui.pages.helpers.common.</span></span><span class="sig-name descname"><span class="pre">get_app_settings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">create_new</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">empty_geo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/pages/helpers/common.html#get_app_settings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.pages.helpers.common.get_app_settings" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.ui.pages.helpers.common.get_direct_settings">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.ui.pages.helpers.common.</span></span><span class="sig-name descname"><span class="pre">get_direct_settings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">create_new</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">empty_geo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/pages/helpers/common.html#get_direct_settings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.pages.helpers.common.get_direct_settings" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.ui.pages.helpers.common.get_selected_areas">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.ui.pages.helpers.common.</span></span><span class="sig-name descname"><span class="pre">get_selected_areas</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">map_output</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/pages/helpers/common.html#get_selected_areas"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.pages.helpers.common.get_selected_areas" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference internal" href="seed_vault.models.html#seed_vault.models.common.RectangleArea" title="seed_vault.models.common.RectangleArea"><code class="xref py py-class docutils literal notranslate"><span class="pre">RectangleArea</span></code></a>, <a class="reference internal" href="seed_vault.models.html#seed_vault.models.common.CircleArea" title="seed_vault.models.common.CircleArea"><code class="xref py py-class docutils literal notranslate"><span class="pre">CircleArea</span></code></a>]]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.ui.pages.helpers.common.handle_circle">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.ui.pages.helpers.common.</span></span><span class="sig-name descname"><span class="pre">handle_circle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geo</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/pages/helpers/common.html#handle_circle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.pages.helpers.common.handle_circle" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.GeometryConstraint" title="seed_vault.models.config.GeometryConstraint"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeometryConstraint</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.ui.pages.helpers.common.handle_polygon">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.ui.pages.helpers.common.</span></span><span class="sig-name descname"><span class="pre">handle_polygon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geo</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/pages/helpers/common.html#handle_polygon"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.pages.helpers.common.handle_polygon" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.GeometryConstraint" title="seed_vault.models.config.GeometryConstraint"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeometryConstraint</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.ui.pages.helpers.common.reset_config">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.ui.pages.helpers.common.</span></span><span class="sig-name descname"><span class="pre">reset_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/pages/helpers/common.html#reset_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.pages.helpers.common.reset_config" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.ui.pages.helpers.common.save_filter">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.ui.pages.helpers.common.</span></span><span class="sig-name descname"><span class="pre">save_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/pages/helpers/common.html#save_filter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.pages.helpers.common.save_filter" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.ui.pages.helpers.common.set_app_settings">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.ui.pages.helpers.common.</span></span><span class="sig-name descname"><span class="pre">set_app_settings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/pages/helpers/common.html#set_app_settings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.pages.helpers.common.set_app_settings" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.ui.pages.helpers.common.set_direct_settings">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.ui.pages.helpers.common.</span></span><span class="sig-name descname"><span class="pre">set_direct_settings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/pages/helpers/common.html#set_direct_settings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.pages.helpers.common.set_direct_settings" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 </section>
 <section id="module-seed_vault.ui.pages.helpers">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-seed_vault.ui.pages.helpers" title="Link to this heading"></a></h2>

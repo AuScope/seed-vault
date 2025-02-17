@@ -56,7 +56,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../seed_vault.html#submodules">Submodules</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../seed_vault.html#seed-vault-cli-module">seed_vault.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../seed_vault.html#module-seed_vault.cli">seed_vault.cli module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../seed_vault.html#module-seed_vault">Module contents</a></li>
 </ul>
 </li>
@@ -93,11 +93,1860 @@
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
 </section>
-<section id="seed-vault-models-common-module">
-<h2>seed_vault.models.common module<a class="headerlink" href="#seed-vault-models-common-module" title="Link to this heading"></a></h2>
+<section id="module-seed_vault.models.common">
+<span id="seed-vault-models-common-module"></span><h2>seed_vault.models.common module<a class="headerlink" href="#module-seed_vault.models.common" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.models.common.CircleArea">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.models.common.</span></span><span class="sig-name descname"><span class="pre">CircleArea</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/common.html#CircleArea"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.common.CircleArea" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>Represents a circular geographic area for seismic data analysis.</p>
+<p>This class is used to define circular constraints for selecting seismic data based on
+a central point and a radius.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.common.CircleArea.lat">
+<span class="sig-name descname"><span class="pre">lat</span></span><a class="headerlink" href="#seed_vault.models.common.CircleArea.lat" title="Link to this definition"></a></dt>
+<dd><p>The latitude of the circle’s center.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.common.CircleArea.lng">
+<span class="sig-name descname"><span class="pre">lng</span></span><a class="headerlink" href="#seed_vault.models.common.CircleArea.lng" title="Link to this definition"></a></dt>
+<dd><p>The longitude of the circle’s center.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.common.CircleArea.max_radius">
+<span class="sig-name descname"><span class="pre">max_radius</span></span><a class="headerlink" href="#seed_vault.models.common.CircleArea.max_radius" title="Link to this definition"></a></dt>
+<dd><p>The maximum radius of the circle.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.common.CircleArea.min_radius">
+<span class="sig-name descname"><span class="pre">min_radius</span></span><a class="headerlink" href="#seed_vault.models.common.CircleArea.min_radius" title="Link to this definition"></a></dt>
+<dd><p>The minimum radius of the circle. Defaults to <cite>0</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="simple">
+<dt>Properties:</dt><dd><p>color (str): Returns the predefined color associated with the area.</p>
+</dd>
+</dl>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
+validated to form a valid model.</p>
+<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="seed_vault.models.common.CircleArea.color">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">color</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#seed_vault.models.common.CircleArea.color" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">lat</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></em><a class="headerlink" href="#id0" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">lng</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></em><a class="headerlink" href="#id1" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">max_radius</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></em><a class="headerlink" href="#id2" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">min_radius</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></em><a class="headerlink" href="#id3" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.common.CircleArea.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar[ConfigDict]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#seed_vault.models.common.CircleArea.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.models.common.RectangleArea">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.models.common.</span></span><span class="sig-name descname"><span class="pre">RectangleArea</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/common.html#RectangleArea"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.common.RectangleArea" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>Represents a rectangular area defined by latitude and longitude boundaries.</p>
+<p>This class is used to define geographic bounding boxes for seismic data analysis.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.common.RectangleArea.min_lat">
+<span class="sig-name descname"><span class="pre">min_lat</span></span><a class="headerlink" href="#seed_vault.models.common.RectangleArea.min_lat" title="Link to this definition"></a></dt>
+<dd><p>The minimum latitude of the rectangle.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.common.RectangleArea.max_lat">
+<span class="sig-name descname"><span class="pre">max_lat</span></span><a class="headerlink" href="#seed_vault.models.common.RectangleArea.max_lat" title="Link to this definition"></a></dt>
+<dd><p>The maximum latitude of the rectangle.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.common.RectangleArea.min_lng">
+<span class="sig-name descname"><span class="pre">min_lng</span></span><a class="headerlink" href="#seed_vault.models.common.RectangleArea.min_lng" title="Link to this definition"></a></dt>
+<dd><p>The minimum longitude of the rectangle.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.common.RectangleArea.max_lng">
+<span class="sig-name descname"><span class="pre">max_lng</span></span><a class="headerlink" href="#seed_vault.models.common.RectangleArea.max_lng" title="Link to this definition"></a></dt>
+<dd><p>The maximum longitude of the rectangle.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="simple">
+<dt>Properties:</dt><dd><p>color (str): Returns the predefined color associated with the area.</p>
+</dd>
+</dl>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
+validated to form a valid model.</p>
+<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="seed_vault.models.common.RectangleArea.color">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">color</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#seed_vault.models.common.RectangleArea.color" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id4">
+<span class="sig-name descname"><span class="pre">max_lat</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></em><a class="headerlink" href="#id4" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id5">
+<span class="sig-name descname"><span class="pre">max_lng</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></em><a class="headerlink" href="#id5" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id6">
+<span class="sig-name descname"><span class="pre">min_lat</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></em><a class="headerlink" href="#id6" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id7">
+<span class="sig-name descname"><span class="pre">min_lng</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></em><a class="headerlink" href="#id7" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.common.RectangleArea.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar[ConfigDict]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#seed_vault.models.common.RectangleArea.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.models.common.StatusHandler">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.models.common.</span></span><span class="sig-name descname"><span class="pre">StatusHandler</span></span><a class="reference internal" href="../_modules/seed_vault/models/common.html#StatusHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.common.StatusHandler" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Manages warning, error, and log messages categorized by type.</p>
+<p>This class provides methods for tracking and organizing status messages, including
+warnings, errors, and logs, to facilitate debugging and status reporting.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.common.StatusHandler.status">
+<span class="sig-name descname"><span class="pre">status</span></span><a class="headerlink" href="#seed_vault.models.common.StatusHandler.status" title="Link to this definition"></a></dt>
+<dd><p>A dictionary storing messages categorized under “warnings”, “errors”, and “logs”.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict[str, Dict[str, List[str]]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">add_warning(category</span></span></dt>
+<dd><p>str, message: str):
+Adds a warning message to a specific category.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">add_error(category</span></span></dt>
+<dd><p>str, message: str):
+Adds an error message to a specific category.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">add_log(category</span></span></dt>
+<dd><p>str, message: str, level: str = “info”):
+Adds a log message with an optional severity level.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.models.common.StatusHandler.get_status">
+<span class="sig-name descname"><span class="pre">get_status</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/seed_vault/models/common.html#StatusHandler.get_status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.common.StatusHandler.get_status" title="Link to this definition"></a></dt>
+<dd><p>Returns the complete status dictionary.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.models.common.StatusHandler.has_errors">
+<span class="sig-name descname"><span class="pre">has_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/seed_vault/models/common.html#StatusHandler.has_errors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.common.StatusHandler.has_errors" title="Link to this definition"></a></dt>
+<dd><p>Checks if there are any recorded errors.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.models.common.StatusHandler.has_warnings">
+<span class="sig-name descname"><span class="pre">has_warnings</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/seed_vault/models/common.html#StatusHandler.has_warnings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.common.StatusHandler.has_warnings" title="Link to this definition"></a></dt>
+<dd><p>Checks if there are any recorded warnings.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.models.common.StatusHandler.display">
+<span class="sig-name descname"><span class="pre">display</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/common.html#StatusHandler.display"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.common.StatusHandler.display" title="Link to this definition"></a></dt>
+<dd><p>Prints all warnings, errors, and logs stored in the status dictionary.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">generate_status_report(level</span></span></dt>
+<dd><p>str = None) -&gt; str:
+Generates a formatted status report, optionally filtering by level.</p>
+</dd></dl>
+
+<p>Initializes the <cite>StatusHandler</cite> with empty dictionaries for warnings, errors, and logs.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.models.common.StatusHandler.add_error">
+<span class="sig-name descname"><span class="pre">add_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">category</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/common.html#StatusHandler.add_error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.common.StatusHandler.add_error" title="Link to this definition"></a></dt>
+<dd><p>Adds an error message to a specific category in the status dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>category</strong> (<em>str</em>) – The category under which the error should be stored.</p></li>
+<li><p><strong>message</strong> (<em>str</em>) – The error message to add.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.models.common.StatusHandler.add_log">
+<span class="sig-name descname"><span class="pre">add_log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">category</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'info'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/common.html#StatusHandler.add_log"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.common.StatusHandler.add_log" title="Link to this definition"></a></dt>
+<dd><p>Adds a log message to a specific category with an optional severity level.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>category</strong> (<em>str</em>) – The category under which the log should be stored.</p></li>
+<li><p><strong>message</strong> (<em>str</em>) – The log message to add.</p></li>
+<li><p><strong>level</strong> (<em>str</em><em>, </em><em>optional</em>) – The severity level of the log (e.g., “info”, “warning”, “error”).
+Defaults to <cite>“info”</cite>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.models.common.StatusHandler.add_warning">
+<span class="sig-name descname"><span class="pre">add_warning</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">category</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/common.html#StatusHandler.add_warning"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.common.StatusHandler.add_warning" title="Link to this definition"></a></dt>
+<dd><p>Adds a warning message to a specific category in the status dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>category</strong> (<em>str</em>) – The category under which the warning should be stored.</p></li>
+<li><p><strong>message</strong> (<em>str</em>) – The warning message to add.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id8">
+<span class="sig-name descname"><span class="pre">display</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/common.html#StatusHandler.display"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id8" title="Link to this definition"></a></dt>
+<dd><p>Prints all warnings, errors, and logs stored in the status dictionary.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.models.common.StatusHandler.generate_status_report">
+<span class="sig-name descname"><span class="pre">generate_status_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/common.html#StatusHandler.generate_status_report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.common.StatusHandler.generate_status_report" title="Link to this definition"></a></dt>
+<dd><p>Generates a formatted string report of the current status, optionally filtered by a specified level.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>level</strong> (<em>str</em><em>, </em><em>optional</em>) – The status category to filter by (e.g., <cite>“warnings”</cite>, <cite>“errors”</cite>, <cite>“logs”</cite>).
+If <cite>None</cite>, includes all categories.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A formatted status report containing warnings, errors, and logs.</dt><dd><p>Returns <cite>“No status messages available.”</cite> if no messages are found.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id9">
+<span class="sig-name descname"><span class="pre">get_status</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/common.html#StatusHandler.get_status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id9" title="Link to this definition"></a></dt>
+<dd><p>Returns the full status dictionary containing warnings, errors, and logs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The complete status dictionary.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dict[str, Dict[str, List[str]]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id10">
+<span class="sig-name descname"><span class="pre">has_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/common.html#StatusHandler.has_errors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id10" title="Link to this definition"></a></dt>
+<dd><p>Checks if there are any recorded error messages.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>True</cite> if there are errors, <cite>False</cite> otherwise.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id11">
+<span class="sig-name descname"><span class="pre">has_warnings</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/common.html#StatusHandler.has_warnings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id11" title="Link to this definition"></a></dt>
+<dd><p>Checks if there are any recorded warning messages.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>True</cite> if there are warnings, <cite>False</cite> otherwise.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
-<section id="seed-vault-models-config-module">
-<h2>seed_vault.models.config module<a class="headerlink" href="#seed-vault-models-config-module" title="Link to this heading"></a></h2>
+<section id="module-seed_vault.models.config">
+<span id="seed-vault-models-config-module"></span><h2>seed_vault.models.config module<a class="headerlink" href="#module-seed_vault.models.config" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.models.config.AuthConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.models.config.</span></span><span class="sig-name descname"><span class="pre">AuthConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/config.html#AuthConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.config.AuthConfig" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>The <cite>AuthConfig</cite> class defines attributes for network.station.location.channel code, username, and
+password.</p>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
+validated to form a valid model.</p>
+<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.AuthConfig.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar[ConfigDict]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#seed_vault.models.config.AuthConfig.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.AuthConfig.nslc_code">
+<span class="sig-name descname"><span class="pre">nslc_code</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#seed_vault.models.config.AuthConfig.nslc_code" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.AuthConfig.password">
+<span class="sig-name descname"><span class="pre">password</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#seed_vault.models.config.AuthConfig.password" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.AuthConfig.username">
+<span class="sig-name descname"><span class="pre">username</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#seed_vault.models.config.AuthConfig.username" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.models.config.DateConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.models.config.</span></span><span class="sig-name descname"><span class="pre">DateConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/config.html#DateConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.config.DateConfig" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>This class defines a DateConfig with optional start and end times, as well as optional before and
+after time definition used for events.</p>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
+validated to form a valid model.</p>
+<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.DateConfig.end_after">
+<span class="sig-name descname"><span class="pre">end_after</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">date</span></code><span class="pre">,</span> <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code><span class="pre">,</span> <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code><span class="pre">]</span></em><a class="headerlink" href="#seed_vault.models.config.DateConfig.end_after" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.DateConfig.end_before">
+<span class="sig-name descname"><span class="pre">end_before</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">date</span></code><span class="pre">,</span> <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code><span class="pre">,</span> <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code><span class="pre">]</span></em><a class="headerlink" href="#seed_vault.models.config.DateConfig.end_before" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.DateConfig.end_time">
+<span class="sig-name descname"><span class="pre">end_time</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">date</span></code><span class="pre">,</span> <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code><span class="pre">,</span> <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code><span class="pre">]</span></em><a class="headerlink" href="#seed_vault.models.config.DateConfig.end_time" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.DateConfig.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar[ConfigDict]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#seed_vault.models.config.DateConfig.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.DateConfig.start_after">
+<span class="sig-name descname"><span class="pre">start_after</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">date</span></code><span class="pre">,</span> <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code><span class="pre">,</span> <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code><span class="pre">]</span></em><a class="headerlink" href="#seed_vault.models.config.DateConfig.start_after" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.DateConfig.start_before">
+<span class="sig-name descname"><span class="pre">start_before</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">date</span></code><span class="pre">,</span> <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code><span class="pre">,</span> <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code><span class="pre">]</span></em><a class="headerlink" href="#seed_vault.models.config.DateConfig.start_before" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.DateConfig.start_time">
+<span class="sig-name descname"><span class="pre">start_time</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">date</span></code><span class="pre">,</span> <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code><span class="pre">,</span> <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code><span class="pre">]</span></em><a class="headerlink" href="#seed_vault.models.config.DateConfig.start_time" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.models.config.EventConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.models.config.</span></span><span class="sig-name descname"><span class="pre">EventConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/config.html#EventConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.config.EventConfig" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>The <cite>EventConfig</cite> class defines parameters for configuring earthquake event queries with default
+values. It is designed to store criteria for filtering earthquake events.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.EventConfig.client">
+<span class="sig-name descname"><span class="pre">client</span></span><a class="headerlink" href="#seed_vault.models.config.EventConfig.client" title="Link to this definition"></a></dt>
+<dd><p>The FDSN client to use for retrieving earthquake data. Defaults to <cite>“EARTHSCOPE”</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.EventConfig.date_config">
+<span class="sig-name descname"><span class="pre">date_config</span></span><a class="headerlink" href="#seed_vault.models.config.EventConfig.date_config" title="Link to this definition"></a></dt>
+<dd><p>The date range for querying earthquake events.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.DateConfig" title="seed_vault.models.config.DateConfig">DateConfig</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.EventConfig.model">
+<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#seed_vault.models.config.EventConfig.model" title="Link to this definition"></a></dt>
+<dd><p>The seismic velocity model to use. Defaults to <cite>“IASP91”</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.EventConfig.min_depth">
+<span class="sig-name descname"><span class="pre">min_depth</span></span><a class="headerlink" href="#seed_vault.models.config.EventConfig.min_depth" title="Link to this definition"></a></dt>
+<dd><p>The minimum earthquake depth in kilometers. Defaults to <cite>-5.0</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.EventConfig.max_depth">
+<span class="sig-name descname"><span class="pre">max_depth</span></span><a class="headerlink" href="#seed_vault.models.config.EventConfig.max_depth" title="Link to this definition"></a></dt>
+<dd><p>The maximum earthquake depth in kilometers. Defaults to <cite>1000.0</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.EventConfig.min_magnitude">
+<span class="sig-name descname"><span class="pre">min_magnitude</span></span><a class="headerlink" href="#seed_vault.models.config.EventConfig.min_magnitude" title="Link to this definition"></a></dt>
+<dd><p>The minimum earthquake magnitude. Defaults to <cite>5.5</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.EventConfig.max_magnitude">
+<span class="sig-name descname"><span class="pre">max_magnitude</span></span><a class="headerlink" href="#seed_vault.models.config.EventConfig.max_magnitude" title="Link to this definition"></a></dt>
+<dd><p>The maximum earthquake magnitude. Defaults to <cite>10.0</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.EventConfig.min_radius">
+<span class="sig-name descname"><span class="pre">min_radius</span></span><a class="headerlink" href="#seed_vault.models.config.EventConfig.min_radius" title="Link to this definition"></a></dt>
+<dd><p>The minimum distance from the event in degrees. Defaults to <cite>30.0</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.EventConfig.max_radius">
+<span class="sig-name descname"><span class="pre">max_radius</span></span><a class="headerlink" href="#seed_vault.models.config.EventConfig.max_radius" title="Link to this definition"></a></dt>
+<dd><p>The maximum distance from the event in degrees. Defaults to <cite>90.0</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.EventConfig.before_p_sec">
+<span class="sig-name descname"><span class="pre">before_p_sec</span></span><a class="headerlink" href="#seed_vault.models.config.EventConfig.before_p_sec" title="Link to this definition"></a></dt>
+<dd><p>The number of seconds before the P-wave arrival. Defaults to <cite>10</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.EventConfig.after_p_sec">
+<span class="sig-name descname"><span class="pre">after_p_sec</span></span><a class="headerlink" href="#seed_vault.models.config.EventConfig.after_p_sec" title="Link to this definition"></a></dt>
+<dd><p>The number of seconds after the P-wave arrival. Defaults to <cite>130</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.EventConfig.include_all_origins">
+<span class="sig-name descname"><span class="pre">include_all_origins</span></span><a class="headerlink" href="#seed_vault.models.config.EventConfig.include_all_origins" title="Link to this definition"></a></dt>
+<dd><p>Whether to include all origins of an event. Defaults to <cite>False</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.EventConfig.include_all_magnitudes">
+<span class="sig-name descname"><span class="pre">include_all_magnitudes</span></span><a class="headerlink" href="#seed_vault.models.config.EventConfig.include_all_magnitudes" title="Link to this definition"></a></dt>
+<dd><p>Whether to include all magnitude values for an event. Defaults to <cite>False</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.EventConfig.include_arrivals">
+<span class="sig-name descname"><span class="pre">include_arrivals</span></span><a class="headerlink" href="#seed_vault.models.config.EventConfig.include_arrivals" title="Link to this definition"></a></dt>
+<dd><p>Whether to include phase arrivals in the results. Defaults to <cite>False</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.EventConfig.local_catalog">
+<span class="sig-name descname"><span class="pre">local_catalog</span></span><a class="headerlink" href="#seed_vault.models.config.EventConfig.local_catalog" title="Link to this definition"></a></dt>
+<dd><p>The local earthquake catalog name, if applicable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.EventConfig.eventtype">
+<span class="sig-name descname"><span class="pre">eventtype</span></span><a class="headerlink" href="#seed_vault.models.config.EventConfig.eventtype" title="Link to this definition"></a></dt>
+<dd><p>The type of earthquake event (e.g., “earthquake”, “explosion”).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.EventConfig.catalog">
+<span class="sig-name descname"><span class="pre">catalog</span></span><a class="headerlink" href="#seed_vault.models.config.EventConfig.catalog" title="Link to this definition"></a></dt>
+<dd><p>The name of the earthquake catalog used for querying events.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.EventConfig.contributor">
+<span class="sig-name descname"><span class="pre">contributor</span></span><a class="headerlink" href="#seed_vault.models.config.EventConfig.contributor" title="Link to this definition"></a></dt>
+<dd><p>The name of the contributor providing the earthquake data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.EventConfig.updatedafter">
+<span class="sig-name descname"><span class="pre">updatedafter</span></span><a class="headerlink" href="#seed_vault.models.config.EventConfig.updatedafter" title="Link to this definition"></a></dt>
+<dd><p>The UTC timestamp indicating the last update time for event selection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.EventConfig.limit">
+<span class="sig-name descname"><span class="pre">limit</span></span><a class="headerlink" href="#seed_vault.models.config.EventConfig.limit" title="Link to this definition"></a></dt>
+<dd><p>The maximum number of events to retrieve.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.EventConfig.offset">
+<span class="sig-name descname"><span class="pre">offset</span></span><a class="headerlink" href="#seed_vault.models.config.EventConfig.offset" title="Link to this definition"></a></dt>
+<dd><p>The offset for paginated earthquake data retrieval.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.EventConfig.selected_catalogs">
+<span class="sig-name descname"><span class="pre">selected_catalogs</span></span><a class="headerlink" href="#seed_vault.models.config.EventConfig.selected_catalogs" title="Link to this definition"></a></dt>
+<dd><p>A list of user-selected earthquake catalogs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.EventConfig.geo_constraint">
+<span class="sig-name descname"><span class="pre">geo_constraint</span></span><a class="headerlink" href="#seed_vault.models.config.EventConfig.geo_constraint" title="Link to this definition"></a></dt>
+<dd><p>Geospatial constraints on earthquake events.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[List[<a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.GeometryConstraint" title="seed_vault.models.config.GeometryConstraint">GeometryConstraint</a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
+validated to form a valid model.</p>
+<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.models.config.EventConfig.Config">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Config</span></span><a class="reference internal" href="../_modules/seed_vault/models/config.html#EventConfig.Config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.config.EventConfig.Config" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.EventConfig.Config.exclude">
+<span class="sig-name descname"><span class="pre">exclude</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'selected_catalogs'}</span></em><a class="headerlink" href="#seed_vault.models.config.EventConfig.Config.exclude" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.EventConfig.Config.json_encoders">
+<span class="sig-name descname"><span class="pre">json_encoders</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{typing.Any:</span> <span class="pre">&lt;function</span> <span class="pre">EventConfig.Config.&lt;lambda&gt;&gt;}</span></em><a class="headerlink" href="#seed_vault.models.config.EventConfig.Config.json_encoders" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id12">
+<span class="sig-name descname"><span class="pre">after_p_sec</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><a class="headerlink" href="#id12" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id13">
+<span class="sig-name descname"><span class="pre">before_p_sec</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><a class="headerlink" href="#id13" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id14">
+<span class="sig-name descname"><span class="pre">catalog</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><a class="headerlink" href="#id14" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id15">
+<span class="sig-name descname"><span class="pre">client</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><a class="headerlink" href="#id15" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id16">
+<span class="sig-name descname"><span class="pre">contributor</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><a class="headerlink" href="#id16" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id17">
+<span class="sig-name descname"><span class="pre">date_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.DateConfig" title="seed_vault.models.config.DateConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">DateConfig</span></code></a></em><a class="headerlink" href="#id17" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id18">
+<span class="sig-name descname"><span class="pre">eventtype</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><a class="headerlink" href="#id18" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id19">
+<span class="sig-name descname"><span class="pre">geo_constraint</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code><span class="pre">[</span><a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.GeometryConstraint" title="seed_vault.models.config.GeometryConstraint"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeometryConstraint</span></code></a><span class="pre">]]</span></em><a class="headerlink" href="#id19" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id20">
+<span class="sig-name descname"><span class="pre">include_all_magnitudes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></em><a class="headerlink" href="#id20" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id21">
+<span class="sig-name descname"><span class="pre">include_all_origins</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></em><a class="headerlink" href="#id21" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id22">
+<span class="sig-name descname"><span class="pre">include_arrivals</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></em><a class="headerlink" href="#id22" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id23">
+<span class="sig-name descname"><span class="pre">limit</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><a class="headerlink" href="#id23" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id24">
+<span class="sig-name descname"><span class="pre">local_catalog</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><a class="headerlink" href="#id24" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id25">
+<span class="sig-name descname"><span class="pre">max_depth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></em><a class="headerlink" href="#id25" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id26">
+<span class="sig-name descname"><span class="pre">max_magnitude</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></em><a class="headerlink" href="#id26" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id27">
+<span class="sig-name descname"><span class="pre">max_radius</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></em><a class="headerlink" href="#id27" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id28">
+<span class="sig-name descname"><span class="pre">min_depth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></em><a class="headerlink" href="#id28" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id29">
+<span class="sig-name descname"><span class="pre">min_magnitude</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></em><a class="headerlink" href="#id29" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id30">
+<span class="sig-name descname"><span class="pre">min_radius</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></em><a class="headerlink" href="#id30" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id31">
+<span class="sig-name descname"><span class="pre">model</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#id31" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.EventConfig.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar[ConfigDict]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'exclude':</span> <span class="pre">{'selected_catalogs'},</span> <span class="pre">'json_encoders':</span> <span class="pre">{typing.Any:</span> <span class="pre">&lt;function</span> <span class="pre">EventConfig.Config.&lt;lambda&gt;&gt;}}</span></em><a class="headerlink" href="#seed_vault.models.config.EventConfig.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id32">
+<span class="sig-name descname"><span class="pre">offset</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><a class="headerlink" href="#id32" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id33">
+<span class="sig-name descname"><span class="pre">selected_catalogs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code><span class="pre">]</span></em><a class="headerlink" href="#id33" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.models.config.EventConfig.set_default">
+<span class="sig-name descname"><span class="pre">set_default</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/config.html#EventConfig.set_default"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.config.EventConfig.set_default" title="Link to this definition"></a></dt>
+<dd><p>Resets all fields to their default values.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id34">
+<span class="sig-name descname"><span class="pre">updatedafter</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><a class="headerlink" href="#id34" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.models.config.GeometryConstraint">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.models.config.</span></span><span class="sig-name descname"><span class="pre">GeometryConstraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geo_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="seed_vault.enums.html#seed_vault.enums.config.GeoConstraintType" title="seed_vault.enums.config.GeoConstraintType"><span class="pre">GeoConstraintType</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">GeoConstraintType.NONE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../seed_vault.models.html#seed_vault.models.common.RectangleArea" title="seed_vault.models.common.RectangleArea"><span class="pre">RectangleArea</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../seed_vault.models.html#seed_vault.models.common.CircleArea" title="seed_vault.models.common.CircleArea"><span class="pre">CircleArea</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/config.html#GeometryConstraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.config.GeometryConstraint" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>The <cite>GeometryConstraint</cite> class defines a geometry constraint with a specified type and coordinates,
+automatically determining the constraint type based on the provided coordinates.</p>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
+validated to form a valid model.</p>
+<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.GeometryConstraint.coords">
+<span class="sig-name descname"><span class="pre">coords</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code><span class="pre">[</span><a class="reference internal" href="../seed_vault.models.html#seed_vault.models.common.RectangleArea" title="seed_vault.models.common.RectangleArea"><code class="xref py py-class docutils literal notranslate"><span class="pre">RectangleArea</span></code></a><span class="pre">,</span> <a class="reference internal" href="../seed_vault.models.html#seed_vault.models.common.CircleArea" title="seed_vault.models.common.CircleArea"><code class="xref py py-class docutils literal notranslate"><span class="pre">CircleArea</span></code></a><span class="pre">,</span> <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code><span class="pre">]</span></em><a class="headerlink" href="#seed_vault.models.config.GeometryConstraint.coords" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.GeometryConstraint.geo_type">
+<span class="sig-name descname"><span class="pre">geo_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><a class="reference internal" href="seed_vault.enums.html#seed_vault.enums.config.GeoConstraintType" title="seed_vault.enums.config.GeoConstraintType"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeoConstraintType</span></code></a><span class="pre">]</span></em><a class="headerlink" href="#seed_vault.models.config.GeometryConstraint.geo_type" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.GeometryConstraint.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar[ConfigDict]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#seed_vault.models.config.GeometryConstraint.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.models.config.PredictionData">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.models.config.</span></span><span class="sig-name descname"><span class="pre">PredictionData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/config.html#PredictionData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.config.PredictionData" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>The <cite>PredictionData</cite> class stores predicted arrival times of seismic waves at a given station.</p>
+<p>This class represents the association between an event and a station, including estimated
+P-wave and S-wave arrival times.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.PredictionData.event_id">
+<span class="sig-name descname"><span class="pre">event_id</span></span><a class="headerlink" href="#seed_vault.models.config.PredictionData.event_id" title="Link to this definition"></a></dt>
+<dd><p>The unique identifier for the seismic event.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.PredictionData.station_id">
+<span class="sig-name descname"><span class="pre">station_id</span></span><a class="headerlink" href="#seed_vault.models.config.PredictionData.station_id" title="Link to this definition"></a></dt>
+<dd><p>The identifier of the seismic station where arrivals are recorded.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.PredictionData.p_arrival">
+<span class="sig-name descname"><span class="pre">p_arrival</span></span><a class="headerlink" href="#seed_vault.models.config.PredictionData.p_arrival" title="Link to this definition"></a></dt>
+<dd><p>The predicted arrival time of the primary (P) wave.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>datetime</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.PredictionData.s_arrival">
+<span class="sig-name descname"><span class="pre">s_arrival</span></span><a class="headerlink" href="#seed_vault.models.config.PredictionData.s_arrival" title="Link to this definition"></a></dt>
+<dd><p>The predicted arrival time of the secondary (S) wave.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>datetime</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
+validated to form a valid model.</p>
+<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id35">
+<span class="sig-name descname"><span class="pre">event_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#id35" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.PredictionData.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar[ConfigDict]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#seed_vault.models.config.PredictionData.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id36">
+<span class="sig-name descname"><span class="pre">p_arrival</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></em><a class="headerlink" href="#id36" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id37">
+<span class="sig-name descname"><span class="pre">s_arrival</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></em><a class="headerlink" href="#id37" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id38">
+<span class="sig-name descname"><span class="pre">station_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#id38" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.models.config.ProcessingConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.models.config.</span></span><span class="sig-name descname"><span class="pre">ProcessingConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/config.html#ProcessingConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.config.ProcessingConfig" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>This class defines a configuration for processing with default values for the number of processes,
+gap tolerance, and logging.</p>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
+validated to form a valid model.</p>
+<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.ProcessingConfig.gap_tolerance">
+<span class="sig-name descname"><span class="pre">gap_tolerance</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code><span class="pre">]</span></em><a class="headerlink" href="#seed_vault.models.config.ProcessingConfig.gap_tolerance" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.ProcessingConfig.logging">
+<span class="sig-name descname"><span class="pre">logging</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><a class="headerlink" href="#seed_vault.models.config.ProcessingConfig.logging" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.ProcessingConfig.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar[ConfigDict]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#seed_vault.models.config.ProcessingConfig.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.ProcessingConfig.num_processes">
+<span class="sig-name descname"><span class="pre">num_processes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code><span class="pre">]</span></em><a class="headerlink" href="#seed_vault.models.config.ProcessingConfig.num_processes" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoLoaderSettings">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.models.config.</span></span><span class="sig-name descname"><span class="pre">SeismoLoaderSettings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/config.html#SeismoLoaderSettings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.config.SeismoLoaderSettings" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>The <cite>SeismoLoaderSettings</cite> class defines configuration settings for managing seismic data retrieval,
+processing, and storage. It provides attributes to control how seismic waveforms, station metadata,
+and event data are handled.</p>
+<p>This class also includes methods for configuring download types, reading settings from a configuration
+file, managing authentication, and persisting settings to disk.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoLoaderSettings.sds_path">
+<span class="sig-name descname"><span class="pre">sds_path</span></span><a class="headerlink" href="#seed_vault.models.config.SeismoLoaderSettings.sds_path" title="Link to this definition"></a></dt>
+<dd><p>The directory path for the Seismic Data Structure (SDS). Defaults to <cite>data/SDS</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoLoaderSettings.db_path">
+<span class="sig-name descname"><span class="pre">db_path</span></span><a class="headerlink" href="#seed_vault.models.config.SeismoLoaderSettings.db_path" title="Link to this definition"></a></dt>
+<dd><p>The database file path for tracking downloaded data. Defaults to <cite>data/database.sqlite</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoLoaderSettings.download_type">
+<span class="sig-name descname"><span class="pre">download_type</span></span><a class="headerlink" href="#seed_vault.models.config.SeismoLoaderSettings.download_type" title="Link to this definition"></a></dt>
+<dd><p>The type of download to perform (e.g., event-based or continuous).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="seed_vault.enums.html#seed_vault.enums.config.DownloadType" title="seed_vault.enums.config.DownloadType">DownloadType</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoLoaderSettings.selected_workflow">
+<span class="sig-name descname"><span class="pre">selected_workflow</span></span><a class="headerlink" href="#seed_vault.models.config.SeismoLoaderSettings.selected_workflow" title="Link to this definition"></a></dt>
+<dd><p>The selected workflow type (e.g., event-based, station-based).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="seed_vault.enums.html#seed_vault.enums.config.WorkflowType" title="seed_vault.enums.config.WorkflowType">WorkflowType</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoLoaderSettings.processing">
+<span class="sig-name descname"><span class="pre">processing</span></span><a class="headerlink" href="#seed_vault.models.config.SeismoLoaderSettings.processing" title="Link to this definition"></a></dt>
+<dd><p>Configuration settings for data processing. Defaults to <cite>None</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.ProcessingConfig" title="seed_vault.models.config.ProcessingConfig">ProcessingConfig</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoLoaderSettings.client_url_mapping">
+<span class="sig-name descname"><span class="pre">client_url_mapping</span></span><a class="headerlink" href="#seed_vault.models.config.SeismoLoaderSettings.client_url_mapping" title="Link to this definition"></a></dt>
+<dd><p>A mapping of client URLs for data retrieval.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[<a class="reference internal" href="../seed_vault.models.html#seed_vault.models.url_mapping.UrlMappings" title="seed_vault.models.url_mapping.UrlMappings">UrlMappings</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoLoaderSettings.extra_clients">
+<span class="sig-name descname"><span class="pre">extra_clients</span></span><a class="headerlink" href="#seed_vault.models.config.SeismoLoaderSettings.extra_clients" title="Link to this definition"></a></dt>
+<dd><p>A dictionary of additional clients for querying seismic data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[dict]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoLoaderSettings.auths">
+<span class="sig-name descname"><span class="pre">auths</span></span><a class="headerlink" href="#seed_vault.models.config.SeismoLoaderSettings.auths" title="Link to this definition"></a></dt>
+<dd><p>A list of authentication configurations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[List[<a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.AuthConfig" title="seed_vault.models.config.AuthConfig">AuthConfig</a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoLoaderSettings.waveform">
+<span class="sig-name descname"><span class="pre">waveform</span></span><a class="headerlink" href="#seed_vault.models.config.SeismoLoaderSettings.waveform" title="Link to this definition"></a></dt>
+<dd><p>Configuration for waveform retrieval. Defaults to <cite>None</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.WaveformConfig" title="seed_vault.models.config.WaveformConfig">WaveformConfig</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoLoaderSettings.station">
+<span class="sig-name descname"><span class="pre">station</span></span><a class="headerlink" href="#seed_vault.models.config.SeismoLoaderSettings.station" title="Link to this definition"></a></dt>
+<dd><p>Configuration for station metadata retrieval. Defaults to <cite>None</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.StationConfig" title="seed_vault.models.config.StationConfig">StationConfig</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoLoaderSettings.event">
+<span class="sig-name descname"><span class="pre">event</span></span><a class="headerlink" href="#seed_vault.models.config.SeismoLoaderSettings.event" title="Link to this definition"></a></dt>
+<dd><p>Configuration for event data retrieval. Defaults to <cite>None</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.EventConfig" title="seed_vault.models.config.EventConfig">EventConfig</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoLoaderSettings.predictions">
+<span class="sig-name descname"><span class="pre">predictions</span></span><a class="headerlink" href="#seed_vault.models.config.SeismoLoaderSettings.predictions" title="Link to this definition"></a></dt>
+<dd><p>A dictionary mapping event-station pairs to arrival time predictions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict[str, <a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.PredictionData" title="seed_vault.models.config.PredictionData">PredictionData</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoLoaderSettings.status_handler">
+<span class="sig-name descname"><span class="pre">status_handler</span></span><a class="headerlink" href="#seed_vault.models.config.SeismoLoaderSettings.status_handler" title="Link to this definition"></a></dt>
+<dd><p>A handler for tracking status messages and errors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../seed_vault.models.html#seed_vault.models.common.StatusHandler" title="seed_vault.models.common.StatusHandler">StatusHandler</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoLoaderSettings.set_download_type_from_workflow">
+<span class="sig-name descname"><span class="pre">set_download_type_from_workflow</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/config.html#SeismoLoaderSettings.set_download_type_from_workflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.config.SeismoLoaderSettings.set_download_type_from_workflow" title="Link to this definition"></a></dt>
+<dd><p>Sets the <cite>download_type</cite> attribute based on the selected workflow.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">from_cfg_file(cls,</span> <span class="pre">cfg_source</span></span></dt>
+<dd><p>Union[str, IO]) -&gt; “SeismoLoaderSettings”:
+Loads and initializes a <cite>SeismoLoaderSettings</cite> instance from a configuration file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">add_prediction(event_id</span></span></dt>
+<dd><p>str, station_id: str, p_arrival: datetime, s_arrival: datetime):
+Adds a predicted P-wave and S-wave arrival time for a given event and station.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">get_prediction(event_id</span></span></dt>
+<dd><p>str, station_id: str) -&gt; Optional[PredictionData]:
+Retrieves the predicted arrival time for a given event and station.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">to_pickle(pickle_path</span></span></dt>
+<dd><p>str) -&gt; None:
+Serializes the <cite>SeismoLoaderSettings</cite> instance to a pickle file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">from_pickle_file(cls,</span> <span class="pre">pickle_path</span></span></dt>
+<dd><p>str) -&gt; “SeismoLoaderSettings”:
+Loads a <cite>SeismoLoaderSettings</cite> instance from a pickle file.</p>
+</dd></dl>
+
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
+validated to form a valid model.</p>
+<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoLoaderSettings.Config">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Config</span></span><a class="reference internal" href="../_modules/seed_vault/models/config.html#SeismoLoaderSettings.Config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.config.SeismoLoaderSettings.Config" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoLoaderSettings.Config.arbitrary_types_allowed">
+<span class="sig-name descname"><span class="pre">arbitrary_types_allowed</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#seed_vault.models.config.SeismoLoaderSettings.Config.arbitrary_types_allowed" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoLoaderSettings.Config.json_encoders">
+<span class="sig-name descname"><span class="pre">json_encoders</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{&lt;class</span> <span class="pre">'datetime.datetime'&gt;:</span> <span class="pre">&lt;function</span> <span class="pre">SeismoLoaderSettings.Config.&lt;lambda&gt;&gt;}</span></em><a class="headerlink" href="#seed_vault.models.config.SeismoLoaderSettings.Config.json_encoders" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoLoaderSettings.add_prediction">
+<span class="sig-name descname"><span class="pre">add_prediction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">station_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_arrival</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s_arrival</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/config.html#SeismoLoaderSettings.add_prediction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.config.SeismoLoaderSettings.add_prediction" title="Link to this definition"></a></dt>
+<dd><p>Adds a predicted P-wave and S-wave arrival time for a given event and station.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>event_id</strong> (<em>str</em>) – The unique identifier of the seismic event.</p></li>
+<li><p><strong>station_id</strong> (<em>str</em>) – The identifier of the seismic station.</p></li>
+<li><p><strong>p_arrival</strong> (<em>datetime</em>) – The predicted arrival time of the P-wave.</p></li>
+<li><p><strong>s_arrival</strong> (<em>datetime</em>) – The predicted arrival time of the S-wave.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoLoaderSettings.add_to_config">
+<span class="sig-name descname"><span class="pre">add_to_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/config.html#SeismoLoaderSettings.add_to_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.config.SeismoLoaderSettings.add_to_config" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id39">
+<span class="sig-name descname"><span class="pre">auths</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code><span class="pre">[</span><a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.AuthConfig" title="seed_vault.models.config.AuthConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">AuthConfig</span></code></a><span class="pre">]]</span></em><a class="headerlink" href="#id39" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id40">
+<span class="sig-name descname"><span class="pre">client_url_mapping</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><a class="reference internal" href="../seed_vault.models.html#seed_vault.models.url_mapping.UrlMappings" title="seed_vault.models.url_mapping.UrlMappings"><code class="xref py py-class docutils literal notranslate"><span class="pre">UrlMappings</span></code></a><span class="pre">]</span></em><a class="headerlink" href="#id40" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoLoaderSettings.create_default">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_default</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/config.html#SeismoLoaderSettings.create_default"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.config.SeismoLoaderSettings.create_default" title="Link to this definition"></a></dt>
+<dd><p>Creates an instance of SeismoLoaderSettings with default values.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id41">
+<span class="sig-name descname"><span class="pre">db_path</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#id41" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id42">
+<span class="sig-name descname"><span class="pre">download_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="seed_vault.enums.html#seed_vault.enums.config.DownloadType" title="seed_vault.enums.config.DownloadType"><code class="xref py py-class docutils literal notranslate"><span class="pre">DownloadType</span></code></a></em><a class="headerlink" href="#id42" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id43">
+<span class="sig-name descname"><span class="pre">event</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.EventConfig" title="seed_vault.models.config.EventConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">EventConfig</span></code></a></em><a class="headerlink" href="#id43" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id44">
+<span class="sig-name descname"><span class="pre">extra_clients</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code><span class="pre">]</span></em><a class="headerlink" href="#id44" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoLoaderSettings.from_cfg_file">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_cfg_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cfg_source</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/config.html#SeismoLoaderSettings.from_cfg_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.config.SeismoLoaderSettings.from_cfg_file" title="Link to this definition"></a></dt>
+<dd><p>Loads a <cite>SeismoLoaderSettings</cite> instance from a configuration file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>cfg_source</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>IO</em><em>]</em>) – The path to the configuration file or a file-like object.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A populated instance of the class.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings">SeismoLoaderSettings</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoLoaderSettings.from_pickle_file">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_pickle_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pickle_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/config.html#SeismoLoaderSettings.from_pickle_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.config.SeismoLoaderSettings.from_pickle_file" title="Link to this definition"></a></dt>
+<dd><p>Loads a <cite>SeismoLoaderSettings</cite> instance from a pickle file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>pickle_path</strong> (<em>str</em>) – The file path from which the object should be loaded.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The loaded instance of the class.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings">SeismoLoaderSettings</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoLoaderSettings.get_prediction">
+<span class="sig-name descname"><span class="pre">get_prediction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">station_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/config.html#SeismoLoaderSettings.get_prediction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.config.SeismoLoaderSettings.get_prediction" title="Link to this definition"></a></dt>
+<dd><p>Retrieves the predicted arrival time for a given event and station.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>event_id</strong> (<em>str</em>) – The unique identifier of the seismic event.</p></li>
+<li><p><strong>station_id</strong> (<em>str</em>) – The identifier of the seismic station.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The predicted arrival time data, or <cite>None</cite> if not found.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[<a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.PredictionData" title="seed_vault.models.config.PredictionData">PredictionData</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoLoaderSettings.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar[ConfigDict]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'arbitrary_types_allowed':</span> <span class="pre">True,</span> <span class="pre">'json_encoders':</span> <span class="pre">{&lt;class</span> <span class="pre">'datetime.datetime'&gt;:</span> <span class="pre">&lt;function</span> <span class="pre">SeismoLoaderSettings.Config.&lt;lambda&gt;&gt;}}</span></em><a class="headerlink" href="#seed_vault.models.config.SeismoLoaderSettings.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoLoaderSettings.parse_optional">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_optional</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/config.html#SeismoLoaderSettings.parse_optional"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.config.SeismoLoaderSettings.parse_optional" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id45">
+<span class="sig-name descname"><span class="pre">predictions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">,</span> <a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.PredictionData" title="seed_vault.models.config.PredictionData"><code class="xref py py-class docutils literal notranslate"><span class="pre">PredictionData</span></code></a><span class="pre">]</span></em><a class="headerlink" href="#id45" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id46">
+<span class="sig-name descname"><span class="pre">processing</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.ProcessingConfig" title="seed_vault.models.config.ProcessingConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProcessingConfig</span></code></a></em><a class="headerlink" href="#id46" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id47">
+<span class="sig-name descname"><span class="pre">sds_path</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#id47" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id48">
+<span class="sig-name descname"><span class="pre">selected_workflow</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="seed_vault.enums.html#seed_vault.enums.config.WorkflowType" title="seed_vault.enums.config.WorkflowType"><code class="xref py py-class docutils literal notranslate"><span class="pre">WorkflowType</span></code></a></em><a class="headerlink" href="#id48" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id49">
+<span class="sig-name descname"><span class="pre">set_download_type_from_workflow</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/config.html#SeismoLoaderSettings.set_download_type_from_workflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id49" title="Link to this definition"></a></dt>
+<dd><p>Sets the download type based on the selected workflow.</p>
+<p>If <cite>selected_workflow</cite> is <cite>EVENT_BASED</cite> or <cite>STATION_BASED</cite>, sets <cite>download_type</cite> to <cite>EVENT</cite>.
+If <cite>selected_workflow</cite> is <cite>CONTINUOUS</cite>, sets <cite>download_type</cite> to <cite>CONTINUOUS</cite>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id50">
+<span class="sig-name descname"><span class="pre">station</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.StationConfig" title="seed_vault.models.config.StationConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">StationConfig</span></code></a></em><a class="headerlink" href="#id50" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id51">
+<span class="sig-name descname"><span class="pre">status_handler</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../seed_vault.models.html#seed_vault.models.common.StatusHandler" title="seed_vault.models.common.StatusHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">StatusHandler</span></code></a></em><a class="headerlink" href="#id51" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoLoaderSettings.to_cfg">
+<span class="sig-name descname"><span class="pre">to_cfg</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/config.html#SeismoLoaderSettings.to_cfg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.config.SeismoLoaderSettings.to_cfg" title="Link to this definition"></a></dt>
+<dd><p>Converts the <cite>SeismoLoaderSettings</cite> instance into a <cite>ConfigParser</cite> object.</p>
+<p>This method constructs a configuration file representation of the current settings
+stored in the <cite>SeismoLoaderSettings</cite> instance. It organizes the settings into sections
+such as <cite>SDS</cite>, <cite>DATABASE</cite>, <cite>PROCESSING</cite>, <cite>AUTH</cite>, <cite>WAVEFORM</cite>, <cite>STATION</cite>, and <cite>EVENT</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A <cite>ConfigParser</cite> object representing the current settings.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>configparser.ConfigParser</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoLoaderSettings.to_pickle">
+<span class="sig-name descname"><span class="pre">to_pickle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pickle_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/config.html#SeismoLoaderSettings.to_pickle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.config.SeismoLoaderSettings.to_pickle" title="Link to this definition"></a></dt>
+<dd><p>Serializes the <cite>SeismoLoaderSettings</cite> instance to a pickle file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>pickle_path</strong> (<em>str</em>) – The file path where the object should be saved.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id52">
+<span class="sig-name descname"><span class="pre">waveform</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.WaveformConfig" title="seed_vault.models.config.WaveformConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">WaveformConfig</span></code></a></em><a class="headerlink" href="#id52" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoQuery">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.models.config.</span></span><span class="sig-name descname"><span class="pre">SeismoQuery</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cmb_str_n_s</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">network</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">station</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">location</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">starttime</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">endtime</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/config.html#SeismoQuery"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.config.SeismoQuery" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>This Python class <cite>SeismoQuery</cite> represents a seismic query params with properties for network, station,
+location, channel, start time, and end time, along with methods to convert combined network and
+station string to individual properties.</p>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
+validated to form a valid model.</p>
+<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoQuery.channel">
+<span class="sig-name descname"><span class="pre">channel</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><a class="headerlink" href="#seed_vault.models.config.SeismoQuery.channel" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoQuery.cmb_str">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cmb_str</span></span><a class="headerlink" href="#seed_vault.models.config.SeismoQuery.cmb_str" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoQuery.cmb_str_n_s_to_props">
+<span class="sig-name descname"><span class="pre">cmb_str_n_s_to_props</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cmb_n_s</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/config.html#SeismoQuery.cmb_str_n_s_to_props"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.config.SeismoQuery.cmb_str_n_s_to_props" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoQuery.endtime">
+<span class="sig-name descname"><span class="pre">endtime</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code><span class="pre">]</span></em><a class="headerlink" href="#seed_vault.models.config.SeismoQuery.endtime" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoQuery.location">
+<span class="sig-name descname"><span class="pre">location</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><a class="headerlink" href="#seed_vault.models.config.SeismoQuery.location" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoQuery.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar[ConfigDict]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#seed_vault.models.config.SeismoQuery.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoQuery.network">
+<span class="sig-name descname"><span class="pre">network</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><a class="headerlink" href="#seed_vault.models.config.SeismoQuery.network" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoQuery.starttime">
+<span class="sig-name descname"><span class="pre">starttime</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code><span class="pre">]</span></em><a class="headerlink" href="#seed_vault.models.config.SeismoQuery.starttime" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.SeismoQuery.station">
+<span class="sig-name descname"><span class="pre">station</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><a class="headerlink" href="#seed_vault.models.config.SeismoQuery.station" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.models.config.StationConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.models.config.</span></span><span class="sig-name descname"><span class="pre">StationConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/config.html#StationConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.config.StationConfig" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>The <cite>StationConfig</cite> class defines configuration settings for querying seismic stations.</p>
+<p>This class allows users to specify parameters such as the seismic network, station selection,
+and geographical constraints while retrieving station metadata.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.StationConfig.client">
+<span class="sig-name descname"><span class="pre">client</span></span><a class="headerlink" href="#seed_vault.models.config.StationConfig.client" title="Link to this definition"></a></dt>
+<dd><p>The FDSN client for retrieving station metadata. Defaults to <cite>“EARTHSCOPE”</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.StationConfig.force_stations">
+<span class="sig-name descname"><span class="pre">force_stations</span></span><a class="headerlink" href="#seed_vault.models.config.StationConfig.force_stations" title="Link to this definition"></a></dt>
+<dd><p>A list of stations to forcefully include in the query.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[List[<a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.SeismoQuery" title="seed_vault.models.config.SeismoQuery">SeismoQuery</a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.StationConfig.exclude_stations">
+<span class="sig-name descname"><span class="pre">exclude_stations</span></span><a class="headerlink" href="#seed_vault.models.config.StationConfig.exclude_stations" title="Link to this definition"></a></dt>
+<dd><p>A list of stations to exclude from the query.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[List[<a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.SeismoQuery" title="seed_vault.models.config.SeismoQuery">SeismoQuery</a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.StationConfig.date_config">
+<span class="sig-name descname"><span class="pre">date_config</span></span><a class="headerlink" href="#seed_vault.models.config.StationConfig.date_config" title="Link to this definition"></a></dt>
+<dd><p>The date range for station availability queries.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.DateConfig" title="seed_vault.models.config.DateConfig">DateConfig</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.StationConfig.local_inventory">
+<span class="sig-name descname"><span class="pre">local_inventory</span></span><a class="headerlink" href="#seed_vault.models.config.StationConfig.local_inventory" title="Link to this definition"></a></dt>
+<dd><p>Path to a local station inventory file, if applicable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.StationConfig.network">
+<span class="sig-name descname"><span class="pre">network</span></span><a class="headerlink" href="#seed_vault.models.config.StationConfig.network" title="Link to this definition"></a></dt>
+<dd><p>The seismic network code (e.g., <cite>“IU”</cite>, <cite>“NE”</cite>) to filter stations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.StationConfig.station">
+<span class="sig-name descname"><span class="pre">station</span></span><a class="headerlink" href="#seed_vault.models.config.StationConfig.station" title="Link to this definition"></a></dt>
+<dd><p>The station code to filter results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.StationConfig.location">
+<span class="sig-name descname"><span class="pre">location</span></span><a class="headerlink" href="#seed_vault.models.config.StationConfig.location" title="Link to this definition"></a></dt>
+<dd><p>The location code for further filtering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.StationConfig.channel">
+<span class="sig-name descname"><span class="pre">channel</span></span><a class="headerlink" href="#seed_vault.models.config.StationConfig.channel" title="Link to this definition"></a></dt>
+<dd><p>The channel code (e.g., <cite>“BHZ”</cite>, <cite>“HHZ”</cite>) to specify station channels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.StationConfig.highest_samplerate_only">
+<span class="sig-name descname"><span class="pre">highest_samplerate_only</span></span><a class="headerlink" href="#seed_vault.models.config.StationConfig.highest_samplerate_only" title="Link to this definition"></a></dt>
+<dd><p>Whether to select only the station with the highest sample rate. Defaults to <cite>False</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.StationConfig.selected_invs">
+<span class="sig-name descname"><span class="pre">selected_invs</span></span><a class="headerlink" href="#seed_vault.models.config.StationConfig.selected_invs" title="Link to this definition"></a></dt>
+<dd><p>A list of pre-selected inventories.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.StationConfig.geo_constraint">
+<span class="sig-name descname"><span class="pre">geo_constraint</span></span><a class="headerlink" href="#seed_vault.models.config.StationConfig.geo_constraint" title="Link to this definition"></a></dt>
+<dd><p>Geospatial constraints to filter stations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[List[<a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.GeometryConstraint" title="seed_vault.models.config.GeometryConstraint">GeometryConstraint</a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.StationConfig.include_restricted">
+<span class="sig-name descname"><span class="pre">include_restricted</span></span><a class="headerlink" href="#seed_vault.models.config.StationConfig.include_restricted" title="Link to this definition"></a></dt>
+<dd><p>Whether to include restricted (non-public) stations. Defaults to <cite>False</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.StationConfig.level">
+<span class="sig-name descname"><span class="pre">level</span></span><a class="headerlink" href="#seed_vault.models.config.StationConfig.level" title="Link to this definition"></a></dt>
+<dd><p>The level of station metadata detail to retrieve. Defaults to <cite>Levels.CHANNEL</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="seed_vault.enums.html#seed_vault.enums.config.Levels" title="seed_vault.enums.config.Levels">Levels</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
+validated to form a valid model.</p>
+<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.models.config.StationConfig.Config">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Config</span></span><a class="reference internal" href="../_modules/seed_vault/models/config.html#StationConfig.Config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.config.StationConfig.Config" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.StationConfig.Config.exclude">
+<span class="sig-name descname"><span class="pre">exclude</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'selected_invs'}</span></em><a class="headerlink" href="#seed_vault.models.config.StationConfig.Config.exclude" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.StationConfig.Config.json_encoders">
+<span class="sig-name descname"><span class="pre">json_encoders</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{typing.Any:</span> <span class="pre">&lt;function</span> <span class="pre">StationConfig.Config.&lt;lambda&gt;&gt;}</span></em><a class="headerlink" href="#seed_vault.models.config.StationConfig.Config.json_encoders" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id53">
+<span class="sig-name descname"><span class="pre">channel</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><a class="headerlink" href="#id53" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id54">
+<span class="sig-name descname"><span class="pre">client</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><a class="headerlink" href="#id54" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id55">
+<span class="sig-name descname"><span class="pre">date_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.DateConfig" title="seed_vault.models.config.DateConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">DateConfig</span></code></a></em><a class="headerlink" href="#id55" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id56">
+<span class="sig-name descname"><span class="pre">exclude_stations</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code><span class="pre">[</span><a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.SeismoQuery" title="seed_vault.models.config.SeismoQuery"><code class="xref py py-class docutils literal notranslate"><span class="pre">SeismoQuery</span></code></a><span class="pre">]]</span></em><a class="headerlink" href="#id56" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id57">
+<span class="sig-name descname"><span class="pre">force_stations</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code><span class="pre">[</span><a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.SeismoQuery" title="seed_vault.models.config.SeismoQuery"><code class="xref py py-class docutils literal notranslate"><span class="pre">SeismoQuery</span></code></a><span class="pre">]]</span></em><a class="headerlink" href="#id57" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id58">
+<span class="sig-name descname"><span class="pre">geo_constraint</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code><span class="pre">[</span><a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.GeometryConstraint" title="seed_vault.models.config.GeometryConstraint"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeometryConstraint</span></code></a><span class="pre">]]</span></em><a class="headerlink" href="#id58" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id59">
+<span class="sig-name descname"><span class="pre">highest_samplerate_only</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></em><a class="headerlink" href="#id59" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id60">
+<span class="sig-name descname"><span class="pre">include_restricted</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></em><a class="headerlink" href="#id60" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id61">
+<span class="sig-name descname"><span class="pre">level</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="seed_vault.enums.html#seed_vault.enums.config.Levels" title="seed_vault.enums.config.Levels"><code class="xref py py-class docutils literal notranslate"><span class="pre">Levels</span></code></a></em><a class="headerlink" href="#id61" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id62">
+<span class="sig-name descname"><span class="pre">local_inventory</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><a class="headerlink" href="#id62" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id63">
+<span class="sig-name descname"><span class="pre">location</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><a class="headerlink" href="#id63" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.StationConfig.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar[ConfigDict]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'exclude':</span> <span class="pre">{'selected_invs'},</span> <span class="pre">'json_encoders':</span> <span class="pre">{typing.Any:</span> <span class="pre">&lt;function</span> <span class="pre">StationConfig.Config.&lt;lambda&gt;&gt;}}</span></em><a class="headerlink" href="#seed_vault.models.config.StationConfig.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id64">
+<span class="sig-name descname"><span class="pre">network</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><a class="headerlink" href="#id64" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id65">
+<span class="sig-name descname"><span class="pre">selected_invs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code><span class="pre">]</span></em><a class="headerlink" href="#id65" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.models.config.StationConfig.set_default">
+<span class="sig-name descname"><span class="pre">set_default</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/config.html#StationConfig.set_default"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.config.StationConfig.set_default" title="Link to this definition"></a></dt>
+<dd><p>Resets all fields to their default values.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id66">
+<span class="sig-name descname"><span class="pre">station</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><a class="headerlink" href="#id66" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.models.config.WaveformConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.models.config.</span></span><span class="sig-name descname"><span class="pre">WaveformConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/config.html#WaveformConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.config.WaveformConfig" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>The <cite>WaveformConfig</cite> class defines a data model with optional fields for configuring waveform data
+requests, with a method to reset all fields to their default values.</p>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
+validated to form a valid model.</p>
+<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.WaveformConfig.channel_pref">
+<span class="sig-name descname"><span class="pre">channel_pref</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><a class="headerlink" href="#seed_vault.models.config.WaveformConfig.channel_pref" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.WaveformConfig.client">
+<span class="sig-name descname"><span class="pre">client</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><a class="headerlink" href="#seed_vault.models.config.WaveformConfig.client" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.WaveformConfig.days_per_request">
+<span class="sig-name descname"><span class="pre">days_per_request</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code><span class="pre">]</span></em><a class="headerlink" href="#seed_vault.models.config.WaveformConfig.days_per_request" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.WaveformConfig.force_redownload">
+<span class="sig-name descname"><span class="pre">force_redownload</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code><span class="pre">]</span></em><a class="headerlink" href="#seed_vault.models.config.WaveformConfig.force_redownload" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.WaveformConfig.location_pref">
+<span class="sig-name descname"><span class="pre">location_pref</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><a class="headerlink" href="#seed_vault.models.config.WaveformConfig.location_pref" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.config.WaveformConfig.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar[ConfigDict]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#seed_vault.models.config.WaveformConfig.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.models.config.WaveformConfig.set_default">
+<span class="sig-name descname"><span class="pre">set_default</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/config.html#WaveformConfig.set_default"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.config.WaveformConfig.set_default" title="Link to this definition"></a></dt>
+<dd><p>Resets all fields to their default values.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.models.config.convert_to_str">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.models.config.</span></span><span class="sig-name descname"><span class="pre">convert_to_str</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/config.html#convert_to_str"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.config.convert_to_str" title="Link to this definition"></a></dt>
+<dd><p>The function <cite>convert_to_str</cite> converts various types of values to strings, handling different cases
+and providing error handling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>val</strong> – The <cite>convert_to_str</cite> function takes a value <cite>val</cite> as input and attempts to convert it to a
+string representation. It handles different types of values such as <cite>None</cite>, <cite>Enum</cite>, strings,
+integers, floats, booleans, objects with <cite>__str__</cite> method, and other unsupported</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The function <cite>convert_to_str</cite> returns a string representation of the input value <cite>val</cite>. It handles
+different types of input values and converts them to a string using various methods based on their
+type. If the conversion fails, it catches the exception and returns an empty string.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.models.config.parse_time">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.models.config.</span></span><span class="sig-name descname"><span class="pre">parse_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time_str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/config.html#parse_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.config.parse_time" title="Link to this definition"></a></dt>
+<dd><p>The function <cite>parse_time</cite> attempts to parse a given time string in various formats and return it in
+ISO format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>time_str</strong> – The date-time in string format. Some acceptable input formats are:
+‘2014,2,1’ | ‘2014001’ | ‘2014,3,2,0,0,5’</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The <cite>parse_time</cite> function is attempting to parse a time string using different formats. If
+successful, it returns the parsed time in ISO format. If parsing fails for all formats, it returns
+<cite>None</cite>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.models.config.safe_add_to_config">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.models.config.</span></span><span class="sig-name descname"><span class="pre">safe_add_to_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">section</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/config.html#safe_add_to_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.config.safe_add_to_config" title="Link to this definition"></a></dt>
+<dd><p>The function <cite>safe_add_to_config</cite> safely adds key-value pairs to a configuration dictionary,
+handling any exceptions that may occur.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – Config is a dictionary that stores configuration settings. It typically has sections as
+keys, where each section contains key-value pairs representing specific configuration
+settings.</p></li>
+<li><p><strong>section</strong> – Section refers to a specific section within the configuration file
+where the key-value pair will be added. It helps organize and categorize different
+settings or options within the configuration file.</p></li>
+<li><p><strong>key</strong> – The <cite>key</cite> parameter in the <cite>safe_add_to_config</cite> function refers to the key of the key-value
+pair that you want to add to the configuration. It is used to uniquely identify the value
+associated with it within a specific section of the configuration.</p></li>
+<li><p><strong>value</strong> – Value is the data that you want to add to the configuration file under the specified
+section and key. It could be a string, integer, boolean, or any other data type that
+you want to store in the configuration.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 <section id="module-seed_vault.models.exception">
 <span id="seed-vault-models-exception-module"></span><h2>seed_vault.models.exception module<a class="headerlink" href="#module-seed_vault.models.exception" title="Link to this heading"></a></h2>
@@ -109,8 +1958,257 @@
 </dd></dl>
 
 </section>
-<section id="seed-vault-models-url-mapping-module">
-<h2>seed_vault.models.url_mapping module<a class="headerlink" href="#seed-vault-models-url-mapping-module" title="Link to this heading"></a></h2>
+<section id="module-seed_vault.models.url_mapping">
+<span id="seed-vault-models-url-mapping-module"></span><h2>seed_vault.models.url_mapping module<a class="headerlink" href="#module-seed_vault.models.url_mapping" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.models.url_mapping.UrlMapping">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.models.url_mapping.</span></span><span class="sig-name descname"><span class="pre">UrlMapping</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/url_mapping.html#UrlMapping"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.url_mapping.UrlMapping" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>Represents a mapping between a seismic data client and its corresponding URL.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.url_mapping.UrlMapping.client">
+<span class="sig-name descname"><span class="pre">client</span></span><a class="headerlink" href="#seed_vault.models.url_mapping.UrlMapping.client" title="Link to this definition"></a></dt>
+<dd><p>The name of the seismic data client.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.url_mapping.UrlMapping.url">
+<span class="sig-name descname"><span class="pre">url</span></span><a class="headerlink" href="#seed_vault.models.url_mapping.UrlMapping.url" title="Link to this definition"></a></dt>
+<dd><p>The associated URL for retrieving seismic data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.url_mapping.UrlMapping.is_original">
+<span class="sig-name descname"><span class="pre">is_original</span></span><a class="headerlink" href="#seed_vault.models.url_mapping.UrlMapping.is_original" title="Link to this definition"></a></dt>
+<dd><p>Indicates whether the client is an original one from <cite>URL_MAPPINGS</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
+validated to form a valid model.</p>
+<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id67">
+<span class="sig-name descname"><span class="pre">client</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#id67" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id68">
+<span class="sig-name descname"><span class="pre">is_original</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></em><a class="headerlink" href="#id68" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.url_mapping.UrlMapping.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar[ConfigDict]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#seed_vault.models.url_mapping.UrlMapping.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id69">
+<span class="sig-name descname"><span class="pre">url</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#id69" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.models.url_mapping.UrlMappings">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.models.url_mapping.</span></span><span class="sig-name descname"><span class="pre">UrlMappings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/url_mapping.html#UrlMappings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.url_mapping.UrlMappings" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>Manages and synchronizes client URL mappings for seismic data retrieval.</p>
+<p>This class maintains a list of known clients, checks for updates, and allows
+users to add new clients. It also provides functionality to load, save, and
+sync mappings with <cite>URL_MAPPINGS</cite>.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.url_mapping.UrlMappings.maps">
+<span class="sig-name descname"><span class="pre">maps</span></span><a class="headerlink" href="#seed_vault.models.url_mapping.UrlMappings.maps" title="Link to this definition"></a></dt>
+<dd><p>A dictionary mapping client names to URLs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[dict]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.url_mapping.UrlMappings.df_maps">
+<span class="sig-name descname"><span class="pre">df_maps</span></span><a class="headerlink" href="#seed_vault.models.url_mapping.UrlMappings.df_maps" title="Link to this definition"></a></dt>
+<dd><p>A Pandas DataFrame storing the client mapping data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.url_mapping.UrlMappings.save_path">
+<span class="sig-name descname"><span class="pre">save_path</span></span><a class="headerlink" href="#seed_vault.models.url_mapping.UrlMappings.save_path" title="Link to this definition"></a></dt>
+<dd><p>The file path where client mappings are stored (default: <cite>clients.csv</cite>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Path</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">check_saved_clients(df</span></span></dt>
+<dd><p>pd.DataFrame) -&gt; pd.DataFrame:
+Validates and updates the saved client list by checking against <cite>URL_MAPPINGS</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">save(extra_clients</span></span></dt>
+<dd><p>List[dict] = None):
+Saves the client mappings to a CSV file and synchronizes them with <cite>URL_MAPPINGS</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">sync_maps(df_maps</span></span></dt>
+<dd><p>pd.DataFrame):
+Synchronizes the <cite>maps</cite> dictionary with the latest client mappings from a dataframe.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.models.url_mapping.UrlMappings.load">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/url_mapping.html#UrlMappings.load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.url_mapping.UrlMappings.load" title="Link to this definition"></a></dt>
+<dd><p>Loads the client mappings from the saved file and ensures synchronization.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">get_clients(client_type</span></span></dt>
+<dd><p>ClientType = ClientType.ALL) -&gt; Union[List[str], Dict[str, str]]:
+Retrieves a list of clients based on the specified <cite>client_type</cite>.</p>
+</dd></dl>
+
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
+validated to form a valid model.</p>
+<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.models.url_mapping.UrlMappings.check_saved_clients">
+<span class="sig-name descname"><span class="pre">check_saved_clients</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/url_mapping.html#UrlMappings.check_saved_clients"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.url_mapping.UrlMappings.check_saved_clients" title="Link to this definition"></a></dt>
+<dd><p>Validates and updates the saved client list by checking against <cite>URL_MAPPINGS</cite>.</p>
+<p>This method ensures that:
+- Clients marked as original but no longer exist in <cite>URL_MAPPINGS</cite> are removed.
+- New clients found in <cite>URL_MAPPINGS</cite> that are not in the saved list are added.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>df</strong> (<em>pd.DataFrame</em>) – The dataframe containing the saved client mappings.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The updated dataframe with verified client mappings.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pd.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id70">
+<span class="sig-name descname"><span class="pre">df_maps</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code><span class="pre">]</span></em><a class="headerlink" href="#id70" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.models.url_mapping.UrlMappings.get_clients">
+<span class="sig-name descname"><span class="pre">get_clients</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ClientType.ALL</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/url_mapping.html#UrlMappings.get_clients"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.url_mapping.UrlMappings.get_clients" title="Link to this definition"></a></dt>
+<dd><p>Retrieves a list of clients based on the specified <cite>client_type</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>client_type</strong> (<a class="reference internal" href="seed_vault.enums.html#seed_vault.enums.common.ClientType" title="seed_vault.enums.common.ClientType"><em>ClientType</em></a><em>, </em><em>optional</em>) – The type of clients to retrieve.
+- <cite>ClientType.ALL</cite>: Returns all clients.
+- <cite>ClientType.ORIGINAL</cite>: Returns only the original clients.
+- <cite>ClientType.EXTRA</cite>: Returns only the extra clients.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of client names or a dictionary of client URLs.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Union[List[str], Dict[str, str]]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If an unknown <cite>client_type</cite> is provided.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id71">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/url_mapping.html#UrlMappings.load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id71" title="Link to this definition"></a></dt>
+<dd><p>Loads the client mappings from the saved file and ensures synchronization.</p>
+<p>This method:
+- Initializes the <cite>maps</cite> dictionary.
+- Calls <cite>save()</cite> to ensure the client mappings are properly saved and updated.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id72">
+<span class="sig-name descname"><span class="pre">maps</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code><span class="pre">]</span></em><a class="headerlink" href="#id72" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.models.url_mapping.UrlMappings.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar[ConfigDict]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#seed_vault.models.url_mapping.UrlMappings.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.models.url_mapping.UrlMappings.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extra_clients</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/url_mapping.html#UrlMappings.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.url_mapping.UrlMappings.save" title="Link to this definition"></a></dt>
+<dd><p>Saves the client mappings to a CSV file and synchronizes them with <cite>URL_MAPPINGS</cite>.</p>
+<p>This method:
+- Loads the existing client mappings if a saved file exists.
+- Updates the list with newly added <cite>extra_clients</cite> if provided.
+- Removes outdated extra clients that are no longer in use.
+- Writes the updated mappings back to disk.
+- Synchronizes the mappings with <cite>URL_MAPPINGS</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>extra_clients</strong> (<em>List</em><em>[</em><em>dict</em><em>]</em><em>, </em><em>optional</em>) – A list of additional client mappings to add.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id73">
+<span class="sig-name descname"><span class="pre">save_path</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></em><a class="headerlink" href="#id73" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.models.url_mapping.UrlMappings.sync_maps">
+<span class="sig-name descname"><span class="pre">sync_maps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df_maps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/models/url_mapping.html#UrlMappings.sync_maps"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.models.url_mapping.UrlMappings.sync_maps" title="Link to this definition"></a></dt>
+<dd><p>Synchronizes the <cite>maps</cite> dictionary with the latest client mappings from the dataframe.</p>
+<p>This method updates both the instance’s <cite>maps</cite> dictionary and the global <cite>URL_MAPPINGS</cite>
+to reflect the latest client URL assignments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>df_maps</strong> (<em>pd.DataFrame</em>) – The dataframe containing the client mapping information.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 <section id="module-seed_vault.models">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-seed_vault.models" title="Link to this heading"></a></h2>

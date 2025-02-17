@@ -58,7 +58,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="seed_vault.html#submodules">Submodules</a></li>
-<li class="toctree-l3"><a class="reference internal" href="seed_vault.html#seed-vault-cli-module">seed_vault.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="seed_vault.html#module-seed_vault.cli">seed_vault.cli module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="seed_vault.html#module-seed_vault">Module contents</a></li>
 </ul>
 </li>
@@ -98,35 +98,1048 @@
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
 </section>
-<section id="seed-vault-ui-components-base-module">
-<h2>seed_vault.ui.components.base module<a class="headerlink" href="#seed-vault-ui-components-base-module" title="Link to this heading"></a></h2>
+<section id="module-seed_vault.ui.components.base">
+<span id="seed-vault-ui-components-base-module"></span><h2>seed_vault.ui.components.base module<a class="headerlink" href="#module-seed_vault.ui.components.base" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.base.</span></span><span class="sig-name descname"><span class="pre">BaseComponent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prev_step_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stage</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.TXT">
+<span class="sig-name descname"><span class="pre">TXT</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#seed_vault.ui.components.base.BaseComponentTexts" title="seed_vault.ui.components.base.BaseComponentTexts"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseComponentTexts</span></code></a></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.TXT" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.all_current_drawings">
+<span class="sig-name descname"><span class="pre">all_current_drawings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code><span class="pre">[</span><a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.GeometryConstraint" title="seed_vault.models.config.GeometryConstraint"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeometryConstraint</span></code></a><span class="pre">]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.all_current_drawings" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.all_feature_drawings">
+<span class="sig-name descname"><span class="pre">all_feature_drawings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code><span class="pre">[</span><a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.GeometryConstraint" title="seed_vault.models.config.GeometryConstraint"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeometryConstraint</span></code></a><span class="pre">]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.all_feature_drawings" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.area_around_prev_step_selections">
+<span class="sig-name descname"><span class="pre">area_around_prev_step_selections</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.area_around_prev_step_selections"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.area_around_prev_step_selections" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.catalogs">
+<span class="sig-name descname"><span class="pre">catalogs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">Catalog</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;obspy.core.event.catalog.Catalog</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.catalogs" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.clear_all_data">
+<span class="sig-name descname"><span class="pre">clear_all_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.clear_all_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.clear_all_data" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.clicked_marker_info">
+<span class="sig-name descname"><span class="pre">clicked_marker_info</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.clicked_marker_info" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.col_color">
+<span class="sig-name descname"><span class="pre">col_color</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.col_color" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.col_size">
+<span class="sig-name descname"><span class="pre">col_size</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.col_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.cols_to_exclude">
+<span class="sig-name descname"><span class="pre">cols_to_exclude</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['detail',</span> <span class="pre">'is_selected']</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.cols_to_exclude" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.df_circ">
+<span class="sig-name descname"><span class="pre">df_circ</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.df_circ" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.df_data_edit">
+<span class="sig-name descname"><span class="pre">df_data_edit</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Empty</span> <span class="pre">DataFrame</span> <span class="pre">Columns:</span> <span class="pre">[]</span> <span class="pre">Index:</span> <span class="pre">[]</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.df_data_edit" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.df_markers">
+<span class="sig-name descname"><span class="pre">df_markers</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Empty</span> <span class="pre">DataFrame</span> <span class="pre">Columns:</span> <span class="pre">[]</span> <span class="pre">Index:</span> <span class="pre">[]</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.df_markers" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.df_markers_prev">
+<span class="sig-name descname"><span class="pre">df_markers_prev</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Empty</span> <span class="pre">DataFrame</span> <span class="pre">Columns:</span> <span class="pre">[]</span> <span class="pre">Index:</span> <span class="pre">[]</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.df_markers_prev" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.df_rect">
+<span class="sig-name descname"><span class="pre">df_rect</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.df_rect" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.display_prev_step_selection_marker">
+<span class="sig-name descname"><span class="pre">display_prev_step_selection_marker</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.display_prev_step_selection_marker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.display_prev_step_selection_marker" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.display_prev_step_selection_table">
+<span class="sig-name descname"><span class="pre">display_prev_step_selection_table</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.display_prev_step_selection_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.display_prev_step_selection_table" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.error">
+<span class="sig-name descname"><span class="pre">error</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.error" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.event_filter">
+<span class="sig-name descname"><span class="pre">event_filter</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.event_filter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.event_filter" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.export_xml_bytes">
+<span class="sig-name descname"><span class="pre">export_xml_bytes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">export_selected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.export_xml_bytes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.export_xml_bytes" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.fig_color_bar">
+<span class="sig-name descname"><span class="pre">fig_color_bar</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.fig_color_bar" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.get_data_globally">
+<span class="sig-name descname"><span class="pre">get_data_globally</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.get_data_globally"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.get_data_globally" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.get_geo_constraint">
+<span class="sig-name descname"><span class="pre">get_geo_constraint</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.get_geo_constraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.get_geo_constraint" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.get_key_element">
+<span class="sig-name descname"><span class="pre">get_key_element</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.get_key_element"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.get_key_element" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.get_prev_step_df">
+<span class="sig-name descname"><span class="pre">get_prev_step_df</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.get_prev_step_df"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.get_prev_step_df" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.get_selected_idx">
+<span class="sig-name descname"><span class="pre">get_selected_idx</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.get_selected_idx"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.get_selected_idx" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.get_selected_marker_info">
+<span class="sig-name descname"><span class="pre">get_selected_marker_info</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.get_selected_marker_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.get_selected_marker_info" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.handle_get_data">
+<span class="sig-name descname"><span class="pre">handle_get_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_import</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uploaded_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.handle_get_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.handle_get_data" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.handle_update_data_points">
+<span class="sig-name descname"><span class="pre">handle_update_data_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">selected_idx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.handle_update_data_points"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.handle_update_data_points" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.has_error">
+<span class="sig-name descname"><span class="pre">has_error</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.has_error" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.import_export">
+<span class="sig-name descname"><span class="pre">import_export</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.import_export"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.import_export" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.import_xml">
+<span class="sig-name descname"><span class="pre">import_xml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uploaded_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.import_xml"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.import_xml" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.inventories">
+<span class="sig-name descname"><span class="pre">inventories</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">Inventory</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;obspy.core.inventory.inventory.Inventory</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.inventories" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.is_valid_circle">
+<span class="sig-name descname"><span class="pre">is_valid_circle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lng</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_radius</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.is_valid_circle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.is_valid_circle" title="Link to this definition"></a></dt>
+<dd><p>Check if circle data is valid.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.is_valid_rectangle">
+<span class="sig-name descname"><span class="pre">is_valid_rectangle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min_lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_lng</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_lng</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.is_valid_rectangle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.is_valid_rectangle" title="Link to this definition"></a></dt>
+<dd><p>Check if min/max latitude and longitude values are valid.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.map_disp">
+<span class="sig-name descname"><span class="pre">map_disp</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.map_disp" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.map_fg_area">
+<span class="sig-name descname"><span class="pre">map_fg_area</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.map_fg_area" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.map_fg_marker">
+<span class="sig-name descname"><span class="pre">map_fg_marker</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.map_fg_marker" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.map_fg_prev_selected_marker">
+<span class="sig-name descname"><span class="pre">map_fg_prev_selected_marker</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.map_fg_prev_selected_marker" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.map_height">
+<span class="sig-name descname"><span class="pre">map_height</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">500</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.map_height" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.map_output">
+<span class="sig-name descname"><span class="pre">map_output</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.map_output" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.marker_info">
+<span class="sig-name descname"><span class="pre">marker_info</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.marker_info" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.page_type">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">page_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.page_type" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.prev_step_type">
+<span class="sig-name descname"><span class="pre">prev_step_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="modules/seed_vault.enums.html#seed_vault.enums.ui.Steps" title="seed_vault.enums.ui.Steps"><code class="xref py py-class docutils literal notranslate"><span class="pre">Steps</span></code></a></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.prev_step_type" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.refresh_map">
+<span class="sig-name descname"><span class="pre">refresh_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reset_areas</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clear_draw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rerun</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">get_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recreate_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.refresh_map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.refresh_map" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.refresh_map_selection">
+<span class="sig-name descname"><span class="pre">refresh_map_selection</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.refresh_map_selection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.refresh_map_selection" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.render">
+<span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.render" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.render_actions_side_menu">
+<span class="sig-name descname"><span class="pre">render_actions_side_menu</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.render_actions_side_menu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.render_actions_side_menu" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.render_data_table">
+<span class="sig-name descname"><span class="pre">render_data_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c5_map</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.render_data_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.render_data_table" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.render_export_import">
+<span class="sig-name descname"><span class="pre">render_export_import</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.render_export_import"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.render_export_import" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.render_map">
+<span class="sig-name descname"><span class="pre">render_map</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.render_map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.render_map" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.render_map_buttons">
+<span class="sig-name descname"><span class="pre">render_map_buttons</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.render_map_buttons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.render_map_buttons" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.render_map_right_menu">
+<span class="sig-name descname"><span class="pre">render_map_right_menu</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.render_map_right_menu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.render_map_right_menu" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.render_marker_select">
+<span class="sig-name descname"><span class="pre">render_marker_select</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.render_marker_select"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.render_marker_select" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.reset_markers">
+<span class="sig-name descname"><span class="pre">reset_markers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.reset_markers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.reset_markers" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.set_geo_constraint">
+<span class="sig-name descname"><span class="pre">set_geo_constraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geo_constraint</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.set_geo_constraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.set_geo_constraint" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.settings">
+<span class="sig-name descname"><span class="pre">settings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings"><code class="xref py py-class docutils literal notranslate"><span class="pre">SeismoLoaderSettings</span></code></a></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.settings" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.stage">
+<span class="sig-name descname"><span class="pre">stage</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.stage" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.station_filter">
+<span class="sig-name descname"><span class="pre">station_filter</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.station_filter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.station_filter" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.step_type">
+<span class="sig-name descname"><span class="pre">step_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="modules/seed_vault.enums.html#seed_vault.enums.ui.Steps" title="seed_vault.enums.ui.Steps"><code class="xref py py-class docutils literal notranslate"><span class="pre">Steps</span></code></a></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.step_type" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.sync_df_markers_with_df_edit">
+<span class="sig-name descname"><span class="pre">sync_df_markers_with_df_edit</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.sync_df_markers_with_df_edit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.sync_df_markers_with_df_edit" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.trigger_error">
+<span class="sig-name descname"><span class="pre">trigger_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.trigger_error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.trigger_error" title="Link to this definition"></a></dt>
+<dd><p>Set an error message in session state to be displayed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.update_area_around_prev_step_selections">
+<span class="sig-name descname"><span class="pre">update_area_around_prev_step_selections</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min_radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_radius</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.update_area_around_prev_step_selections"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.update_area_around_prev_step_selections" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.update_circle_areas">
+<span class="sig-name descname"><span class="pre">update_circle_areas</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.update_circle_areas"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.update_circle_areas" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.update_filter_geometry">
+<span class="sig-name descname"><span class="pre">update_filter_geometry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geo_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geo_constraint</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.update_filter_geometry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.update_filter_geometry" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.update_rectangle_areas">
+<span class="sig-name descname"><span class="pre">update_rectangle_areas</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.update_rectangle_areas"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.update_rectangle_areas" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.update_selected_data">
+<span class="sig-name descname"><span class="pre">update_selected_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.update_selected_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.update_selected_data" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.warning">
+<span class="sig-name descname"><span class="pre">warning</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.warning" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.watch_all_drawings">
+<span class="sig-name descname"><span class="pre">watch_all_drawings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_drawings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.watch_all_drawings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.watch_all_drawings" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponentTexts">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.base.</span></span><span class="sig-name descname"><span class="pre">BaseComponentTexts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponentTexts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponentTexts" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponentTexts.CLEAR_ALL_MAP_DATA">
+<span class="sig-name descname"><span class="pre">CLEAR_ALL_MAP_DATA</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Clear</span> <span class="pre">All'</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponentTexts.CLEAR_ALL_MAP_DATA" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponentTexts.CONFIG_EVENT_FILE">
+<span class="sig-name descname"><span class="pre">CONFIG_EVENT_FILE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'config_event'</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponentTexts.CONFIG_EVENT_FILE" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponentTexts.CONFIG_STATION_FILE">
+<span class="sig-name descname"><span class="pre">CONFIG_STATION_FILE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'config_station'</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponentTexts.CONFIG_STATION_FILE" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponentTexts.CONFIG_TEMPLATE_FILE">
+<span class="sig-name descname"><span class="pre">CONFIG_TEMPLATE_FILE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'config_template.cfg'</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponentTexts.CONFIG_TEMPLATE_FILE" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponentTexts.DOWNLOAD_CONFIG">
+<span class="sig-name descname"><span class="pre">DOWNLOAD_CONFIG</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Download</span> <span class="pre">Config'</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponentTexts.DOWNLOAD_CONFIG" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponentTexts.SAVE_CONFIG">
+<span class="sig-name descname"><span class="pre">SAVE_CONFIG</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Save</span> <span class="pre">Config'</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponentTexts.SAVE_CONFIG" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </section>
-<section id="seed-vault-ui-components-card-module">
-<h2>seed_vault.ui.components.card module<a class="headerlink" href="#seed-vault-ui-components-card-module" title="Link to this heading"></a></h2>
+<section id="module-seed_vault.ui.components.card">
+<span id="seed-vault-ui-components-card-module"></span><h2>seed_vault.ui.components.card module<a class="headerlink" href="#module-seed_vault.ui.components.card" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.ui.components.card.create_card">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.card.</span></span><span class="sig-name descname"><span class="pre">create_card</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enforce_padding</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">content_func</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/card.html#create_card"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.card.create_card" title="Link to this definition"></a></dt>
+<dd><p>Creates a styled card container to display content in Streamlit.</p>
+<p>Args:
+content_func (callable): A function that generates the content to be displayed inside the card.
+args, kwargs: Arguments and keyword arguments to be passed to content_func.
+enforce_padding: puts the content in columns to enforce artificial padding.</p>
+</dd></dl>
+
 </section>
-<section id="seed-vault-ui-components-continuous-waveform-module">
-<h2>seed_vault.ui.components.continuous_waveform module<a class="headerlink" href="#seed-vault-ui-components-continuous-waveform-module" title="Link to this heading"></a></h2>
+<section id="module-seed_vault.ui.components.continuous_waveform">
+<span id="seed-vault-ui-components-continuous-waveform-module"></span><h2>seed_vault.ui.components.continuous_waveform module<a class="headerlink" href="#module-seed_vault.ui.components.continuous_waveform" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousComponents">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.continuous_waveform.</span></span><span class="sig-name descname"><span class="pre">ContinuousComponents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/continuous_waveform.html#ContinuousComponents"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousComponents" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousComponents.render">
+<span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/continuous_waveform.html#ContinuousComponents.render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousComponents.render" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousDisplay">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.continuous_waveform.</span></span><span class="sig-name descname"><span class="pre">ContinuousDisplay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_menu</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/continuous_waveform.html#ContinuousDisplay"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousDisplay" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousDisplay.process_continuous_data">
+<span class="sig-name descname"><span class="pre">process_continuous_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/continuous_waveform.html#ContinuousDisplay.process_continuous_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousDisplay.process_continuous_data" title="Link to this definition"></a></dt>
+<dd><p>Process continuous data with console output</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousDisplay.render">
+<span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/continuous_waveform.html#ContinuousDisplay.render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousDisplay.render" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.continuous_waveform.</span></span><span class="sig-name descname"><span class="pre">ContinuousFilterMenu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/continuous_waveform.html#ContinuousFilterMenu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu.render">
+<span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/continuous_waveform.html#ContinuousFilterMenu.render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu.render" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </section>
-<section id="seed-vault-ui-components-data-explorer-module">
-<h2>seed_vault.ui.components.data_explorer module<a class="headerlink" href="#seed-vault-ui-components-data-explorer-module" title="Link to this heading"></a></h2>
+<section id="module-seed_vault.ui.components.data_explorer">
+<span id="seed-vault-ui-components-data-explorer-module"></span><h2>seed_vault.ui.components.data_explorer module<a class="headerlink" href="#module-seed_vault.ui.components.data_explorer" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.ui.components.data_explorer.DataExplorerComponent">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.data_explorer.</span></span><span class="sig-name descname"><span class="pre">DataExplorerComponent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/data_explorer.html#DataExplorerComponent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.data_explorer.DataExplorerComponent" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.data_explorer.DataExplorerComponent.db_manager">
+<span class="sig-name descname"><span class="pre">db_manager</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="seed_vault.service.html#seed_vault.service.db.DatabaseManager" title="seed_vault.service.db.DatabaseManager"><code class="xref py py-class docutils literal notranslate"><span class="pre">DatabaseManager</span></code></a></em><a class="headerlink" href="#seed_vault.ui.components.data_explorer.DataExplorerComponent.db_manager" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.data_explorer.DataExplorerComponent.queries">
+<span class="sig-name descname"><span class="pre">queries</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">deque</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code><span class="pre">]</span></em><a class="headerlink" href="#seed_vault.ui.components.data_explorer.DataExplorerComponent.queries" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.data_explorer.DataExplorerComponent.render">
+<span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/data_explorer.html#DataExplorerComponent.render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.data_explorer.DataExplorerComponent.render" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.data_explorer.DataExplorerComponent.render_example_queries">
+<span class="sig-name descname"><span class="pre">render_example_queries</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/data_explorer.html#DataExplorerComponent.render_example_queries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.data_explorer.DataExplorerComponent.render_example_queries" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.data_explorer.DataExplorerComponent.render_query">
+<span class="sig-name descname"><span class="pre">render_query</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/data_explorer.html#DataExplorerComponent.render_query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.data_explorer.DataExplorerComponent.render_query" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.data_explorer.DataExplorerComponent.render_query_history">
+<span class="sig-name descname"><span class="pre">render_query_history</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/data_explorer.html#DataExplorerComponent.render_query_history"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.data_explorer.DataExplorerComponent.render_query_history" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.data_explorer.DataExplorerComponent.render_schema">
+<span class="sig-name descname"><span class="pre">render_schema</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/data_explorer.html#DataExplorerComponent.render_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.data_explorer.DataExplorerComponent.render_schema" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.data_explorer.DataExplorerComponent.settings">
+<span class="sig-name descname"><span class="pre">settings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings"><code class="xref py py-class docutils literal notranslate"><span class="pre">SeismoLoaderSettings</span></code></a></em><a class="headerlink" href="#seed_vault.ui.components.data_explorer.DataExplorerComponent.settings" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.ui.components.data_explorer.get_queries">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.data_explorer.</span></span><span class="sig-name descname"><span class="pre">get_queries</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/data_explorer.html#get_queries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.data_explorer.get_queries" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">deque</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.ui.components.data_explorer.match_pk_fk">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.data_explorer.</span></span><span class="sig-name descname"><span class="pre">match_pk_fk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/data_explorer.html#match_pk_fk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.data_explorer.match_pk_fk" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.ui.components.data_explorer.rename_duplicate_cols">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.data_explorer.</span></span><span class="sig-name descname"><span class="pre">rename_duplicate_cols</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_frame</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/data_explorer.html#rename_duplicate_cols"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.data_explorer.rename_duplicate_cols" title="Link to this definition"></a></dt>
+<dd><p>for each duplicated column it will add a suffix with a number (col, col_2, col_3… )</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data_frame</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span>) – DataFrame</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
-<section id="seed-vault-ui-components-display-log-module">
-<h2>seed_vault.ui.components.display_log module<a class="headerlink" href="#seed-vault-ui-components-display-log-module" title="Link to this heading"></a></h2>
+<section id="module-seed_vault.ui.components.display_log">
+<span id="seed-vault-ui-components-display-log-module"></span><h2>seed_vault.ui.components.display_log module<a class="headerlink" href="#module-seed_vault.ui.components.display_log" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.ui.components.display_log.ConsoleDisplay">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.display_log.</span></span><span class="sig-name descname"><span class="pre">ConsoleDisplay</span></span><a class="reference internal" href="_modules/seed_vault/ui/components/display_log.html#ConsoleDisplay"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.display_log.ConsoleDisplay" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.display_log.ConsoleDisplay.run_with_logs">
+<span class="sig-name descname"><span class="pre">run_with_logs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">process_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status_message</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Processing...'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/display_log.html#ConsoleDisplay.run_with_logs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.display_log.ConsoleDisplay.run_with_logs" title="Link to this definition"></a></dt>
+<dd><p>Run a process with terminal-style logging</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>process_func</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></span>) – Function to execute</p></li>
+<li><p><strong>status_message</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Status message to display</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(success status, error message if any)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[bool, str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
-<section id="seed-vault-ui-components-map-module">
-<h2>seed_vault.ui.components.map module<a class="headerlink" href="#seed-vault-ui-components-map-module" title="Link to this heading"></a></h2>
+<section id="module-seed_vault.ui.components.map">
+<span id="seed-vault-ui-components-map-module"></span><h2>seed_vault.ui.components.map module<a class="headerlink" href="#module-seed_vault.ui.components.map" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.ui.components.map.AddMapDraw">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.map.</span></span><span class="sig-name descname"><span class="pre">AddMapDraw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_drawings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/map.html#AddMapDraw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.map.AddMapDraw" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">MacroElement</span></code></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.ui.components.map.ClearMapDraw">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.map.</span></span><span class="sig-name descname"><span class="pre">ClearMapDraw</span></span><a class="reference internal" href="_modules/seed_vault/ui/components/map.html#ClearMapDraw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.map.ClearMapDraw" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">MacroElement</span></code></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.ui.components.map.DrawEventHandler">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.map.</span></span><span class="sig-name descname"><span class="pre">DrawEventHandler</span></span><a class="reference internal" href="_modules/seed_vault/ui/components/map.html#DrawEventHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.map.DrawEventHandler" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">MacroElement</span></code></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.ui.components.map.add_area_overlays">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.map.</span></span><span class="sig-name descname"><span class="pre">add_area_overlays</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">areas</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/map.html#add_area_overlays"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.map.add_area_overlays" title="Link to this definition"></a></dt>
+<dd><p>Add overlays representing areas (Rectangles or Circles) to the map.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.ui.components.map.add_circle_area">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.map.</span></span><span class="sig-name descname"><span class="pre">add_circle_area</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_group</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/map.html#add_circle_area"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.map.add_circle_area" title="Link to this definition"></a></dt>
+<dd><p>Add circle area (inner and outer) to the feature group.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.ui.components.map.add_data_points">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.map.</span></span><span class="sig-name descname"><span class="pre">add_data_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cols_to_disp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/map.html#add_data_points"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.map.add_data_points" title="Link to this definition"></a></dt>
+<dd><p>Add points to map</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.ui.components.map.add_draw_controls">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.map.</span></span><span class="sig-name descname"><span class="pre">add_draw_controls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">map_object</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/map.html#add_draw_controls"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.map.add_draw_controls" title="Link to this definition"></a></dt>
+<dd><p>Add draw controls to the map.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.ui.components.map.add_fullscreen_control">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.map.</span></span><span class="sig-name descname"><span class="pre">add_fullscreen_control</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">map_object</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/map.html#add_fullscreen_control"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.map.add_fullscreen_control" title="Link to this definition"></a></dt>
+<dd><p>Add fullscreen control to the map.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.ui.components.map.add_map_draw">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.map.</span></span><span class="sig-name descname"><span class="pre">add_map_draw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">map_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">areas</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/map.html#add_map_draw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.map.add_map_draw" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.ui.components.map.add_marker_to_cluster">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.map.</span></span><span class="sig-name descname"><span class="pre">add_marker_to_cluster</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">longitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_color</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fill_opacity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">popup</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/map.html#add_marker_to_cluster"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.map.add_marker_to_cluster" title="Link to this definition"></a></dt>
+<dd><p>Add a marker to a cluster with specific attributes.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.ui.components.map.clear_map_draw">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.map.</span></span><span class="sig-name descname"><span class="pre">clear_map_draw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">map_object</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/map.html#clear_map_draw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.map.clear_map_draw" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.ui.components.map.clear_map_layers">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.map.</span></span><span class="sig-name descname"><span class="pre">clear_map_layers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">map_object</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/map.html#clear_map_layers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.map.clear_map_layers" title="Link to this definition"></a></dt>
+<dd><p>Remove all FeatureGroup layers from the map object.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.ui.components.map.create_map">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.map.</span></span><span class="sig-name descname"><span class="pre">create_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">map_center</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[-25.0,</span> <span class="pre">135.0]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zoom_start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">map_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/map.html#create_map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.map.create_map" title="Link to this definition"></a></dt>
+<dd><p>Create a base map with controls but without dynamic layers.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.ui.components.map.create_popup">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.map.</span></span><span class="sig-name descname"><span class="pre">create_popup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">row</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cols_to_disp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/map.html#create_popup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.map.create_popup" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.ui.components.map.get_color_map">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.map.</span></span><span class="sig-name descname"><span class="pre">get_color_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'viridis'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/map.html#get_color_map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.map.get_color_map" title="Link to this definition"></a></dt>
+<dd><p>offset: 0.0 &lt;= offset &lt;= 1   -&gt; it is used to lower the range of colors</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.ui.components.map.get_marker_color">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.map.</span></span><span class="sig-name descname"><span class="pre">get_marker_color</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">magnitude</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/map.html#get_marker_color"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.map.get_marker_color" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.ui.components.map.get_marker_size">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.map.</span></span><span class="sig-name descname"><span class="pre">get_marker_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">magnitude</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/map.html#get_marker_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.map.get_marker_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.ui.components.map.normalize_bounds">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.map.</span></span><span class="sig-name descname"><span class="pre">normalize_bounds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry_constraint</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/map.html#normalize_bounds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.map.normalize_bounds" title="Link to this definition"></a></dt>
+<dd><p>Split bounds of a GeometryConstraint that crosses the 180° meridian or falls partly in a mirrored instance.</p>
+<p>Args:
+- geometry_constraint: A GeometryConstraint instance containing RectangleArea bounds.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.GeometryConstraint" title="seed_vault.models.config.GeometryConstraint"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeometryConstraint</span></code></a>]</span></p>
+</dd>
+</dl>
+<p>Returns:
+- A list of GeometryConstraint instances. If the rectangle crosses the 180° meridian or falls in a mirrored instance,</p>
+<blockquote>
+<div><p>it will return one or two GeometryConstraints.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.ui.components.map.normalize_circle">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.map.</span></span><span class="sig-name descname"><span class="pre">normalize_circle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry_constraint</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/map.html#normalize_circle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.map.normalize_circle" title="Link to this definition"></a></dt>
+<dd><p>Normalize circle bounds for circles that are completely located in the left or right mirrored instance.</p>
+<p>Args:
+- geometry_constraint: A GeometryConstraint instance containing CircleArea bounds.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.GeometryConstraint" title="seed_vault.models.config.GeometryConstraint"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeometryConstraint</span></code></a>]</span></p>
+</dd>
+</dl>
+<p>Returns:
+- A list with the normalized GeometryConstraint instance. If the circle falls entirely within the left or right mirrored instance,</p>
+<blockquote>
+<div><p>the longitude will be adjusted to bring it within the [-180, 180] range.</p>
+</div></blockquote>
+</dd></dl>
+
 </section>
-<section id="seed-vault-ui-components-run-from-config-module">
-<h2>seed_vault.ui.components.run_from_config module<a class="headerlink" href="#seed-vault-ui-components-run-from-config-module" title="Link to this heading"></a></h2>
+<section id="module-seed_vault.ui.components.run_from_config">
+<span id="seed-vault-ui-components-run-from-config-module"></span><h2>seed_vault.ui.components.run_from_config module<a class="headerlink" href="#module-seed_vault.ui.components.run_from_config" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.ui.components.run_from_config.RunFromConfigComponent">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.run_from_config.</span></span><span class="sig-name descname"><span class="pre">RunFromConfigComponent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/run_from_config.html#RunFromConfigComponent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.run_from_config.RunFromConfigComponent" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.run_from_config.RunFromConfigComponent.config_str">
+<span class="sig-name descname"><span class="pre">config_str</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#seed_vault.ui.components.run_from_config.RunFromConfigComponent.config_str" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.run_from_config.RunFromConfigComponent.edited_config_str">
+<span class="sig-name descname"><span class="pre">edited_config_str</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#seed_vault.ui.components.run_from_config.RunFromConfigComponent.edited_config_str" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.run_from_config.RunFromConfigComponent.is_editing">
+<span class="sig-name descname"><span class="pre">is_editing</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#seed_vault.ui.components.run_from_config.RunFromConfigComponent.is_editing" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.run_from_config.RunFromConfigComponent.process_run_main">
+<span class="sig-name descname"><span class="pre">process_run_main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">from_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/run_from_config.html#RunFromConfigComponent.process_run_main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.run_from_config.RunFromConfigComponent.process_run_main" title="Link to this definition"></a></dt>
+<dd><p>Process direct run from config with console output</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.run_from_config.RunFromConfigComponent.render">
+<span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/run_from_config.html#RunFromConfigComponent.render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.run_from_config.RunFromConfigComponent.render" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.run_from_config.RunFromConfigComponent.render_config">
+<span class="sig-name descname"><span class="pre">render_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/run_from_config.html#RunFromConfigComponent.render_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.run_from_config.RunFromConfigComponent.render_config" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.run_from_config.RunFromConfigComponent.settings">
+<span class="sig-name descname"><span class="pre">settings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings"><code class="xref py py-class docutils literal notranslate"><span class="pre">SeismoLoaderSettings</span></code></a></em><a class="headerlink" href="#seed_vault.ui.components.run_from_config.RunFromConfigComponent.settings" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </section>
-<section id="seed-vault-ui-components-settings-module">
-<h2>seed_vault.ui.components.settings module<a class="headerlink" href="#seed-vault-ui-components-settings-module" title="Link to this heading"></a></h2>
+<section id="module-seed_vault.ui.components.settings">
+<span id="seed-vault-ui-components-settings-module"></span><h2>seed_vault.ui.components.settings module<a class="headerlink" href="#module-seed_vault.ui.components.settings" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.ui.components.settings.SettingsComponent">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.settings.</span></span><span class="sig-name descname"><span class="pre">SettingsComponent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/settings.html#SettingsComponent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.settings.SettingsComponent" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.settings.SettingsComponent.add_credential">
+<span class="sig-name descname"><span class="pre">add_credential</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/settings.html#SettingsComponent.add_credential"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.settings.SettingsComponent.add_credential" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.settings.SettingsComponent.df_clients">
+<span class="sig-name descname"><span class="pre">df_clients</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#seed_vault.ui.components.settings.SettingsComponent.df_clients" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.settings.SettingsComponent.is_new_cred_added">
+<span class="sig-name descname"><span class="pre">is_new_cred_added</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#seed_vault.ui.components.settings.SettingsComponent.is_new_cred_added" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.settings.SettingsComponent.render">
+<span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/settings.html#SettingsComponent.render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.settings.SettingsComponent.render" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.settings.SettingsComponent.render_auth">
+<span class="sig-name descname"><span class="pre">render_auth</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/settings.html#SettingsComponent.render_auth"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.settings.SettingsComponent.render_auth" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.settings.SettingsComponent.render_clients">
+<span class="sig-name descname"><span class="pre">render_clients</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/settings.html#SettingsComponent.render_clients"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.settings.SettingsComponent.render_clients" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.settings.SettingsComponent.render_db">
+<span class="sig-name descname"><span class="pre">render_db</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/settings.html#SettingsComponent.render_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.settings.SettingsComponent.render_db" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.settings.SettingsComponent.reset_config">
+<span class="sig-name descname"><span class="pre">reset_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/settings.html#SettingsComponent.reset_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.settings.SettingsComponent.reset_config" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.settings.SettingsComponent.reset_is_new_cred_added">
+<span class="sig-name descname"><span class="pre">reset_is_new_cred_added</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/settings.html#SettingsComponent.reset_is_new_cred_added"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.settings.SettingsComponent.reset_is_new_cred_added" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.settings.SettingsComponent.settings">
+<span class="sig-name descname"><span class="pre">settings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings"><code class="xref py py-class docutils literal notranslate"><span class="pre">SeismoLoaderSettings</span></code></a></em><a class="headerlink" href="#seed_vault.ui.components.settings.SettingsComponent.settings" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </section>
-<section id="seed-vault-ui-components-waveform-module">
-<h2>seed_vault.ui.components.waveform module<a class="headerlink" href="#seed-vault-ui-components-waveform-module" title="Link to this heading"></a></h2>
+<section id="module-seed_vault.ui.components.waveform">
+<span id="seed-vault-ui-components-waveform-module"></span><h2>seed_vault.ui.components.waveform module<a class="headerlink" href="#module-seed_vault.ui.components.waveform" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.MissingDataDisplay">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.waveform.</span></span><span class="sig-name descname"><span class="pre">MissingDataDisplay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">streams</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#MissingDataDisplay"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.MissingDataDisplay" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.MissingDataDisplay.render">
+<span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#MissingDataDisplay.render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.MissingDataDisplay.render" title="Link to this definition"></a></dt>
+<dd><p>Display missing event information in a table format</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformComponents">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.waveform.</span></span><span class="sig-name descname"><span class="pre">WaveformComponents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#WaveformComponents"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformComponents" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformComponents.continuous_components">
+<span class="sig-name descname"><span class="pre">continuous_components</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#seed_vault.ui.components.continuous_waveform.ContinuousComponents" title="seed_vault.ui.components.continuous_waveform.ContinuousComponents"><code class="xref py py-class docutils literal notranslate"><span class="pre">ContinuousComponents</span></code></a></em><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformComponents.continuous_components" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformComponents.filter_menu">
+<span class="sig-name descname"><span class="pre">filter_menu</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#seed_vault.ui.components.waveform.WaveformFilterMenu" title="seed_vault.ui.components.waveform.WaveformFilterMenu"><code class="xref py py-class docutils literal notranslate"><span class="pre">WaveformFilterMenu</span></code></a></em><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformComponents.filter_menu" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformComponents.render">
+<span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#WaveformComponents.render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformComponents.render" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformComponents.settings">
+<span class="sig-name descname"><span class="pre">settings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings"><code class="xref py py-class docutils literal notranslate"><span class="pre">SeismoLoaderSettings</span></code></a></em><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformComponents.settings" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformComponents.waveform_display">
+<span class="sig-name descname"><span class="pre">waveform_display</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#seed_vault.ui.components.waveform.WaveformDisplay" title="seed_vault.ui.components.waveform.WaveformDisplay"><code class="xref py py-class docutils literal notranslate"><span class="pre">WaveformDisplay</span></code></a></em><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformComponents.waveform_display" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformDisplay">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.waveform.</span></span><span class="sig-name descname"><span class="pre">WaveformDisplay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_menu</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#WaveformDisplay"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformDisplay" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformDisplay.apply_filters">
+<span class="sig-name descname"><span class="pre">apply_filters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stream</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#WaveformDisplay.apply_filters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformDisplay.apply_filters" title="Link to this definition"></a></dt>
+<dd><p>Filter stream based on user selection</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Stream</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformDisplay.fetch_data">
+<span class="sig-name descname"><span class="pre">fetch_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#WaveformDisplay.fetch_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformDisplay.fetch_data" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformDisplay.plot_event_view">
+<span class="sig-name descname"><span class="pre">plot_event_view</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stream</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_pages</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#WaveformDisplay.plot_event_view"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformDisplay.plot_event_view" title="Link to this definition"></a></dt>
+<dd><p>Plot event view with proper time alignment and improved layout</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformDisplay.plot_station_view">
+<span class="sig-name descname"><span class="pre">plot_station_view</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">station_code</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stream</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_pages</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#WaveformDisplay.plot_station_view"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformDisplay.plot_station_view" title="Link to this definition"></a></dt>
+<dd><p>Plot station view with event information</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformDisplay.render">
+<span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#WaveformDisplay.render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformDisplay.render" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformDisplay.retrieve_waveforms">
+<span class="sig-name descname"><span class="pre">retrieve_waveforms</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#WaveformDisplay.retrieve_waveforms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformDisplay.retrieve_waveforms" title="Link to this definition"></a></dt>
+<dd><p>Retrieve waveforms and store as ObsPy streams</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformFilterMenu">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.waveform.</span></span><span class="sig-name descname"><span class="pre">WaveformFilterMenu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#WaveformFilterMenu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformFilterMenu" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformFilterMenu.available_channels">
+<span class="sig-name descname"><span class="pre">available_channels</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformFilterMenu.available_channels" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformFilterMenu.channel_filter">
+<span class="sig-name descname"><span class="pre">channel_filter</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformFilterMenu.channel_filter" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformFilterMenu.display_limit">
+<span class="sig-name descname"><span class="pre">display_limit</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformFilterMenu.display_limit" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformFilterMenu.network_filter">
+<span class="sig-name descname"><span class="pre">network_filter</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformFilterMenu.network_filter" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformFilterMenu.render">
+<span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stream</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#WaveformFilterMenu.render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformFilterMenu.render" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformFilterMenu.settings">
+<span class="sig-name descname"><span class="pre">settings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings"><code class="xref py py-class docutils literal notranslate"><span class="pre">SeismoLoaderSettings</span></code></a></em><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformFilterMenu.settings" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformFilterMenu.station_filter">
+<span class="sig-name descname"><span class="pre">station_filter</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformFilterMenu.station_filter" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformFilterMenu.update_available_channels">
+<span class="sig-name descname"><span class="pre">update_available_channels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stream</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#WaveformFilterMenu.update_available_channels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformFilterMenu.update_available_channels" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.get_tele_filter">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.waveform.</span></span><span class="sig-name descname"><span class="pre">get_tele_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#get_tele_filter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.get_tele_filter" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 </section>
-<section id="seed-vault-ui-components-workflows-combined-module">
-<h2>seed_vault.ui.components.workflows_combined module<a class="headerlink" href="#seed-vault-ui-components-workflows-combined-module" title="Link to this heading"></a></h2>
+<section id="module-seed_vault.ui.components.workflows_combined">
+<span id="seed-vault-ui-components-workflows-combined-module"></span><h2>seed_vault.ui.components.workflows_combined module<a class="headerlink" href="#module-seed_vault.ui.components.workflows_combined" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.workflows_combined.</span></span><span class="sig-name descname"><span class="pre">CombinedBasedWorkflow</span></span><a class="reference internal" href="_modules/seed_vault/ui/components/workflows_combined.html#CombinedBasedWorkflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.err_message">
+<span class="sig-name descname"><span class="pre">err_message</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></em><a class="headerlink" href="#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.err_message" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.event_components">
+<span class="sig-name descname"><span class="pre">event_components</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#seed_vault.ui.components.base.BaseComponent" title="seed_vault.ui.components.base.BaseComponent"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseComponent</span></code></a></em><a class="headerlink" href="#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.event_components" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.has_error">
+<span class="sig-name descname"><span class="pre">has_error</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.has_error" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.init_settings">
+<span class="sig-name descname"><span class="pre">init_settings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">selected_flow_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/workflows_combined.html#CombinedBasedWorkflow.init_settings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.init_settings" title="Link to this definition"></a></dt>
+<dd><p>See description in render_stage_0.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.next_stage">
+<span class="sig-name descname"><span class="pre">next_stage</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/workflows_combined.html#CombinedBasedWorkflow.next_stage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.next_stage" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.previous_stage">
+<span class="sig-name descname"><span class="pre">previous_stage</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/workflows_combined.html#CombinedBasedWorkflow.previous_stage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.previous_stage" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.render">
+<span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/workflows_combined.html#CombinedBasedWorkflow.render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.render" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.render_stage_0">
+<span class="sig-name descname"><span class="pre">render_stage_0</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/workflows_combined.html#CombinedBasedWorkflow.render_stage_0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.render_stage_0" title="Link to this definition"></a></dt>
+<dd><p>ToDo: We probably need a settings clean up in this stage,
+to ensure if user changes Flow Type, geometry selections and
+selected events + stations are cleaned for a fresh start of a
+new flow. Probably, we only need the clean up, if Flow Type selection
+changes. Also, probably, we do not need clean up on the filter settings
+(we actually may need to keep the filters as is).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.render_stage_1">
+<span class="sig-name descname"><span class="pre">render_stage_1</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/workflows_combined.html#CombinedBasedWorkflow.render_stage_1"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.render_stage_1" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.render_stage_2">
+<span class="sig-name descname"><span class="pre">render_stage_2</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/workflows_combined.html#CombinedBasedWorkflow.render_stage_2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.render_stage_2" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.render_stage_3">
+<span class="sig-name descname"><span class="pre">render_stage_3</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/workflows_combined.html#CombinedBasedWorkflow.render_stage_3"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.render_stage_3" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.settings">
+<span class="sig-name descname"><span class="pre">settings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings"><code class="xref py py-class docutils literal notranslate"><span class="pre">SeismoLoaderSettings</span></code></a></em><a class="headerlink" href="#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.settings" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.stage">
+<span class="sig-name descname"><span class="pre">stage</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.stage" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.station_components">
+<span class="sig-name descname"><span class="pre">station_components</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#seed_vault.ui.components.base.BaseComponent" title="seed_vault.ui.components.base.BaseComponent"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseComponent</span></code></a></em><a class="headerlink" href="#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.station_components" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.trigger_error">
+<span class="sig-name descname"><span class="pre">trigger_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/workflows_combined.html#CombinedBasedWorkflow.trigger_error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.trigger_error" title="Link to this definition"></a></dt>
+<dd><p>Set an error message in session state to be displayed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.validate_and_adjust_selection">
+<span class="sig-name descname"><span class="pre">validate_and_adjust_selection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">workflow_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/workflows_combined.html#CombinedBasedWorkflow.validate_and_adjust_selection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.validate_and_adjust_selection" title="Link to this definition"></a></dt>
+<dd><p>Validate selection based on workflow type and return True if valid, else trigger error.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.waveform_components">
+<span class="sig-name descname"><span class="pre">waveform_components</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#seed_vault.ui.components.waveform.WaveformComponents" title="seed_vault.ui.components.waveform.WaveformComponents"><code class="xref py py-class docutils literal notranslate"><span class="pre">WaveformComponents</span></code></a></em><a class="headerlink" href="#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.waveform_components" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </section>
 <section id="module-seed_vault.ui.components">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-seed_vault.ui.components" title="Link to this heading"></a></h2>

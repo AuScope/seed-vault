@@ -1,0 +1,369 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>seed_vault.models.common &mdash; Seed Vault 0.1.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=92734c54"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Seed Vault
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../app.html">Seed Vault App</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cli.html">CLI commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../seed_vault.html">seed_vault package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../seed_vault.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../seed_vault.models.html">seed_vault.models package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../seed_vault.service.html">seed_vault.service package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../seed_vault.ui.html">seed_vault.ui package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../seed_vault.utils.html">seed_vault.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../seed_vault.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../seed_vault.html#module-seed_vault.cli">seed_vault.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../seed_vault.html#module-seed_vault">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Seed Vault</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">seed_vault.models.common</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for seed_vault.models.common</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.utils.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">AREA_COLOR</span>
+
+<div class="viewcode-block" id="RectangleArea">
+<a class="viewcode-back" href="../../../seed_vault.models.html#seed_vault.models.common.RectangleArea">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">RectangleArea</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a rectangular area defined by latitude and longitude boundaries.</span>
+
+<span class="sd">    This class is used to define geographic bounding boxes for seismic data analysis.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        min_lat (float): The minimum latitude of the rectangle.</span>
+<span class="sd">        max_lat (float): The maximum latitude of the rectangle.</span>
+<span class="sd">        min_lng (float): The minimum longitude of the rectangle.</span>
+<span class="sd">        max_lng (float): The maximum longitude of the rectangle.</span>
+
+<span class="sd">    Properties:</span>
+<span class="sd">        color (str): Returns the predefined color associated with the area.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">min_lat</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">max_lat</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">min_lng</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">max_lng</span><span class="p">:</span> <span class="nb">float</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">color</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">AREA_COLOR</span>  </div>
+
+
+
+
+<div class="viewcode-block" id="CircleArea">
+<a class="viewcode-back" href="../../../seed_vault.models.html#seed_vault.models.common.CircleArea">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CircleArea</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a circular geographic area for seismic data analysis.</span>
+
+<span class="sd">    This class is used to define circular constraints for selecting seismic data based on </span>
+<span class="sd">    a central point and a radius.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        lat (float): The latitude of the circle&#39;s center.</span>
+<span class="sd">        lng (float): The longitude of the circle&#39;s center.</span>
+<span class="sd">        max_radius (float): The maximum radius of the circle.</span>
+<span class="sd">        min_radius (float, optional): The minimum radius of the circle. Defaults to `0`.</span>
+
+<span class="sd">    Properties:</span>
+<span class="sd">        color (str): Returns the predefined color associated with the area.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lat</span>   <span class="p">:</span> <span class="nb">float</span>
+    <span class="n">lng</span>   <span class="p">:</span> <span class="nb">float</span>
+    <span class="n">max_radius</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">min_radius</span> <span class="p">:</span> <span class="nb">float</span><span class="o">=</span><span class="mi">0</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">color</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">AREA_COLOR</span> </div>
+
+    
+
+<div class="viewcode-block" id="StatusHandler">
+<a class="viewcode-back" href="../../../seed_vault.models.html#seed_vault.models.common.StatusHandler">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">StatusHandler</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Manages warning, error, and log messages categorized by type.</span>
+
+<span class="sd">    This class provides methods for tracking and organizing status messages, including </span>
+<span class="sd">    warnings, errors, and logs, to facilitate debugging and status reporting.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        status (Dict[str, Dict[str, List[str]]]): </span>
+<span class="sd">            A dictionary storing messages categorized under &quot;warnings&quot;, &quot;errors&quot;, and &quot;logs&quot;.</span>
+
+<span class="sd">    Methods:</span>
+<span class="sd">        add_warning(category: str, message: str):</span>
+<span class="sd">            Adds a warning message to a specific category.</span>
+
+<span class="sd">        add_error(category: str, message: str):</span>
+<span class="sd">            Adds an error message to a specific category.</span>
+
+<span class="sd">        add_log(category: str, message: str, level: str = &quot;info&quot;):</span>
+<span class="sd">            Adds a log message with an optional severity level.</span>
+
+<span class="sd">        get_status() -&gt; Dict[str, Dict[str, List[str]]]:</span>
+<span class="sd">            Returns the complete status dictionary.</span>
+
+<span class="sd">        has_errors() -&gt; bool:</span>
+<span class="sd">            Checks if there are any recorded errors.</span>
+
+<span class="sd">        has_warnings() -&gt; bool:</span>
+<span class="sd">            Checks if there are any recorded warnings.</span>
+
+<span class="sd">        display():</span>
+<span class="sd">            Prints all warnings, errors, and logs stored in the status dictionary.</span>
+
+<span class="sd">        generate_status_report(level: str = None) -&gt; str:</span>
+<span class="sd">            Generates a formatted status report, optionally filtering by level.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes the `StatusHandler` with empty dictionaries for warnings, errors, and logs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;warnings&quot;</span><span class="p">:</span> <span class="p">{},</span>
+            <span class="s2">&quot;errors&quot;</span><span class="p">:</span> <span class="p">{},</span>
+            <span class="s2">&quot;logs&quot;</span><span class="p">:</span> <span class="p">{},</span>
+        <span class="p">}</span>
+
+<div class="viewcode-block" id="StatusHandler.add_warning">
+<a class="viewcode-back" href="../../../seed_vault.models.html#seed_vault.models.common.StatusHandler.add_warning">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_warning</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">category</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adds a warning message to a specific category in the status dictionary.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            category (str): The category under which the warning should be stored.</span>
+<span class="sd">            message (str): The warning message to add.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">category</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s2">&quot;warnings&quot;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s2">&quot;warnings&quot;</span><span class="p">][</span><span class="n">category</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s2">&quot;warnings&quot;</span><span class="p">][</span><span class="n">category</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_format_message</span><span class="p">(</span><span class="s2">&quot;Warning&quot;</span><span class="p">,</span> <span class="n">message</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="StatusHandler.add_error">
+<a class="viewcode-back" href="../../../seed_vault.models.html#seed_vault.models.common.StatusHandler.add_error">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">category</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adds an error message to a specific category in the status dictionary.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            category (str): The category under which the error should be stored.</span>
+<span class="sd">            message (str): The error message to add.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">category</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s2">&quot;errors&quot;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s2">&quot;errors&quot;</span><span class="p">][</span><span class="n">category</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s2">&quot;errors&quot;</span><span class="p">][</span><span class="n">category</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_format_message</span><span class="p">(</span><span class="s2">&quot;Error&quot;</span><span class="p">,</span> <span class="n">message</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="StatusHandler.add_log">
+<a class="viewcode-back" href="../../../seed_vault.models.html#seed_vault.models.common.StatusHandler.add_log">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">category</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">level</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;info&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adds a log message to a specific category with an optional severity level.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            category (str): The category under which the log should be stored.</span>
+<span class="sd">            message (str): The log message to add.</span>
+<span class="sd">            level (str, optional): The severity level of the log (e.g., &quot;info&quot;, &quot;warning&quot;, &quot;error&quot;).</span>
+<span class="sd">                                   Defaults to `&quot;info&quot;`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">category</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s2">&quot;logs&quot;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s2">&quot;logs&quot;</span><span class="p">][</span><span class="n">category</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s2">&quot;logs&quot;</span><span class="p">][</span><span class="n">category</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_format_message</span><span class="p">(</span><span class="n">level</span><span class="o">.</span><span class="n">capitalize</span><span class="p">(),</span> <span class="n">message</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="StatusHandler.get_status">
+<a class="viewcode-back" href="../../../seed_vault.models.html#seed_vault.models.common.StatusHandler.get_status">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_status</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the full status dictionary containing warnings, errors, and logs.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dict[str, Dict[str, List[str]]]: The complete status dictionary.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span></div>
+
+
+<div class="viewcode-block" id="StatusHandler.has_errors">
+<a class="viewcode-back" href="../../../seed_vault.models.html#seed_vault.models.common.StatusHandler.has_errors">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_errors</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks if there are any recorded error messages.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: `True` if there are errors, `False` otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">messages</span> <span class="k">for</span> <span class="n">messages</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s2">&quot;errors&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="StatusHandler.has_warnings">
+<a class="viewcode-back" href="../../../seed_vault.models.html#seed_vault.models.common.StatusHandler.has_warnings">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_warnings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks if there are any recorded warning messages.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: `True` if there are warnings, `False` otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">messages</span> <span class="k">for</span> <span class="n">messages</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s2">&quot;warnings&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">())</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_format_message</span><span class="p">(</span><span class="n">level</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Formats a status message with a given severity level.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            level (str): The severity level of the message (e.g., &quot;Warning&quot;, &quot;Error&quot;, &quot;Info&quot;).</span>
+<span class="sd">            message (str): The actual message content.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: The formatted message string.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
+
+<div class="viewcode-block" id="StatusHandler.display">
+<a class="viewcode-back" href="../../../seed_vault.models.html#seed_vault.models.common.StatusHandler.display">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">display</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Prints all warnings, errors, and logs stored in the status dictionary.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">category</span><span class="p">,</span> <span class="n">subcategories</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">subcategory</span><span class="p">,</span> <span class="n">messages</span> <span class="ow">in</span> <span class="n">subcategories</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">message</span> <span class="ow">in</span> <span class="n">messages</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">category</span><span class="o">.</span><span class="n">capitalize</span><span class="p">()</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">subcategory</span><span class="si">}</span><span class="s2">]: </span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="StatusHandler.generate_status_report">
+<a class="viewcode-back" href="../../../seed_vault.models.html#seed_vault.models.common.StatusHandler.generate_status_report">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_status_report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates a formatted string report of the current status, optionally filtered by a specified level.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            level (str, optional): The status category to filter by (e.g., `&quot;warnings&quot;`, `&quot;errors&quot;`, `&quot;logs&quot;`).</span>
+<span class="sd">                                   If `None`, includes all categories.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: A formatted status report containing warnings, errors, and logs.</span>
+<span class="sd">                 Returns `&quot;No status messages available.&quot;` if no messages are found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">report_lines</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">target_levels</span> <span class="o">=</span> <span class="p">[</span><span class="n">level</span><span class="p">]</span> <span class="k">if</span> <span class="n">level</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">category</span> <span class="ow">in</span> <span class="n">target_levels</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">category</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">report_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;**</span><span class="si">{</span><span class="n">category</span><span class="o">.</span><span class="n">capitalize</span><span class="p">()</span><span class="si">}</span><span class="s2">**&quot;</span><span class="p">)</span>  <span class="c1"># Category header</span>
+            <span class="k">for</span> <span class="n">subcategory</span><span class="p">,</span> <span class="n">messages</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="n">category</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">report_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span> 
+                <span class="k">if</span> <span class="n">messages</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">message</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">messages</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+                        <span class="n">report_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">. </span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># Numbered messages</span>
+
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">report_lines</span><span class="p">)</span> <span class="k">if</span> <span class="n">report_lines</span> <span class="k">else</span> <span class="s2">&quot;No status messages available.&quot;</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, CSIRO.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -58,7 +58,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="seed_vault.html#submodules">Submodules</a></li>
-<li class="toctree-l3"><a class="reference internal" href="seed_vault.html#seed-vault-cli-module">seed_vault.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="seed_vault.html#module-seed_vault.cli">seed_vault.cli module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="seed_vault.html#module-seed_vault">Module contents</a></li>
 </ul>
 </li>
@@ -97,11 +97,163 @@
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
 </section>
-<section id="seed-vault-service-db-module">
-<h2>seed_vault.service.db module<a class="headerlink" href="#seed-vault-service-db-module" title="Link to this heading"></a></h2>
+<section id="module-seed_vault.service.db">
+<span id="seed-vault-service-db-module"></span><h2>seed_vault.service.db module<a class="headerlink" href="#module-seed_vault.service.db" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.service.db.</span></span><span class="sig-name descname"><span class="pre">DatabaseManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/db.html#DatabaseManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.analyze_table">
+<span class="sig-name descname"><span class="pre">analyze_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/db.html#DatabaseManager.analyze_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.analyze_table" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.bulk_insert_archive_data">
+<span class="sig-name descname"><span class="pre">bulk_insert_archive_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">archive_list</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/db.html#DatabaseManager.bulk_insert_archive_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.bulk_insert_archive_data" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.bulk_insert_arrival_data">
+<span class="sig-name descname"><span class="pre">bulk_insert_arrival_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arrival_list</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/db.html#DatabaseManager.bulk_insert_arrival_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.bulk_insert_arrival_data" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.connection">
+<span class="sig-name descname"><span class="pre">connection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_retries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_delay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/db.html#DatabaseManager.connection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.connection" title="Link to this definition"></a></dt>
+<dd><p>Context manager for safe database connections with retry mechanism.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.delete_elements">
+<span class="sig-name descname"><span class="pre">delete_elements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4102444799</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/db.html#DatabaseManager.delete_elements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.delete_elements" title="Link to this definition"></a></dt>
+<dd><p>Delete elements from table_name between start and end_time</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.display_contents">
+<span class="sig-name descname"><span class="pre">display_contents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4102444799</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/db.html#DatabaseManager.display_contents"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.display_contents" title="Link to this definition"></a></dt>
+<dd><p>Display the contents of a specified table within a given time range.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>table_name</strong> – Name of the table to query (e.g., ‘archive_data’ or ‘arrival_data’)</p></li>
+<li><p><strong>starttime</strong> – Start time for the query (can be timestamp, datetime, or UTCDateTime)</p></li>
+<li><p><strong>endtime</strong> – End time for the query (can be timestamp, datetime, or UTCDateTime)</p></li>
+<li><p><strong>limit</strong> – Maximum number of rows to return</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.execute_query">
+<span class="sig-name descname"><span class="pre">execute_query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/db.html#DatabaseManager.execute_query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.execute_query" title="Link to this definition"></a></dt>
+<dd><p>Execute any SQL query and return results along with a flag indicating if it’s tabular data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>query</strong> (<em>str</em>) – SQL query to execute</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(is_data: bool, result: Union[pd.DataFrame, str])
+- is_data: True if query returns tabular data, False otherwise
+- result: DataFrame for SELECT queries, status message for other queries</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.fetch_arrivals">
+<span class="sig-name descname"><span class="pre">fetch_arrivals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">netcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stacode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/db.html#DatabaseManager.fetch_arrivals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.fetch_arrivals" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.fetch_arrivals_distances">
+<span class="sig-name descname"><span class="pre">fetch_arrivals_distances</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">netcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stacode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/db.html#DatabaseManager.fetch_arrivals_distances"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.fetch_arrivals_distances" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.get_arrival_data">
+<span class="sig-name descname"><span class="pre">get_arrival_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">netcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stacode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/db.html#DatabaseManager.get_arrival_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.get_arrival_data" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.get_events_for_station">
+<span class="sig-name descname"><span class="pre">get_events_for_station</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">netcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stacode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/db.html#DatabaseManager.get_events_for_station"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.get_events_for_station" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.get_stations_for_event">
+<span class="sig-name descname"><span class="pre">get_stations_for_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/db.html#DatabaseManager.get_stations_for_event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.get_stations_for_event" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.join_continuous_segments">
+<span class="sig-name descname"><span class="pre">join_continuous_segments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gap_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/db.html#DatabaseManager.join_continuous_segments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.join_continuous_segments" title="Link to this definition"></a></dt>
+<dd><p>Join continuous data segments in the database, even across day boundaries.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>gap_tolerance</strong> – Maximum allowed gap (in seconds) to still consider segments continuous</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.reindex_archive_data">
+<span class="sig-name descname"><span class="pre">reindex_archive_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/db.html#DatabaseManager.reindex_archive_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.reindex_archive_data" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.run_query">
+<span class="sig-name descname"><span class="pre">run_query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/db.html#DatabaseManager.run_query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.run_query" title="Link to this definition"></a></dt>
+<dd><p>Run any query!</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.setup_database">
+<span class="sig-name descname"><span class="pre">setup_database</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/db.html#DatabaseManager.setup_database"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.setup_database" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.vacuum_database">
+<span class="sig-name descname"><span class="pre">vacuum_database</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/db.html#DatabaseManager.vacuum_database"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.vacuum_database" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.db.to_timestamp">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.db.</span></span><span class="sig-name descname"><span class="pre">to_timestamp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time_obj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/db.html#to_timestamp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.to_timestamp" title="Link to this definition"></a></dt>
+<dd><p>Anything to timestamp helper</p>
+</dd></dl>
+
 </section>
-<section id="seed-vault-service-events-module">
-<h2>seed_vault.service.events module<a class="headerlink" href="#seed-vault-service-events-module" title="Link to this heading"></a></h2>
+<section id="module-seed_vault.service.events">
+<span id="seed-vault-service-events-module"></span><h2>seed_vault.service.events module<a class="headerlink" href="#module-seed_vault.service.events" title="Link to this heading"></a></h2>
+<p>The events service should get the events based on a selection (filter) settings.
+UI should generate the selection and pass it here. We need a single function
+here that gets the selection and runs Rob’s script.</p>
+<p>We should also be able to support multi-select areas.</p>
+<p>&#64;TODO: For now, dummy scripts are used. &#64;Yunlong to fix.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.events.event_response_to_df">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.events.</span></span><span class="sig-name descname"><span class="pre">event_response_to_df</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/events.html#event_response_to_df"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.events.event_response_to_df" title="Link to this definition"></a></dt>
+<dd><p>&#64;TODO: base on response from FSDN, below should be re-written</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.events.get_event_data">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.events.</span></span><span class="sig-name descname"><span class="pre">get_event_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/events.html#get_event_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.events.get_event_data" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.events.remove_duplicate_events">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.events.</span></span><span class="sig-name descname"><span class="pre">remove_duplicate_events</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">events</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/events.html#remove_duplicate_events"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.events.remove_duplicate_events" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 </section>
 <section id="module-seed_vault.service.gen_config_models">
 <span id="seed-vault-service-gen-config-models-module"></span><h2>seed_vault.service.gen_config_models module<a class="headerlink" href="#module-seed_vault.service.gen_config_models" title="Link to this heading"></a></h2>
@@ -116,17 +268,354 @@
 <dd></dd></dl>
 
 </section>
-<section id="seed-vault-service-seismoloader-module">
-<h2>seed_vault.service.seismoloader module<a class="headerlink" href="#seed-vault-service-seismoloader-module" title="Link to this heading"></a></h2>
+<section id="module-seed_vault.service.seismoloader">
+<span id="seed-vault-service-seismoloader-module"></span><h2>seed_vault.service.seismoloader module<a class="headerlink" href="#module-seed_vault.service.seismoloader" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.service.seismoloader.CustomConfigParser">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">CustomConfigParser</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/seismoloader.html#CustomConfigParser"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.CustomConfigParser" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ConfigParser</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.service.seismoloader.CustomConfigParser.optionxform">
+<span class="sig-name descname"><span class="pre">optionxform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optionstr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/seismoloader.html#CustomConfigParser.optionxform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.CustomConfigParser.optionxform" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.seismoloader.archive_request">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">archive_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">waveform_clients</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sds_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_manager</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/seismoloader.html#archive_request"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.archive_request" title="Link to this definition"></a></dt>
+<dd><p>Send a request to an FDSN center, parse it, save to archive, and update database</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.seismoloader.collect_requests">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">collect_requests</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">days_per_request</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cha_pref</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loc_pref</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/seismoloader.html#collect_requests"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.collect_requests" title="Link to this definition"></a></dt>
+<dd><p>Collect all requests required to download everything in inventory, split into X-day periods.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.seismoloader.collect_requests_event">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">collect_requests_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/seismoloader.html#collect_requests_event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.collect_requests_event" title="Link to this definition"></a></dt>
+<dd><p>Collect requests for event eq for stations in inv.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.seismoloader.combine_requests">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">combine_requests</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">requests</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/seismoloader.html#combine_requests"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.combine_requests" title="Link to this definition"></a></dt>
+<dd><p>Combine requests for efficiency.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.seismoloader.convert_degrees_to_radius_meter">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">convert_degrees_to_radius_meter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">radius_degree</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/seismoloader.html#convert_degrees_to_radius_meter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.convert_degrees_to_radius_meter" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.seismoloader.convert_degress_to_radius_km">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">convert_degress_to_radius_km</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">radius_degree</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/seismoloader.html#convert_degress_to_radius_km"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.convert_degress_to_radius_km" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.seismoloader.convert_radius_to_degrees">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">convert_radius_to_degrees</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">radius_meters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/seismoloader.html#convert_radius_to_degrees"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.convert_radius_to_degrees" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.seismoloader.get_events">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">get_events</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/seismoloader.html#get_events"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.get_events" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Catalog</span></code>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.seismoloader.get_p_s_times">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">get_p_s_times</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dist_deg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ttmodel</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/seismoloader.html#get_p_s_times"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.get_p_s_times" title="Link to this definition"></a></dt>
+<dd><p>Get first P/S arrivals given an earthquake object, distance, and traveltime model.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.seismoloader.get_preferred_channels">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">get_preferred_channels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cha_rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loc_rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/seismoloader.html#get_preferred_channels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.get_preferred_channels" title="Link to this definition"></a></dt>
+<dd><p>Select the best available channels from an FDSN inventory based on channel and location code rankings.
+If everything is filtered, returns the original station object.
+Channel order before location order.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.seismoloader.get_sds_filenames">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">get_sds_filenames</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sds_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/seismoloader.html#get_sds_filenames"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.get_sds_filenames" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.seismoloader.get_selected_stations_at_channel_level">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">get_selected_stations_at_channel_level</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/seismoloader.html#get_selected_stations_at_channel_level"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.get_selected_stations_at_channel_level" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.seismoloader.get_stations">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">get_stations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/seismoloader.html#get_stations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.get_stations" title="Link to this definition"></a></dt>
+<dd><p>Refine input args to what is needed for get_stations.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.seismoloader.miniseed_to_db_element">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">miniseed_to_db_element</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/seismoloader.html#miniseed_to_db_element"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.miniseed_to_db_element" title="Link to this definition"></a></dt>
+<dd><p>Create a database element from a miniseed file.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.seismoloader.populate_database_from_files">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">populate_database_from_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cursor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_paths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/seismoloader.html#populate_database_from_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.populate_database_from_files" title="Link to this definition"></a></dt>
+<dd><p>Quickly insert/update a few SDS archive files into the SQL database.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.seismoloader.populate_database_from_files_dumb">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">populate_database_from_files_dumb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cursor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_paths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/seismoloader.html#populate_database_from_files_dumb"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.populate_database_from_files_dumb" title="Link to this definition"></a></dt>
+<dd><p>Quickly insert/update a few SDS archive files into the SQL database. Assume cursor already open!</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.seismoloader.populate_database_from_sds">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">populate_database_from_sds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sds_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">search_patterns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['??.*.*.???.?.????.???']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">newer_than</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_processes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gap_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">60</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/seismoloader.html#populate_database_from_sds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.populate_database_from_sds" title="Link to this definition"></a></dt>
+<dd><p>Utility function to populate the archive_table in our database.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.seismoloader.prune_requests">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">prune_requests</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">requests</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_manager</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sds_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_request_window</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/seismoloader.html#prune_requests"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.prune_requests" title="Link to this definition"></a></dt>
+<dd><p>Remove any overlapping requests where already-archived data may exist.
+Ignore requests that are less than min_request_window seconds.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>requests</strong> – List of request tuples (network, station, location, channel, start_time, end_time)</p></li>
+<li><p><strong>db_manager</strong> – DatabaseManager instance</p></li>
+<li><p><strong>min_request_window</strong> – Minimum request window in seconds (default: 3)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of pruned request tuples</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.seismoloader.read_config">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">read_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/seismoloader.html#read_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.read_config" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.seismoloader.run_continuous">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">run_continuous</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/seismoloader.html#run_continuous"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.run_continuous" title="Link to this definition"></a></dt>
+<dd><p>Retrieves continuous seismic data over long time intervals for a set of stations
+defined by the <cite>inv</cite> parameter. The function manages multiple steps including
+generating data requests, pruning unnecessary requests based on existing data,
+combining requests for efficiency, and finally archiving the retrieved data.</p>
+<p>The function uses a client setup based on the configuration in <cite>settings</cite> to
+handle different data sources and authentication methods. Errors during client
+creation or data retrieval are handled gracefully, with issues logged to the console.</p>
+<p>Parameters:
+- settings (SeismoLoaderSettings): Configuration settings containing client information,</p>
+<blockquote>
+<div><p>authentication details, and database paths necessary for data retrieval and storage.
+This should include the start and end times for data collection, database path,
+and SDS archive path among other configurations.</p>
+</div></blockquote>
+<ul class="simple">
+<li><p>inv (Inventory): An object representing the network/station/channel inventory
+to be used for data requests. This is usually prepared prior to calling this function.</p></li>
+</ul>
+<p>Workflow:
+1. Initialize clients for waveform data retrieval.
+2. Retrieve station information based on settings.
+3. Collect initial data requests for the given time interval.
+4. Prune requests based on existing data in the database to avoid redundancy.
+5. Combine similar requests to minimize the number of individual operations.
+6. Update or create clients based on specific network credentials if necessary.
+7. Execute data retrieval requests, archive data to disk, and update the database.</p>
+<p>Raises:
+- Exception: General exceptions could be raised due to misconfiguration, unsuccessful</p>
+<blockquote>
+<div><p>data retrieval or client initialization errors. These exceptions are caught and logged,
+but not re-raised, allowing the process to continue with other requests.</p>
+</div></blockquote>
+<p>Notes:
+- It is crucial to ensure that the settings object is correctly configured, especially</p>
+<blockquote>
+<div><p>the client details and authentication credentials to avoid runtime errors.</p>
+</div></blockquote>
+<ul class="simple">
+<li><p>The function logs detailed information about the processing steps and errors to aid
+in debugging and monitoring of data retrieval processes.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.seismoloader.run_event">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">run_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop_event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/seismoloader.html#run_event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.run_event" title="Link to this definition"></a></dt>
+<dd><p>Processes and downloads seismic event data for each event in the provided catalog using the specified
+settings and station inventory. The function handles data requests, filters out already available data,
+combines requests for efficiency, and manages authentication for access to restricted data.</p>
+<p>Parameters:
+- settings (SeismoLoaderSettings): Configuration settings that include client details, authentication credentials,</p>
+<blockquote>
+<div><p>event-specific parameters like radius and time window, and paths for data storage.</p>
+</div></blockquote>
+<ul class="simple">
+<li><p>inv (Inventory): The network/station/channel inventory to be used for data requests, typically relevant to the
+stations involved in the seismic events.</p></li>
+<li><p>catalog (Catalog): A collection of seismic events, each containing data like origin time, coordinates, and depth.</p></li>
+</ul>
+<p>Workflow:
+1. Initialize a primary waveform client for data retrieval.
+2. Loop through each event in the catalog, collecting necessary data request parameters.
+3. For each event, collect data requests based on its geographical and temporal parameters.
+4. Filter out data requests that are already satisfied with existing data in the database.
+5. Optionally combine requests for operational efficiency.
+6. Manage additional client creation for restricted data based on user credentials.
+7. Execute the data retrieval requests, then archive the data to disk and update the database.</p>
+<p>Raises:
+- Exception: General exceptions could be caught related to client creation, data retrieval, or during the</p>
+<blockquote>
+<div><p>archival process. These are logged but not re-raised, allowing the function to continue processing further events.</p>
+</div></blockquote>
+<p>Notes:
+- The function includes comments questioning the design, such as the redundancy of using ‘inv’ from STATION</p>
+<blockquote>
+<div><p>settings in EVENTS processing, which suggests a potential refactor for better separation of concerns or efficiency.</p>
+</div></blockquote>
+<ul class="simple">
+<li><p>Care should be taken when modifying settings and handling authentication to ensure the integrity and security
+of data access and retrieval.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.seismoloader.run_main">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">run_main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">from_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/seismoloader.html#run_main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.run_main" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.seismoloader.select_highest_samplerate">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">select_highest_samplerate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minSR</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/seismoloader.html#select_highest_samplerate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.select_highest_samplerate" title="Link to this definition"></a></dt>
+<dd><p>Where overlapping channels exist (e.g. 100 hz and 10 hz), filter out anything other than highest available samplerate.
+Channels are considered duplicates if:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>When time is specified: same location code and both exist at that time</p></li>
+<li><p>When time is None: same location code and same time span</p></li>
+</ul>
+</div></blockquote>
+<p>All channels must meet minSR requirement.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.seismoloader.setup_paths">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">setup_paths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/seismoloader.html#setup_paths"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.setup_paths" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.seismoloader.stream_to_db_element">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">stream_to_db_element</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">st</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/seismoloader.html#stream_to_db_element"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.stream_to_db_element" title="Link to this definition"></a></dt>
+<dd><p>Create a database element from a stream
+(assuming all traces have same NSLC!)
+just a bit faster than re-opening the file
+again via miniseed_to_db_element.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.seismoloader.to_timestamp">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">to_timestamp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time_obj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/seismoloader.html#to_timestamp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.to_timestamp" title="Link to this definition"></a></dt>
+<dd><p>Anything to timestamp helper.</p>
+</dd></dl>
+
 </section>
-<section id="seed-vault-service-stations-module">
-<h2>seed_vault.service.stations module<a class="headerlink" href="#seed-vault-service-stations-module" title="Link to this heading"></a></h2>
+<section id="module-seed_vault.service.stations">
+<span id="seed-vault-service-stations-module"></span><h2>seed_vault.service.stations module<a class="headerlink" href="#module-seed_vault.service.stations" title="Link to this heading"></a></h2>
+<p>The stations service should get the stations based on a selection (filter) settings.
+UI should generate the selection and pass it here. We need a single function
+here that gets the selection and runs Rob’s script.</p>
+<p>We should also be able to support multi-select areas.</p>
+<p>&#64;TODO: For now, dummy scripts are used. &#64;Yunlong to fix.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.stations.get_station_data">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.stations.</span></span><span class="sig-name descname"><span class="pre">get_station_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/stations.html#get_station_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.stations.get_station_data" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.stations.remove_duplicate_inventories">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.stations.</span></span><span class="sig-name descname"><span class="pre">remove_duplicate_inventories</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inventories</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/stations.html#remove_duplicate_inventories"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.stations.remove_duplicate_inventories" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.stations.station_response_to_df">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.stations.</span></span><span class="sig-name descname"><span class="pre">station_response_to_df</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inventory</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/stations.html#station_response_to_df"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.stations.station_response_to_df" title="Link to this definition"></a></dt>
+<dd><p>Convert ObsPy Inventory data into a DataFrame with station information.</p>
+</dd></dl>
+
 </section>
-<section id="seed-vault-service-utils-module">
-<h2>seed_vault.service.utils module<a class="headerlink" href="#seed-vault-service-utils-module" title="Link to this heading"></a></h2>
+<section id="module-seed_vault.service.utils">
+<span id="seed-vault-service-utils-module"></span><h2>seed_vault.service.utils module<a class="headerlink" href="#module-seed_vault.service.utils" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.utils.check_client_services">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.utils.</span></span><span class="sig-name descname"><span class="pre">check_client_services</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/utils.html#check_client_services"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.utils.check_client_services" title="Link to this definition"></a></dt>
+<dd><p>Check which services are available for a given client name.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.utils.convert_to_datetime">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.utils.</span></span><span class="sig-name descname"><span class="pre">convert_to_datetime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/utils.html#convert_to_datetime"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.utils.convert_to_datetime" title="Link to this definition"></a></dt>
+<dd><p>Convert a string or other value to a date and time object, handling different formats.</p>
+<p>If only a date is provided, it defaults to 00:00:00 time.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.utils.get_time_interval">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.utils.</span></span><span class="sig-name descname"><span class="pre">get_time_interval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interval_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/utils.html#get_time_interval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.utils.get_time_interval" title="Link to this definition"></a></dt>
+<dd><p>Get the current date-time and the date-time <cite>amount</cite> intervals earlier.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>interval_type</strong> (<em>str</em>) – One of [‘hour’, ‘day’, ‘week’, ‘month’]</p></li>
+<li><p><strong>amount</strong> (<em>int</em>) – Number of intervals to go back (default is 1)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(current_datetime, past_datetime)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.utils.is_in_enum">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.utils.</span></span><span class="sig-name descname"><span class="pre">is_in_enum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enum_class</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/utils.html#is_in_enum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.utils.is_in_enum" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 </section>
-<section id="seed-vault-service-waveform-module">
-<h2>seed_vault.service.waveform module<a class="headerlink" href="#seed-vault-service-waveform-module" title="Link to this heading"></a></h2>
+<section id="module-seed_vault.service.waveform">
+<span id="seed-vault-service-waveform-module"></span><h2>seed_vault.service.waveform module<a class="headerlink" href="#module-seed_vault.service.waveform" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.waveform.check_is_archived">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.waveform.</span></span><span class="sig-name descname"><span class="pre">check_is_archived</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cursor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">req</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/waveform.html#check_is_archived"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.waveform.check_is_archived" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.waveform.get_local_waveform">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.waveform.</span></span><span class="sig-name descname"><span class="pre">get_local_waveform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">req</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/waveform.html#get_local_waveform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.waveform.get_local_waveform" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.waveform.stream_to_dataframe">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.waveform.</span></span><span class="sig-name descname"><span class="pre">stream_to_dataframe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stream</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/waveform.html#stream_to_dataframe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.waveform.stream_to_dataframe" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 </section>
 <section id="module-seed_vault.service">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-seed_vault.service" title="Link to this heading"></a></h2>
