@@ -5,10 +5,12 @@ import time
 from copy import deepcopy
 from seed_vault.enums.common import ClientType
 from seed_vault.models.config import AuthConfig, SeismoLoaderSettings
-from seed_vault.ui.pages.helpers.common import save_filter
+from seed_vault.ui.pages.helpers.common import save_filter, reset_config
 
 from seed_vault.service.seismoloader import populate_database_from_sds
 
+import os
+import jinja2
 
 
 class SettingsComponent:
@@ -137,6 +139,10 @@ class SettingsComponent:
             st.write("## Existing Clients (via ObsPy)")
             st.write(orig_clients)
 
+    def reset_config(self):
+        self.settings = reset_config()   
+        save_filter(self.settings)
+        st.success("Config have been reset to default.")
 
     def render(self):
         c1, c2, c3 = st.columns([1,1, 2])
@@ -145,23 +151,27 @@ class SettingsComponent:
         with c2:
             st.text("")
             st.text("")
-            if st.button("Save Config"):
-                try:
-                    self.reset_is_new_cred_added()
-                    save_filter(self.settings)
-                    df_copy = deepcopy(self.df_clients)
-                    df_copy = df_copy.rename(columns={"Client Name": 'client', "Url": 'url'})
-                    self.settings.client_url_mapping.save(df_copy.to_dict('records'))
-                    # extra_clients = {item["Client Name"]: item["Url"] for item in self.df_clients.to_dict(orient='records')}
-                    # save_extra_client(extra_clients)
-                    with c3:
-                        st.text("")
-                        st.success("Config is successfully saved.")
-                except Exception as e:
-                    with c3:
-                        st.text("")
-                        st.error(f"An error occured. Make sure there is no null value in the table.")
-                        st.error(e)
+            button_col1, button_col2 = st.columns([1, 1])
+            with button_col1:
+                if st.button("Save Config"):
+                    try:
+                        self.reset_is_new_cred_added()
+                        save_filter(self.settings)
+                        df_copy = deepcopy(self.df_clients)
+                        df_copy = df_copy.rename(columns={"Client Name": 'client', "Url": 'url'})
+                        self.settings.client_url_mapping.save(df_copy.to_dict('records'))
+                        # extra_clients = {item["Client Name"]: item["Url"] for item in self.df_clients.to_dict(orient='records')}
+                        # save_extra_client(extra_clients)
+                        with c3:
+                            st.text("")
+                            st.success("Config is successfully saved.")
+                    except Exception as e:
+                        with c3:
+                            st.text("")
+                            st.error(f"An error occured. Make sure there is no null value in the table.")
+                            st.error(e)
+            with button_col2:
+                st.button("Reset Config", on_click=self.reset_config)
 
         tab1, tab2, tab3 = st.tabs(["Data", "Credentials", "Clients"])
         with tab1:

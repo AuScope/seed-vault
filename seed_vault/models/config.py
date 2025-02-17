@@ -239,14 +239,14 @@ class StationConfig(BaseModel):
     force_stations     : Optional   [ List          [SeismoQuery]] = []
     exclude_stations   : Optional   [ List          [SeismoQuery]] = []
     date_config        : DateConfig                                = DateConfig(
-        start_time=datetime(2024, 8, 20),
-        end_time=datetime(2024, 9, 20)
+        start_time=(datetime.now() - timedelta(days=30)).isoformat(),
+        end_time=datetime.now().isoformat()
     )
     local_inventory    : Optional   [ str           ] = None
-    network            : Optional   [ str           ] = None
-    station            : Optional   [ str           ] = None
-    location           : Optional   [ str           ] = None
-    channel            : Optional   [ str           ] = None
+    network            : Optional   [ str           ] = "GSN"
+    station            : Optional   [ str           ] = "*"
+    location           : Optional   [ str           ] = "*"
+    channel            : Optional   [ str           ] = "?H?,?N?"
     highest_samplerate_only : bool = False
     selected_invs      : Optional   [Any] = None
     geo_constraint     : Optional   [ List          [GeometryConstraint]] = None
@@ -263,7 +263,8 @@ class StationConfig(BaseModel):
         """Resets all fields to their default values."""
         self.__fields_set__.clear()
         for field_name, field in self.__fields__.items():
-            setattr(self, field_name, field.get_default())
+            setattr(self, field_name, field.get_default())                 
+
 
     # TODO: check if it makes sense to use SeismoLocation instead of separate
     # props.
@@ -306,8 +307,8 @@ class EventConfig(BaseModel):
     """
     client              : Optional   [str] = "EARTHSCOPE"
     date_config         : DateConfig                 = DateConfig(
-        start_time=datetime(2024, 8, 20),
-        end_time=datetime(2024, 9, 20)
+        start_time=(datetime.now() - timedelta(days=30)).isoformat(),        
+        end_time=datetime.now().isoformat()
     )
     model               : str = 'IASP91'
     min_depth           : float = -5.0
@@ -411,7 +412,7 @@ class SeismoLoaderSettings(BaseModel):
     db_path           : str                                   = "data/database.sqlite"
     download_type     : DownloadType                          = DownloadType.EVENT
     selected_workflow : WorkflowType                          = WorkflowType.EVENT_BASED
-    processing          : ProcessingConfig                      = None
+    processing        : ProcessingConfig                      = None
     client_url_mapping: Optional[UrlMappings]                 = UrlMappings()
     extra_clients     : Optional[dict]                        = {}
     auths             : Optional        [List[AuthConfig]]    = []
@@ -422,7 +423,35 @@ class SeismoLoaderSettings(BaseModel):
     status_handler    : StatusHandler                         = StatusHandler()
 
 
+    @classmethod
+    def create_default(cls):
+        """Creates an instance of SeismoLoaderSettings with default values."""
 
+        station_instance = StationConfig()
+        station_instance.set_default()
+
+        event_instance = EventConfig()
+        event_instance.set_default()
+
+        return cls(
+            sds_path='data/SDS',
+            db_path='data/database.sqlite',
+            download_type=DownloadType.EVENT,
+            selected_workflow=WorkflowType.EVENT_BASED,
+            processing=ProcessingConfig(
+                num_processes=2,
+                gap_tolerance=60,
+            ),
+            client_url_mapping=UrlMappings(),
+            extra_clients={},
+            auths=[],
+            waveform=WaveformConfig(), 
+            station=station_instance,  
+            event=event_instance,      
+            predictions={},
+            status_handler=StatusHandler(),
+        )
+    
     def set_download_type_from_workflow(self):
         """
         Sets the download type based on the selected workflow.
@@ -438,8 +467,6 @@ class SeismoLoaderSettings(BaseModel):
 
         if (self.selected_workflow == WorkflowType.CONTINUOUS):
             self.download_type = DownloadType.CONTINUOUS
-
-
 
     @classmethod
     def _check_val(cls, val, default_val, val_type: str = "int", return_empty_str: bool = False):
