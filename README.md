@@ -249,3 +249,38 @@ To install from pypi-test:
 pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple seed-vault
 ```
 Note: include both `test` and `official` indexes.
+
+
+## Unit test
+
+The repository includes a number of unit tests. These tests only covers
+the main functions in `seed_vault.service.seismoloader` as these are the 
+core logics adopted in the app.
+
+### Run tests
+To run the test units:
+
+1. Running only mockup tests
+```
+poetry run pytest
+```
+
+2. Running tests with actual FSDN API calls
+```
+poetry run pytest --run-real-fdsn
+```
+
+3. Generate coverage report
+ **to include the whole module**
+```
+poetry run pytest --run-real-fdsn --cov=seed_vault --cov-report=html
+```
+**to only include `service/seismoloader.py**
+```
+poetry run pytest --run-real-fdsn --cov=seed_vault --cov-config=.coveragerc --cov-report=html
+```
+
+1. Generate coverage badge
+```
+poetry run coverage-badge -o coverage.svg
+```
