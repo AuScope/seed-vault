@@ -1,0 +1,32 @@
+name: Deploy Sphinx Docs
+
+on:
+  push:
+    branches:
+      - main # Change if using a different branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install Dependencies
+        run: |
+          pip install sphinx sphinx-rtd-theme myst-parser sphinx-autodoc-typehints
+
+      - name: Build Docs
+        run: |
+          sphinx-build -b html docs/ docs/_build/html
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: docs/_build/html

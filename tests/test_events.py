@@ -4,6 +4,7 @@ from seed_vault.service.seismoloader import  get_events
 from seed_vault.models.config import SeismoLoaderSettings
 from seed_vault.service.events import event_response_to_df
 
+
 @pytest.fixture
 def test_settings():
     """Fixture to load real settings from a test config file."""
@@ -76,6 +77,7 @@ def test_mock_get_events_414(test_settings):
 # ==================================
 # TEST WITH REAL FDSN API
 # ==================================
+@pytest.mark.xfail(reason="Testing live servers is not reliable as they are sometimes unavailable")
 def test_get_events(test_settings):
     """Integration test using a real FDSN client"""
     
@@ -99,6 +101,7 @@ def test_get_events(test_settings):
         assert(((row["latitude"] <= geo.coords.max_lat) & (row["latitude"] >= geo.coords.min_lat)))
 
 
+@pytest.mark.xfail(reason="Testing live servers is not reliable as they are sometimes unavailable")
 def test_bad_request_events(test_settings):
     test_settings.event.min_magnitude = 7.0
     test_settings.event.max_magnitude = 5.0
@@ -109,7 +112,7 @@ def test_bad_request_events(test_settings):
         assert f"http status code: 400" in str(e).lower()
 
 
-
+@pytest.mark.xfail(reason="Testing live servers is not reliable as they are sometimes unavailable")
 def test_no_events(test_settings):
     test_settings.event.date_config.start_time = test_settings.event.date_config.end_time
 

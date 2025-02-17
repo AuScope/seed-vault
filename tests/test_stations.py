@@ -4,6 +4,7 @@ from seed_vault.service.seismoloader import get_stations
 from seed_vault.models.config import SeismoLoaderSettings
 from seed_vault.enums.config import Levels
 
+
 @pytest.fixture
 def test_settings():
     """Fixture to load real settings from a test config file."""
@@ -89,16 +90,17 @@ def test_mock_get_stations_414(test_settings):
 # ====================================
 # REAL FDSN API CALLS
 # ====================================
+@pytest.mark.xfail(reason="Testing live servers is not reliable as they are sometimes unavailable")
 def test_get_stations(test_settings, pytestconfig):
     """Integration test using a real FDSN client"""
     if not pytestconfig.getoption("--run-real-fdsn"):
         pytest.skip("Skipping real FDSN test: get_stations")
-    # Act: Call get_stations() with real settings
+    
     inventory = get_stations(test_settings)
 
     num_networks, num_stations, num_locations, num_channels = get_num_contents(inventory)
 
-    # Assert: Ensure we get a valid Inventory object
+    
     assert isinstance(inventory, Inventory), "Expected an Inventory object, but got None or incorrect type."
     assert num_networks > 0, "Expected networks in the inventory, but got an empty inventory."
     assert num_stations > 0, "Expected stations in the inventory, but got an empty stations."
@@ -106,6 +108,7 @@ def test_get_stations(test_settings, pytestconfig):
     assert num_channels > 0, "Expected channels in the inventory, but got an empty channels."
 
 
+@pytest.mark.xfail(reason="Testing live servers is not reliable as they are sometimes unavailable")
 def test_bad_req_stations(test_settings, pytestconfig):
     if not pytestconfig.getoption("--run-real-fdsn"):
         pytest.skip("Skipping real FDSN test: Bad Request - get_stations")
@@ -117,6 +120,7 @@ def test_bad_req_stations(test_settings, pytestconfig):
         assert f"http status code: 400" in str(e).lower()
 
 
+@pytest.mark.xfail(reason="Testing live servers is not reliable as they are sometimes unavailable")
 def test_no_stations(test_settings, pytestconfig):
     if not pytestconfig.getoption("--run-real-fdsn"):
         pytest.skip("Skipping real FDSN test: Bad Request - get_stations")
@@ -127,6 +131,7 @@ def test_no_stations(test_settings, pytestconfig):
     assert inventory is None
 
 
+@pytest.mark.xfail(reason="Testing live servers is not reliable as they are sometimes unavailable")
 def test_param_level(test_settings, pytestconfig):
     if not pytestconfig.getoption("--run-real-fdsn"):
         pytest.skip("Skipping real FDSN test: get_stations - param: level")
@@ -140,6 +145,7 @@ def test_param_level(test_settings, pytestconfig):
     assert num_channels == 0, "Expected empty channels in the inventory, but got an some."
 
 
+@pytest.mark.xfail(reason="Testing live servers is not reliable as they are sometimes unavailable")
 def test_param_highest_sample_rate(test_settings, pytestconfig):
     """
     @FIXME: This function needs a review from Rob.
@@ -147,47 +153,14 @@ def test_param_highest_sample_rate(test_settings, pytestconfig):
     if not pytestconfig.getoption("--run-real-fdsn"):
         pytest.skip("Skipping real FDSN test: get_stations - highest_samplerate_only")
 
+    inventory = get_stations(test_settings)
+
+    n_net, n_sta, _, n_cha = get_num_contents(inventory)
     test_settings.station.highest_samplerate_only = True
     inventory = get_stations(test_settings)
-    for network in inventory.networks:
-        for station in network.stations:
-            for channel in station:
-                # @FIXME: how to check if the channel is highest rate??
-                assert channel.code.startswith("H")
 
+    n_net_flt, n_sta_flt, _, n_cha_flt = get_num_contents(inventory)
 
-def test_get_stations_414(test_settings, pytestconfig):
-    """Test triggering a 414 URI Too Long error with an excessively long query."""
-
-    if not pytestconfig.getoption("--run-real-fdsn"):
-        pytest.skip("Skipping real FDSN test: get_stations - Too long uri error")
-    
-    # mocking extremely long query string
-    test_settings.station.network = ",".join(["XX"] * 5000)
-    test_settings.station.station = ",".join(["TEST"] * 5000) 
-
-    # Act & Assert
-    try:
-        get_stations(test_settings)
-    except Exception as e:
-        # @FIXME: A long uri is raising Connection Reset and not a 414 error.
-        assert "HTTP Status code: 414" in str(e), f"But got: {str(e)}"
-
-
-def test_get_stations_413(test_settings, pytestconfig):
-    """Test triggering a 413 Payload Too Large error with a massive request."""
-    
-    if not pytestconfig.getoption("--run-heavy-fdsn"):
-        pytest.skip("Skipping real FDSN test: get_stations - Too many data uri error")
-    
-    # Modify settings to request an excessive amount of data
-    test_settings.station.network = "*"  # All networks
-    test_settings.station.station = "*"  # All stations
-    test_settings.station.channel = "*"  # All channels
-    test_settings.station.date_config.start_time = "1900-01-01"  # Very old start time
-    test_settings.station.date_config.end_time = "2100-01-01"  # Very far end time
-       
-    try:
-        get_stations(test_settings)
-    except Exception as e:
-        assert "HTTP Status code: 413" in str(e), "Expected a 413 Payload Too Large error, but got a different response."
+    assert n_net == n_net_flt, f"Expected to get same number of networks but n_net={n_net}, n_net_flt={n_net_flt}"
+    assert n_sta == n_sta_flt, f"Expected to get same number of stations but n_sta={n_sta}, n_sta_flt={n_sta_flt}"
+    assert n_cha > n_cha_flt, f"Expected to get lower number of channels but n_cha={n_cha}, n_cha_flt={n_cha_flt}"

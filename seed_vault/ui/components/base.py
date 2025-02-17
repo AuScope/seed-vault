@@ -986,7 +986,7 @@ class BaseComponent:
         def reset_uploaded_file_processed():
             st.session_state['uploaded_file_processed'] = False
 
-        uploaded_file = st.file_uploader(f"Import {self.TXT.STEP.title()}s from a File", type=["xml"], on_change=lambda:  reset_uploaded_file_processed())
+        uploaded_file = st.file_uploader(f"Import {self.TXT.STEP.title()}s from a File", on_change=lambda:  reset_uploaded_file_processed())
         if uploaded_file and not st.session_state['uploaded_file_processed']:
             self.clear_all_data()
             self.refresh_map(reset_areas=True, clear_draw=True)

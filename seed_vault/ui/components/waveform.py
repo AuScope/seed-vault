@@ -34,7 +34,7 @@ def get_tele_filter(tr):
     senstype = tr.stats.channel[1]
 
     if senstype not in ['H','N']:
-        return 0,0
+        return 0,0 # flagged elsewhere
 
     if distance_km < 100:
         f0,f1 = 2.0,15
@@ -294,7 +294,7 @@ class WaveformDisplay:
         sensortype = tr.stats.channel[1].upper()
 
         if sensortype not in ['H','N']:
-            return 'lightgray'
+            return 'tomato'
         
         # Standard color scheme for components
         if component == 'Z':
