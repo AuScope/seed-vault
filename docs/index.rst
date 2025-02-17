@@ -19,4 +19,12 @@ documentation for details.
    usage
    app
    cli
-   api
+   modules
+   
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`

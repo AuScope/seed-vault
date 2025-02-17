@@ -91,7 +91,8 @@ def save_filter(settings:  SeismoLoaderSettings):
     
     return save_path
 
-
+def reset_config():
+    return SeismoLoaderSettings.create_default()
         
 def handle_polygon(geo) -> GeometryConstraint:
     coords_arr = np.array(geo.get("geometry").get("coordinates")[0])

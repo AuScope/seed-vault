@@ -13,17 +13,38 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.10"
 
-      - name: Install Dependencies
+      - name: Install Poetry
         run: |
-          pip install sphinx sphinx-rtd-theme myst-parser sphinx-autodoc-typehints
+          pip install poetry
+
+      - name: Install Dependencies (Including Dev)
+        run: |
+          poetry install --with dev
+          poetry run pip install -e .
+
+      - name: Debug Python Environment
+        run: |
+          python -c "import sys; print('PYTHONPATH:', sys.path)"
+          python -c "import seed_vault; print('✅ seed_vault found!')"
 
       - name: Build Docs
         run: |
-          sphinx-build -b html docs/ docs/_build/html
+          cd docs
+          poetry run make clean html
+
+      - name: Add .nojekyll File
+        run: |
+          touch docs/_build/html/.nojekyll
+
+      - name: Upload Built Docs as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: built-docs
+          path: docs/_build/html
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4

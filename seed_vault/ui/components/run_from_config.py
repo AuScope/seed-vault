@@ -90,6 +90,21 @@ class RunFromConfigComponent:
         def toggle_editing():
             st.session_state.is_editing = not st.session_state.is_editing
 
+        def reset_config():
+                           
+            settings = SeismoLoaderSettings.create_default()
+            current_directory = os.path.dirname(os.path.abspath(__file__))
+            target_file = os.path.join(current_directory, '../../service')
+            target_file = os.path.abspath(target_file)
+            
+            template_loader = jinja2.FileSystemLoader(searchpath=target_file)  
+            template_env = jinja2.Environment(loader=template_loader)
+            template = template_env.get_template("config_template.cfg")
+            config_dict = settings.add_to_config()
+            config_str = template.render(**config_dict)    
+            st.session_state.edited_config_str = config_str 
+            save_config()
+
         def save_config():
             save_path = os.path.join(target_file, fileName)
             with open(save_path, "w") as f:
@@ -112,6 +127,10 @@ class RunFromConfigComponent:
                 st.button(
                     "Edit config" if not st.session_state.is_editing else "Stop Editing",
                     on_click=toggle_editing,
+                )
+                st.button(
+                    "Reset",
+                    on_click=reset_config,
                 )
 
                 if st.session_state.is_editing:
