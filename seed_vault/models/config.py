@@ -13,15 +13,24 @@ from obspy import UTCDateTime
 
 from .common import RectangleArea, CircleArea, StatusHandler
 from .url_mapping import UrlMappings
-from seed_vault.enums.config import DownloadType, WorkflowType, GeoConstraintType, Levels, EventModels
-
-# TODO: Not sure if these values are controlled values
-# check to see if should we use controlled values or
-# rely on free inputs from users.
+from seed_vault.enums.config import DownloadType, WorkflowType, GeoConstraintType, Levels
 
 
 # Convert start and end times to datetime
 def parse_time(time_str):
+    """
+    The function `parse_time` attempts to parse a given time string in various formats and return it in
+    ISO format.
+    
+    Args:
+      time_str: The date-time in string format. Some acceptable input formats are:
+                '2014,2,1' | '2014001' | '2014,3,2,0,0,5'
+    
+    Returns:
+      The `parse_time` function is attempting to parse a time string using different formats. If
+      successful, it returns the parsed time in ISO format. If parsing fails for all formats, it returns
+      `None`.
+    """
     try:
         return UTCDateTime(time_str).isoformat()
     except:
@@ -38,13 +47,47 @@ def parse_time(time_str):
     return None
     
 def safe_add_to_config(config, section, key, value):
-    """Helper function to safely add key-value pairs to config."""
+    """
+    The function `safe_add_to_config` safely adds key-value pairs to a configuration dictionary,
+    handling any exceptions that may occur.
+    
+    Args:
+      config: Config is a dictionary that stores configuration settings. It typically has sections as
+              keys, where each section contains key-value pairs representing specific configuration 
+              settings. 
+              
+      section: Section refers to a specific section within the configuration file 
+               where the key-value pair will be added. It helps organize and categorize different 
+               settings or options within the configuration file.
+
+      key: The `key` parameter in the `safe_add_to_config` function refers to the key of the key-value
+           pair that you want to add to the configuration. It is used to uniquely identify the value 
+           associated with it within a specific section of the configuration.
+
+      value: Value is the data that you want to add to the configuration file under the specified
+             section and key. It could be a string, integer, boolean, or any other data type that 
+             you want to store in the configuration.
+    """
     try:
         config[section][key] = convert_to_str(value)
     except Exception as e:
         print(f"Failed to add {key} to {section}: {e}")
 
 def convert_to_str(val):
+    """
+    The function `convert_to_str` converts various types of values to strings, handling different cases
+    and providing error handling.
+    
+    Args:
+      val: The `convert_to_str` function takes a value `val` as input and attempts to convert it to a
+           string representation. It handles different types of values such as `None`, `Enum`, strings,
+           integers, floats, booleans, objects with `__str__` method, and other unsupported
+    
+    Returns:
+      The function `convert_to_str` returns a string representation of the input value `val`. It handles
+      different types of input values and converts them to a string using various methods based on their
+      type. If the conversion fails, it catches the exception and returns an empty string.
+    """
     try:
         if val is None:
             return ''  # Convert None to empty string
@@ -59,17 +102,33 @@ def convert_to_str(val):
         print(f"Error converting value {val}: {e}")
         return ''  # Return empty string if conversion fails
             
+
 class ProcessingConfig(BaseModel):
+    """
+    This class defines a configuration for processing with default values for the number of processes,
+    gap tolerance, and logging.
+    """
     num_processes: Optional    [  int         ] | None = 4
     gap_tolerance: Optional    [  int         ] | None = 60
     logging      : Optional    [  str         ] = None
 
+
 class AuthConfig(BaseModel):
+    """
+    The `AuthConfig` class defines attributes for network.station.location.channel code, username, and
+    password.
+    """
     nslc_code: str  # network.station.location.channel code
     username: str
     password: str
 
+
 class SeismoQuery(BaseModel):
+    """
+    This Python class `SeismoQuery` represents a seismic query params with properties for network, station,
+    location, channel, start time, and end time, along with methods to convert combined network and
+    station string to individual properties.
+    """
     network : Optional[str] = None
     station : Optional[str] = None
     location: Optional[str] = None
@@ -105,6 +164,10 @@ class SeismoQuery(BaseModel):
         setattr(self, 'station', station)
 
 class DateConfig(BaseModel):
+    """
+    This class defines a DateConfig with optional start and end times, as well as optional before and
+    after time definition used for events.
+    """
     start_time  : Optional[Union[date, Any] ] = date.today() - timedelta(days=7)
     end_time    : Optional[Union[date, Any] ] = date.today()
     start_before: Optional[Union[date, Any] ] =      None
@@ -114,6 +177,10 @@ class DateConfig(BaseModel):
 
 
 class WaveformConfig(BaseModel):
+    """
+    The `WaveformConfig` class defines a data model with optional fields for configuring waveform data
+    requests, with a method to reset all fields to their default values.
+    """
     client           : Optional     [str] = "EARTHSCOPE"
     channel_pref     : Optional     [str] = None
     location_pref    : Optional     [str] = None
@@ -128,6 +195,10 @@ class WaveformConfig(BaseModel):
             setattr(self, field_name, field.get_default())
 
 class GeometryConstraint(BaseModel):
+    """
+    The `GeometryConstraint` class defines a geometry constraint with a specified type and coordinates,
+    automatically determining the constraint type based on the provided coordinates.
+    """
     geo_type: Optional[GeoConstraintType] = GeoConstraintType.NONE
     coords: Optional[Union[RectangleArea, CircleArea]] = None
 
@@ -142,6 +213,28 @@ class GeometryConstraint(BaseModel):
 
 
 class StationConfig(BaseModel):
+    """
+    The `StationConfig` class defines configuration settings for querying seismic stations.
+
+    This class allows users to specify parameters such as the seismic network, station selection, 
+    and geographical constraints while retrieving station metadata.
+
+    Attributes:
+        client (Optional[str]): The FDSN client for retrieving station metadata. Defaults to `"EARTHSCOPE"`.
+        force_stations (Optional[List[SeismoQuery]]): A list of stations to forcefully include in the query.
+        exclude_stations (Optional[List[SeismoQuery]]): A list of stations to exclude from the query.
+        date_config (DateConfig): The date range for station availability queries.
+        local_inventory (Optional[str]): Path to a local station inventory file, if applicable.
+        network (Optional[str]): The seismic network code (e.g., `"IU"`, `"NE"`) to filter stations.
+        station (Optional[str]): The station code to filter results.
+        location (Optional[str]): The location code for further filtering.
+        channel (Optional[str]): The channel code (e.g., `"BHZ"`, `"HHZ"`) to specify station channels.
+        highest_samplerate_only (bool): Whether to select only the station with the highest sample rate. Defaults to `False`.
+        selected_invs (Optional[Any]): A list of pre-selected inventories.
+        geo_constraint (Optional[List[GeometryConstraint]]): Geospatial constraints to filter stations.
+        include_restricted (bool): Whether to include restricted (non-public) stations. Defaults to `False`.
+        level (Levels): The level of station metadata detail to retrieve. Defaults to `Levels.CHANNEL`.
+    """
     client             : Optional   [ str] = "EARTHSCOPE"
     force_stations     : Optional   [ List          [SeismoQuery]] = []
     exclude_stations   : Optional   [ List          [SeismoQuery]] = []
@@ -180,7 +273,37 @@ class StationConfig(BaseModel):
     # given in one string separated with "," -> e.g.
     # channel = CH,HH,BH,EH
 
+
 class EventConfig(BaseModel):
+    """
+    The `EventConfig` class defines parameters for configuring earthquake event queries with default
+    values. It is designed to store criteria for filtering earthquake events.
+
+    Attributes:
+        client (Optional[str]): The FDSN client to use for retrieving earthquake data. Defaults to `"EARTHSCOPE"`.
+        date_config (DateConfig): The date range for querying earthquake events.
+        model (str): The seismic velocity model to use. Defaults to `"IASP91"`.
+        min_depth (float): The minimum earthquake depth in kilometers. Defaults to `-5.0`.
+        max_depth (float): The maximum earthquake depth in kilometers. Defaults to `1000.0`.
+        min_magnitude (float): The minimum earthquake magnitude. Defaults to `5.5`.
+        max_magnitude (float): The maximum earthquake magnitude. Defaults to `10.0`.
+        min_radius (float): The minimum distance from the event in degrees. Defaults to `30.0`.
+        max_radius (float): The maximum distance from the event in degrees. Defaults to `90.0`.
+        before_p_sec (int): The number of seconds before the P-wave arrival. Defaults to `10`.
+        after_p_sec (int): The number of seconds after the P-wave arrival. Defaults to `130`.
+        include_all_origins (bool): Whether to include all origins of an event. Defaults to `False`.
+        include_all_magnitudes (bool): Whether to include all magnitude values for an event. Defaults to `False`.
+        include_arrivals (bool): Whether to include phase arrivals in the results. Defaults to `False`.
+        local_catalog (Optional[str]): The local earthquake catalog name, if applicable.
+        eventtype (Optional[str]): The type of earthquake event (e.g., "earthquake", "explosion").
+        catalog (Optional[str]): The name of the earthquake catalog used for querying events.
+        contributor (Optional[str]): The name of the contributor providing the earthquake data.
+        updatedafter (Optional[str]): The UTC timestamp indicating the last update time for event selection.
+        limit (Optional[str]): The maximum number of events to retrieve.
+        offset (Optional[str]): The offset for paginated earthquake data retrieval.
+        selected_catalogs (Optional[Any]): A list of user-selected earthquake catalogs.
+        geo_constraint (Optional[List[GeometryConstraint]]): Geospatial constraints on earthquake events.
+    """
     client              : Optional   [str] = "EARTHSCOPE"
     date_config         : DateConfig                 = DateConfig(
         start_time=datetime(2024, 8, 20),
@@ -222,14 +345,70 @@ class EventConfig(BaseModel):
         for field_name, field in self.__fields__.items():
             setattr(self, field_name, field.get_default())      
 
+
 class PredictionData(BaseModel):
+    """
+    The `PredictionData` class stores predicted arrival times of seismic waves at a given station.
+
+    This class represents the association between an event and a station, including estimated 
+    P-wave and S-wave arrival times.
+
+    Attributes:
+        event_id (str): The unique identifier for the seismic event.
+        station_id (str): The identifier of the seismic station where arrivals are recorded.
+        p_arrival (datetime): The predicted arrival time of the primary (P) wave.
+        s_arrival (datetime): The predicted arrival time of the secondary (S) wave.
+    """
     event_id: str
     station_id: str
     p_arrival: datetime
     s_arrival: datetime
+
 class SeismoLoaderSettings(BaseModel):
-    sds_path          : str                                   = None
-    db_path           : str                                   = None
+    """
+    The `SeismoLoaderSettings` class defines configuration settings for managing seismic data retrieval, 
+    processing, and storage. It provides attributes to control how seismic waveforms, station metadata, 
+    and event data are handled.
+
+    This class also includes methods for configuring download types, reading settings from a configuration 
+    file, managing authentication, and persisting settings to disk.
+
+    Attributes:
+        sds_path (str): The directory path for the Seismic Data Structure (SDS). Defaults to `data/SDS`.
+        db_path (str): The database file path for tracking downloaded data. Defaults to `data/database.sqlite`.
+        download_type (DownloadType): The type of download to perform (e.g., event-based or continuous).
+        selected_workflow (WorkflowType): The selected workflow type (e.g., event-based, station-based).
+        processing (ProcessingConfig): Configuration settings for data processing. Defaults to `None`.
+        client_url_mapping (Optional[UrlMappings]): A mapping of client URLs for data retrieval.
+        extra_clients (Optional[dict]): A dictionary of additional clients for querying seismic data.
+        auths (Optional[List[AuthConfig]]): A list of authentication configurations.
+        waveform (WaveformConfig): Configuration for waveform retrieval. Defaults to `None`.
+        station (StationConfig): Configuration for station metadata retrieval. Defaults to `None`.
+        event (EventConfig): Configuration for event data retrieval. Defaults to `None`.
+        predictions (Dict[str, PredictionData]): A dictionary mapping event-station pairs to arrival time predictions.
+        status_handler (StatusHandler): A handler for tracking status messages and errors.
+
+    Methods:
+        set_download_type_from_workflow():
+            Sets the `download_type` attribute based on the selected workflow.
+        
+        from_cfg_file(cls, cfg_source: Union[str, IO]) -> "SeismoLoaderSettings":
+            Loads and initializes a `SeismoLoaderSettings` instance from a configuration file.
+
+        add_prediction(event_id: str, station_id: str, p_arrival: datetime, s_arrival: datetime):
+            Adds a predicted P-wave and S-wave arrival time for a given event and station.
+
+        get_prediction(event_id: str, station_id: str) -> Optional[PredictionData]:
+            Retrieves the predicted arrival time for a given event and station.
+
+        to_pickle(pickle_path: str) -> None:
+            Serializes the `SeismoLoaderSettings` instance to a pickle file.
+
+        from_pickle_file(cls, pickle_path: str) -> "SeismoLoaderSettings":
+            Loads a `SeismoLoaderSettings` instance from a pickle file.
+    """
+    sds_path          : str                                   = "data/SDS"
+    db_path           : str                                   = "data/database.sqlite"
     download_type     : DownloadType                          = DownloadType.EVENT
     selected_workflow : WorkflowType                          = WorkflowType.EVENT_BASED
     processing          : ProcessingConfig                      = None
@@ -245,6 +424,12 @@ class SeismoLoaderSettings(BaseModel):
 
 
     def set_download_type_from_workflow(self):
+        """
+        Sets the download type based on the selected workflow.
+
+        If `selected_workflow` is `EVENT_BASED` or `STATION_BASED`, sets `download_type` to `EVENT`.
+        If `selected_workflow` is `CONTINUOUS`, sets `download_type` to `CONTINUOUS`.
+        """
         if (
             self.selected_workflow == WorkflowType.EVENT_BASED or
             self.selected_workflow == WorkflowType.STATION_BASED
@@ -287,6 +472,15 @@ class SeismoLoaderSettings(BaseModel):
             
     @classmethod
     def from_cfg_file(cls, cfg_source: Union[str, IO]) -> "SeismoLoaderSettings":
+        """
+        Loads a `SeismoLoaderSettings` instance from a configuration file.
+
+        Args:
+            cfg_source (Union[str, IO]): The path to the configuration file or a file-like object.
+
+        Returns:
+            SeismoLoaderSettings: A populated instance of the class.
+        """
         status_handler= StatusHandler()       
         config = configparser.ConfigParser()
         config.optionxform = str
@@ -859,6 +1053,16 @@ class SeismoLoaderSettings(BaseModel):
 
 
     def to_cfg(self) -> ConfigParser:
+        """
+        Converts the `SeismoLoaderSettings` instance into a `ConfigParser` object.
+
+        This method constructs a configuration file representation of the current settings
+        stored in the `SeismoLoaderSettings` instance. It organizes the settings into sections
+        such as `SDS`, `DATABASE`, `PROCESSING`, `AUTH`, `WAVEFORM`, `STATION`, and `EVENT`.
+
+        Returns:
+            configparser.ConfigParser: A `ConfigParser` object representing the current settings.
+        """
         config = ConfigParser()
 
         # Populate the [SDS] section
@@ -1040,6 +1244,15 @@ class SeismoLoaderSettings(BaseModel):
 
 
     def add_prediction(self, event_id: str, station_id: str, p_arrival: datetime, s_arrival: datetime):
+        """
+        Adds a predicted P-wave and S-wave arrival time for a given event and station.
+
+        Args:
+            event_id (str): The unique identifier of the seismic event.
+            station_id (str): The identifier of the seismic station.
+            p_arrival (datetime): The predicted arrival time of the P-wave.
+            s_arrival (datetime): The predicted arrival time of the S-wave.
+        """
         key = f"{event_id}|{station_id}"
         self.predictions[key] = PredictionData(
             event_id=event_id,
@@ -1049,6 +1262,16 @@ class SeismoLoaderSettings(BaseModel):
         )
 
     def get_prediction(self, event_id: str, station_id: str) -> Optional[PredictionData]:
+        """
+        Retrieves the predicted arrival time for a given event and station.
+
+        Args:
+            event_id (str): The unique identifier of the seismic event.
+            station_id (str): The identifier of the seismic station.
+
+        Returns:
+            Optional[PredictionData]: The predicted arrival time data, or `None` if not found.
+        """
         key = f"{event_id}|{station_id}"
         return self.predictions.get(key)
     class Config:
@@ -1058,12 +1281,25 @@ class SeismoLoaderSettings(BaseModel):
         }
 
     def to_pickle(self, pickle_path: str) -> None:
-        """Serialize the SeismoLoaderSettings instance to a pickle file."""
+        """
+        Serializes the `SeismoLoaderSettings` instance to a pickle file.
+
+        Args:
+            pickle_path (str): The file path where the object should be saved.
+        """
         with open(pickle_path, "wb") as f:
             pickle.dump(self, f)
     
     @classmethod
     def from_pickle_file(cls, pickle_path: str) -> "SeismoLoaderSettings":
-        """Load a SeismoLoaderSettings instance from a pickle file."""
+        """
+        Loads a `SeismoLoaderSettings` instance from a pickle file.
+
+        Args:
+            pickle_path (str): The file path from which the object should be loaded.
+
+        Returns:
+            SeismoLoaderSettings: The loaded instance of the class.
+        """
         with open(pickle_path, "rb") as f:
             return pickle.load(f)        
