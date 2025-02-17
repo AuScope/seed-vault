@@ -265,22 +265,23 @@ To run the test units:
 poetry run pytest
 ```
 
-2. Running tests with actual FSDN API calls
+2. Running tests with actual FDSN API calls
 ```
 poetry run pytest --run-real-fdsn
 ```
 
-3. Generate coverage report
- **to include the whole module**
+3. Generate coverage report:
+
+ **to include the whole module:**
 ```
 poetry run pytest --run-real-fdsn --cov=seed_vault --cov-report=html
 ```
-**to only include `service/seismoloader.py**
+**to only include `service/*` tests:**
 ```
 poetry run pytest --run-real-fdsn --cov=seed_vault --cov-config=.coveragerc --cov-report=html
 ```
 
-1. Generate coverage badge
+4. Generate coverage badge
 ```
 poetry run coverage-badge -o coverage.svg
 ```
