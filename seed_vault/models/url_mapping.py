@@ -14,6 +14,14 @@ from seed_vault.enums.common import ClientType
 current_directory = os.path.dirname(os.path.abspath(__file__))
 
 class UrlMapping(BaseModel):
+    """
+    Represents a mapping between a seismic data client and its corresponding URL.
+
+    Attributes:
+        client (str): The name of the seismic data client.
+        url (str): The associated URL for retrieving seismic data.
+        is_original (bool): Indicates whether the client is an original one from `URL_MAPPINGS`.
+    """
     client: str
     url: str
     is_original: bool
@@ -21,11 +29,52 @@ class UrlMapping(BaseModel):
 
 
 class UrlMappings(BaseModel):
+    """
+    Manages and synchronizes client URL mappings for seismic data retrieval.
+
+    This class maintains a list of known clients, checks for updates, and allows
+    users to add new clients. It also provides functionality to load, save, and
+    sync mappings with `URL_MAPPINGS`.
+
+    Attributes:
+        maps (Optional[dict]): A dictionary mapping client names to URLs.
+        df_maps (Optional[Any]): A Pandas DataFrame storing the client mapping data.
+        save_path (Path): The file path where client mappings are stored (default: `clients.csv`).
+
+    Methods:
+        check_saved_clients(df: pd.DataFrame) -> pd.DataFrame:
+            Validates and updates the saved client list by checking against `URL_MAPPINGS`.
+
+        save(extra_clients: List[dict] = None):
+            Saves the client mappings to a CSV file and synchronizes them with `URL_MAPPINGS`.
+
+        sync_maps(df_maps: pd.DataFrame):
+            Synchronizes the `maps` dictionary with the latest client mappings from a dataframe.
+
+        load():
+            Loads the client mappings from the saved file and ensures synchronization.
+
+        get_clients(client_type: ClientType = ClientType.ALL) -> Union[List[str], Dict[str, str]]:
+            Retrieves a list of clients based on the specified `client_type`.
+    """
     maps: Optional[dict] = {}
     df_maps: Optional[Any] = None
     save_path: Path  = os.path.join(current_directory,"clients.csv")
 
     def check_saved_clients(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Validates and updates the saved client list by checking against `URL_MAPPINGS`.
+
+        This method ensures that:
+        - Clients marked as original but no longer exist in `URL_MAPPINGS` are removed.
+        - New clients found in `URL_MAPPINGS` that are not in the saved list are added.
+
+        Args:
+            df (pd.DataFrame): The dataframe containing the saved client mappings.
+
+        Returns:
+            pd.DataFrame: The updated dataframe with verified client mappings.
+        """
         chk_clients = []
         # Check if an original saved client yet exist
         # in the latest URL_MAPPINGS
@@ -53,8 +102,19 @@ class UrlMappings(BaseModel):
 
 
     def save(self, extra_clients: List[dict] = None):
-        
-        # df = pd.DataFrame(columns=["client", "url", "is_original"])
+        """
+        Saves the client mappings to a CSV file and synchronizes them with `URL_MAPPINGS`.
+
+        This method:
+        - Loads the existing client mappings if a saved file exists.
+        - Updates the list with newly added `extra_clients` if provided.
+        - Removes outdated extra clients that are no longer in use.
+        - Writes the updated mappings back to disk.
+        - Synchronizes the mappings with `URL_MAPPINGS`.
+
+        Args:
+            extra_clients (List[dict], optional): A list of additional client mappings to add.
+        """
         if os.path.exists(self.save_path):
             df = pd.read_csv(self.save_path)
         else:
@@ -105,6 +165,15 @@ class UrlMappings(BaseModel):
         # return df
     
     def sync_maps(self, df_maps):
+        """
+        Synchronizes the `maps` dictionary with the latest client mappings from the dataframe.
+
+        This method updates both the instance's `maps` dictionary and the global `URL_MAPPINGS`
+        to reflect the latest client URL assignments.
+
+        Args:
+            df_maps (pd.DataFrame): The dataframe containing the client mapping information.
+        """
         self.df_maps = df_maps   
         for row in df_maps.to_dict('records'):
             self.maps[row['client']] = row['url']
@@ -114,6 +183,13 @@ class UrlMappings(BaseModel):
 
 
     def load(self):
+        """
+        Loads the client mappings from the saved file and ensures synchronization.
+
+        This method:
+        - Initializes the `maps` dictionary.
+        - Calls `save()` to ensure the client mappings are properly saved and updated.
+        """
         self.maps = {}
 
         self.save()
@@ -124,6 +200,21 @@ class UrlMappings(BaseModel):
         
 
     def get_clients(self, client_type: ClientType = ClientType.ALL):
+        """
+        Retrieves a list of clients based on the specified `client_type`.
+
+        Args:
+            client_type (ClientType, optional): The type of clients to retrieve.
+                - `ClientType.ALL`: Returns all clients.
+                - `ClientType.ORIGINAL`: Returns only the original clients.
+                - `ClientType.EXTRA`: Returns only the extra clients.
+
+        Returns:
+            Union[List[str], Dict[str, str]]: A list of client names or a dictionary of client URLs.
+
+        Raises:
+            ValueError: If an unknown `client_type` is provided.
+        """
         self.load()
         if client_type == ClientType.ALL:
             return list(self.maps.keys())

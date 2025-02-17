@@ -6,7 +6,11 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.pardir)))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "seed_vault")))
+
+# sys.path.insert(0, os.path.abspath(os.path.join(os.pardir)))
 # sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'seed_vault')))
 
 
