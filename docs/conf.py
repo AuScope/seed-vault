@@ -43,7 +43,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = 'sphinx_rtd_theme' # 'sphinx_material'
-html_static_path = [] # ['_static']
+html_static_path = ['_static']
 html_theme_options = {
     "collapse_navigation": False,
     "navigation_depth": 4,
@@ -55,7 +55,7 @@ html_theme_options = {
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'Seed Vault'
-copyright = '2025, Ben Motevalli, Neda Taherifar, Yunlong Li, Robert Pickle, Vincent Fazio, Pavel Golodoniuc'
+copyright = '2025, CSIRO'
 author = 'Ben Motevalli, Neda Taherifar, Yunlong Li, Robert Pickle, Vincent Fazio, Pavel Golodoniuc'
 release = '0.1.2'
 
