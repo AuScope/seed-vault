@@ -23,7 +23,8 @@ jobs:
 
       - name: Build Docs
         run: |
-          sphinx-build -b html docs/ docs/_build/html
+          cd docs
+          make clean html
 
       - name: Add .nojekyll File
         run: |
