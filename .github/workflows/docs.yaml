@@ -13,7 +13,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Python
-        uses: actions/setup-python@v5 # Updated to latest version
+        uses: actions/setup-python@v5
         with:
           python-version: "3.10"
 
@@ -21,9 +21,9 @@ jobs:
         run: |
           pip install poetry
 
-      - name: Install Dependencies
+      - name: Install Dependencies (Including Dev)
         run: |
-          poetry install
+          poetry install --with dev
           poetry run pip install -e .
 
       - name: Debug Python Environment
@@ -34,7 +34,7 @@ jobs:
       - name: Build Docs
         run: |
           cd docs
-          make clean html
+          poetry run make clean html
 
       - name: Add .nojekyll File
         run: |

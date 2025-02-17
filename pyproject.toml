@@ -18,7 +18,7 @@ classifiers = [
 ]
 readme = "README.md"
 authors = [
-           {name = "Ben Motevalli", email = "mot032@csiro.au"},
+           {name = "Ben Motevalli", email = "benyamin.motevalli@csiro.au"},
            {name = "Vincent Fazio", email = "vincent.fazio@csiro.au"}
 ]
 keywords = ["seismic", "FDSN", "earthquakes", "miniseed"] 
