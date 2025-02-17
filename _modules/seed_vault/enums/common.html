@@ -1,0 +1,161 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>seed_vault.enums.common &mdash; Seed Vault 0.1.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=92734c54"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Seed Vault
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../app.html">Seed Vault App</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cli.html">CLI commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../seed_vault.html">seed_vault package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../seed_vault.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../seed_vault.models.html">seed_vault.models package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../seed_vault.service.html">seed_vault.service package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../seed_vault.ui.html">seed_vault.ui package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../seed_vault.utils.html">seed_vault.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../seed_vault.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../seed_vault.html#seed-vault-cli-module">seed_vault.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../seed_vault.html#module-seed_vault">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Seed Vault</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">seed_vault.enums.common</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for seed_vault.enums.common</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
+
+
+<div class="viewcode-block" id="DescribedEnum">
+<a class="viewcode-back" href="../../../modules/seed_vault.enums.html#seed_vault.enums.common.DescribedEnum">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DescribedEnum</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">description</span><span class="p">):</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="nb">object</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">_value_</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">description</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">): </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="GeometryType">
+<a class="viewcode-back" href="../../../modules/seed_vault.enums.html#seed_vault.enums.common.GeometryType">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">GeometryType</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The class `GeometryType` defines an enumeration with two members, `POLYGON` and `POINT`,</span>
+<span class="sd">    representing different types of geometric shapes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">POLYGON</span> <span class="o">=</span> <span class="s1">&#39;Polygon&#39;</span>
+    <span class="n">POINT</span>   <span class="o">=</span> <span class="s1">&#39;Point&#39;</span></div>
+
+
+
+
+
+<div class="viewcode-block" id="ClientType">
+<a class="viewcode-back" href="../../../modules/seed_vault.enums.html#seed_vault.enums.common.ClientType">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ClientType</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The class `ClientType` defines an enumeration with three options: `ALL`, `ORIGINAL`, and `EXTRA`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ALL</span> <span class="o">=</span> <span class="s2">&quot;ALL&quot;</span>
+    <span class="n">ORIGINAL</span> <span class="o">=</span> <span class="s2">&quot;ORIGINAL&quot;</span>
+    <span class="n">EXTRA</span> <span class="o">=</span> <span class="s2">&quot;EXTRA&quot;</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, CSIRO.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
