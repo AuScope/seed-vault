@@ -11,15 +11,18 @@ from seed_vault.service.seismoloader import populate_database_from_sds
 
 import os
 import jinja2
+from copy import deepcopy
 
 
 class SettingsComponent:
     settings: SeismoLoaderSettings
+    old_settings: SeismoLoaderSettings
     is_new_cred_added = None
     df_clients = None
 
     def __init__(self, settings: SeismoLoaderSettings):
         self.settings  = settings
+        self.old_settings   = deepcopy(settings)
 
     
     def add_credential(self):
@@ -35,6 +38,14 @@ class SettingsComponent:
         # time.sleep(5)
         self.is_new_cred_added = None
         # st.rerun()
+
+
+    def refresh_filters(self):
+        changes = self.settings.has_changed(self.old_settings)
+        if changes.get('has_changed', False):
+            self.old_settings      = deepcopy(self.settings)
+            save_filter(self.settings)
+            st.rerun()
 
     
     def render_auth(self):
@@ -122,6 +133,8 @@ class SettingsComponent:
                 num_processes=self.settings.processing.num_processes,
                 gap_tolerance=self.settings.processing.gap_tolerance
             )
+
+        self.refresh_filters()
 
 
     def render_clients(self):

@@ -1329,4 +1329,49 @@ class SeismoLoaderSettings(BaseModel):
             SeismoLoaderSettings: The loaded instance of the class.
         """
         with open(pickle_path, "rb") as f:
-            return pickle.load(f)        
+            return pickle.load(f)
+        
+
+    def has_changed(self, old_settings: "SeismoLoaderSettings") -> Dict[str, bool]:
+        """
+        Compare self with old_settings and return a dictionary indicating which parts have changed.
+
+        Args:
+            old_settings (SeismoLoaderSettings): The old settings to compare against.
+
+        Returns:
+            Dict[str, bool]: A dictionary with keys indicating which properties changed.
+        """
+        changes = {
+            "has_changed": False,
+            "event": False,
+            "station": False,
+            "waveform": False,
+            "settings": False,
+        }
+
+        if not isinstance(old_settings, SeismoLoaderSettings):
+            raise TypeError("old_settings must be an instance of SeismoLoaderSettings")
+
+        # Compare each component and update the dictionary accordingly
+        if self.event != old_settings.event:
+            changes["event"] = True
+            changes["has_changed"] = True
+
+        if self.station != old_settings.station:
+            changes["station"] = True
+            changes["has_changed"] = True
+
+        if self.waveform != old_settings.waveform:
+            changes["waveform"] = True
+            changes["has_changed"] = True
+
+        if (self.sds_path != old_settings.sds_path or
+            self.db_path != old_settings.db_path or 
+            self.processing != old_settings.processing or
+            self.auths != old_settings.auths
+            ):
+            changes["settings"] = True
+            changes["has_changed"] = True
+
+        return changes
