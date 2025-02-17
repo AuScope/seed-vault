@@ -5,33 +5,34 @@
 
 import os
 import sys
-sys.path.insert(0, os.path.abspath('..'))  # Ensure Sphinx finds your project
 
-extensions = [
-    "sphinx.ext.autodoc",          # Automatically generate docs from docstrings
-    "sphinx.ext.napoleon",         # Support Google/NumPy docstrings
-    "sphinx.ext.viewcode",         # Add links to source code
-    "sphinx.ext.intersphinx",      # Reference external documentation
-    "myst_parser",                 # Enable Markdown support
-    "sphinx_autodoc_typehints",    # Include Python type hints in docs
-]
+sys.path.insert(0, os.path.abspath(os.path.join(os.pardir)))
+# sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'seed_vault')))
 
-# Set Theme
-html_theme = "sphinx_rtd_theme"
-
-
-# -- Project information -----------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
-
-project = 'Seed Vault'
-copyright = '2025, Ben Motevalli, Neda Taherifar, Yunlong Li, Robert Pickle, Vincent Fazio, Pavel Golodoniuc'
-author = 'Ben Motevalli, Neda Taherifar, Yunlong Li, Robert Pickle, Vincent Fazio, Pavel Golodoniuc'
-release = '0.1.2'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = []
+autoclass_content = "both"  # include both class docstring and __init__
+
+autodoc_default_flags = [
+        # Make sure that any autodoc declarations show the right members
+        "members",
+        "inherited-members",
+        "private-members",
+        "show-inheritance",
+]
+autosummary_generate = True  # Make _autosummary files and include them
+
+
+extensions = [
+    "sphinx.ext.todo", 
+    "sphinx.ext.viewcode", 
+    "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.intersphinx",
+    "sphinx_autodoc_typehints",
+]
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
@@ -41,5 +42,20 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'alabaster'
-html_static_path = ['_static']
+html_theme = 'sphinx_rtd_theme' # 'sphinx_material'
+html_static_path = [] # ['_static']
+html_theme_options = {
+    "collapse_navigation": False,
+    "navigation_depth": 4,
+    "style_external_links": True,
+    "titles_only": False
+}
+
+# -- Project information -----------------------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
+
+project = 'Seed Vault'
+copyright = '2025, Ben Motevalli, Neda Taherifar, Yunlong Li, Robert Pickle, Vincent Fazio, Pavel Golodoniuc'
+author = 'Ben Motevalli, Neda Taherifar, Yunlong Li, Robert Pickle, Vincent Fazio, Pavel Golodoniuc'
+release = '0.1.2'
+
