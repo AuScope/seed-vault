@@ -175,7 +175,7 @@ def populate_database_from_sds(sds_path, db_path,
     try:
         num_inserted = db_manager.bulk_insert_archive_data(to_insert_db)
     except Exception as e:
-        print("Error with bulk_insert_archive_data: ", e)    
+        raise RuntimeError("Error with bulk_insert_archive_data") from e  
 
     print(f"Processed {total_files} files, inserted {num_inserted} records into the database.")
 
