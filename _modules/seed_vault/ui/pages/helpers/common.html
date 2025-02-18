@@ -94,14 +94,13 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.ui.components.map</span><span class="w"> </span><span class="kn">import</span> <span class="n">normalize_circle</span><span class="p">,</span> <span class="n">normalize_bounds</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">streamlit</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">st</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-
 <span class="kn">import</span><span class="w"> </span><span class="nn">jinja2</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">obspy.geodetics</span><span class="w"> </span><span class="kn">import</span> <span class="n">kilometer2degrees</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.models.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">RectangleArea</span><span class="p">,</span> <span class="n">CircleArea</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.enums.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeometryType</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.models.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">SeismoLoaderSettings</span><span class="p">,</span> <span class="n">GeometryConstraint</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.service.seismoloader</span><span class="w"> </span><span class="kn">import</span> <span class="n">convert_radius_to_degrees</span>
 
 
 <span class="n">current_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
@@ -186,10 +185,10 @@
     <span class="n">target_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">current_directory</span><span class="p">,</span> <span class="s1">&#39;../../../service&#39;</span><span class="p">)</span>
     <span class="n">target_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">target_file</span><span class="p">)</span>
     
-    <span class="n">template_loader</span> <span class="o">=</span> <span class="n">jinja2</span><span class="o">.</span><span class="n">FileSystemLoader</span><span class="p">(</span><span class="n">searchpath</span><span class="o">=</span><span class="n">target_file</span><span class="p">)</span>  
+    <span class="n">template_loader</span> <span class="o">=</span> <span class="n">jinja2</span><span class="o">.</span><span class="n">FileSystemLoader</span><span class="p">(</span><span class="n">searchpath</span><span class="o">=</span><span class="n">target_file</span><span class="p">)</span>
     <span class="n">template_env</span> <span class="o">=</span> <span class="n">jinja2</span><span class="o">.</span><span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">template_loader</span><span class="p">)</span>
     <span class="n">template</span> <span class="o">=</span> <span class="n">template_env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s2">&quot;config_template.cfg&quot;</span><span class="p">)</span>
-    <span class="n">config_dict</span> <span class="o">=</span> <span class="n">get_app_settings</span><span class="p">(</span><span class="n">create_new</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">empty_geo</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">add_to_config</span><span class="p">()</span> <span class="c1"># settings.add_to_config()</span>
+    <span class="n">config_dict</span> <span class="o">=</span> <span class="n">get_app_settings</span><span class="p">(</span><span class="n">create_new</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">empty_geo</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">add_to_config</span><span class="p">()</span>
     <span class="n">config_str</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="o">**</span><span class="n">config_dict</span><span class="p">)</span>
     
     <span class="n">save_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">target_file</span><span class="p">,</span> <span class="s2">&quot;config&quot;</span> <span class="o">+</span> <span class="s2">&quot;.cfg&quot;</span><span class="p">)</span>
@@ -229,7 +228,7 @@
     <span class="n">coords</span> <span class="o">=</span> <span class="n">geo</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;geometry&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;coordinates&quot;</span><span class="p">)</span>
     <span class="c1"># min_radius = geo.get(&quot;properties&quot;).get(&quot;min_radius&quot;)</span>
     <span class="c1"># max_radius = geo.get(&quot;properties&quot;).get(&quot;max_radius&quot;)</span>
-    <span class="n">radius</span> <span class="o">=</span> <span class="n">geo</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;properties&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;radius&quot;</span><span class="p">)</span>
+    <span class="n">radius</span> <span class="o">=</span> <span class="n">geo</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;properties&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;radius&quot;</span><span class="p">)</span> <span class="c1">#this is in &quot;meters&quot;</span>
 
     <span class="k">if</span> <span class="n">radius</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Radius is missing in the geo properties&quot;</span><span class="p">)</span>    
@@ -239,7 +238,7 @@
             <span class="n">lat</span> <span class="o">=</span> <span class="n">coords</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
             <span class="n">lng</span> <span class="o">=</span> <span class="n">coords</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
             <span class="n">min_radius</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
-            <span class="n">max_radius</span> <span class="o">=</span> <span class="n">convert_radius_to_degrees</span><span class="p">(</span><span class="n">radius</span><span class="p">)</span>
+            <span class="n">max_radius</span> <span class="o">=</span> <span class="n">kilometer2degrees</span><span class="p">(</span><span class="n">radius</span><span class="o">/</span><span class="mi">1000</span><span class="p">)</span>
         <span class="p">)</span>
     <span class="p">)</span></div>
 

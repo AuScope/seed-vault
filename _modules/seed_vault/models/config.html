@@ -123,6 +123,9 @@
 <span class="sd">      successful, it returns the parsed time in ISO format. If parsing fails for all formats, it returns</span>
 <span class="sd">      `None`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">time_str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
     <span class="k">try</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">UTCDateTime</span><span class="p">(</span><span class="n">time_str</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
     <span class="k">except</span><span class="p">:</span>
@@ -901,11 +904,11 @@
 
         <span class="n">geo_constraint_station</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_parse_geo_constraint</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="s1">&#39;STATION&#39;</span><span class="p">,</span> <span class="n">status_handler</span><span class="p">)</span>
 
-        <span class="c1"># Parse force_stations</span>
+        <span class="c1"># Parse force_stations (can be network.station.location.channel)</span>
         <span class="n">force_stations_cmb_n_s</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">station_section</span><span class="p">,</span> <span class="s1">&#39;force_stations&#39;</span><span class="p">,</span> <span class="n">fallback</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
         <span class="n">force_stations</span> <span class="o">=</span> <span class="p">[</span><span class="n">SeismoQuery</span><span class="p">(</span><span class="n">cmb_str_n_s</span><span class="o">=</span><span class="n">cmb_n_s</span><span class="p">)</span> <span class="k">for</span> <span class="n">cmb_n_s</span> <span class="ow">in</span> <span class="n">force_stations_cmb_n_s</span> <span class="k">if</span> <span class="n">cmb_n_s</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
 
-        <span class="c1"># Parse exclude_stations</span>
+        <span class="c1"># Parse exclude_stations (just network.station)</span>
         <span class="n">exclude_stations_cmb_n_s</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">station_section</span><span class="p">,</span> <span class="s1">&#39;exclude_stations&#39;</span><span class="p">,</span> <span class="n">fallback</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
         <span class="n">exclude_stations</span> <span class="o">=</span> <span class="p">[</span><span class="n">SeismoQuery</span><span class="p">(</span><span class="n">cmb_str_n_s</span><span class="o">=</span><span class="n">cmb_n_s</span><span class="p">)</span> <span class="k">for</span> <span class="n">cmb_n_s</span> <span class="ow">in</span> <span class="n">exclude_stations_cmb_n_s</span> <span class="k">if</span> <span class="n">cmb_n_s</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
 
@@ -913,15 +916,13 @@
         <span class="n">local_inventory</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">parse_optional</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">station_section</span><span class="p">,</span> <span class="s1">&#39;local_inventory&#39;</span><span class="p">,</span> <span class="n">fallback</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
         <span class="n">highest_samplerate_only</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_check_val</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">station_section</span><span class="p">,</span> <span class="s2">&quot;highest_samplerate_only&quot;</span><span class="p">,</span> <span class="n">fallback</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;bool&quot;</span><span class="p">)</span>
 
- 
-
         <span class="c1"># Parse include_restricted</span>
         <span class="n">include_restricted</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_check_val</span><span class="p">(</span>
             <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">station_section</span><span class="p">,</span> <span class="s1">&#39;include_restricted&#39;</span><span class="p">,</span> <span class="n">fallback</span><span class="o">=</span><span class="s1">&#39;False&#39;</span><span class="p">),</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;bool&quot;</span>
         <span class="p">)</span>
 
         <span class="c1"># Parse level</span>
-        <span class="n">level</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">station_section</span><span class="p">,</span> <span class="s1">&#39;level&#39;</span><span class="p">,</span> <span class="n">fallback</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="n">level</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">station_section</span><span class="p">,</span> <span class="s1">&#39;level&#39;</span><span class="p">,</span> <span class="n">fallback</span><span class="o">=</span><span class="s1">&#39;channel&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">level</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># Key is missing</span>
             <span class="n">status_handler</span><span class="o">.</span><span class="n">add_error</span><span class="p">(</span><span class="s2">&quot;input_parameters&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;&#39;level&#39; is missing in the [</span><span class="si">{</span><span class="n">station_section</span><span class="si">}</span><span class="s2">] section. Please specify a level (e.g., &#39;channel&#39;).&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>

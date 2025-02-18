@@ -95,48 +95,134 @@
 </section>
 <section id="module-seed_vault.service.db">
 <span id="seed-vault-service-db-module"></span><h2>seed_vault.service.db module<a class="headerlink" href="#module-seed_vault.service.db" title="Link to this heading"></a></h2>
+<p>Database management module for the SEED-vault archive</p>
+<p>This module provides a DatabaseManager class for handling seismic data storage in SQLite,
+including archive data and arrival data. It implements connection management, data insertion,
+querying, and database maintenance operations.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.service.db.</span></span><span class="sig-name descname"><span class="pre">DatabaseManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/db.html#DatabaseManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Manages seismic data storage and retrieval using SQLite.</p>
+<p>This class handles database connections, table creation, data insertion,
+and querying for seismic archive and arrival data.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.db_path">
+<span class="sig-name descname"><span class="pre">db_path</span></span><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.db_path" title="Link to this definition"></a></dt>
+<dd><p>Path to the SQLite database file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Initialize DatabaseManager with database path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>db_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Path where the SQLite database should be created/accessed.</p>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.analyze_table">
 <span class="sig-name descname"><span class="pre">analyze_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/db.html#DatabaseManager.analyze_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.analyze_table" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Update table statistics for query optimization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>table_name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Name of the table to analyze.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.bulk_insert_archive_data">
 <span class="sig-name descname"><span class="pre">bulk_insert_archive_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">archive_list</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/db.html#DatabaseManager.bulk_insert_archive_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.bulk_insert_archive_data" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Insert multiple archive data records.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>archive_list</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>]</span>) – List of tuples containing archive data records.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Number of inserted records.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.bulk_insert_arrival_data">
 <span class="sig-name descname"><span class="pre">bulk_insert_arrival_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arrival_list</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/db.html#DatabaseManager.bulk_insert_arrival_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.bulk_insert_arrival_data" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Insert multiple arrival data records.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>arrival_list</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>]</span>) – List of tuples containing arrival data records.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Number of inserted records.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.connection">
 <span class="sig-name descname"><span class="pre">connection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_retries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_delay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/db.html#DatabaseManager.connection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.connection" title="Link to this definition"></a></dt>
-<dd><p>Context manager for safe database connections with retry mechanism.</p>
+<dd><p>Context manager for database connections with retry mechanism.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>max_retries</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Maximum number of connection retry attempts.</p></li>
+<li><p><strong>initial_delay</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Initial delay between retries in seconds.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Yields<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>sqlite3.Connection</em> – Database connection object.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>sqlite3.OperationalError</strong> – If database connection fails after all retries.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.delete_elements">
 <span class="sig-name descname"><span class="pre">delete_elements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4102444799</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/db.html#DatabaseManager.delete_elements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.delete_elements" title="Link to this definition"></a></dt>
-<dd><p>Delete elements from table_name between start and end_time</p>
+<dd><p>Delete elements from specified table within time range.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>table_name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Name of the table (‘archive_data’ or ‘arrival_data’).</p></li>
+<li><p><strong>start_time</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">UTCDateTime</span></code>]</span>) – Start time for deletion range.</p></li>
+<li><p><strong>end_time</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">UTCDateTime</span></code>]</span>) – End time for deletion range.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Number of deleted rows.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If table_name is invalid or time format is incorrect.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.display_contents">
 <span class="sig-name descname"><span class="pre">display_contents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4102444799</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/db.html#DatabaseManager.display_contents"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.display_contents" title="Link to this definition"></a></dt>
-<dd><p>Display the contents of a specified table within a given time range.</p>
+<dd><p>Display contents of a specified table within a given time range.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>table_name</strong> – Name of the table to query (e.g., ‘archive_data’ or ‘arrival_data’)</p></li>
-<li><p><strong>starttime</strong> – Start time for the query (can be timestamp, datetime, or UTCDateTime)</p></li>
-<li><p><strong>endtime</strong> – End time for the query (can be timestamp, datetime, or UTCDateTime)</p></li>
-<li><p><strong>limit</strong> – Maximum number of rows to return</p></li>
+<li><p><strong>table_name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Name of the table to query (‘archive_data’ or ‘arrival_data’).</p></li>
+<li><p><strong>start_time</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">UTCDateTime</span></code>]</span>) – Start time for the query.</p></li>
+<li><p><strong>end_time</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">UTCDateTime</span></code>]</span>) – End time for the query.</p></li>
+<li><p><strong>limit</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Maximum number of rows to return.</p></li>
 </ul>
 </dd>
 </dl>
@@ -145,18 +231,21 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.execute_query">
 <span class="sig-name descname"><span class="pre">execute_query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/db.html#DatabaseManager.execute_query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.execute_query" title="Link to this definition"></a></dt>
-<dd><p>Execute any SQL query and return results along with a flag indicating if it’s tabular data.</p>
+<dd><p>Execute an SQL query and return results.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>query</strong> (<em>str</em>) – SQL query to execute</p>
+<dd class="field-odd"><p><strong>query</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – SQL query to execute.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>(is_data: bool, result: Union[pd.DataFrame, str])
-- is_data: True if query returns tabular data, False otherwise
-- result: DataFrame for SELECT queries, status message for other queries</p>
+<dd class="field-even"><p><ul class="simple">
+<li><p>bool: Whether an error occurred</p></li>
+<li><p>str: Status message or error description</p></li>
+<li><p>Optional[pd.DataFrame]: Results for SELECT queries, None otherwise</p></li>
+</ul>
+</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>tuple</p>
+<dd class="field-odd"><p>Tuple containing</p>
 </dd>
 </dl>
 </dd></dl>
@@ -164,35 +253,136 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.fetch_arrivals">
 <span class="sig-name descname"><span class="pre">fetch_arrivals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">netcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stacode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/db.html#DatabaseManager.fetch_arrivals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.fetch_arrivals" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Retrieve P and S wave arrival times for a specific event and station.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>event_id</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Unique identifier for the seismic event.</p></li>
+<li><p><strong>netcode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Network code for the station.</p></li>
+<li><p><strong>stacode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Station code.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Tuple containing (p_arrival, s_arrival) times</dt><dd><p>as timestamps, or None if no matching record is found.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[Tuple[float, float]]</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.fetch_arrivals_distances">
 <span class="sig-name descname"><span class="pre">fetch_arrivals_distances</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">netcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stacode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/db.html#DatabaseManager.fetch_arrivals_distances"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.fetch_arrivals_distances" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Retrieve arrival times and distance metrics for a specific event and station.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>event_id</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Unique identifier for the seismic event.</p></li>
+<li><p><strong>netcode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Network code for the station.</p></li>
+<li><p><strong>stacode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Station code.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Tuple containing</dt><dd><p>(p_arrival, s_arrival, dist_km, dist_deg, azimuth), where:
+- p_arrival: P wave arrival time (timestamp)
+- s_arrival: S wave arrival time (timestamp)
+- dist_km: Distance in kilometers
+- dist_deg: Distance in degrees
+- azimuth: Azimuth angle from event to station
+Returns None if no matching record is found.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[Tuple[float, float, float, float, float]]</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.get_arrival_data">
 <span class="sig-name descname"><span class="pre">get_arrival_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">netcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stacode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/db.html#DatabaseManager.get_arrival_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.get_arrival_data" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Retrieve complete arrival data for a specific event and station.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>event_id</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Unique identifier for the seismic event.</p></li>
+<li><p><strong>netcode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Network code for the station.</p></li>
+<li><p><strong>stacode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Station code.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Dictionary containing all arrival data fields for the</dt><dd><p>specified event and station, or None if no matching record is found.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[Dict[str, Any]]</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.get_events_for_station">
 <span class="sig-name descname"><span class="pre">get_events_for_station</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">netcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stacode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/db.html#DatabaseManager.get_events_for_station"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.get_events_for_station" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Retrieve all seismic events recorded by a specific station.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>netcode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Network code for the station.</p></li>
+<li><p><strong>stacode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Station code.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>List of dictionaries containing arrival data for all</dt><dd><p>events recorded by the station. Returns empty list if no events found.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[Dict[str, Any]]</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.get_stations_for_event">
 <span class="sig-name descname"><span class="pre">get_stations_for_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/db.html#DatabaseManager.get_stations_for_event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.get_stations_for_event" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Retrieve all station data associated with a specific seismic event.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>event_id</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Unique identifier for the seismic event.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>List of dictionaries containing arrival data for all</dt><dd><p>stations that recorded the event. Returns empty list if no stations found.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[Dict[str, Any]]</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.join_continuous_segments">
 <span class="sig-name descname"><span class="pre">join_continuous_segments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gap_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/db.html#DatabaseManager.join_continuous_segments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.join_continuous_segments" title="Link to this definition"></a></dt>
-<dd><p>Join continuous data segments in the database, even across day boundaries.</p>
+<dd><p>Join continuous data segments in the database.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>gap_tolerance</strong> – Maximum allowed gap (in seconds) to still consider segments continuous</p>
+<dd class="field-odd"><p><strong>gap_tolerance</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Maximum allowed gap (in seconds) to consider segments continuous.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -200,30 +390,41 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.reindex_archive_data">
 <span class="sig-name descname"><span class="pre">reindex_archive_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/db.html#DatabaseManager.reindex_archive_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.reindex_archive_data" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.run_query">
-<span class="sig-name descname"><span class="pre">run_query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/db.html#DatabaseManager.run_query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.run_query" title="Link to this definition"></a></dt>
-<dd><p>Run any query!</p>
+<dd><p>Rebuild the index on archive_data table.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.setup_database">
 <span class="sig-name descname"><span class="pre">setup_database</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/db.html#DatabaseManager.setup_database"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.setup_database" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Initialize database schema with required tables and indices.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.vacuum_database">
 <span class="sig-name descname"><span class="pre">vacuum_database</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/db.html#DatabaseManager.vacuum_database"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.vacuum_database" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Rebuild the database file to reclaim unused space.</p>
+</dd></dl>
 
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="seed_vault.service.db.to_timestamp">
 <span class="sig-prename descclassname"><span class="pre">seed_vault.service.db.</span></span><span class="sig-name descname"><span class="pre">to_timestamp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time_obj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/db.html#to_timestamp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.to_timestamp" title="Link to this definition"></a></dt>
-<dd><p>Anything to timestamp helper</p>
+<dd><p>Convert various time objects to Unix timestamp.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>time_obj</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">UTCDateTime</span></code>]</span>) – Time object to convert. Can be int/float timestamp, datetime, or UTCDateTime.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Unix timestamp.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the time object type is not supported.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -266,21 +467,92 @@ here that gets the selection and runs Rob’s script.</p>
 </section>
 <section id="module-seed_vault.service.seismoloader">
 <span id="seed-vault-service-seismoloader-module"></span><h2>seed_vault.service.seismoloader module<a class="headerlink" href="#module-seed_vault.service.seismoloader" title="Link to this heading"></a></h2>
+<p>The main functions for SEED-vault, from original CLI-only version (Pickle 2024)</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="seed_vault.service.seismoloader.CustomConfigParser">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">CustomConfigParser</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/seismoloader.html#CustomConfigParser"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.CustomConfigParser" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ConfigParser</span></code></p>
+<p>Custom configuration parser that can preserve case sensitivity for specified sections.</p>
+<p>This class extends the standard ConfigParser to allow certain sections to maintain
+case sensitivity while others are converted to lowercase.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.service.seismoloader.CustomConfigParser.case_sensitive_sections">
+<span class="sig-name descname"><span class="pre">case_sensitive_sections</span></span><a class="headerlink" href="#seed_vault.service.seismoloader.CustomConfigParser.case_sensitive_sections" title="Link to this definition"></a></dt>
+<dd><p>Set of section names that should preserve case sensitivity.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>set</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Initialize the CustomConfigParser.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*args</strong> – Variable length argument list passed to ConfigParser.</p></li>
+<li><p><strong>**kwargs</strong> – Arbitrary keyword arguments passed to ConfigParser.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.service.seismoloader.CustomConfigParser.optionxform">
 <span class="sig-name descname"><span class="pre">optionxform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optionstr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/seismoloader.html#CustomConfigParser.optionxform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.CustomConfigParser.optionxform" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Transform option names during parsing.</p>
+<p>Overrides the default behavior to preserve the original string case.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>optionstr</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – The option string to transform.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The original string unchanged.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="seed_vault.service.seismoloader.archive_request">
 <span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">archive_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">waveform_clients</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sds_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_manager</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/seismoloader.html#archive_request"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.archive_request" title="Link to this definition"></a></dt>
-<dd><p>Send a request to an FDSN center, parse it, save to archive, and update database</p>
+<dd><p>Download seismic data for a request and archive it in SDS format.</p>
+<p>Retrieves waveform data from FDSN web services, saves it in SDS format,
+and updates the database. Handles authentication, data merging, and
+various error conditions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>request</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – Tuple containing (network, station, location, channel,
+start_time, end_time)</p></li>
+<li><p><strong>waveform_clients</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Client</span></code>]</span>) – Dictionary mapping network codes to FDSN clients.
+Special key ‘open’ is used for default client.</p></li>
+<li><p><strong>sds_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Root path of the SDS archive.</p></li>
+<li><p><strong>db_manager</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../seed_vault.service.html#seed_vault.service.db.DatabaseManager" title="seed_vault.service.db.DatabaseManager"><code class="xref py py-class docutils literal notranslate"><span class="pre">DatabaseManager</span></code></a></span>) – DatabaseManager instance for updating the database.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>Supports per-network and per-station authentication</p></li>
+<li><p>Handles splitting of large station list requests</p></li>
+<li><p>Performs data merging when files already exist</p></li>
+<li><p>Attempts STEIM2 compression, falls back to uncompressed format</p></li>
+<li><p>Groups traces by day to handle fragmented data efficiently</p></li>
+</ul>
+</div>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">clients</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;IU&#39;</span><span class="p">:</span> <span class="n">Client</span><span class="p">(</span><span class="s1">&#39;IRIS&#39;</span><span class="p">),</span> <span class="s1">&#39;open&#39;</span><span class="p">:</span> <span class="n">Client</span><span class="p">(</span><span class="s1">&#39;IRIS&#39;</span><span class="p">)}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">request</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;IU&quot;</span><span class="p">,</span> <span class="s2">&quot;ANMO&quot;</span><span class="p">,</span> <span class="s2">&quot;00&quot;</span><span class="p">,</span> <span class="s2">&quot;BHZ&quot;</span><span class="p">,</span> <span class="s2">&quot;2020-01-01&quot;</span><span class="p">,</span> <span class="s2">&quot;2020-01-02&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">archive_request</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">clients</span><span class="p">,</span> <span class="s2">&quot;/data/seismic&quot;</span><span class="p">,</span> <span class="n">db_manager</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
@@ -292,38 +564,111 @@ here that gets the selection and runs Rob’s script.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="seed_vault.service.seismoloader.collect_requests_event">
 <span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">collect_requests_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/seismoloader.html#collect_requests_event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.collect_requests_event" title="Link to this definition"></a></dt>
-<dd><p>Collect requests for event eq for stations in inv.</p>
+<dd><p>Collect data requests and arrival times for an event at multiple stations.</p>
+<p>For a given earthquake event, calculates arrival times and generates data
+requests for all appropriate stations in the inventory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>eq</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></span>) – ObsPy Event object containing earthquake information.</p></li>
+<li><p><strong>inv</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Inventory</span></code></span>) – ObsPy Inventory object containing station information.</p></li>
+<li><p><strong>model</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TauPyModel</span></code>]</span>) – Optional TauPyModel for travel time calculations.
+If None, uses model from settings or falls back to IASP91.</p></li>
+<li><p><strong>settings</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings"><code class="xref py py-class docutils literal notranslate"><span class="pre">SeismoLoaderSettings</span></code></a>]</span>) – Optional SeismoLoaderSettings object containing configuration.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>List of request tuples (net, sta, loc, chan, start, end)</p></li>
+<li><p>List of arrival data tuples for database</p></li>
+<li><p>Dictionary mapping “net.sta” to P-arrival timestamps</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple containing</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Requires a DatabaseManager instance to check for existing arrivals.
+Time windows are constructed around P-wave arrivals using settings.
+Handles both new calculations and retrieving existing arrival times.</p>
+</div>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">event</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_events</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inventory</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_stations</span><span class="p">(</span><span class="n">network</span><span class="o">=</span><span class="s2">&quot;IU&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">requests</span><span class="p">,</span> <span class="n">arrivals</span><span class="p">,</span> <span class="n">p_times</span> <span class="o">=</span> <span class="n">collect_requests_event</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">event</span><span class="p">,</span> <span class="n">inventory</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">TauPyModel</span><span class="p">(</span><span class="s2">&quot;iasp91&quot;</span><span class="p">)</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="seed_vault.service.seismoloader.combine_requests">
 <span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">combine_requests</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">requests</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/seismoloader.html#combine_requests"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.combine_requests" title="Link to this definition"></a></dt>
-<dd><p>Combine requests for efficiency.</p>
+<dd><p>Combine multiple data requests for efficiency.</p>
+<p>Groups requests by network and time range, combining stations, locations,
+and channels into comma-separated lists to minimize the number of requests.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>requests</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span>) – List of request tuples, each containing:
+(network, station, location, channel, start_time, end_time)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of combined request tuples with the same structure but with
+station, location, and channel fields potentially containing
+comma-separated lists.</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">original</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span>    <span class="p">(</span><span class="s2">&quot;IU&quot;</span><span class="p">,</span> <span class="s2">&quot;ANMO&quot;</span><span class="p">,</span> <span class="s2">&quot;00&quot;</span><span class="p">,</span> <span class="s2">&quot;BHZ&quot;</span><span class="p">,</span> <span class="s2">&quot;2020-01-01&quot;</span><span class="p">,</span> <span class="s2">&quot;2020-01-02&quot;</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="p">(</span><span class="s2">&quot;IU&quot;</span><span class="p">,</span> <span class="s2">&quot;COLA&quot;</span><span class="p">,</span> <span class="s2">&quot;00&quot;</span><span class="p">,</span> <span class="s2">&quot;BHZ&quot;</span><span class="p">,</span> <span class="s2">&quot;2020-01-01&quot;</span><span class="p">,</span> <span class="s2">&quot;2020-01-02&quot;</span><span class="p">)</span>
+<span class="gp">... </span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">combined</span> <span class="o">=</span> <span class="n">combine_requests</span><span class="p">(</span><span class="n">original</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">combined</span><span class="p">)</span>
+<span class="go">[(&quot;IU&quot;, &quot;ANMO,COLA&quot;, &quot;00&quot;, &quot;BHZ&quot;, &quot;2020-01-01&quot;, &quot;2020-01-02&quot;)]</span>
+</pre></div>
+</div>
 </dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="seed_vault.service.seismoloader.convert_degrees_to_radius_meter">
-<span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">convert_degrees_to_radius_meter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">radius_degree</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/seismoloader.html#convert_degrees_to_radius_meter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.convert_degrees_to_radius_meter" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="seed_vault.service.seismoloader.convert_degress_to_radius_km">
-<span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">convert_degress_to_radius_km</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">radius_degree</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/seismoloader.html#convert_degress_to_radius_km"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.convert_degress_to_radius_km" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="seed_vault.service.seismoloader.convert_radius_to_degrees">
-<span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">convert_radius_to_degrees</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">radius_meters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/seismoloader.html#convert_radius_to_degrees"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.convert_radius_to_degrees" title="Link to this definition"></a></dt>
-<dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="seed_vault.service.seismoloader.get_events">
 <span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">get_events</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/seismoloader.html#get_events"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.get_events" title="Link to this definition"></a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Catalog</span></code>]</span></p>
+<dd><p>Retrieve seismic event catalogs based on configured criteria.</p>
+<p>Queries FDSN web services or loads local catalogs for seismic events matching
+specified criteria including time range, magnitude, depth, and geographic constraints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>settings</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings"><code class="xref py py-class docutils literal notranslate"><span class="pre">SeismoLoaderSettings</span></code></a></span>) – Configuration settings containing event search criteria,
+client information, and filtering preferences.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Catalog</span></code>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of ObsPy Catalog objects containing matching events.
+Returns empty catalog if no events found.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>FileNotFoundError</strong> – If local catalog file not found.</p></li>
+<li><p><strong>PermissionError</strong> – If unable to access local catalog file.</p></li>
+<li><p><strong>ValueError</strong> – If invalid geographic constraint type specified.</p></li>
+</ul>
 </dd>
 </dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span> <span class="o">=</span> <span class="n">SeismoLoaderSettings</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">min_magnitude</span> <span class="o">=</span> <span class="mf">5.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">catalogs</span> <span class="o">=</span> <span class="n">get_events</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
@@ -335,31 +680,175 @@ here that gets the selection and runs Rob’s script.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="seed_vault.service.seismoloader.get_preferred_channels">
 <span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">get_preferred_channels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cha_rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loc_rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/seismoloader.html#get_preferred_channels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.get_preferred_channels" title="Link to this definition"></a></dt>
-<dd><p>Select the best available channels from an FDSN inventory based on channel and location code rankings.
-If everything is filtered, returns the original station object.
-Channel order before location order.</p>
+<dd><p>Select the best available channels from an FDSN inventory based on rankings.</p>
+<p>Filters an inventory to keep only the preferred channels based on channel code
+and location code rankings. For each component (Z, N, E), selects the channel
+with the highest ranking.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inv</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Inventory</span></code></span>) – ObsPy Inventory object to filter.</p></li>
+<li><p><strong>cha_rank</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span>) – List of channel codes in order of preference (e.g., [‘BH’, ‘HH’]).
+Lower index means higher preference.</p></li>
+<li><p><strong>loc_rank</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span>) – List of location codes in order of preference (e.g., [‘’, ‘00’]).
+Lower index means higher preference. ‘–’ is treated as empty string.</p></li>
+<li><p><strong>time</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">UTCDateTime</span></code>]</span>) – Optional time to filter channel availability at that time.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Inventory</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Filtered ObsPy Inventory containing only the preferred channels.
+If all channels would be filtered out, returns original station.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Channel preference takes precedence over location preference.
+If neither cha_rank nor loc_rank is provided, returns original inventory.</p>
+</div>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">inventory</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_stations</span><span class="p">(</span><span class="n">network</span><span class="o">=</span><span class="s2">&quot;IU&quot;</span><span class="p">,</span> <span class="n">station</span><span class="o">=</span><span class="s2">&quot;ANMO&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cha_rank</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;BH&#39;</span><span class="p">,</span> <span class="s1">&#39;HH&#39;</span><span class="p">,</span> <span class="s1">&#39;EH&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">loc_rank</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;00&#39;</span><span class="p">,</span> <span class="s1">&#39;10&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">filtered</span> <span class="o">=</span> <span class="n">get_preferred_channels</span><span class="p">(</span><span class="n">inventory</span><span class="p">,</span> <span class="n">cha_rank</span><span class="p">,</span> <span class="n">loc_rank</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="seed_vault.service.seismoloader.get_sds_filenames">
 <span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">get_sds_filenames</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sds_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/seismoloader.html#get_sds_filenames"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.get_sds_filenames" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Generate SDS (SeisComP Data Structure) format filenames for a time range.</p>
+<p>Creates a list of daily SDS format filenames for given network, station,
+location, and channel codes over a specified time period.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Network code.</p></li>
+<li><p><strong>s</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Station code.</p></li>
+<li><p><strong>l</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Location code.</p></li>
+<li><p><strong>c</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Channel code.</p></li>
+<li><p><strong>time_start</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">UTCDateTime</span></code></span>) – Start time for data requests.</p></li>
+<li><p><strong>time_end</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">UTCDateTime</span></code></span>) – End time for data requests.</p></li>
+<li><p><strong>sds_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Root path of the SDS archive.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>/sds_path/YEAR/NETWORK/STATION/CHANNEL.D/NET.STA.LOC.CHA.D.YEAR.DOY</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of SDS format filepaths in the form</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">paths</span> <span class="o">=</span> <span class="n">get_sds_filenames</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="s2">&quot;IU&quot;</span><span class="p">,</span> <span class="s2">&quot;ANMO&quot;</span><span class="p">,</span> <span class="s2">&quot;00&quot;</span><span class="p">,</span> <span class="s2">&quot;BHZ&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">UTCDateTime</span><span class="p">(</span><span class="s2">&quot;2020-01-01&quot;</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">UTCDateTime</span><span class="p">(</span><span class="s2">&quot;2020-01-03&quot;</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="s2">&quot;/data/seismic&quot;</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="seed_vault.service.seismoloader.get_selected_stations_at_channel_level">
 <span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">get_selected_stations_at_channel_level</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/seismoloader.html#get_selected_stations_at_channel_level"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.get_selected_stations_at_channel_level" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Update inventory information to include channel-level details for selected stations.</p>
+<p>Retrieves detailed channel information for each station in the selected inventory
+using the specified FDSN client.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>settings</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings"><code class="xref py py-class docutils literal notranslate"><span class="pre">SeismoLoaderSettings</span></code></a></span>) – Configuration settings containing station selection and client information.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings"><code class="xref py py-class docutils literal notranslate"><span class="pre">SeismoLoaderSettings</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Updated settings with refined station inventory including channel information.</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span> <span class="o">=</span> <span class="n">SeismoLoaderSettings</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span> <span class="o">=</span> <span class="n">get_selected_stations_at_channel_level</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="seed_vault.service.seismoloader.get_stations">
 <span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">get_stations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/seismoloader.html#get_stations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.get_stations" title="Link to this definition"></a></dt>
-<dd><p>Refine input args to what is needed for get_stations.</p>
+<dd><p>Retrieve station inventory based on configured criteria.</p>
+<p>Gets station information from FDSN web services or local inventory based on
+settings, including geographic constraints, network/station filters, and channel
+preferences.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>settings</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings"><code class="xref py py-class docutils literal notranslate"><span class="pre">SeismoLoaderSettings</span></code></a></span>) – Configuration settings containing station selection criteria,
+client information, and filtering preferences.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Inventory</span></code>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Inventory containing matching stations, or None if no stations found
+or if station service is unavailable.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The function applies several layers of filtering:
+1. Basic network/station/location/channel criteria
+2. Geographic constraints (if specified)
+3. Station exclusions/inclusions
+4. Channel and location preferences
+5. Sample rate filtering</p>
+</div>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span> <span class="o">=</span> <span class="n">SeismoLoaderSettings</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">network</span> <span class="o">=</span> <span class="s2">&quot;IU&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inventory</span> <span class="o">=</span> <span class="n">get_stations</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="seed_vault.service.seismoloader.miniseed_to_db_element">
 <span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">miniseed_to_db_element</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/seismoloader.html#miniseed_to_db_element"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.miniseed_to_db_element" title="Link to this definition"></a></dt>
-<dd><p>Create a database element from a miniseed file.</p>
+<dd><p>Convert a miniseed file to a database element tuple.</p>
+<p>Processes a miniseed file and extracts relevant metadata for database storage.
+Expects files in the format: network.station.location.channel.*.year.julday</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Path to the miniseed file.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl>
+<dt>A tuple containing:</dt><dd><ul class="simple">
+<li><p>network: Network code</p></li>
+<li><p>station: Station code</p></li>
+<li><p>location: Location code</p></li>
+<li><p>channel: Channel code</p></li>
+<li><p>start_time: ISO format start time</p></li>
+<li><p>end_time: ISO format end time</p></li>
+</ul>
+<p>Returns None if file is invalid or cannot be processed.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[Tuple[str, str, str, str, str, str]]</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">element</span> <span class="o">=</span> <span class="n">miniseed_to_db_element</span><span class="p">(</span><span class="s2">&quot;/path/to/IU.ANMO.00.BHZ.D.2020.001&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="n">element</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">network</span><span class="p">,</span> <span class="n">station</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">element</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
@@ -371,7 +860,7 @@ Channel order before location order.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="seed_vault.service.seismoloader.populate_database_from_files_dumb">
 <span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">populate_database_from_files_dumb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cursor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_paths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/seismoloader.html#populate_database_from_files_dumb"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.populate_database_from_files_dumb" title="Link to this definition"></a></dt>
-<dd><p>Quickly insert/update a few SDS archive files into the SQL database. Assume cursor already open!</p>
+<dd><p>Quickly insert/update a few SDS archive files into the SQL database. “Dumb” version!</p>
 </dd></dl>
 
 <dl class="py function">
@@ -383,26 +872,68 @@ Channel order before location order.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="seed_vault.service.seismoloader.prune_requests">
 <span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">prune_requests</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">requests</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_manager</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sds_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_request_window</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/seismoloader.html#prune_requests"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.prune_requests" title="Link to this definition"></a></dt>
-<dd><p>Remove any overlapping requests where already-archived data may exist.
-Ignore requests that are less than min_request_window seconds.</p>
+<dd><p>Remove overlapping requests where data already exists in the archive.</p>
+<p>Checks both the database and filesystem for existing data and removes or
+splits requests to avoid re-downloading data that’s already available.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>requests</strong> – List of request tuples (network, station, location, channel, start_time, end_time)</p></li>
-<li><p><strong>db_manager</strong> – DatabaseManager instance</p></li>
-<li><p><strong>min_request_window</strong> – Minimum request window in seconds (default: 3)</p></li>
+<li><p><strong>requests</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span>) – List of request tuples containing:
+(network, station, location, channel, start_time, end_time)</p></li>
+<li><p><strong>db_manager</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../seed_vault.service.html#seed_vault.service.db.DatabaseManager" title="seed_vault.service.db.DatabaseManager"><code class="xref py py-class docutils literal notranslate"><span class="pre">DatabaseManager</span></code></a></span>) – DatabaseManager instance for querying existing data.</p></li>
+<li><p><strong>sds_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Root path of the SDS archive.</p></li>
+<li><p><strong>min_request_window</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Minimum time window in seconds to keep a request.
+Requests shorter than this are discarded.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>List of pruned request tuples</p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of pruned request tuples, sorted by start time, network, and station.</p>
 </dd>
 </dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This function will update the database if it finds files in the SDS
+structure that aren’t yet recorded in the database.</p>
+</div>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">requests</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;IU&quot;</span><span class="p">,</span> <span class="s2">&quot;ANMO&quot;</span><span class="p">,</span> <span class="s2">&quot;00&quot;</span><span class="p">,</span> <span class="s2">&quot;BHZ&quot;</span><span class="p">,</span> <span class="s2">&quot;2020-01-01&quot;</span><span class="p">,</span> <span class="s2">&quot;2020-01-02&quot;</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pruned</span> <span class="o">=</span> <span class="n">prune_requests</span><span class="p">(</span><span class="n">requests</span><span class="p">,</span> <span class="n">db_manager</span><span class="p">,</span> <span class="s2">&quot;/data/seismic&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="seed_vault.service.seismoloader.read_config">
 <span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">read_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/seismoloader.html#read_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.read_config" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Read and process a configuration file with case-sensitive handling for specific sections.</p>
+<p>Reads a configuration file and processes it such that certain sections
+(AUTH, DATABASE, SDS, WAVEFORM) preserve their case sensitivity while
+other sections are converted to lowercase.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config_file</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Path to the configuration file to read.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Processed configuration with appropriate case handling</dt><dd><p>for different sections.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../seed_vault.service.html#seed_vault.service.seismoloader.CustomConfigParser" title="seed_vault.service.seismoloader.CustomConfigParser">CustomConfigParser</a></p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">config</span> <span class="o">=</span> <span class="n">read_config</span><span class="p">(</span><span class="s2">&quot;config.ini&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">auth_value</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;AUTH&quot;</span><span class="p">,</span> <span class="s2">&quot;ApiKey&quot;</span><span class="p">)</span>  <span class="c1"># Case preserved</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">other_value</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;settings&quot;</span><span class="p">,</span> <span class="s2">&quot;parameter&quot;</span><span class="p">)</span>  <span class="c1"># Converted to lowercase</span>
+</pre></div>
+</div>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="seed_vault.service.seismoloader.run_continuous">
@@ -453,47 +984,88 @@ in debugging and monitoring of data retrieval processes.</p></li>
 <dl class="py function">
 <dt class="sig sig-object py" id="seed_vault.service.seismoloader.run_event">
 <span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">run_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop_event</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/seismoloader.html#run_event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.run_event" title="Link to this definition"></a></dt>
-<dd><p>Processes and downloads seismic event data for each event in the provided catalog using the specified
-settings and station inventory. The function handles data requests, filters out already available data,
-combines requests for efficiency, and manages authentication for access to restricted data.</p>
+<dd><p>Processes and downloads seismic event data for each event in the provided catalog using
+the specified settings and station inventory. The function manages multiple steps including
+data requests, arrival time calculations, database updates, and data retrieval.</p>
+<p>The function handles data retrieval from FDSN web services with support for authenticated
+access and restricted data. Processing can be interrupted via the stop_event parameter,
+and errors during execution are handled gracefully with detailed logging.</p>
 <p>Parameters:
-- settings (SeismoLoaderSettings): Configuration settings that include client details, authentication credentials,</p>
+- settings (SeismoLoaderSettings): Configuration settings that include client details,</p>
 <blockquote>
-<div><p>event-specific parameters like radius and time window, and paths for data storage.</p>
+<div><p>authentication credentials, event-specific parameters like radius and time window,
+and paths for data storage.</p>
 </div></blockquote>
 <ul class="simple">
-<li><p>inv (Inventory): The network/station/channel inventory to be used for data requests, typically relevant to the
-stations involved in the seismic events.</p></li>
-<li><p>catalog (Catalog): A collection of seismic events, each containing data like origin time, coordinates, and depth.</p></li>
+<li><p>stop_event (threading.Event): Optional event flag for canceling the operation mid-execution.
+If provided and set, the function will terminate gracefully at the next safe point.</p></li>
 </ul>
 <p>Workflow:
-1. Initialize a primary waveform client for data retrieval.
-2. Loop through each event in the catalog, collecting necessary data request parameters.
-3. For each event, collect data requests based on its geographical and temporal parameters.
-4. Filter out data requests that are already satisfied with existing data in the database.
-5. Optionally combine requests for operational efficiency.
-6. Manage additional client creation for restricted data based on user credentials.
-7. Execute the data retrieval requests, then archive the data to disk and update the database.</p>
-<p>Raises:
-- Exception: General exceptions could be caught related to client creation, data retrieval, or during the</p>
+1. Initialize paths and database connections
+2. Load appropriate travel time model for arrival calculations
+3. Process each event in the catalog:</p>
 <blockquote>
-<div><p>archival process. These are logged but not re-raised, allowing the function to continue processing further events.</p>
+<div><ol class="loweralpha simple">
+<li><p>Calculate arrival times and generate data requests</p></li>
+<li><p>Update arrival information in database</p></li>
+<li><p>Check for existing data and prune redundant requests</p></li>
+<li><p>Download and archive new data</p></li>
+<li><p>Add event metadata to traces (arrivals, distances, azimuths)</p></li>
+</ol>
+</div></blockquote>
+<ol class="arabic simple" start="4">
+<li><p>Combine data into event streams with complete metadata</p></li>
+</ol>
+<p>Returns:
+- List[obspy.Stream]: List of streams, each containing data for one event with</p>
+<blockquote>
+<div><p>complete metadata including arrival times, distances, and azimuths. Returns None
+if operation is canceled or no data is processed.</p>
+</div></blockquote>
+<p>Raises:
+- Exception: General exceptions from client creation, data retrieval, or processing</p>
+<blockquote>
+<div><p>are caught and logged but not re-raised, allowing processing to continue with
+remaining events.</p>
 </div></blockquote>
 <p>Notes:
-- The function includes comments questioning the design, such as the redundancy of using ‘inv’ from STATION</p>
-<blockquote>
-<div><p>settings in EVENTS processing, which suggests a potential refactor for better separation of concerns or efficiency.</p>
-</div></blockquote>
-<ul class="simple">
-<li><p>Care should be taken when modifying settings and handling authentication to ensure the integrity and security
-of data access and retrieval.</p></li>
-</ul>
+- The function supports threading and can be safely interrupted via stop_event
+- Station metadata is enriched with event-specific information including arrivals
+- Data is archived in SDS format and the database is updated accordingly
+- Each stream in the output includes complete event metadata for analysis</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="seed_vault.service.seismoloader.run_main">
 <span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">run_main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">from_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/seismoloader.html#run_main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.run_main" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Main entry point for seismic data retrieval and processing.</p>
+<p>Coordinates the overall workflow for retrieving and processing seismic data,
+handling both continuous and event-based data collection based on settings.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>settings</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings"><code class="xref py py-class docutils literal notranslate"><span class="pre">SeismoLoaderSettings</span></code></a>]</span>) – Configuration settings for data retrieval and processing.
+If None, settings must be provided via from_file.</p></li>
+<li><p><strong>from_file</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – Path to configuration file to load settings from.
+Only used if settings is None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Using settings object</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span> <span class="o">=</span> <span class="n">SeismoLoaderSettings</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">download_type</span> <span class="o">=</span> <span class="n">DownloadType</span><span class="o">.</span><span class="n">EVENT</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">run_main</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Using configuration file</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">run_main</span><span class="p">(</span><span class="n">from_file</span><span class="o">=</span><span class="s2">&quot;config.ini&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="seed_vault.service.seismoloader.select_highest_samplerate">
@@ -512,21 +1084,99 @@ Channels are considered duplicates if:</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="seed_vault.service.seismoloader.setup_paths">
 <span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">setup_paths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/seismoloader.html#setup_paths"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.setup_paths" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Initialize paths and database for seismic data management.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>settings</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings"><code class="xref py py-class docutils literal notranslate"><span class="pre">SeismoLoaderSettings</span></code></a></span>) – Configuration settings containing paths and database information.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>Updated settings with validated paths</p></li>
+<li><p>Initialized DatabaseManager instance</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple containing</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If SDS path is not set in settings.</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span> <span class="o">=</span> <span class="n">SeismoLoaderSettings</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">sds_path</span> <span class="o">=</span> <span class="s2">&quot;/data/seismic&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="p">,</span> <span class="n">db_manager</span> <span class="o">=</span> <span class="n">setup_paths</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="seed_vault.service.seismoloader.stream_to_db_element">
 <span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">stream_to_db_element</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">st</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/seismoloader.html#stream_to_db_element"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.stream_to_db_element" title="Link to this definition"></a></dt>
-<dd><p>Create a database element from a stream
-(assuming all traces have same NSLC!)
-just a bit faster than re-opening the file
-again via miniseed_to_db_element.</p>
+<dd><p>Convert an ObsPy Stream object to a database element tuple.</p>
+<p>Creates a database element from a stream, assuming all traces have the same
+Network-Station-Location-Channel (NSLC) codes. This is typically faster than
+reading from a file using miniseed_to_db_element.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>st</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Stream</span></code></span>) – ObsPy Stream object containing seismic traces.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl>
+<dt>A tuple containing:</dt><dd><ul class="simple">
+<li><p>network: Network code</p></li>
+<li><p>station: Station code</p></li>
+<li><p>location: Location code</p></li>
+<li><p>channel: Channel code</p></li>
+<li><p>start_time: ISO format start time</p></li>
+<li><p>end_time: ISO format end time</p></li>
+</ul>
+<p>Returns None if stream is empty.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[Tuple[str, str, str, str, str, str]]</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">stream</span> <span class="o">=</span> <span class="n">obspy</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">element</span> <span class="o">=</span> <span class="n">stream_to_db_element</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="n">element</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">network</span><span class="p">,</span> <span class="n">station</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">element</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="seed_vault.service.seismoloader.to_timestamp">
 <span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">to_timestamp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time_obj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/seismoloader.html#to_timestamp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.to_timestamp" title="Link to this definition"></a></dt>
-<dd><p>Anything to timestamp helper.</p>
+<dd><p>Convert various time objects to Unix timestamp.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>time_obj</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">UTCDateTime</span></code>]</span>) – Time object to convert. Can be one of:
+- int/float: Already a timestamp
+- datetime: Python datetime object
+- UTCDateTime: ObsPy UTCDateTime object</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Unix timestamp (seconds since epoch).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the input time object type is not supported.</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ts</span> <span class="o">=</span> <span class="n">to_timestamp</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ts</span> <span class="o">=</span> <span class="n">to_timestamp</span><span class="p">(</span><span class="n">UTCDateTime</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ts</span> <span class="o">=</span> <span class="n">to_timestamp</span><span class="p">(</span><span class="mf">1234567890.0</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </section>

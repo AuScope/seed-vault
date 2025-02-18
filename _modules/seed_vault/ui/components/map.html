@@ -88,10 +88,12 @@
            <div itemprop="articleBody">
              
   <h1>Source code for seed_vault.ui.components.map</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span>
-
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">streamlit</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">st</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">obspy.geodetics.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">degrees2kilometers</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">folium</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">folium.plugins</span><span class="w"> </span><span class="kn">import</span> <span class="n">Draw</span><span class="p">,</span> <span class="n">Fullscreen</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">folium</span><span class="w"> </span><span class="kn">import</span> <span class="n">MacroElement</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="kn">import</span> <span class="n">Normalize</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.cm</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cm</span>
@@ -99,21 +101,14 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jinja2</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.models.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">RectangleArea</span><span class="p">,</span> <span class="n">CircleArea</span> 
 <span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.enums.ui</span><span class="w"> </span><span class="kn">import</span> <span class="n">Steps</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.utils.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">AREA_COLOR</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.service.seismoloader</span><span class="w"> </span><span class="kn">import</span> <span class="n">convert_degrees_to_radius_meter</span>
-<span class="c1"># from shapely.geometry import Point</span>
-<span class="c1"># from shapely.geometry.polygon import Polygon</span>
-<span class="c1"># import geopandas as gpd</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">streamlit</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">st</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.models.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeometryConstraint</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">folium.plugins</span><span class="w"> </span><span class="kn">import</span> <span class="n">Draw</span>
 
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">folium</span><span class="w"> </span><span class="kn">import</span> <span class="n">MacroElement</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">jinja2</span>
 
 <span class="n">DEFAULT_COLOR_MARKER</span> <span class="o">=</span> <span class="s1">&#39;blue&#39;</span>
 
@@ -230,7 +225,7 @@
     <span class="k">if</span> <span class="n">coords</span><span class="o">.</span><span class="n">min_radius</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">feature_group</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">folium</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span>
             <span class="n">location</span><span class="o">=</span><span class="p">[</span><span class="n">coords</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span> <span class="n">coords</span><span class="o">.</span><span class="n">lng</span><span class="p">],</span>
-            <span class="n">radius</span><span class="o">=</span><span class="n">convert_degrees_to_radius_meter</span><span class="p">(</span><span class="n">coords</span><span class="o">.</span><span class="n">max_radius</span><span class="p">),</span>
+            <span class="n">radius</span><span class="o">=</span><span class="n">degrees2kilometers</span><span class="p">(</span><span class="n">coords</span><span class="o">.</span><span class="n">max_radius</span><span class="p">)</span><span class="o">*</span><span class="mi">1000</span><span class="p">,</span>
             <span class="n">color</span><span class="o">=</span> <span class="n">AREA_COLOR</span><span class="p">,</span>
             <span class="n">fill</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">fill_opacity</span><span class="o">=</span><span class="mf">0.5</span>
@@ -239,7 +234,7 @@
         <span class="c1"># Outer Circle</span>
         <span class="n">feature_group</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">folium</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span>
             <span class="n">location</span><span class="o">=</span><span class="p">[</span><span class="n">coords</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span> <span class="n">coords</span><span class="o">.</span><span class="n">lng</span><span class="p">],</span>
-            <span class="n">radius</span><span class="o">=</span><span class="n">convert_degrees_to_radius_meter</span><span class="p">(</span><span class="n">coords</span><span class="o">.</span><span class="n">max_radius</span><span class="p">),</span>
+            <span class="n">radius</span><span class="o">=</span><span class="n">degrees2kilometers</span><span class="p">(</span><span class="n">coords</span><span class="o">.</span><span class="n">max_radius</span><span class="p">)</span><span class="o">*</span><span class="mi">1000</span><span class="p">,</span>
             <span class="n">color</span><span class="o">=</span><span class="n">coords</span><span class="o">.</span><span class="n">color</span><span class="p">,</span>
             <span class="n">fill</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">dash_array</span><span class="o">=</span><span class="s1">&#39;2, 4&#39;</span><span class="p">,</span>
@@ -248,7 +243,7 @@
         <span class="c1"># Inner Circle</span>
         <span class="n">feature_group</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">folium</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span>
             <span class="n">location</span><span class="o">=</span><span class="p">[</span><span class="n">coords</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span> <span class="n">coords</span><span class="o">.</span><span class="n">lng</span><span class="p">],</span>
-            <span class="n">radius</span><span class="o">=</span><span class="n">convert_degrees_to_radius_meter</span><span class="p">(</span><span class="n">coords</span><span class="o">.</span><span class="n">min_radius</span><span class="p">),</span>
+            <span class="n">radius</span><span class="o">=</span><span class="n">degrees2kilometers</span><span class="p">(</span><span class="n">coords</span><span class="o">.</span><span class="n">max_radius</span><span class="p">)</span><span class="o">*</span><span class="mi">1000</span><span class="p">,</span>
             <span class="n">color</span><span class="o">=</span><span class="n">coords</span><span class="o">.</span><span class="n">color</span><span class="p">,</span>
             <span class="n">fill</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">dash_array</span><span class="o">=</span><span class="s1">&#39;2, 4&#39;</span><span class="p">,</span>

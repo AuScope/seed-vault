@@ -88,7 +88,15 @@
            <div itemprop="articleBody">
              
   <h1>Source code for seed_vault.service.db</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sqlite3</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Database management module for the SEED-vault archive</span>
+
+<span class="sd">This module provides a DatabaseManager class for handling seismic data storage in SQLite,</span>
+<span class="sd">including archive data and arrival data. It implements connection management, data insertion,</span>
+<span class="sd">querying, and database maintenance operations.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">sqlite3</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">contextlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
@@ -96,15 +104,26 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">obspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">UTCDateTime</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span>
 
 <div class="viewcode-block" id="to_timestamp">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.to_timestamp">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">to_timestamp</span><span class="p">(</span><span class="n">time_obj</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Anything to timestamp helper &quot;&quot;&quot;</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">to_timestamp</span><span class="p">(</span><span class="n">time_obj</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">,</span> <span class="n">UTCDateTime</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert various time objects to Unix timestamp.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        time_obj: Time object to convert. Can be int/float timestamp, datetime, or UTCDateTime.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        float: Unix timestamp.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If the time object type is not supported.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_obj</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
         <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">time_obj</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_obj</span><span class="p">,</span> <span class="n">datetime</span><span class="p">):</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_obj</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">time_obj</span><span class="o">.</span><span class="n">timestamp</span><span class="p">()</span>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_obj</span><span class="p">,</span> <span class="n">UTCDateTime</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">time_obj</span><span class="o">.</span><span class="n">timestamp</span>
@@ -115,18 +134,47 @@
 <div class="viewcode-block" id="DatabaseManager">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.DatabaseManager">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">DatabaseManager</span><span class="p">:</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Manages seismic data storage and retrieval using SQLite.</span>
+
+<span class="sd">    This class handles database connections, table creation, data insertion,</span>
+<span class="sd">    and querying for seismic archive and arrival data.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        db_path (str): Path to the SQLite database file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize DatabaseManager with database path.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            db_path: Path where the SQLite database should be created/accessed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">db_path</span> <span class="o">=</span> <span class="n">db_path</span>
         <span class="n">parent_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">db_path</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span>
         <span class="n">parent_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">setup_database</span><span class="p">()</span>
+
 <div class="viewcode-block" id="DatabaseManager.connection">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.DatabaseManager.connection">[docs]</a>
     <span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">connection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_retries</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">initial_delay</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Context manager for safe database connections with retry mechanism.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">connection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">initial_delay</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Context manager for database connections with retry mechanism.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            max_retries: Maximum number of connection retry attempts.</span>
+<span class="sd">            initial_delay: Initial delay between retries in seconds.</span>
+
+<span class="sd">        Yields:</span>
+<span class="sd">            sqlite3.Connection: Database connection object.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            sqlite3.OperationalError: If database connection fails after all retries.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">retry_count</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">delay</span> <span class="o">=</span> <span class="n">initial_delay</span>
+        
         <span class="k">while</span> <span class="n">retry_count</span> <span class="o">&lt;</span> <span class="n">max_retries</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">conn</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db_path</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
@@ -153,11 +201,12 @@
 <div class="viewcode-block" id="DatabaseManager.setup_database">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.DatabaseManager.setup_database">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">setup_database</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize database schema with required tables and indices.&quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
             <span class="n">cursor</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
             
             <span class="c1"># Create archive_data table</span>
-            <span class="c1"># starttime and endtime are isoformat, importtime is timestamp</span>
             <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
 <span class="s1">                CREATE TABLE IF NOT EXISTS archive_data (</span>
 <span class="s1">                    id INTEGER PRIMARY KEY AUTOINCREMENT,</span>
@@ -178,26 +227,6 @@
 <span class="s1">            &#39;&#39;&#39;</span><span class="p">)</span>
             
             <span class="c1"># Create arrival_data table</span>
-                <span class="c1"># event_id / unique eventID which usually points to a web address</span>
-                <span class="c1"># e_mag / earthquake magnitude</span>
-                <span class="c1"># e_lat / earthquake origin latitude</span>
-                <span class="c1"># e_lon / earthquake origin longitude</span>
-                <span class="c1"># e_depth / earthquake depth (km)</span>
-                <span class="c1"># e_time / earthquake origin time (utc)</span>
-                <span class="c1"># s_netcode / station network code</span>
-                <span class="c1"># s_stacode / station station code</span>
-                <span class="c1"># s_lat / station latitude</span>
-                <span class="c1"># s_lon / station longitude</span>
-                <span class="c1"># s_elev / station elevation (km)</span>
-                <span class="c1"># s_start / station start date (timestamp) * some scenarios where there are multiple stations at different times</span>
-                <span class="c1"># s_end / station end date (timestamp) * NULL if station is still running</span>
-                <span class="c1"># dist_deg / distance between event and station in degrees</span>
-                <span class="c1"># dist_km / distance between event and station in km</span>
-                <span class="c1"># azimuth / azimuth from EVENT to STATION</span>
-                <span class="c1"># p_arrival / estimated p arrival at station (timestamp)</span>
-                <span class="c1"># s_arrival / estimated S arrival at station (timestamp)</span>
-                <span class="c1"># model / 1D earth model used in TauP</span>
-                <span class="c1"># importtime / timestamp</span>
             <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
 <span class="s1">                CREATE TABLE IF NOT EXISTS arrival_data (</span>
 <span class="s1">                    event_id TEXT,</span>
@@ -219,7 +248,7 @@
 <span class="s1">                    p_arrival REAL,</span>
 <span class="s1">                    s_arrival REAL,</span>
 <span class="s1">                    model TEXT,</span>
-<span class="s1">                    importtime,</span>
+<span class="s1">                    importtime REAL,</span>
 <span class="s1">                    PRIMARY KEY (event_id, s_netcode, s_stacode, s_start)</span>
 <span class="s1">                )</span>
 <span class="s1">            &#39;&#39;&#39;</span><span class="p">)</span></div>
@@ -227,16 +256,17 @@
 
 <div class="viewcode-block" id="DatabaseManager.display_contents">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.DatabaseManager.display_contents">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">display_contents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end_time</span><span class="o">=</span><span class="mi">4102444799</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">display_contents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">start_time</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">,</span> <span class="n">UTCDateTime</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+                        <span class="n">end_time</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">,</span> <span class="n">UTCDateTime</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4102444799</span><span class="p">,</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Display the contents of a specified table within a given time range.</span>
-<span class="sd">        </span>
-<span class="sd">        :param table_name: Name of the table to query (e.g., &#39;archive_data&#39; or &#39;arrival_data&#39;)</span>
-<span class="sd">        :param starttime: Start time for the query (can be timestamp, datetime, or UTCDateTime)</span>
-<span class="sd">        :param endtime: End time for the query (can be timestamp, datetime, or UTCDateTime)</span>
-<span class="sd">        :param limit: Maximum number of rows to return</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        Display contents of a specified table within a given time range.</span>
 
+<span class="sd">        Args:</span>
+<span class="sd">            table_name: Name of the table to query (&#39;archive_data&#39; or &#39;arrival_data&#39;).</span>
+<span class="sd">            start_time: Start time for the query.</span>
+<span class="sd">            end_time: End time for the query.</span>
+<span class="sd">            limit: Maximum number of rows to return.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">start_timestamp</span> <span class="o">=</span> <span class="n">to_timestamp</span><span class="p">(</span><span class="n">start_time</span><span class="p">)</span>
             <span class="n">end_timestamp</span> <span class="o">=</span> <span class="n">to_timestamp</span><span class="p">(</span><span class="n">end_time</span><span class="p">)</span>
@@ -247,23 +277,19 @@
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
             <span class="n">cursor</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
             
-            <span class="c1"># Get column names</span>
             <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PRAGMA table_info(</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
             <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()]</span>
             
-            <span class="c1"># Construct and execute query</span>
-            <span class="n">query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">                SELECT * FROM </span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span>
+            <span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                SELECT * FROM </span><span class="si">{table_name}</span>
 <span class="s2">                WHERE importtime BETWEEN ? AND ?</span>
 <span class="s2">                ORDER BY importtime</span>
 <span class="s2">                LIMIT ?</span>
 <span class="s2">            &quot;&quot;&quot;</span>
             <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="p">(</span><span class="n">start_timestamp</span><span class="p">,</span> <span class="n">end_timestamp</span><span class="p">,</span> <span class="n">limit</span><span class="p">))</span>
             
-            <span class="c1"># Fetch results</span>
             <span class="n">results</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
             
-            <span class="c1"># Print results</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Contents of </span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2"> (limited to </span><span class="si">{</span><span class="n">limit</span><span class="si">}</span><span class="s2"> rows):&quot;</span><span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">80</span><span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; | &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">columns</span><span class="p">))</span>
@@ -274,10 +300,10 @@
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Total rows: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 
-    <span class="c1"># tools to clean / maintain tables if they get very large or many elements deleted (not currently implemented)</span>
 <div class="viewcode-block" id="DatabaseManager.reindex_archive_data">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.DatabaseManager.reindex_archive_data">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">reindex_archive_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Rebuild the index on archive_data table.&quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
             <span class="n">cursor</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
             <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;REINDEX idx_archive_data&quot;</span><span class="p">)</span></div>
@@ -286,13 +312,19 @@
 <div class="viewcode-block" id="DatabaseManager.vacuum_database">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.DatabaseManager.vacuum_database">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">vacuum_database</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Rebuild the database file to reclaim unused space.&quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
             <span class="n">conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;VACUUM&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="DatabaseManager.analyze_table">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.DatabaseManager.analyze_table">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">analyze_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">analyze_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update table statistics for query optimization.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            table_name: Name of the table to analyze.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
             <span class="n">cursor</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
             <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ANALYZE </span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
@@ -300,12 +332,25 @@
 
 <div class="viewcode-block" id="DatabaseManager.delete_elements">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.DatabaseManager.delete_elements">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">delete_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end_time</span><span class="o">=</span><span class="mi">4102444799</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Delete elements from table_name between start and end_time &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> 
+                       <span class="n">start_time</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">,</span> <span class="n">UTCDateTime</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+                       <span class="n">end_time</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">,</span> <span class="n">UTCDateTime</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4102444799</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Delete elements from specified table within time range.</span>
 
-        <span class="k">if</span> <span class="n">table_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;archive_data&#39;</span><span class="p">,</span><span class="s1">&#39;arrival_data&#39;</span><span class="p">]:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;table_name must be archive_data or arrival_data&quot;</span><span class="p">)</span>
-            <span class="k">return</span> <span class="mi">0</span>
+<span class="sd">        Args:</span>
+<span class="sd">            table_name: Name of the table (&#39;archive_data&#39; or &#39;arrival_data&#39;).</span>
+<span class="sd">            start_time: Start time for deletion range.</span>
+<span class="sd">            end_time: End time for deletion range.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int: Number of deleted rows.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If table_name is invalid or time format is incorrect.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">table_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;archive_data&#39;</span><span class="p">,</span> <span class="s1">&#39;arrival_data&#39;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;table_name must be archive_data or arrival_data&quot;</span><span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="n">start_timestamp</span> <span class="o">=</span> <span class="n">to_timestamp</span><span class="p">(</span><span class="n">start_time</span><span class="p">)</span>
@@ -315,31 +360,26 @@
 
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
             <span class="n">cursor</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
-            
-            <span class="n">query</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;&#39;&#39;</span>
-<span class="s1">                DELETE FROM </span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span>
-<span class="s1">                WHERE importtime &gt;= ? AND importtime &lt;= ?</span>
-<span class="s1">            &#39;&#39;&#39;</span>
-            
+            <span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                DELETE FROM </span><span class="si">{table_name}</span>
+<span class="s2">                WHERE importtime &gt;= ? AND importtime &lt;= ?</span>
+<span class="s2">            &quot;&quot;&quot;</span>
             <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="p">(</span><span class="n">start_timestamp</span><span class="p">,</span> <span class="n">end_timestamp</span><span class="p">))</span>
-            
-            <span class="n">deleted_count</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">rowcount</span>
-            
-            <span class="k">return</span> <span class="n">deleted_count</span></div>
+            <span class="k">return</span> <span class="n">cursor</span><span class="o">.</span><span class="n">rowcount</span></div>
 
 
 <div class="viewcode-block" id="DatabaseManager.join_continuous_segments">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.DatabaseManager.join_continuous_segments">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">join_continuous_segments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gap_tolerance</span><span class="o">=</span><span class="mi">30</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">join_continuous_segments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gap_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">30</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Join continuous data segments in the database, even across day boundaries.</span>
-<span class="sd">        </span>
-<span class="sd">        :param gap_tolerance: Maximum allowed gap (in seconds) to still consider segments continuous</span>
+<span class="sd">        Join continuous data segments in the database.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            gap_tolerance: Maximum allowed gap (in seconds) to consider segments continuous.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
             <span class="n">cursor</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
             
-            <span class="c1"># Fetch all data sorted by network, station, location, channel, and starttime</span>
             <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
 <span class="s1">                SELECT id, network, station, location, channel, starttime, endtime, importtime</span>
 <span class="s1">                FROM archive_data</span>
@@ -347,7 +387,6 @@
 <span class="s1">            &#39;&#39;&#39;</span><span class="p">)</span>
             
             <span class="n">all_data</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
-            
             <span class="n">to_delete</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="n">to_update</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="n">current_segment</span> <span class="o">=</span> <span class="kc">None</span>
@@ -360,35 +399,28 @@
                 <span class="k">if</span> <span class="n">current_segment</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">current_segment</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="c1"># Check if this segment is continuous with the current one</span>
                     <span class="k">if</span> <span class="p">(</span><span class="n">network</span> <span class="o">==</span> <span class="n">current_segment</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span>
                         <span class="n">station</span> <span class="o">==</span> <span class="n">current_segment</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="ow">and</span>
                         <span class="n">location</span> <span class="o">==</span> <span class="n">current_segment</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="ow">and</span>
                         <span class="n">channel</span> <span class="o">==</span> <span class="n">current_segment</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="ow">and</span>
                         <span class="n">starttime</span> <span class="o">-</span> <span class="n">UTCDateTime</span><span class="p">(</span><span class="n">current_segment</span><span class="p">[</span><span class="mi">6</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="n">gap_tolerance</span><span class="p">):</span>
                         
-                        <span class="c1"># Extend the current segment</span>
                         <span class="n">current_segment</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">endtime</span><span class="p">,</span> <span class="n">UTCDateTime</span><span class="p">(</span><span class="n">current_segment</span><span class="p">[</span><span class="mi">6</span><span class="p">]))</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
-                        <span class="c1"># Keep the latest importtime</span>
-                        <span class="n">current_segment</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">importtime</span><span class="p">,</span> <span class="n">current_segment</span><span class="p">[</span><span class="mi">7</span><span class="p">])</span> <span class="c1">### bug if database was deleted and both are None</span>
+                        <span class="n">current_segment</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">importtime</span><span class="p">,</span> <span class="n">current_segment</span><span class="p">[</span><span class="mi">7</span><span class="p">])</span> <span class="k">if</span> <span class="n">importtime</span> <span class="ow">and</span> <span class="n">current_segment</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span> <span class="k">else</span> <span class="kc">None</span>
                         <span class="n">to_delete</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
                     <span class="k">else</span><span class="p">:</span>
-                        <span class="c1"># Start a new segment</span>
                         <span class="n">to_update</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">current_segment</span><span class="p">))</span>
                         <span class="n">current_segment</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
             
-            <span class="c1"># Don&#39;t forget the last segment</span>
             <span class="k">if</span> <span class="n">current_segment</span><span class="p">:</span>
                 <span class="n">to_update</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">current_segment</span><span class="p">))</span>
             
-            <span class="c1"># Perform updates</span>
             <span class="n">cursor</span><span class="o">.</span><span class="n">executemany</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
 <span class="s1">                UPDATE archive_data</span>
 <span class="s1">                SET endtime = ?, importtime = ?</span>
 <span class="s1">                WHERE id = ?</span>
 <span class="s1">            &#39;&#39;&#39;</span><span class="p">,</span> <span class="p">[(</span><span class="n">row</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">to_update</span><span class="p">])</span>
             
-            <span class="c1"># Delete the merged segments (break into pieces to avoid SQL3 limit)</span>
             <span class="k">if</span> <span class="n">to_delete</span><span class="p">:</span>
                 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">to_delete</span><span class="p">),</span> <span class="mi">500</span><span class="p">):</span>
                     <span class="n">chunk</span> <span class="o">=</span> <span class="n">to_delete</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="mi">500</span><span class="p">]</span>
@@ -400,81 +432,62 @@
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Database cleaned. Deleted </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">to_delete</span><span class="p">)</span><span class="si">}</span><span class="s2"> rows, updated </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">to_update</span><span class="p">)</span><span class="si">}</span><span class="s2"> rows.&quot;</span><span class="p">)</span></div>
 
 
-
-<div class="viewcode-block" id="DatabaseManager.run_query">
-<a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.DatabaseManager.run_query">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">run_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">query</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run any query!&quot;&quot;&quot;</span>
-        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
-            <span class="n">cursor</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
-            <span class="k">except</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">Error</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;SQLite error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="c1"># Print the SQL statement and the data being inserted</span>
-        <span class="k">return</span></div>
-
-    
-
 <div class="viewcode-block" id="DatabaseManager.execute_query">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.DatabaseManager.execute_query">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">execute_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">execute_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Execute any SQL query and return results along with a flag indicating if it&#39;s tabular data.</span>
-<span class="sd">        </span>
+<span class="sd">        Execute an SQL query and return results.</span>
+
 <span class="sd">        Args:</span>
-<span class="sd">            query (str): SQL query to execute</span>
-<span class="sd">            </span>
+<span class="sd">            query: SQL query to execute.</span>
+
 <span class="sd">        Returns:</span>
-<span class="sd">            tuple: (is_data: bool, result: Union[pd.DataFrame, str])</span>
-<span class="sd">            - is_data: True if query returns tabular data, False otherwise</span>
-<span class="sd">            - result: DataFrame for SELECT queries, status message for other queries</span>
+<span class="sd">            Tuple containing:</span>
+<span class="sd">                - bool: Whether an error occurred</span>
+<span class="sd">                - str: Status message or error description</span>
+<span class="sd">                - Optional[pd.DataFrame]: Results for SELECT queries, None otherwise</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># List of SQL commands that modify data</span>
         <span class="n">modify_commands</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;INSERT&#39;</span><span class="p">,</span> <span class="s1">&#39;UPDATE&#39;</span><span class="p">,</span> <span class="s1">&#39;DELETE&#39;</span><span class="p">,</span> <span class="s1">&#39;DROP&#39;</span><span class="p">,</span> <span class="s1">&#39;CREATE&#39;</span><span class="p">,</span> <span class="s1">&#39;ALTER&#39;</span><span class="p">,</span> <span class="s1">&#39;TRUNCATE&#39;</span><span class="p">}</span>
-        
-        <span class="c1"># Check if the query is a SELECT statement or a modify command</span>
         <span class="n">first_word</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
         <span class="n">is_select</span> <span class="o">=</span> <span class="n">first_word</span> <span class="o">==</span> <span class="s1">&#39;SELECT&#39;</span>
-        <span class="n">has_error</span> <span class="o">=</span> <span class="kc">False</span>
         
         <span class="k">try</span><span class="p">:</span>
             <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">is_select</span><span class="p">:</span>
-                    <span class="c1"># For SELECT queries, return a DataFrame</span>
                     <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql_query</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">conn</span><span class="p">)</span>
-                    <span class="k">return</span> <span class="n">has_error</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Query executed successfully. </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span><span class="si">}</span><span class="s2"> rows returned.&quot;</span><span class="p">,</span> <span class="n">df</span>
+                    <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Query executed successfully. </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span><span class="si">}</span><span class="s2"> rows returned.&quot;</span><span class="p">,</span> <span class="n">df</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="c1"># For other queries, execute and return status message</span>
                     <span class="n">cursor</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
                     <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
                     
                     <span class="k">if</span> <span class="n">first_word</span> <span class="ow">in</span> <span class="n">modify_commands</span><span class="p">:</span>
-                        <span class="n">rows_affected</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">rowcount</span>
-                        <span class="k">return</span> <span class="n">has_error</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Query executed successfully. Rows affected: </span><span class="si">{</span><span class="n">rows_affected</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="kc">None</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="k">return</span> <span class="n">has_error</span><span class="p">,</span> <span class="s2">&quot;Query executed successfully.&quot;</span><span class="p">,</span> <span class="kc">None</span>
+                        <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Query executed successfully. Rows affected: </span><span class="si">{</span><span class="n">cursor</span><span class="o">.</span><span class="n">rowcount</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="kc">None</span>
+                    <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;Query executed successfully.&quot;</span><span class="p">,</span> <span class="kc">None</span>
                     
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">error_message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Error executing query: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="n">has_error</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="k">return</span> <span class="n">has_error</span><span class="p">,</span> <span class="n">error_message</span><span class="p">,</span> <span class="kc">None</span></div>
+            <span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Error executing query: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="kc">None</span></div>
 
-        
 
 <div class="viewcode-block" id="DatabaseManager.bulk_insert_archive_data">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.DatabaseManager.bulk_insert_archive_data">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">bulk_insert_archive_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">archive_list</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">bulk_insert_archive_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">archive_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Insert multiple archive data records.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            archive_list: List of tuples containing archive data records.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int: Number of inserted records.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">archive_list</span><span class="p">:</span>
             <span class="k">return</span> <span class="mi">0</span>
 
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
             <span class="n">cursor</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
-            
-            <span class="c1"># Add import time</span>
             <span class="n">now</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">timestamp</span><span class="p">())</span>
             <span class="n">archive_list</span> <span class="o">=</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">ele</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="n">now</span><span class="p">])</span> <span class="k">for</span> <span class="n">ele</span> <span class="ow">in</span> <span class="n">archive_list</span> <span class="k">if</span> <span class="n">ele</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
-            <span class="c1"># Do the insert</span>
+            
             <span class="n">cursor</span><span class="o">.</span><span class="n">executemany</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
 <span class="s1">                INSERT OR REPLACE INTO archive_data</span>
 <span class="s1">                (network, station, location, channel, starttime, endtime, importtime)</span>
@@ -486,32 +499,35 @@
 
 <div class="viewcode-block" id="DatabaseManager.bulk_insert_arrival_data">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.DatabaseManager.bulk_insert_arrival_data">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">bulk_insert_arrival_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arrival_list</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">bulk_insert_arrival_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arrival_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Insert multiple arrival data records.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            arrival_list: List of tuples containing arrival data records.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int: Number of inserted records.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">arrival_list</span><span class="p">:</span>
             <span class="k">return</span> <span class="mi">0</span>
 
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
             <span class="n">cursor</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
-            
-            <span class="c1"># Define the columns based on your table structure</span>
             <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;event_id&#39;</span><span class="p">,</span> <span class="s1">&#39;e_mag&#39;</span><span class="p">,</span> <span class="s1">&#39;e_lat&#39;</span><span class="p">,</span> <span class="s1">&#39;e_lon&#39;</span><span class="p">,</span> <span class="s1">&#39;e_depth&#39;</span><span class="p">,</span> <span class="s1">&#39;e_time&#39;</span><span class="p">,</span>
-                   <span class="s1">&#39;s_netcode&#39;</span><span class="p">,</span> <span class="s1">&#39;s_stacode&#39;</span><span class="p">,</span> <span class="s1">&#39;s_lat&#39;</span><span class="p">,</span> <span class="s1">&#39;s_lon&#39;</span><span class="p">,</span> <span class="s1">&#39;s_elev&#39;</span><span class="p">,</span> <span class="s1">&#39;s_start&#39;</span><span class="p">,</span> <span class="s1">&#39;s_end&#39;</span><span class="p">,</span>
-                   <span class="s1">&#39;dist_deg&#39;</span><span class="p">,</span> <span class="s1">&#39;dist_km&#39;</span><span class="p">,</span> <span class="s1">&#39;azimuth&#39;</span><span class="p">,</span> <span class="s1">&#39;p_arrival&#39;</span><span class="p">,</span> <span class="s1">&#39;s_arrival&#39;</span><span class="p">,</span> <span class="s1">&#39;model&#39;</span><span class="p">,</span>
-                   <span class="s1">&#39;importtime&#39;</span><span class="p">]</span>
+                      <span class="s1">&#39;s_netcode&#39;</span><span class="p">,</span> <span class="s1">&#39;s_stacode&#39;</span><span class="p">,</span> <span class="s1">&#39;s_lat&#39;</span><span class="p">,</span> <span class="s1">&#39;s_lon&#39;</span><span class="p">,</span> <span class="s1">&#39;s_elev&#39;</span><span class="p">,</span> <span class="s1">&#39;s_start&#39;</span><span class="p">,</span> <span class="s1">&#39;s_end&#39;</span><span class="p">,</span>
+                      <span class="s1">&#39;dist_deg&#39;</span><span class="p">,</span> <span class="s1">&#39;dist_km&#39;</span><span class="p">,</span> <span class="s1">&#39;azimuth&#39;</span><span class="p">,</span> <span class="s1">&#39;p_arrival&#39;</span><span class="p">,</span> <span class="s1">&#39;s_arrival&#39;</span><span class="p">,</span> <span class="s1">&#39;model&#39;</span><span class="p">,</span>
+                      <span class="s1">&#39;importtime&#39;</span><span class="p">]</span>
             
             <span class="n">placeholders</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;?&#39;</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">])</span>
-            
             <span class="n">query</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;&#39;&#39;</span>
 <span class="s1">                INSERT OR REPLACE INTO arrival_data</span>
 <span class="s1">                (</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">columns</span><span class="p">)</span><span class="si">}</span><span class="s1">)</span>
 <span class="s1">                VALUES (</span><span class="si">{</span><span class="n">placeholders</span><span class="si">}</span><span class="s1">)</span>
 <span class="s1">            &#39;&#39;&#39;</span>
             
-            <span class="c1"># Add import time</span>
             <span class="n">now</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">timestamp</span><span class="p">())</span>
             <span class="n">arrival_list</span> <span class="o">=</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">ele</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="n">now</span><span class="p">])</span> <span class="k">for</span> <span class="n">ele</span> <span class="ow">in</span> <span class="n">arrival_list</span><span class="p">]</span>
-
-            <span class="c1"># Do the insert</span>
             <span class="n">cursor</span><span class="o">.</span><span class="n">executemany</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">arrival_list</span><span class="p">)</span>
             
             <span class="k">return</span> <span class="n">cursor</span><span class="o">.</span><span class="n">rowcount</span></div>
@@ -519,7 +535,19 @@
 
 <div class="viewcode-block" id="DatabaseManager.get_arrival_data">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.DatabaseManager.get_arrival_data">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_arrival_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_id</span><span class="p">,</span> <span class="n">netcode</span><span class="p">,</span> <span class="n">stacode</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_arrival_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">netcode</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">stacode</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieve complete arrival data for a specific event and station.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            event_id: Unique identifier for the seismic event.</span>
+<span class="sd">            netcode: Network code for the station.</span>
+<span class="sd">            stacode: Station code.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Optional[Dict[str, Any]]: Dictionary containing all arrival data fields for the</span>
+<span class="sd">                specified event and station, or None if no matching record is found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
             <span class="n">cursor</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
             <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
@@ -535,7 +563,17 @@
 
 <div class="viewcode-block" id="DatabaseManager.get_stations_for_event">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.DatabaseManager.get_stations_for_event">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_stations_for_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_id</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_stations_for_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieve all station data associated with a specific seismic event.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            event_id: Unique identifier for the seismic event.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            List[Dict[str, Any]]: List of dictionaries containing arrival data for all</span>
+<span class="sd">                stations that recorded the event. Returns empty list if no stations found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
             <span class="n">cursor</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
             <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
@@ -551,7 +589,18 @@
 
 <div class="viewcode-block" id="DatabaseManager.get_events_for_station">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.DatabaseManager.get_events_for_station">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_events_for_station</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">netcode</span><span class="p">,</span> <span class="n">stacode</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_events_for_station</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">netcode</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">stacode</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieve all seismic events recorded by a specific station.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            netcode: Network code for the station.</span>
+<span class="sd">            stacode: Station code.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            List[Dict[str, Any]]: List of dictionaries containing arrival data for all</span>
+<span class="sd">                events recorded by the station. Returns empty list if no events found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
             <span class="n">cursor</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
             <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
@@ -567,7 +616,19 @@
 
 <div class="viewcode-block" id="DatabaseManager.fetch_arrivals">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.DatabaseManager.fetch_arrivals">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">fetch_arrivals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_id</span><span class="p">,</span> <span class="n">netcode</span><span class="p">,</span> <span class="n">stacode</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fetch_arrivals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">netcode</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">stacode</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieve P and S wave arrival times for a specific event and station.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            event_id: Unique identifier for the seismic event.</span>
+<span class="sd">            netcode: Network code for the station.</span>
+<span class="sd">            stacode: Station code.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Optional[Tuple[float, float]]: Tuple containing (p_arrival, s_arrival) times</span>
+<span class="sd">                as timestamps, or None if no matching record is found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
             <span class="n">cursor</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
             <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
@@ -581,10 +642,27 @@
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
-    <span class="c1"># expanded version of the above to include distances and azimth</span>
 <div class="viewcode-block" id="DatabaseManager.fetch_arrivals_distances">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.DatabaseManager.fetch_arrivals_distances">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">fetch_arrivals_distances</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_id</span><span class="p">,</span> <span class="n">netcode</span><span class="p">,</span> <span class="n">stacode</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fetch_arrivals_distances</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">netcode</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">stacode</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieve arrival times and distance metrics for a specific event and station.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            event_id: Unique identifier for the seismic event.</span>
+<span class="sd">            netcode: Network code for the station.</span>
+<span class="sd">            stacode: Station code.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Optional[Tuple[float, float, float, float, float]]: Tuple containing</span>
+<span class="sd">                (p_arrival, s_arrival, dist_km, dist_deg, azimuth), where:</span>
+<span class="sd">                - p_arrival: P wave arrival time (timestamp)</span>
+<span class="sd">                - s_arrival: S wave arrival time (timestamp)</span>
+<span class="sd">                - dist_km: Distance in kilometers</span>
+<span class="sd">                - dist_deg: Distance in degrees</span>
+<span class="sd">                - azimuth: Azimuth angle from event to station</span>
+<span class="sd">                Returns None if no matching record is found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
             <span class="n">cursor</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
             <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
@@ -598,59 +676,6 @@
         <span class="k">return</span> <span class="kc">None</span></div>
 </div>
 
-
-
-
-<span class="c1">###### Legacy functions below</span>
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">def setup_database(db_path):</span>
-<span class="sd">    conn = sqlite3.connect(db_path)</span>
-<span class="sd">    cursor = conn.cursor()</span>
-<span class="sd">    cursor.execute(&#39;&#39;&#39;</span>
-<span class="sd">        CREATE TABLE IF NOT EXISTS archive_data (</span>
-<span class="sd">            id INTEGER PRIMARY KEY AUTOINCREMENT,</span>
-<span class="sd">            network TEXT,</span>
-<span class="sd">            station TEXT,</span>
-<span class="sd">            location TEXT,</span>
-<span class="sd">            channel TEXT,</span>
-<span class="sd">            starttime TEXT,</span>
-<span class="sd">            endtime TEXT,</span>
-<span class="sd">            importtime REAL</span>
-<span class="sd">            )</span>
-<span class="sd">        &#39;&#39;&#39;)</span>
-<span class="sd">    cursor.execute(&#39;&#39;&#39;</span>
-<span class="sd">        CREATE INDEX IF NOT EXISTS idx_archive_data </span>
-<span class="sd">        ON archive_data (network, station, location, channel, starttime, endtime, importtime)</span>
-<span class="sd">        &#39;&#39;&#39;)</span>
-<span class="sd">    conn.commit()</span>
-<span class="sd">    return</span>
-
-<span class="sd">@contextlib.contextmanager</span>
-<span class="sd">def safe_db_connection(db_path, max_retries=3, initial_delay=1):</span>
-<span class="sd">    #Context manager for safe database connections with retry mechanism.</span>
-<span class="sd">    retry_count = 0</span>
-<span class="sd">    delay = initial_delay</span>
-<span class="sd">    while retry_count &lt; max_retries:</span>
-<span class="sd">        try:</span>
-<span class="sd">            conn = sqlite3.connect(db_path, timeout=20)</span>
-<span class="sd">            yield conn</span>
-<span class="sd">            return</span>
-<span class="sd">        except sqlite3.OperationalError as e:</span>
-<span class="sd">            if &quot;database is locked&quot; in str(e):</span>
-<span class="sd">                retry_count += 1</span>
-<span class="sd">                if retry_count &gt;= max_retries:</span>
-<span class="sd">                    print(f&quot;Failed to connect to database after {max_retries} retries.&quot;)</span>
-<span class="sd">                    raise</span>
-<span class="sd">                print(f&quot;Database is locked. Retrying in {delay} seconds...&quot;)</span>
-<span class="sd">                time.sleep(delay)</span>
-<span class="sd">                delay *= 2  # Exponential backoff</span>
-<span class="sd">                delay += random.uniform(0, 1)  # Add jitter</span>
-<span class="sd">            else:</span>
-<span class="sd">                raise</span>
-<span class="sd">        finally:</span>
-<span class="sd">            if &#39;conn&#39; in locals():</span>
-<span class="sd">                conn.close()</span>
-<span class="sd">&quot;&quot;&quot;</span>                
 </pre></div>
 
            </div>
