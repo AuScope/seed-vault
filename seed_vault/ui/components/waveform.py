@@ -16,6 +16,8 @@ from seed_vault.ui.components.continuous_waveform import ContinuousComponents
 from seed_vault.service.utils import check_client_services
 from io import StringIO
 from contextlib import redirect_stdout, redirect_stderr
+from copy import deepcopy
+from seed_vault.ui.pages.helpers.common import save_filter
 
 
 query_thread = None
@@ -56,13 +58,44 @@ class WaveformFilterMenu:
     channel_filter: str
     available_channels: List[str]
     display_limit: int
+
     def __init__(self, settings: SeismoLoaderSettings):
         self.settings = settings
+        self.old_settings = deepcopy(settings)  # Track previous state
         self.network_filter = "All networks"
         self.station_filter = "All stations"
         self.channel_filter = "All channels"
         self.available_channels = ["All channels"]
         self.display_limit = 50
+        # Track previous filter state
+        self.old_filter_state = {
+            'network_filter': self.network_filter,
+            'station_filter': self.station_filter,
+            'channel_filter': self.channel_filter,
+            'display_limit': self.display_limit
+        }
+
+    def refresh_filters(self):
+        """Check for changes and trigger updates"""
+        current_state = {
+            'network_filter': self.network_filter,
+            'station_filter': self.station_filter,
+            'channel_filter': self.channel_filter,
+            'display_limit': self.display_limit
+        }
+        
+        # Check if filter state changed
+        if current_state != self.old_filter_state:
+            self.old_filter_state = current_state.copy()
+            st.rerun()
+
+        # Check if settings changed
+        changes = self.settings.has_changed(self.old_settings)
+        if changes.get('has_changed', False):
+            self.old_settings = deepcopy(self.settings)
+            save_filter(self.settings)
+            st.rerun()
+
     def update_available_channels(self, stream: Stream):
         if not stream:
             self.available_channels = ["All channels"]
@@ -91,26 +124,40 @@ class WaveformFilterMenu:
         # Step 1: Data Retrieval Settings
         with st.sidebar.expander("Step 1: Data Source", expanded=True):
             st.subheader("🔍 Time Window")
-            self.settings.event.before_p_sec = st.number_input(
+            
+            # Update time window settings with immediate refresh
+            before_p = st.number_input(
                 "Start (secs before P arrival):", 
                 value=self.settings.event.before_p_sec or 20,
-                help="Time window before P arrival"
+                help="Time window before P arrival",
+                key="before_p_input"
             )
-            self.settings.event.after_p_sec = st.number_input(
+            if before_p != self.settings.event.before_p_sec:
+                self.settings.event.before_p_sec = before_p
+                self.refresh_filters()
+
+            after_p = st.number_input(
                 "End (secs after P arrival):", 
                 value=self.settings.event.after_p_sec or 100,
-                help="Time window after P arrival"
+                help="Time window after P arrival",
+                key="after_p_input"
             )
-            
-            st.subheader("📡 Data Source")
+            if after_p != self.settings.event.after_p_sec:
+                self.settings.event.after_p_sec = after_p
+                self.refresh_filters()
+
+            # Client selection with immediate refresh
             client_options = list(self.settings.client_url_mapping.get_clients())
-            self.settings.waveform.client = st.selectbox(
+            selected_client = st.selectbox(
                 'Choose a client:', 
-                client_options, 
-                index=client_options.index(self.settings.waveform.client), 
-                key="event-pg-client-event"
+                client_options,
+                index=client_options.index(self.settings.waveform.client),
+                key="waveform_client_select"
             )
-            
+            if selected_client != self.settings.waveform.client:
+                self.settings.waveform.client = selected_client
+                self.refresh_filters()
+
             # Check services for selected client
             services = check_client_services(self.settings.waveform.client)
             if not services['dataselect']:
@@ -159,52 +206,60 @@ class WaveformFilterMenu:
                 else:
                     st.error("Invalid location format. Each location code should be 0-2 characters (e.g., 00,--,10,20)")
 
-        # Step 2: Display Filters (enabled after data retrieval)
-        with st.sidebar.expander("Step 2: Display Filters", expanded=True):
             if stream is not None:
-                self.update_available_channels(stream)
-                
-                st.subheader("🎯 Waveform Filters")
-                
-                # Network filter
                 networks = ["All networks"] + list(set([inv.code for inv in self.settings.station.selected_invs]))
-                self.network_filter = st.selectbox(
+                selected_network = st.selectbox(
                     "Network:",
                     networks,
                     index=networks.index(self.network_filter),
-                    help="Filter by network"
+                    help="Filter by network",
+                    key="network_filter_select"
                 )
-                
-                # Station filter
+                if selected_network != self.network_filter:
+                    self.network_filter = selected_network
+                    self.refresh_filters()
+
+                # Station filter with immediate refresh
                 stations = ["All stations"]
                 for inv in self.settings.station.selected_invs:
                     stations.extend([sta.code for sta in inv])
                 stations = list(dict.fromkeys(stations))  # Remove duplicates
                 stations.sort()
                 
-                self.station_filter = st.selectbox(
+                selected_station = st.selectbox(
                     "Station:",
                     stations,
                     index=stations.index(self.station_filter),
-                    help="Filter by station"
+                    help="Filter by station",
+                    key="station_filter_select"
                 )
-                
-                # Channel filter
+                if selected_station != self.station_filter:
+                    self.station_filter = selected_station
+                    self.refresh_filters()
+
+                # Channel filter with immediate refresh
                 self.channel_filter = st.selectbox(
                     "Channel:",
                     options=self.available_channels,
                     index=self.available_channels.index(self.channel_filter),
-                    help="Filter by channel"
+                    help="Filter by channel",
+                    key="channel_filter_select"
                 )
-                
+                if self.channel_filter != self.old_filter_state['channel_filter']:
+                    self.old_filter_state['channel_filter'] = self.channel_filter
+                    self.refresh_filters()
+
                 st.subheader("📊 Display Options")
-                self.display_limit = st.selectbox(
+                display_limit = st.selectbox(
                     "Waveforms per page:",
                     options=[10, 25, 50],
                     index=[10, 25, 50].index(self.display_limit),
                     key="waveform_display_limit",
                     help="Number of waveforms to show per page"
                 )
+                if display_limit != self.display_limit:
+                    self.display_limit = display_limit
+                    self.refresh_filters()
                 
                 # Add status information
                 if stream:
@@ -216,8 +271,7 @@ class WaveformFilterMenu:
                     self.station_filter = "All stations"
                     self.channel_filter = "All channels"
                     self.display_limit = 50
-            else:
-                st.info("Load data to enable display filters")
+                    self.refresh_filters()
 
 class WaveformDisplay:
     def __init__(self, settings: SeismoLoaderSettings, filter_menu: WaveformFilterMenu):
@@ -991,7 +1045,6 @@ class WaveformComponents:
                 status_message="Downloading event waveforms..."
             )
         else:
-            # Silent execution with log capture
             with redirect_stdout(StringIO()) as stdout, redirect_stderr(StringIO()) as stderr:
                 try:
                     result = retrieval_task()
@@ -999,11 +1052,9 @@ class WaveformComponents:
                 except Exception as e:
                     success, error = False, str(e)
                 
-                # Capture output
                 output = stdout.getvalue() + stderr.getvalue()
                 self.console.accumulated_output = output.splitlines()
         
-        # Store logs in session state
         if self.console.accumulated_output:
             st.session_state.console_logs = '<br>'.join(self.console.accumulated_output)
 
