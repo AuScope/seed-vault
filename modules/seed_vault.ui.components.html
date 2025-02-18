@@ -97,7 +97,7 @@
 <span id="seed-vault-ui-components-base-module"></span><h2>seed_vault.ui.components.base module<a class="headerlink" href="#module-seed_vault.ui.components.base" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.base.</span></span><span class="sig-name descname"><span class="pre">BaseComponent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prev_step_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stage</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/ui/components/base.html#BaseComponent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.base.</span></span><span class="sig-name descname"><span class="pre">BaseComponent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prev_step_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stage</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_map_center</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_map_zoom</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/ui/components/base.html#BaseComponent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.TXT">
@@ -312,6 +312,11 @@
 <dd></dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.map_view_zoom">
+<span class="sig-name descname"><span class="pre">map_view_zoom</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.map_view_zoom" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.marker_info">
 <span class="sig-name descname"><span class="pre">marker_info</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.marker_info" title="Link to this definition"></a></dt>
 <dd></dd></dl>
@@ -394,6 +399,11 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.set_geo_constraint">
 <span class="sig-name descname"><span class="pre">set_geo_constraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geo_constraint</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/ui/components/base.html#BaseComponent.set_geo_constraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.set_geo_constraint" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.set_map_view">
+<span class="sig-name descname"><span class="pre">set_map_view</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">map_center</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">map_zoom</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/ui/components/base.html#BaseComponent.set_map_view"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.set_map_view" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
