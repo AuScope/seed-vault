@@ -3,6 +3,7 @@ import os
 from seed_vault.service.seismoloader import run_main, populate_database_from_sds
 
 dirname = os.path.dirname(__file__)
+par_dir = os.path.dirname(dirname)
 
 @click.group()
 def cli():
@@ -10,7 +11,7 @@ def cli():
 
 @cli.command(name="run-server", help="Runs the streamlit app server.")
 def run_app():
-    path_to_run = os.path.join(dirname, "ui", "1_🌎_main_flows.py")
+    path_to_run = os.path.join(par_dir, "ui", "1_🌎_main_flows.py")
     os.system(f"streamlit run {path_to_run}  --server.runOnSave=true")
 
 

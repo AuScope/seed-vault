@@ -124,14 +124,17 @@ class RunFromConfigComponent:
                 with st.container(height=600):                    
                     st.code(self.config_str, language="python")
             else:
-                st.button(
-                    "Edit config" if not st.session_state.is_editing else "Stop Editing",
-                    on_click=toggle_editing,
-                )
-                st.button(
-                    "Reset",
-                    on_click=reset_config,
-                )
+                c11, c12 = st.columns([1,1])
+                with c11:
+                    st.button(
+                        "Edit config" if not st.session_state.is_editing else "Stop Editing",
+                        on_click=toggle_editing,
+                    )
+                with c12:
+                    st.button(
+                        "Reset",
+                        on_click=reset_config,
+                    )
 
                 if st.session_state.is_editing:
                     st.session_state.edited_config_str = st.text_area(

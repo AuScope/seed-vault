@@ -483,43 +483,6 @@ class AddMapDraw(MacroElement):
         """)
 
 
-# class AddMapDraw(MacroElement):
-#     def __init__(self, all_drawings: List[GeometryConstraint]):
-#         super().__init__()
-#         self.all_drawings = all_drawings
-#         self._template = jinja2.Template("""
-#         {% macro script(this, kwargs) %}
-#         console.log("Adding drawings to the map.");  // Debugging console log
-#         var map = this;  // Reference to the current map object
-
-#         // Function to add a rectangle
-#         function addRectangle(bounds, color) {
-#             L.rectangle(bounds, {color: color, weight: 1, fillOpacity: 0.5}).addTo(map);
-#         }
-
-#         // Function to add a circle
-#         function addCircle(lat, lng, radius, color) {
-#             L.circle([lat, lng], {radius: radius, color: color, weight: 1, fillOpacity: 0.5}).addTo(map);
-#         }
-                                         
-#         console.log(this)
-
-#         // Loop over all drawings and add to map
-#         {% for constraint in this.all_drawings %}
-#             console.log({{constraint.coords.min_lat}})
-#             {% if constraint.geo_type == 'bounding' %}
-#                 addRectangle([[{{constraint.coords.min_lat}}, {{constraint.coords.min_lng}}], [{{constraint.coords.max_lat}}, {{constraint.coords.max_lng}}]], "{{constraint.coords.color}}");
-#             {% elif constraint.geo_type == 'circle' %}
-#                 addCircle({{constraint.coords.lat}}, {{constraint.coords.lng}}, {{constraint.coords.max_radius}}, "{{constraint.coords.color}}");
-#                 if ({{constraint.coords.min_radius}} > 0) {
-#                     addCircle({{constraint.coords.lat}}, {{constraint.coords.lng}}, {{constraint.coords.min_radius}}, "{{constraint.coords.color}}");
-#                 }
-#             {% endif %}
-#         {% endfor %}
-#         {% endmacro %}
-#         """)
-
-
 class DrawEventHandler(MacroElement):
     def __init__(self):
         super().__init__()

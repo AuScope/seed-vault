@@ -28,7 +28,7 @@ package-mode = true
 packages = [{ include = "seed_vault" }]
 
 [tool.poetry.scripts]
-seed-vault = "seed_vault.cli:cli"
+seed-vault = "seed_vault.cli.cli:cli"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.14"
