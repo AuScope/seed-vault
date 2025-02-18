@@ -621,43 +621,6 @@
 
 
 
-<span class="c1"># class AddMapDraw(MacroElement):</span>
-<span class="c1">#     def __init__(self, all_drawings: List[GeometryConstraint]):</span>
-<span class="c1">#         super().__init__()</span>
-<span class="c1">#         self.all_drawings = all_drawings</span>
-<span class="c1">#         self._template = jinja2.Template(&quot;&quot;&quot;</span>
-<span class="c1">#         {% macro script(this, kwargs) %}</span>
-<span class="c1">#         console.log(&quot;Adding drawings to the map.&quot;);  // Debugging console log</span>
-<span class="c1">#         var map = this;  // Reference to the current map object</span>
-
-<span class="c1">#         // Function to add a rectangle</span>
-<span class="c1">#         function addRectangle(bounds, color) {</span>
-<span class="c1">#             L.rectangle(bounds, {color: color, weight: 1, fillOpacity: 0.5}).addTo(map);</span>
-<span class="c1">#         }</span>
-
-<span class="c1">#         // Function to add a circle</span>
-<span class="c1">#         function addCircle(lat, lng, radius, color) {</span>
-<span class="c1">#             L.circle([lat, lng], {radius: radius, color: color, weight: 1, fillOpacity: 0.5}).addTo(map);</span>
-<span class="c1">#         }</span>
-                                         
-<span class="c1">#         console.log(this)</span>
-
-<span class="c1">#         // Loop over all drawings and add to map</span>
-<span class="c1">#         {% for constraint in this.all_drawings %}</span>
-<span class="c1">#             console.log({{constraint.coords.min_lat}})</span>
-<span class="c1">#             {% if constraint.geo_type == &#39;bounding&#39; %}</span>
-<span class="c1">#                 addRectangle([[{{constraint.coords.min_lat}}, {{constraint.coords.min_lng}}], [{{constraint.coords.max_lat}}, {{constraint.coords.max_lng}}]], &quot;{{constraint.coords.color}}&quot;);</span>
-<span class="c1">#             {% elif constraint.geo_type == &#39;circle&#39; %}</span>
-<span class="c1">#                 addCircle({{constraint.coords.lat}}, {{constraint.coords.lng}}, {{constraint.coords.max_radius}}, &quot;{{constraint.coords.color}}&quot;);</span>
-<span class="c1">#                 if ({{constraint.coords.min_radius}} &gt; 0) {</span>
-<span class="c1">#                     addCircle({{constraint.coords.lat}}, {{constraint.coords.lng}}, {{constraint.coords.min_radius}}, &quot;{{constraint.coords.color}}&quot;);</span>
-<span class="c1">#                 }</span>
-<span class="c1">#             {% endif %}</span>
-<span class="c1">#         {% endfor %}</span>
-<span class="c1">#         {% endmacro %}</span>
-<span class="c1">#         &quot;&quot;&quot;)</span>
-
-
 <div class="viewcode-block" id="DrawEventHandler">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.map.DrawEventHandler">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">DrawEventHandler</span><span class="p">(</span><span class="n">MacroElement</span><span class="p">):</span>

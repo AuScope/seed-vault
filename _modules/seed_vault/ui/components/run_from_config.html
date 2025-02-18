@@ -221,14 +221,17 @@
                 <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">container</span><span class="p">(</span><span class="n">height</span><span class="o">=</span><span class="mi">600</span><span class="p">):</span>                    
                     <span class="n">st</span><span class="o">.</span><span class="n">code</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_str</span><span class="p">,</span> <span class="n">language</span><span class="o">=</span><span class="s2">&quot;python&quot;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span>
-                    <span class="s2">&quot;Edit config&quot;</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">is_editing</span> <span class="k">else</span> <span class="s2">&quot;Stop Editing&quot;</span><span class="p">,</span>
-                    <span class="n">on_click</span><span class="o">=</span><span class="n">toggle_editing</span><span class="p">,</span>
-                <span class="p">)</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span>
-                    <span class="s2">&quot;Reset&quot;</span><span class="p">,</span>
-                    <span class="n">on_click</span><span class="o">=</span><span class="n">reset_config</span><span class="p">,</span>
-                <span class="p">)</span>
+                <span class="n">c11</span><span class="p">,</span> <span class="n">c12</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+                <span class="k">with</span> <span class="n">c11</span><span class="p">:</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span>
+                        <span class="s2">&quot;Edit config&quot;</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">is_editing</span> <span class="k">else</span> <span class="s2">&quot;Stop Editing&quot;</span><span class="p">,</span>
+                        <span class="n">on_click</span><span class="o">=</span><span class="n">toggle_editing</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="k">with</span> <span class="n">c12</span><span class="p">:</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span>
+                        <span class="s2">&quot;Reset&quot;</span><span class="p">,</span>
+                        <span class="n">on_click</span><span class="o">=</span><span class="n">reset_config</span><span class="p">,</span>
+                    <span class="p">)</span>
 
                 <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">is_editing</span><span class="p">:</span>
                     <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">edited_config_str</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">text_area</span><span class="p">(</span>
