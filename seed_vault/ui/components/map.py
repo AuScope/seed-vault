@@ -1,7 +1,9 @@
-from typing import List, Dict
-
+import streamlit as st
+from typing import List, Dict, Union
+from obspy.geodetics.base import degrees2kilometers
 import folium
 from folium.plugins import Draw, Fullscreen
+from folium import MacroElement
 import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
 import matplotlib.cm as cm
@@ -9,21 +11,14 @@ import matplotlib.colors as mcolors
 import time
 import numpy as np
 import pandas as pd
+import jinja2
 
 from seed_vault.models.common import RectangleArea, CircleArea 
 from seed_vault.enums.ui import Steps
 from seed_vault.utils.constants import AREA_COLOR
-from seed_vault.service.seismoloader import convert_degrees_to_radius_meter
-# from shapely.geometry import Point
-# from shapely.geometry.polygon import Polygon
-# import geopandas as gpd
-import streamlit as st
 from seed_vault.models.config import GeometryConstraint
-from folium.plugins import Draw
 
 
-from folium import MacroElement
-import jinja2
 
 DEFAULT_COLOR_MARKER = 'blue'
 
@@ -126,7 +121,7 @@ def add_circle_area(feature_group, coords):
     if coords.min_radius == 0:
         feature_group.add_child(folium.Circle(
             location=[coords.lat, coords.lng],
-            radius=convert_degrees_to_radius_meter(coords.max_radius),
+            radius=degrees2kilometers(coords.max_radius)*1000,
             color= AREA_COLOR,
             fill=True,
             fill_opacity=0.5
@@ -135,7 +130,7 @@ def add_circle_area(feature_group, coords):
         # Outer Circle
         feature_group.add_child(folium.Circle(
             location=[coords.lat, coords.lng],
-            radius=convert_degrees_to_radius_meter(coords.max_radius),
+            radius=degrees2kilometers(coords.max_radius)*1000,
             color=coords.color,
             fill=False,
             dash_array='2, 4',
@@ -144,7 +139,7 @@ def add_circle_area(feature_group, coords):
         # Inner Circle
         feature_group.add_child(folium.Circle(
             location=[coords.lat, coords.lng],
-            radius=convert_degrees_to_radius_meter(coords.min_radius),
+            radius=degrees2kilometers(coords.max_radius)*1000,
             color=coords.color,
             fill=False,
             dash_array='2, 4',

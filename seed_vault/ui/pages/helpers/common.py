@@ -4,14 +4,13 @@ import numpy as np
 from seed_vault.ui.components.map import normalize_circle, normalize_bounds
 import streamlit as st
 import os
-
 import jinja2
-import os
+
+from obspy.geodetics import kilometer2degrees
 
 from seed_vault.models.common import RectangleArea, CircleArea
 from seed_vault.enums.common import GeometryType
 from seed_vault.models.config import SeismoLoaderSettings, GeometryConstraint
-from seed_vault.service.seismoloader import convert_radius_to_degrees
 
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
@@ -79,10 +78,10 @@ def save_filter(settings:  SeismoLoaderSettings):
     target_file = os.path.join(current_directory, '../../../service')
     target_file = os.path.abspath(target_file)
     
-    template_loader = jinja2.FileSystemLoader(searchpath=target_file)  
+    template_loader = jinja2.FileSystemLoader(searchpath=target_file)
     template_env = jinja2.Environment(loader=template_loader)
     template = template_env.get_template("config_template.cfg")
-    config_dict = get_app_settings(create_new=False, empty_geo=False).add_to_config() # settings.add_to_config()
+    config_dict = get_app_settings(create_new=False, empty_geo=False).add_to_config()
     config_str = template.render(**config_dict)
     
     save_path = os.path.join(target_file, "config" + ".cfg")
@@ -113,7 +112,7 @@ def handle_circle(geo) -> GeometryConstraint:
     coords = geo.get("geometry").get("coordinates")
     # min_radius = geo.get("properties").get("min_radius")
     # max_radius = geo.get("properties").get("max_radius")
-    radius = geo.get("properties").get("radius")
+    radius = geo.get("properties").get("radius") #this is in "meters"
 
     if radius is None:
         raise ValueError("Radius is missing in the geo properties")    
@@ -123,7 +122,7 @@ def handle_circle(geo) -> GeometryConstraint:
             lat = coords[1],
             lng = coords[0],
             min_radius = 0,
-            max_radius = convert_radius_to_degrees(radius)
+            max_radius = kilometer2degrees(radius/1000)
         )
     )
 
