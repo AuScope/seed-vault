@@ -89,6 +89,7 @@ class BaseComponent:
     map_fg_prev_selected_marker = None
     map_height                  = 500
     map_output                  = None
+    map_view_center             = {}
     marker_info                 = None
     clicked_marker_info         = None
     warning                     = None
@@ -138,6 +139,7 @@ class BaseComponent:
 
         self.has_error = False
         self.error = ""
+        self.map_view_center = {}
 
     def get_key_element(self, name):        
         return f"{name}-{self.step_type.value}-{self.stage}"
@@ -583,11 +585,24 @@ class BaseComponent:
         st.rerun()
 
 
-    def refresh_map(self, reset_areas = False, selected_idx = None, clear_draw = False, rerun = False, get_data = True, recreate_map = False):
+    def refresh_map(self, reset_areas = False, selected_idx = None, clear_draw = False, rerun = False, get_data = True, recreate_map = True):
         geo_constraint = self.get_geo_constraint()
 
         if recreate_map:
-            self.map_disp = create_map(map_id=self.map_id)
+            if self.map_output is None:
+                self.map_disp = create_map(map_id=self.map_id)
+            else:
+                if self.map_output.get("center"):
+                    self.map_view_center = self.map_output.get("center", {})
+
+                self.map_disp = create_map(
+                    map_id=self.map_id, 
+                    zoom_start=self.map_output.get("zoom", 2),
+                    map_center=[
+                        self.map_view_center.get("lat", 0.0),
+                        self.map_view_center.get("lng", 0.0),
+                    ]
+                )
         
         if clear_draw:
             clear_map_draw(self.map_disp)
@@ -613,9 +628,7 @@ class BaseComponent:
                 self.map_fg_area= add_area_overlays(areas=geo_constraint)
             if get_data:
                 self.handle_get_data()
-        
-        # elif len(geo_constraint) > 0:
-        #     self.handle_get_data()
+
 
         if rerun:
             st.rerun()
@@ -1068,6 +1081,8 @@ class BaseComponent:
         #                  window or tooltips. Here, we have embedded a line at the bottom of the
         #                  popup to be able to get the Event/Station Ids as well as the type of 
         #                  the marker, ie, event or station.
+
+        # st.write(self.map_output)
         if self.map_output and self.map_output.get('last_object_clicked') is not None:
             last_clicked = self.map_output['last_object_clicked_popup']
 
@@ -1091,6 +1106,19 @@ class BaseComponent:
 
             if 'is_selected' not in self.df_markers.columns:
                 self.df_markers['is_selected'] = False
+
+            # try:
+            #     if self.clicked_marker_info['step'] == self.step_type:
+            #         if self.df_markers.loc[self.clicked_marker_info['id'] - 1, 'is_selected']:
+            #             self.df_markers.loc[self.clicked_marker_info['id'] - 1, 'is_selected'] = False
+            #             self.refresh_map_selection()                        
+            #         else:
+            #             self.sync_df_markers_with_df_edit()
+            #             self.df_markers.loc[self.clicked_marker_info['id'] - 1, 'is_selected'] = True
+            #             self.refresh_map_selection()
+
+            # except KeyError:
+            #     print("Selected map marker not found")
                 
             try:
                 if self.df_markers.loc[self.clicked_marker_info['id'] - 1, 'is_selected']:

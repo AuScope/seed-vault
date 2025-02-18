@@ -1,3 +1,5 @@
+from typing import List, Dict
+
 import folium
 from folium.plugins import Draw, Fullscreen
 import matplotlib.pyplot as plt
@@ -7,8 +9,6 @@ import matplotlib.colors as mcolors
 import time
 import numpy as np
 import pandas as pd
-
-from typing import List, Union
 
 from seed_vault.models.common import RectangleArea, CircleArea 
 from seed_vault.enums.ui import Steps
@@ -33,7 +33,8 @@ icon = folium.DivIcon(html="""
     </svg>
 """)
 
-def create_map(map_center=[-25.0000, 135.0000], zoom_start=2, map_id=None):
+
+def create_map(map_center=[0.0, 0.0], zoom_start=2, map_id=None):
     """
     Create a base map with controls but without dynamic layers.
     """
@@ -61,7 +62,7 @@ def create_map(map_center=[-25.0000, 135.0000], zoom_start=2, map_id=None):
         bounds = [[-90, -180], [90, 180]]
     ).add_to(m)
     
-    m.location = [0, 0]
+    # m.location = [0, 0]
 
 
     add_draw_controls(m)
@@ -234,9 +235,11 @@ def add_data_points(df, cols_to_disp, step: Steps, selected_idx=[], col_color=No
         popup_content = create_popup(index, row, cols_to_disp, step)
         popup = folium.Popup(html=popup_content, max_width=2650, min_width=200)
 
+        tooltip_text = create_popup(index, row, cols_to_disp, step, truncate=True)
+
         # Add marker to the cluster
         latitude, longitude = row['latitude'], row['longitude']
-        add_marker_to_cluster(fg, latitude, longitude, color, edge_color, size, fill_opacity, popup, step)
+        add_marker_to_cluster(fg, latitude, longitude, color, edge_color, size, fill_opacity, popup, tooltip_text, step)
 
         # Store marker information
         # marker_key = (latitude, longitude)
@@ -251,36 +254,9 @@ def add_data_points(df, cols_to_disp, step: Steps, selected_idx=[], col_color=No
 
     return fg, marker_info, fig
 
-# def add_data_points(df, cols_to_disp, step: Steps, selected_idx=[], col_color=None, col_size = None):
 
-#     fg = folium.FeatureGroup(name="Marker "+ step)
 
-#     marker_info = {}
-
-#     for index, row in df.iterrows():
-#         color = DEFAULT_COLOR_MARKER if col_color is None else get_marker_color(row[col_color])
-
-#         edge_color = 'black' if index in selected_idx else color
-#         size = 7 if index in selected_idx else 5
-#         fill_opacity = 1.0 if index in selected_idx else 0.2
-
-#         popup_content = create_popup(index, row, cols_to_disp)
-#         popup = folium.Popup(html=popup_content, max_width=2650, min_width=200)
-
-#         latitude, longitude = row['latitude'], row['longitude']
-#         add_marker_to_cluster(fg, latitude, longitude, color, edge_color, size, fill_opacity, popup,step)
-
-#         # marker_key = (latitude, longitude)
-#         marker_key = index + 1
-#         if marker_key not in marker_info:
-#             marker_info[marker_key] = {"id": index + 1}
-
-#         for k, v in cols_to_disp.items():
-#             marker_info[marker_key][v] = row[k]
-
-#     return fg, marker_info
-
-def add_marker_to_cluster(fg, latitude, longitude, color, edge_color, size, fill_opacity, popup, step):
+def add_marker_to_cluster(fg, latitude, longitude, color, edge_color, size, fill_opacity, popup, tooltip_text, step):
     """
     Add a marker to a cluster with specific attributes.
     """
@@ -289,6 +265,7 @@ def add_marker_to_cluster(fg, latitude, longitude, color, edge_color, size, fill
                 location=[latitude, longitude],
                 radius=size,
                 popup=popup,
+                tooltip=tooltip_text,
                 color=edge_color,
                 fill=True,
                 fill_color=color,
@@ -302,6 +279,7 @@ def add_marker_to_cluster(fg, latitude, longitude, color, edge_color, size, fill
             rotation=-90,
             radius=size,
             popup=popup,
+            tooltip=tooltip_text,
             color=edge_color,
             fill=True,
             fill_color=color,
@@ -394,10 +372,18 @@ def get_color_map(df, c, offset=0.0, cmap='viridis'):
     return norm, colormap
     
 
-def create_popup(index, row, cols_to_disp, step: Steps = None):
+
+
+
+def truncate_text(text, max_length=47):
+    """Truncate text and add '...' if it exceeds max_length"""
+    return text if len(text) <= max_length else text[:max_length] + "..."
+
+
+def create_popup(index, row, cols_to_disp, step: Steps = None, truncate: bool = False):
     html_disp = ""
     if step == Steps.EVENT:
-        html_disp = f"<h4><b>{row['place']}</b></h4>"
+        html_disp = f"<h4><b>{truncate_text(row['place']) if truncate else row['place']}</b></h4>"
         html_disp += f"<h5>{row['magnitude']:.2f} {row['magnitude type']}</h5>"
         html_disp += f"<h5>{row['time']} (UTC)</h5>"
         html_disp += f"<h5>{row['latitude']:.2f} latitude, {row['longitude']:.2f} longitude, {row['depth (km)']:.2f} km</h5>"
@@ -405,14 +391,14 @@ def create_popup(index, row, cols_to_disp, step: Steps = None):
 
     if step == Steps.STATION:
         html_disp = f"<h4><b>{row['network']}.{row['station']}</b></h4>"
-        html_disp += f"<h5>{row['description']}</h5>"
+        html_disp += f"<h5>{truncate_text(row['description']) if truncate else row['description']}</h5>"
         html_disp += f"<h5>({row['start date (UTC)']} - {row['end date (UTC)']})</h5>"
-        html_disp += f"<h5>{row['channels']}</h5>"
+        html_disp += f"<h5>{truncate_text(row['channels']) if truncate else row['channels']}</h5>"
         html_disp += f"<h5>{row['latitude']:.2f} latitude, {row['longitude']:.2f} longitude, {row['elevation']:.2f} m</h5>"
         html_disp += f"<p style='color:black; font-size:2px; opacity:0;'>Station {index + 1}</p>"
 
     return f"""
-    <div style="max-width: 300px; word-wrap: break-word;">
+    <div style="max-width: 400px; word-wrap: break-word;">
         {html_disp}
     </div>
     """
