@@ -31,6 +31,9 @@ def parse_time(time_str):
       successful, it returns the parsed time in ISO format. If parsing fails for all formats, it returns
       `None`.
     """
+    if not time_str:
+        return None
+
     try:
         return UTCDateTime(time_str).isoformat()
     except:
@@ -746,11 +749,11 @@ class SeismoLoaderSettings(BaseModel):
 
         geo_constraint_station = cls._parse_geo_constraint(cls, config, 'STATION', status_handler)
 
-        # Parse force_stations
+        # Parse force_stations (can be network.station.location.channel)
         force_stations_cmb_n_s = config.get(station_section, 'force_stations', fallback='').split(',')
         force_stations = [SeismoQuery(cmb_str_n_s=cmb_n_s) for cmb_n_s in force_stations_cmb_n_s if cmb_n_s.strip()]
 
-        # Parse exclude_stations
+        # Parse exclude_stations (just network.station)
         exclude_stations_cmb_n_s = config.get(station_section, 'exclude_stations', fallback='').split(',')
         exclude_stations = [SeismoQuery(cmb_str_n_s=cmb_n_s) for cmb_n_s in exclude_stations_cmb_n_s if cmb_n_s.strip()]
 
@@ -758,15 +761,13 @@ class SeismoLoaderSettings(BaseModel):
         local_inventory = cls.parse_optional(config.get(station_section, 'local_inventory', fallback=None))
         highest_samplerate_only = cls._check_val(config.get(station_section, "highest_samplerate_only", fallback=False), False, "bool")
 
- 
-
         # Parse include_restricted
         include_restricted = cls._check_val(
             config.get(station_section, 'include_restricted', fallback='False'), False, "bool"
         )
 
         # Parse level
-        level = config.get(station_section, 'level', fallback=None)
+        level = config.get(station_section, 'level', fallback='channel')
         if level is None:  # Key is missing
             status_handler.add_error("input_parameters", f"'level' is missing in the [{station_section}] section. Please specify a level (e.g., 'channel').")
         else:

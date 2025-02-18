@@ -50,19 +50,29 @@ git clone git@github.com:AuScope/seed-vault.git
 
 The app requires python >=3.10. For a quick start follow these steps:
 
+If you want to install from source, 
+
 ```
 git clone https://github.com/AuScope/seed-vault.git
-cd seed-vault
 ```
 
-#### Linux/MacOS
+Then can build via pip:
+
 ```
+python3 -m pip install ./seed-vault
+```
+
+Or,
+```
+#### Linux/MacOS
+cd seed-vault
 source setup.sh
 source run.sh
 ```
 #### Windows
 Open a powershell and run following commands:
 ```
+cd seed-vault
 .\setup-win.ps1
 .\run-win.ps1
 ```
@@ -74,7 +84,6 @@ Open a powershell and run following commands:
    sudo apt update
    sudo apt install python3.10-venv
    ``` 
-
 ----
 
 # Development
@@ -131,7 +140,7 @@ poetry config virtualenvs.in-project true
 ```
 
 ## Install pyenv (Optional)
-This project uses python 3.12.*. If your base python is a different version (check via `python --version`), you may get errors when trying to install via poetry. Use pyenv to manage this.
+This project uses python 3.10.*. If your base python is a different version (check via `python --version`), you may get errors when trying to install via poetry. Use pyenv to manage this.
 
 **Linux**
 
