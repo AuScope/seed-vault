@@ -114,6 +114,13 @@ class CombinedBasedWorkflow:
                 selected_catalogs = self.event_components.settings.event.selected_catalogs
                 self.station_components.settings.station.date_config.start_time = self.event_components.settings.event.date_config.start_time
                 self.station_components.settings.station.date_config.end_time = self.event_components.settings.event.date_config.end_time
+
+                self.station_components.set_map_view(
+                    map_center=self.event_components.map_view_center,
+                    map_zoom=self.event_components.map_view_zoom
+                )
+                self.station_components.refresh_map(get_data=False, recreate_map=True)
+
                 if selected_catalogs is None or len(selected_catalogs) <= 0:
                     self.trigger_error("Please select an event to proceed to the next step.")
                     return False
@@ -123,6 +130,13 @@ class CombinedBasedWorkflow:
                 selected_invs = self.station_components.settings.station.selected_invs
                 self.event_components.settings.event.date_config.start_time = self.station_components.settings.station.date_config.start_time
                 self.event_components.settings.event.date_config.end_time = self.station_components.settings.station.date_config.end_time
+                
+                self.event_components.set_map_view(
+                    map_center=self.station_components.map_view_center,
+                    map_zoom=self.station_components.map_view_zoom
+                )
+                self.event_components.refresh_map(get_data=False, recreate_map=True)
+
                 if selected_invs is None or len(selected_invs) <= 0:
                     self.trigger_error("Please select a station to proceed to the next step.")
                     return False

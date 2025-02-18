@@ -90,6 +90,7 @@ class BaseComponent:
     map_height                  = 500
     map_output                  = None
     map_view_center             = {}
+    map_view_zoom               = 2
     marker_info                 = None
     clicked_marker_info         = None
     warning                     = None
@@ -113,7 +114,15 @@ class BaseComponent:
         else:
             return self.step_type
 
-    def __init__(self, settings: SeismoLoaderSettings, step_type: Steps, prev_step_type: Steps, stage: int):
+    def __init__(
+            self, 
+            settings: SeismoLoaderSettings, 
+            step_type: Steps, 
+            prev_step_type: Steps, 
+            stage: int, 
+            init_map_center = {}, 
+            init_map_zoom = 2
+        ):
         self.settings       = settings
         self.old_settings   = deepcopy(settings)
         self.step_type      = step_type
@@ -139,7 +148,10 @@ class BaseComponent:
 
         self.has_error = False
         self.error = ""
-        self.map_view_center = {}
+        self.set_map_view(init_map_center, init_map_zoom)
+        self.map_view_center = init_map_center
+        self.map_view_zoom   = init_map_zoom
+
 
     def get_key_element(self, name):        
         return f"{name}-{self.step_type.value}-{self.stage}"
@@ -432,7 +444,12 @@ class BaseComponent:
 
     # ====================
     # MAP
-    # ====================
+    # ====================   
+    def set_map_view(self, map_center, map_zoom):
+        self.map_view_center = map_center
+        self.map_view_zoom   = map_zoom
+
+
     def update_filter_geometry(self, df, geo_type: GeoConstraintType, geo_constraint: List[GeometryConstraint]):
         add_geo = []
         for _, row in df.iterrows():
@@ -589,20 +606,18 @@ class BaseComponent:
         geo_constraint = self.get_geo_constraint()
 
         if recreate_map:
-            if self.map_output is None:
-                self.map_disp = create_map(map_id=self.map_id)
-            else:
-                if self.map_output.get("center"):
-                    self.map_view_center = self.map_output.get("center", {})
+            if self.map_output is not None and self.map_output.get("center"):
+                self.map_view_center = self.map_output.get("center", {})
+                self.map_view_zoom = self.map_output.get("zoom", 2)
 
-                self.map_disp = create_map(
-                    map_id=self.map_id, 
-                    zoom_start=self.map_output.get("zoom", 2),
-                    map_center=[
-                        self.map_view_center.get("lat", 0.0),
-                        self.map_view_center.get("lng", 0.0),
-                    ]
-                )
+            self.map_disp = create_map(
+                map_id=self.map_id, 
+                zoom_start=self.map_view_zoom,
+                map_center=[
+                    self.map_view_center.get("lat", 0.0),
+                    self.map_view_center.get("lng", 0.0),
+                ]
+            )
         
         if clear_draw:
             clear_map_draw(self.map_disp)
