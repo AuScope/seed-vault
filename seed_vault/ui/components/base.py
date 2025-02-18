@@ -1,4 +1,5 @@
 from typing import List
+from copy import deepcopy
 import streamlit as st
 from streamlit_folium import st_folium
 import pandas as pd
@@ -68,6 +69,7 @@ class BaseComponentTexts:
 
 class BaseComponent:
     settings: SeismoLoaderSettings
+    old_settings: SeismoLoaderSettings
     step_type: Steps
     prev_step_type: Steps
 
@@ -112,6 +114,7 @@ class BaseComponent:
 
     def __init__(self, settings: SeismoLoaderSettings, step_type: Steps, prev_step_type: Steps, stage: int):
         self.settings       = settings
+        self.old_settings   = deepcopy(settings)
         self.step_type      = step_type
         self.prev_step_type = prev_step_type
         self.stage          = stage
@@ -157,6 +160,15 @@ class BaseComponent:
     # ====================
     # FILTERS
     # ====================
+    def refresh_filters(self):
+        changes = self.settings.has_changed(self.old_settings)
+        if changes.get('has_changed', False):
+            self.old_settings      = deepcopy(self.settings)
+            save_filter(self.settings)
+            st.rerun()
+
+
+
     def import_export(self):
         def reset_import_setting_processed():
             if uploaded_file is not None:
@@ -233,11 +245,9 @@ class BaseComponent:
             return c2_export
 
     def event_filter(self):
+
         start_date, start_time = convert_to_datetime(self.settings.event.date_config.start_time)
         end_date, end_time     = convert_to_datetime(self.settings.event.date_config.end_time)
-
-        if 'initial_event_settings' not in st.session_state:
-            st.session_state['initial_event_settings'] = self.settings.event.dict()
 
         with st.sidebar:
             self.render_map_right_menu()
@@ -311,13 +321,8 @@ class BaseComponent:
                 
             c2_export = self.import_export()
 
-        new_event_settings = self.settings.event.dict() 
-        if new_event_settings != st.session_state['initial_event_settings']:
-            save_filter(self.settings)
-            # self.refresh_map()
-            st.session_state['initial_event_settings'] = new_event_settings 
-        
-        save_filter(self.settings)
+
+        self.refresh_filters()
 
         return c2_export
 
@@ -418,7 +423,8 @@ class BaseComponent:
 
             c2_export = self.import_export()
 
-        save_filter(self.settings)
+        self.refresh_filters()
+        # save_filter(self.settings)
 
         return c2_export
 

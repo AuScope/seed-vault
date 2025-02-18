@@ -1,15 +1,16 @@
-# seed-vault
+# SEED-vault
 
 ![Example of Step 1](docs/screenshots/Step1.png)
 
-#### Seed Vault is a cross platform GUI utility which can search, view and download seismic FDSN data
+#### SEED Vault is a cross platform GUI utility which can search, view and download seismic data from FDSN servers
 
-*  Users can download data via earthquake search (station to event, or event to station)
-*  View and download bulk continuous data
-*  Search and save earthquake events and station metadata.
+*  Download & view EQ arrival data via a station-to-event OR an event-to-station search
+*  Quickly download and archive bulk continuous data, saving your progress along the way
+*  A CLI scripting tool to automate common jobs
+*  Search, export, or import earthquake event catalogs and station metadata
 *  Download restricted data
 *  Caches downloaded data in a local database to speed up future retrievals
-*  Local database editor
+*  Local sqlite3 database editor
 *  Load and save search parameters and configuration
 
 Runs on:
@@ -29,7 +30,9 @@ Can run:
 * ObsPy (>=1.4.1), Streamlit (>=1.39), Plotly (>-5.24), Pandas (>=2.2.2), Matplotlib (>=3.8.5)
 
 # Install via pip
+```
 $ python3 pip install seed-vault
+```
 
 # Install from source
 
@@ -246,3 +249,39 @@ To install from pypi-test:
 pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple seed-vault
 ```
 Note: include both `test` and `official` indexes.
+
+
+## Unit test
+
+The repository includes a number of unit tests. These tests only covers
+the main functions in `seed_vault.service.seismoloader` as these are the 
+core logics adopted in the app.
+
+### Run tests
+To run the test units:
+
+1. Running only mockup tests
+```
+poetry run pytest
+```
+
+2. Running tests with actual FDSN API calls
+```
+poetry run pytest --run-real-fdsn
+```
+
+3. Generate coverage report:
+
+ **to include the whole module:**
+```
+poetry run pytest --run-real-fdsn --cov=seed_vault --cov-report=html
+```
+**to only include `service/*` tests:**
+```
+poetry run pytest --run-real-fdsn --cov=seed_vault --cov-config=.coveragerc --cov-report=html
+```
+
+4. Generate coverage badge
+```
+poetry run coverage-badge -o coverage.svg
+```
