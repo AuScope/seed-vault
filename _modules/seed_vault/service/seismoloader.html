@@ -285,7 +285,7 @@
     <span class="k">try</span><span class="p">:</span>
         <span class="n">num_inserted</span> <span class="o">=</span> <span class="n">db_manager</span><span class="o">.</span><span class="n">bulk_insert_archive_data</span><span class="p">(</span><span class="n">to_insert_db</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error with bulk_insert_archive_data: &quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>    
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Error with bulk_insert_archive_data&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>  
 
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processed </span><span class="si">{</span><span class="n">total_files</span><span class="si">}</span><span class="s2"> files, inserted </span><span class="si">{</span><span class="n">num_inserted</span><span class="si">}</span><span class="s2"> records into the database.&quot;</span><span class="p">)</span>
 
