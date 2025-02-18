@@ -101,7 +101,7 @@ class SettingsComponent:
         with c1:
             self.settings.db_path = st.text_input("Database Path", value=self.settings.db_path, help="FULL path to your database, e.g. /archive/database.sqlite")
             self.settings.sds_path = st.text_input("Local Seismic Data Archive Path in [SDS structure](https://www.seiscomp.de/seiscomp3/doc/applications/slarchive/SDS.html)",
-                                                   value=self.settings.sds_path, help="ROOT path of your archive. If you change this you may have to resync your database.")
+                                                value=self.settings.sds_path, help="ROOT path of your archive. If you change this you may have to resync your database.")
 
         st.write("## Sync database with existing archive")
         c1, c2, c3, c4 = st.columns([1,1,1,2])
@@ -117,10 +117,12 @@ class SettingsComponent:
                 else:
                     newer_than = st.date_input("Update Since")
         with c2:
-            self.settings.processing.num_processes = int(st.text_input("Number of Processors", value=self.settings.processing.num_processes, help="Number of Processors >= 0. If set to zero, the app will use all available cpu to perform the operation."))
+            self.settings.processing.num_processes = st.number_input("Number of Processors", value=self.settings.processing.num_processes, min_value=0, help="Number of Processors >= 0. If set to zero, the app will use all available cpu to perform the operation.")   
+            # int(st.text_input("Number of Processors", value=self.settings.processing.num_processes, help="Number of Processors >= 0. If set to zero, the app will use all available cpu to perform the operation."))
 
         with c3:
-            self.settings.processing.gap_tolerance = int(st.text_input("Gap Tolerance (s)", value=self.settings.processing.gap_tolerance))
+            self.settings.processing.gap_tolerance = st.number_input("Gap Tolerance (s)", value=self.settings.processing.gap_tolerance, min_value=0)   
+            # int(st.text_input("Gap Tolerance (s)", value=self.settings.processing.gap_tolerance))
 
         if st.button("Sync Database", help="Synchronizes your SDS archive given the above parameters."):
             self.reset_is_new_cred_added()
@@ -173,8 +175,6 @@ class SettingsComponent:
                         df_copy = deepcopy(self.df_clients)
                         df_copy = df_copy.rename(columns={"Client Name": 'client', "Url": 'url'})
                         self.settings.client_url_mapping.save(df_copy.to_dict('records'))
-                        # extra_clients = {item["Client Name"]: item["Url"] for item in self.df_clients.to_dict(orient='records')}
-                        # save_extra_client(extra_clients)
                         with c3:
                             st.text("")
                             st.success("Config is successfully saved.")
