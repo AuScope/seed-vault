@@ -65,7 +65,6 @@ python3 -m pip install ./seed-vault
 Or,
 ```
 #### Linux/MacOS
-```
 cd seed-vault
 source setup.sh
 source run.sh
@@ -85,7 +84,6 @@ cd seed-vault
    sudo apt update
    sudo apt install python3.10-venv
    ``` 
-
 ----
 
 # Development
