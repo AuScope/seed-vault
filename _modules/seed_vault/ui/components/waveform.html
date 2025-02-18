@@ -106,6 +106,8 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.service.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_client_services</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">io</span><span class="w"> </span><span class="kn">import</span> <span class="n">StringIO</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">redirect_stdout</span><span class="p">,</span> <span class="n">redirect_stderr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.ui.pages.helpers.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">save_filter</span>
 
 
 <span class="n">query_thread</span> <span class="o">=</span> <span class="kc">None</span>
@@ -151,13 +153,47 @@
     <span class="n">channel_filter</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">available_channels</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="n">display_limit</span><span class="p">:</span> <span class="nb">int</span>
+
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">:</span> <span class="n">SeismoLoaderSettings</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">settings</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">old_settings</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>  <span class="c1"># Track previous state</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">network_filter</span> <span class="o">=</span> <span class="s2">&quot;All networks&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">station_filter</span> <span class="o">=</span> <span class="s2">&quot;All stations&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">channel_filter</span> <span class="o">=</span> <span class="s2">&quot;All channels&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">available_channels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;All channels&quot;</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">display_limit</span> <span class="o">=</span> <span class="mi">50</span>
+        <span class="c1"># Track previous filter state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">old_filter_state</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;network_filter&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">network_filter</span><span class="p">,</span>
+            <span class="s1">&#39;station_filter&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">station_filter</span><span class="p">,</span>
+            <span class="s1">&#39;channel_filter&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">channel_filter</span><span class="p">,</span>
+            <span class="s1">&#39;display_limit&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">display_limit</span>
+        <span class="p">}</span>
+
+<div class="viewcode-block" id="WaveformFilterMenu.refresh_filters">
+<a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.waveform.WaveformFilterMenu.refresh_filters">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">refresh_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check for changes and trigger updates&quot;&quot;&quot;</span>
+        <span class="n">current_state</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;network_filter&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">network_filter</span><span class="p">,</span>
+            <span class="s1">&#39;station_filter&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">station_filter</span><span class="p">,</span>
+            <span class="s1">&#39;channel_filter&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">channel_filter</span><span class="p">,</span>
+            <span class="s1">&#39;display_limit&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">display_limit</span>
+        <span class="p">}</span>
+        
+        <span class="c1"># Check if filter state changed</span>
+        <span class="k">if</span> <span class="n">current_state</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">old_filter_state</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">old_filter_state</span> <span class="o">=</span> <span class="n">current_state</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span>
+
+        <span class="c1"># Check if settings changed</span>
+        <span class="n">changes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">has_changed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">old_settings</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">changes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;has_changed&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">old_settings</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+            <span class="n">save_filter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span></div>
+
+
 <div class="viewcode-block" id="WaveformFilterMenu.update_available_channels">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.waveform.WaveformFilterMenu.update_available_channels">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">update_available_channels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">:</span> <span class="n">Stream</span><span class="p">):</span>
@@ -191,26 +227,40 @@
         <span class="c1"># Step 1: Data Retrieval Settings</span>
         <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Step 1: Data Source&quot;</span><span class="p">,</span> <span class="n">expanded</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
             <span class="n">st</span><span class="o">.</span><span class="n">subheader</span><span class="p">(</span><span class="s2">&quot;🔍 Time Window&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">before_p_sec</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+            
+            <span class="c1"># Update time window settings with immediate refresh</span>
+            <span class="n">before_p</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
                 <span class="s2">&quot;Start (secs before P arrival):&quot;</span><span class="p">,</span> 
                 <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">before_p_sec</span> <span class="ow">or</span> <span class="mi">20</span><span class="p">,</span>
-                <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Time window before P arrival&quot;</span>
+                <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Time window before P arrival&quot;</span><span class="p">,</span>
+                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;before_p_input&quot;</span>
             <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">after_p_sec</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
+            <span class="k">if</span> <span class="n">before_p</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">before_p_sec</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">before_p_sec</span> <span class="o">=</span> <span class="n">before_p</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">refresh_filters</span><span class="p">()</span>
+
+            <span class="n">after_p</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span>
                 <span class="s2">&quot;End (secs after P arrival):&quot;</span><span class="p">,</span> 
                 <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">after_p_sec</span> <span class="ow">or</span> <span class="mi">100</span><span class="p">,</span>
-                <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Time window after P arrival&quot;</span>
+                <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Time window after P arrival&quot;</span><span class="p">,</span>
+                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;after_p_input&quot;</span>
             <span class="p">)</span>
-            
-            <span class="n">st</span><span class="o">.</span><span class="n">subheader</span><span class="p">(</span><span class="s2">&quot;📡 Data Source&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">after_p</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">after_p_sec</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">after_p_sec</span> <span class="o">=</span> <span class="n">after_p</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">refresh_filters</span><span class="p">()</span>
+
+            <span class="c1"># Client selection with immediate refresh</span>
             <span class="n">client_options</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">client_url_mapping</span><span class="o">.</span><span class="n">get_clients</span><span class="p">())</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">waveform</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
+            <span class="n">selected_client</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
                 <span class="s1">&#39;Choose a client:&#39;</span><span class="p">,</span> 
-                <span class="n">client_options</span><span class="p">,</span> 
-                <span class="n">index</span><span class="o">=</span><span class="n">client_options</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">waveform</span><span class="o">.</span><span class="n">client</span><span class="p">),</span> 
-                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;event-pg-client-event&quot;</span>
+                <span class="n">client_options</span><span class="p">,</span>
+                <span class="n">index</span><span class="o">=</span><span class="n">client_options</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">waveform</span><span class="o">.</span><span class="n">client</span><span class="p">),</span>
+                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;waveform_client_select&quot;</span>
             <span class="p">)</span>
-            
+            <span class="k">if</span> <span class="n">selected_client</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">waveform</span><span class="o">.</span><span class="n">client</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">waveform</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">selected_client</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">refresh_filters</span><span class="p">()</span>
+
             <span class="c1"># Check services for selected client</span>
             <span class="n">services</span> <span class="o">=</span> <span class="n">check_client_services</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">waveform</span><span class="o">.</span><span class="n">client</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">services</span><span class="p">[</span><span class="s1">&#39;dataselect&#39;</span><span class="p">]:</span>
@@ -259,52 +309,60 @@
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Invalid location format. Each location code should be 0-2 characters (e.g., 00,--,10,20)&quot;</span><span class="p">)</span>
 
-        <span class="c1"># Step 2: Display Filters (enabled after data retrieval)</span>
-        <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Step 2: Display Filters&quot;</span><span class="p">,</span> <span class="n">expanded</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">stream</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">update_available_channels</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>
-                
-                <span class="n">st</span><span class="o">.</span><span class="n">subheader</span><span class="p">(</span><span class="s2">&quot;🎯 Waveform Filters&quot;</span><span class="p">)</span>
-                
-                <span class="c1"># Network filter</span>
                 <span class="n">networks</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;All networks&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">inv</span><span class="o">.</span><span class="n">code</span> <span class="k">for</span> <span class="n">inv</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">selected_invs</span><span class="p">]))</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">network_filter</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
+                <span class="n">selected_network</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
                     <span class="s2">&quot;Network:&quot;</span><span class="p">,</span>
                     <span class="n">networks</span><span class="p">,</span>
                     <span class="n">index</span><span class="o">=</span><span class="n">networks</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">network_filter</span><span class="p">),</span>
-                    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Filter by network&quot;</span>
+                    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Filter by network&quot;</span><span class="p">,</span>
+                    <span class="n">key</span><span class="o">=</span><span class="s2">&quot;network_filter_select&quot;</span>
                 <span class="p">)</span>
-                
-                <span class="c1"># Station filter</span>
+                <span class="k">if</span> <span class="n">selected_network</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">network_filter</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">network_filter</span> <span class="o">=</span> <span class="n">selected_network</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">refresh_filters</span><span class="p">()</span>
+
+                <span class="c1"># Station filter with immediate refresh</span>
                 <span class="n">stations</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;All stations&quot;</span><span class="p">]</span>
                 <span class="k">for</span> <span class="n">inv</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">selected_invs</span><span class="p">:</span>
                     <span class="n">stations</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">sta</span><span class="o">.</span><span class="n">code</span> <span class="k">for</span> <span class="n">sta</span> <span class="ow">in</span> <span class="n">inv</span><span class="p">])</span>
                 <span class="n">stations</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">stations</span><span class="p">))</span>  <span class="c1"># Remove duplicates</span>
                 <span class="n">stations</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
                 
-                <span class="bp">self</span><span class="o">.</span><span class="n">station_filter</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
+                <span class="n">selected_station</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
                     <span class="s2">&quot;Station:&quot;</span><span class="p">,</span>
                     <span class="n">stations</span><span class="p">,</span>
                     <span class="n">index</span><span class="o">=</span><span class="n">stations</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">station_filter</span><span class="p">),</span>
-                    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Filter by station&quot;</span>
+                    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Filter by station&quot;</span><span class="p">,</span>
+                    <span class="n">key</span><span class="o">=</span><span class="s2">&quot;station_filter_select&quot;</span>
                 <span class="p">)</span>
-                
-                <span class="c1"># Channel filter</span>
+                <span class="k">if</span> <span class="n">selected_station</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">station_filter</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">station_filter</span> <span class="o">=</span> <span class="n">selected_station</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">refresh_filters</span><span class="p">()</span>
+
+                <span class="c1"># Channel filter with immediate refresh</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">channel_filter</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
                     <span class="s2">&quot;Channel:&quot;</span><span class="p">,</span>
                     <span class="n">options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">available_channels</span><span class="p">,</span>
                     <span class="n">index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">available_channels</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">channel_filter</span><span class="p">),</span>
-                    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Filter by channel&quot;</span>
+                    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Filter by channel&quot;</span><span class="p">,</span>
+                    <span class="n">key</span><span class="o">=</span><span class="s2">&quot;channel_filter_select&quot;</span>
                 <span class="p">)</span>
-                
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">channel_filter</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">old_filter_state</span><span class="p">[</span><span class="s1">&#39;channel_filter&#39;</span><span class="p">]:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">old_filter_state</span><span class="p">[</span><span class="s1">&#39;channel_filter&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">channel_filter</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">refresh_filters</span><span class="p">()</span>
+
                 <span class="n">st</span><span class="o">.</span><span class="n">subheader</span><span class="p">(</span><span class="s2">&quot;📊 Display Options&quot;</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">display_limit</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
+                <span class="n">display_limit</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
                     <span class="s2">&quot;Waveforms per page:&quot;</span><span class="p">,</span>
                     <span class="n">options</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">50</span><span class="p">],</span>
                     <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">50</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">display_limit</span><span class="p">),</span>
                     <span class="n">key</span><span class="o">=</span><span class="s2">&quot;waveform_display_limit&quot;</span><span class="p">,</span>
                     <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Number of waveforms to show per page&quot;</span>
                 <span class="p">)</span>
+                <span class="k">if</span> <span class="n">display_limit</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">display_limit</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">display_limit</span> <span class="o">=</span> <span class="n">display_limit</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">refresh_filters</span><span class="p">()</span>
                 
                 <span class="c1"># Add status information</span>
                 <span class="k">if</span> <span class="n">stream</span><span class="p">:</span>
@@ -316,8 +374,7 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">station_filter</span> <span class="o">=</span> <span class="s2">&quot;All stations&quot;</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">channel_filter</span> <span class="o">=</span> <span class="s2">&quot;All channels&quot;</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">display_limit</span> <span class="o">=</span> <span class="mi">50</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Load data to enable display filters&quot;</span><span class="p">)</span></div>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">refresh_filters</span><span class="p">()</span></div>
 </div>
 
 
@@ -1119,7 +1176,6 @@
                 <span class="n">status_message</span><span class="o">=</span><span class="s2">&quot;Downloading event waveforms...&quot;</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># Silent execution with log capture</span>
             <span class="k">with</span> <span class="n">redirect_stdout</span><span class="p">(</span><span class="n">StringIO</span><span class="p">())</span> <span class="k">as</span> <span class="n">stdout</span><span class="p">,</span> <span class="n">redirect_stderr</span><span class="p">(</span><span class="n">StringIO</span><span class="p">())</span> <span class="k">as</span> <span class="n">stderr</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">result</span> <span class="o">=</span> <span class="n">retrieval_task</span><span class="p">()</span>
@@ -1127,11 +1183,9 @@
                 <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                     <span class="n">success</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
                 
-                <span class="c1"># Capture output</span>
                 <span class="n">output</span> <span class="o">=</span> <span class="n">stdout</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span> <span class="o">+</span> <span class="n">stderr</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">accumulated_output</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
         
-        <span class="c1"># Store logs in session state</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">accumulated_output</span><span class="p">:</span>
             <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">console_logs</span> <span class="o">=</span> <span class="s1">&#39;&lt;br&gt;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">accumulated_output</span><span class="p">)</span></div>
 
