@@ -184,6 +184,7 @@
     <span class="n">map_fg_prev_selected_marker</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">map_height</span>                  <span class="o">=</span> <span class="mi">500</span>
     <span class="n">map_output</span>                  <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">map_view_center</span>             <span class="o">=</span> <span class="p">{}</span>
     <span class="n">marker_info</span>                 <span class="o">=</span> <span class="kc">None</span>
     <span class="n">clicked_marker_info</span>         <span class="o">=</span> <span class="kc">None</span>
     <span class="n">warning</span>                     <span class="o">=</span> <span class="kc">None</span>
@@ -233,6 +234,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">has_error</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">error</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">map_view_center</span> <span class="o">=</span> <span class="p">{}</span>
 
 <div class="viewcode-block" id="BaseComponent.get_key_element">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.get_key_element">[docs]</a>
@@ -725,11 +727,24 @@
 
 <div class="viewcode-block" id="BaseComponent.refresh_map">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.refresh_map">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">refresh_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reset_areas</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">selected_idx</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">clear_draw</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">rerun</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">get_data</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">recreate_map</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">refresh_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reset_areas</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">selected_idx</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">clear_draw</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">rerun</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">get_data</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">recreate_map</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
         <span class="n">geo_constraint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_geo_constraint</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">recreate_map</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">map_disp</span> <span class="o">=</span> <span class="n">create_map</span><span class="p">(</span><span class="n">map_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">map_id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">map_output</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">map_disp</span> <span class="o">=</span> <span class="n">create_map</span><span class="p">(</span><span class="n">map_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">map_id</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">map_output</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;center&quot;</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">map_view_center</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">map_output</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="p">{})</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">map_disp</span> <span class="o">=</span> <span class="n">create_map</span><span class="p">(</span>
+                    <span class="n">map_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">map_id</span><span class="p">,</span> 
+                    <span class="n">zoom_start</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">map_output</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;zoom&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+                    <span class="n">map_center</span><span class="o">=</span><span class="p">[</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">map_view_center</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">map_view_center</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;lng&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                    <span class="p">]</span>
+                <span class="p">)</span>
         
         <span class="k">if</span> <span class="n">clear_draw</span><span class="p">:</span>
             <span class="n">clear_map_draw</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">map_disp</span><span class="p">)</span>
@@ -755,9 +770,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">map_fg_area</span><span class="o">=</span> <span class="n">add_area_overlays</span><span class="p">(</span><span class="n">areas</span><span class="o">=</span><span class="n">geo_constraint</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">get_data</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">handle_get_data</span><span class="p">()</span>
-        
-        <span class="c1"># elif len(geo_constraint) &gt; 0:</span>
-        <span class="c1">#     self.handle_get_data()</span>
+
 
         <span class="k">if</span> <span class="n">rerun</span><span class="p">:</span>
             <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span></div>
@@ -1273,6 +1286,8 @@
         <span class="c1">#                  window or tooltips. Here, we have embedded a line at the bottom of the</span>
         <span class="c1">#                  popup to be able to get the Event/Station Ids as well as the type of </span>
         <span class="c1">#                  the marker, ie, event or station.</span>
+
+        <span class="c1"># st.write(self.map_output)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">map_output</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">map_output</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;last_object_clicked&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">last_clicked</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">map_output</span><span class="p">[</span><span class="s1">&#39;last_object_clicked_popup&#39;</span><span class="p">]</span>
 
@@ -1299,6 +1314,19 @@
 
             <span class="k">if</span> <span class="s1">&#39;is_selected&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="p">[</span><span class="s1">&#39;is_selected&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+            <span class="c1"># try:</span>
+            <span class="c1">#     if self.clicked_marker_info[&#39;step&#39;] == self.step_type:</span>
+            <span class="c1">#         if self.df_markers.loc[self.clicked_marker_info[&#39;id&#39;] - 1, &#39;is_selected&#39;]:</span>
+            <span class="c1">#             self.df_markers.loc[self.clicked_marker_info[&#39;id&#39;] - 1, &#39;is_selected&#39;] = False</span>
+            <span class="c1">#             self.refresh_map_selection()                        </span>
+            <span class="c1">#         else:</span>
+            <span class="c1">#             self.sync_df_markers_with_df_edit()</span>
+            <span class="c1">#             self.df_markers.loc[self.clicked_marker_info[&#39;id&#39;] - 1, &#39;is_selected&#39;] = True</span>
+            <span class="c1">#             self.refresh_map_selection()</span>
+
+            <span class="c1"># except KeyError:</span>
+            <span class="c1">#     print(&quot;Selected map marker not found&quot;)</span>
                 
             <span class="k">try</span><span class="p">:</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">clicked_marker_info</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;is_selected&#39;</span><span class="p">]:</span>
