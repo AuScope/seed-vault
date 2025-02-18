@@ -4,18 +4,18 @@ from obspy import UTCDateTime
 import threading
 from seed_vault.enums.config import WorkflowType
 from seed_vault.models.config import SeismoLoaderSettings
-from seed_vault.service.seismoloader import run_continuous, run_event
+from seed_vault.service.seismoloader import run_event
 from obspy.clients.fdsn import Client
 from obspy.taup import TauPyModel
 from seed_vault.ui.components.display_log import ConsoleDisplay
 import streamlit as st
 import pandas as pd
-from obspy.geodetics import degrees2kilometers
-from obspy.geodetics.base import locations2degrees
 import numpy as np
 import matplotlib.pyplot as plt
 from seed_vault.ui.components.continuous_waveform import ContinuousComponents
 from seed_vault.service.utils import check_client_services
+from io import StringIO
+from contextlib import redirect_stdout, redirect_stderr
 
 
 query_thread = None
@@ -79,6 +79,15 @@ class WaveformFilterMenu:
     
     def render(self, stream=None):
         st.sidebar.title("Waveform Controls")
+        
+        # Add view selector at the top
+        st.sidebar.radio(
+            "View Mode",
+            ["Waveform View", "Log View"],
+            key="waveform_view_mode",
+            horizontal=True
+        )
+        
         # Step 1: Data Retrieval Settings
         with st.sidebar.expander("Step 1: Data Source", expanded=True):
             st.subheader("🔍 Time Window")
@@ -841,103 +850,162 @@ class WaveformComponents:
     filter_menu: WaveformFilterMenu
     waveform_display: WaveformDisplay
     continuous_components: ContinuousComponents
+    console: ConsoleDisplay
     
     def __init__(self, settings: SeismoLoaderSettings):
         self.settings = settings
         self.filter_menu = WaveformFilterMenu(settings)
         self.waveform_display = WaveformDisplay(settings, self.filter_menu)
         self.continuous_components = ContinuousComponents(settings)
+        self.console = ConsoleDisplay()  # Add console display
         
     def render(self):
         if self.settings.selected_workflow == WorkflowType.CONTINUOUS:
-            # Use continuous components
             self.continuous_components.render()
+            return
+        
+        # Always render filter menu (sidebar) first
+        current_stream = self.waveform_display.streams[0] if self.waveform_display.streams else None
+        self.filter_menu.render(current_stream)
+        
+        # Then handle main content
+        if st.session_state.get("waveform_view_mode") == "Log View":
+            self._render_log_view()
         else:
-            st.title("Waveform Analysis")
+            self._render_waveform_view()
 
-            # Initialize the download state in session state if not exists
-            if "is_downloading" not in st.session_state:
+    def _render_waveform_view(self):
+        st.title("Waveform Analysis")
+
+        # Initialize the download state in session state if not exists
+        if "is_downloading" not in st.session_state:
+            st.session_state.is_downloading = False
+        if "current_figure" not in st.session_state:
+            st.session_state.current_figure = None
+
+        # Create three columns for the controls (removed the fourth column)
+        col1, col2, col3 = st.columns(3)
+        
+        # Force Re-download toggle in first column
+        with col1:
+            self.settings.waveform.force_redownload = st.toggle(
+                "Force Re-download", 
+                value=self.settings.waveform.force_redownload, 
+                help="If turned off, the app will try to avoid "
+                "downloading data that are already available locally."
+                " If flagged, it will redownload the data again."
+            )
+
+        # Get Waveforms button in second column
+        with col2:
+            get_waveforms_button = st.button(
+                "Get Waveforms",
+                key="get_waveforms",
+                disabled=st.session_state.is_downloading,
+                use_container_width=True
+            )
+
+        # Cancel Download button in third column
+        with col3:
+            if st.button("Cancel Download", 
+                        key="cancel_download",
+                        disabled=not st.session_state.is_downloading,
+                        use_container_width=True):
+                stop_event.set()  # Signal cancellation
+                st.warning("Cancelling query...")
                 st.session_state.is_downloading = False
-            if "current_figure" not in st.session_state:
-                st.session_state.current_figure = None
+                st.rerun()
 
-            # Create three columns for the controls (removed the fourth column)
-            col1, col2, col3 = st.columns(3)
-            
-            # Force Re-download toggle in first column
-            with col1:
-                self.settings.waveform.force_redownload = st.toggle(
-                    "Force Re-download", 
-                    value=self.settings.waveform.force_redownload, 
-                    help="If turned off, the app will try to avoid "
-                    "downloading data that are already available locally."
-                    " If flagged, it will redownload the data again."
-                )
+        if get_waveforms_button:
+            st.session_state.is_downloading = True
+            st.rerun()  # Immediate UI update
 
-            # Get Waveforms button in second column
-            with col2:
-                get_waveforms_button = st.button(
-                    "Get Waveforms",
-                    key="get_waveforms",
-                    disabled=st.session_state.is_downloading,
-                    use_container_width=True
-                )
-
-            # Cancel Download button in third column
-            with col3:
-                if st.button("Cancel Download", 
-                            key="cancel_download",
-                            disabled=not st.session_state.is_downloading,
-                            use_container_width=True):
-                    stop_event.set()  # Signal cancellation
-                    st.warning("Cancelling query...")
+        # Show progress spinner and status
+        if st.session_state.is_downloading:
+            with st.spinner("Downloading waveforms... (this may take several minutes)"):
+                try:
+                    # Execute retrieval in the spinner context
+                    self._execute_waveform_retrieval()
+                    
+                    # Check if still downloading (not cancelled)
+                    if st.session_state.is_downloading:
+                        st.success("Download completed successfully!")
+                except Exception as e:
+                    st.error(f"Download failed: {str(e)}")
+                finally:
                     st.session_state.is_downloading = False
                     st.rerun()
 
-            if get_waveforms_button:
-                st.session_state.is_downloading = True
-                st.rerun()  # Rerun to update button state
+        # Display waveforms if they exist
+        if self.waveform_display.streams:
+            self.waveform_display.render()
 
-            if st.session_state.is_downloading:
-                with st.spinner("Downloading waveforms..."):
-                    try:
-                        self.waveform_display.retrieve_waveforms()
-                        st.success("Download completed successfully!")
-                    except Exception as e:
-                        st.error(f"Error during download: {str(e)}")
-                    finally:
-                        st.session_state.is_downloading = False
-                        st.rerun()  # Rerun to update button state
+        # Add download button at the bottom of the sidebar
+        with st.sidebar:
+            # Add some visual separation
+            st.markdown("---")
+            # Download PNG button
+            if st.session_state.current_figure is not None:
+                import io
+                buf = io.BytesIO()
+                st.session_state.current_figure.savefig(buf, format='png', dpi=300, bbox_inches='tight')
+                buf.seek(0)
+                
+                st.download_button(
+                    label="Download PNG",
+                    data=buf,
+                    file_name="waveform_plot.png",
+                    mime="image/png",
+                    use_container_width=True
+                )
+            else:
+                st.button("Download PNG", disabled=True, use_container_width=True)
 
-            # Render filter menu with current stream
-            current_stream = self.waveform_display.streams[0] if self.waveform_display.streams else None
-            self.filter_menu.render(current_stream)
+    def _render_log_view(self):
+        st.title("Waveform Retrieval Logs")
+        self.console._init_terminal_style()  # Initialize terminal styling
+        
+        if self.console.accumulated_output:
+            # Use ConsoleDisplay's formatting
+            log_text = (
+                '<div class="terminal" id="log-terminal">'
+                '<pre>{}</pre>'
+                '</div>'
+            ).format('\n'.join(self.console.accumulated_output))
             
-            # Display waveforms if they exist
-            if self.waveform_display.streams:
-                self.waveform_display.render()
+            st.markdown(log_text, unsafe_allow_html=True)
+        else:
+            st.info("No logs available yet. Perform a waveform download first.")
 
-            # Add download button at the bottom of the sidebar
-            with st.sidebar:
-                # Add some visual separation
-                st.markdown("---")
-                # Download PNG button
-                if st.session_state.current_figure is not None:
-                    import io
-                    buf = io.BytesIO()
-                    st.session_state.current_figure.savefig(buf, format='png', dpi=300, bbox_inches='tight')
-                    buf.seek(0)
-                    
-                    st.download_button(
-                        label="Download PNG",
-                        data=buf,
-                        file_name="waveform_plot.png",
-                        mime="image/png",
-                        use_container_width=True
-                    )
-                else:
-                    st.button("Download PNG", disabled=True, use_container_width=True)
+    def _execute_waveform_retrieval(self):
+        """Wrap waveform retrieval with logging"""
+        def retrieval_task():
+            return self.waveform_display.retrieve_waveforms()
 
+        # Only show live logs if in Log View
+        show_live = st.session_state.get("waveform_view_mode") == "Log View"
+        
+        if show_live:
+            success, error = self.console.run_with_logs(
+                process_func=retrieval_task,
+                status_message="Downloading event waveforms..."
+            )
+        else:
+            # Silent execution with log capture
+            with redirect_stdout(StringIO()) as stdout, redirect_stderr(StringIO()) as stderr:
+                try:
+                    result = retrieval_task()
+                    success, error = True, ""
+                except Exception as e:
+                    success, error = False, str(e)
+                
+                # Capture output
+                output = stdout.getvalue() + stderr.getvalue()
+                self.console.accumulated_output = output.splitlines()
+        
+        # Store logs in session state
+        if self.console.accumulated_output:
+            st.session_state.console_logs = '<br>'.join(self.console.accumulated_output)
 
 class MissingDataDisplay:
     def __init__(self, streams: List[Stream], settings: SeismoLoaderSettings):
