@@ -1241,8 +1241,8 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
                     curr_inv = station_client.get_stations(
                         minlatitude=geo.coords.min_lat,
                         maxlatitude=geo.coords.max_lat,
-                        minlongitude=geo.coords.min_lng,
-                        maxlongitude=geo.coords.max_lng,
+                        minlongitude=geo.coords.min_lon,
+                        maxlongitude=geo.coords.max_lon,
                         **kwargs
                     )
                 elif geo.geo_type == GeoConstraintType.CIRCLE:
@@ -1250,7 +1250,7 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
                         minradius=geo.coords.min_radius,
                         maxradius=geo.coords.max_radius,
                         latitude=geo.coords.lat,
-                        longitude=geo.coords.lng,
+                        longitude=geo.coords.lon,
                         **kwargs
                     )
                 else:
@@ -1389,7 +1389,7 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
             if geo.geo_type == GeoConstraintType.CIRCLE:
                 cat = event_client.get_events(
                     latitude=geo.coords.lat,
-                    longitude=geo.coords.lng,
+                    longitude=geo.coords.lon,
                     minradius=geo.coords.min_radius,
                     maxradius=geo.coords.max_radius,
                     **kwargs
@@ -1400,9 +1400,9 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
             elif geo.geo_type == GeoConstraintType.BOUNDING:
                 cat = event_client.get_events(
                     minlatitude=geo.coords.min_lat,
-                    minlongitude=geo.coords.min_lng,
+                    minlongitude=geo.coords.min_lon,
                     maxlatitude=geo.coords.max_lat,
-                    maxlongitude=geo.coords.max_lng,
+                    maxlongitude=geo.coords.max_lon,
                     **kwargs
                 )
                 print(f"Found {len(cat)} events from {settings.event.client}")

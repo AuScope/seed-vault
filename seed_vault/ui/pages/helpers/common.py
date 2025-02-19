@@ -101,9 +101,9 @@ def handle_polygon(geo) -> GeometryConstraint:
     return GeometryConstraint(
             coords = RectangleArea(
             min_lat = min_vals[1],
-            min_lng = min_vals[0],
+            min_lon = min_vals[0],
             max_lat = max_vals[1],
-            max_lng = max_vals[0],
+            max_lon = max_vals[0],
         )
     )
 
@@ -120,7 +120,7 @@ def handle_circle(geo) -> GeometryConstraint:
     return GeometryConstraint(
             coords = CircleArea(
             lat = coords[1],
-            lng = coords[0],
+            lon = coords[0],
             min_radius = 0,
             max_radius = kilometer2degrees(radius/1000)
         )

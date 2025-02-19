@@ -104,7 +104,7 @@ def add_area_overlays(areas):
         coords = area.coords
         if isinstance(coords, RectangleArea):
             feature_group.add_child(folium.Rectangle(
-                bounds=[[coords.min_lat, coords.min_lng], [coords.max_lat, coords.max_lng]],
+                bounds=[[coords.min_lat, coords.min_lon], [coords.max_lat, coords.max_lon]],
                 color=coords.color,
                 fill=True,
                 fill_opacity=0.5
@@ -120,7 +120,7 @@ def add_circle_area(feature_group, coords):
     """
     if coords.min_radius == 0:
         feature_group.add_child(folium.Circle(
-            location=[coords.lat, coords.lng],
+            location=[coords.lat, coords.lon],
             radius=degrees2kilometers(coords.max_radius)*1000,
             color= AREA_COLOR,
             fill=True,
@@ -129,7 +129,7 @@ def add_circle_area(feature_group, coords):
     else:
         # Outer Circle
         feature_group.add_child(folium.Circle(
-            location=[coords.lat, coords.lng],
+            location=[coords.lat, coords.lon],
             radius=degrees2kilometers(coords.max_radius)*1000,
             color=coords.color,
             fill=False,
@@ -138,7 +138,7 @@ def add_circle_area(feature_group, coords):
         ))
         # Inner Circle
         feature_group.add_child(folium.Circle(
-            location=[coords.lat, coords.lng],
+            location=[coords.lat, coords.lon],
             radius=degrees2kilometers(coords.max_radius)*1000,
             color=coords.color,
             fill=False,
@@ -449,12 +449,12 @@ class AddMapDraw(MacroElement):
         // Example of adding a rectangle
         {% for drawing in this.all_drawings %}
             {% if drawing.geo_type == 'bounding' %}
-                var bounds = [[{{drawing.coords.min_lat}}, {{drawing.coords.min_lng}}], [{{drawing.coords.max_lat}}, {{drawing.coords.max_lng}}]];
+                var bounds = [[{{drawing.coords.min_lat}}, {{drawing.coords.min_lon}}], [{{drawing.coords.max_lat}}, {{drawing.coords.max_lon}}]];
                 var rect = L.rectangle(bounds, {});
                 map.drawnItems.addLayer(rect);
             {% endif %}
             {% if drawing.geo_type == 'circle' %}
-                var circ = L.circle([{{drawing.coords.lat}}, {{drawing.coords.lng}}], {radius: {{drawing.coords.max_radius}}});
+                var circ = L.circle([{{drawing.coords.lat}}, {{drawing.coords.lon}}], {radius: {{drawing.coords.max_radius}}});
                 map.drawnItems.addLayer(circ);       
             {% endif %}                          
         {% endfor %}
@@ -504,8 +504,8 @@ def normalize_bounds(geometry_constraint: GeometryConstraint) -> List[GeometryCo
       it will return one or two GeometryConstraints.
     """
     rect_bounds = geometry_constraint.coords
-    lat_min, lon_min = rect_bounds.min_lat, rect_bounds.min_lng
-    lat_max, lon_max = rect_bounds.max_lat, rect_bounds.max_lng
+    lat_min, lon_min = rect_bounds.min_lat, rect_bounds.min_lon
+    lat_max, lon_max = rect_bounds.max_lat, rect_bounds.max_lon
     if lon_min >= -180 and lon_max <= 180:
         return [geometry_constraint]
     
@@ -514,8 +514,8 @@ def normalize_bounds(geometry_constraint: GeometryConstraint) -> List[GeometryCo
             coords=RectangleArea(
                 min_lat=lat_min,
                 max_lat=lat_max,
-                min_lng=lon_min,
-                max_lng=180
+                min_lon=lon_min,
+                max_lon=180
             )
         )
         
@@ -523,8 +523,8 @@ def normalize_bounds(geometry_constraint: GeometryConstraint) -> List[GeometryCo
             coords=RectangleArea(
                 min_lat=lat_min,
                 max_lat=lat_max,
-                min_lng=-180,
-                max_lng=lon_max - 360
+                min_lon=-180,
+                max_lon=lon_max - 360
             )
         )
         
@@ -536,8 +536,8 @@ def normalize_bounds(geometry_constraint: GeometryConstraint) -> List[GeometryCo
             coords=RectangleArea(
                 min_lat=lat_min,
                 max_lat=lat_max,
-                min_lng=lon_min + 360,  
-                max_lng=180
+                min_lon=lon_min + 360,  
+                max_lon=180
             )
         )
         
@@ -546,8 +546,8 @@ def normalize_bounds(geometry_constraint: GeometryConstraint) -> List[GeometryCo
             coords=RectangleArea(
                 min_lat=lat_min,
                 max_lat=lat_max,
-                min_lng=-180,
-                max_lng=lon_max
+                min_lon=-180,
+                max_lon=lon_max
             )
         )
         print(left_rectangle, main_rectangle)
@@ -559,8 +559,8 @@ def normalize_bounds(geometry_constraint: GeometryConstraint) -> List[GeometryCo
             coords=RectangleArea(
                 min_lat=lat_min,
                 max_lat=lat_max,
-                min_lng=lon_min + 360,
-                max_lng=lon_max + 360
+                min_lon=lon_min + 360,
+                max_lon=lon_max + 360
             )
         )
         return [normalized_rectangle]
@@ -571,8 +571,8 @@ def normalize_bounds(geometry_constraint: GeometryConstraint) -> List[GeometryCo
             coords=RectangleArea(
                 min_lat=lat_min,
                 max_lat=lat_max,
-                min_lng=lon_min - 360,
-                max_lng=lon_max - 360
+                min_lon=lon_min - 360,
+                max_lon=lon_max - 360
             )
         )
         return [normalized_rectangle]
@@ -590,29 +590,29 @@ def normalize_circle(geometry_constraint: GeometryConstraint) -> List[GeometryCo
       the longitude will be adjusted to bring it within the [-180, 180] range.
     """
     circle = geometry_constraint.coords
-    center_lat, center_lng, radius = circle.lat, circle.lng, circle.max_radius
+    center_lat, center_lon, radius = circle.lat, circle.lon, circle.max_radius
 
     # Case where the circle is within the main instance or partially overlaps it (no need to modify)
-    if -180 <= center_lng <= 180:
+    if -180 <= center_lon <= 180:
         return [geometry_constraint]
     
-    # Case where the circle is entirely in the left mirrored instance (center_lng < -180)
-    elif center_lng < -180:
+    # Case where the circle is entirely in the left mirrored instance (center_lon < -180)
+    elif center_lon < -180:
         normalized_circle = GeometryConstraint(
             coords=CircleArea(
                 lat=center_lat,
-                lng=center_lng + 360,  # Normalize center_lng to be within [-180, 180]
+                lon=center_lon + 360,  # Normalize center_lon to be within [-180, 180]
                 max_radius=radius
             )
         )
         return [normalized_circle]
 
-    # Case where the circle is entirely in the right mirrored instance (center_lng > 180)
-    elif center_lng > 180:
+    # Case where the circle is entirely in the right mirrored instance (center_lon > 180)
+    elif center_lon > 180:
         normalized_circle = GeometryConstraint(
             coords=CircleArea(
                 lat=center_lat,
-                lng=center_lng - 360,  # Normalize center_lng to be within [-180, 180]
+                lon=center_lon - 360,  # Normalize center_lon to be within [-180, 180]
                 max_radius=radius
             )
         )

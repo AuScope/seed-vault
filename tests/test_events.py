@@ -97,7 +97,7 @@ def test_get_events(test_settings):
     for i, row in df_res.iterrows():
         assert(((row["magnitude"] <= test_settings.event.max_magnitude) & (row["magnitude"] >= test_settings.event.min_magnitude)))
         assert(((row["depth (km)"] <= test_settings.event.max_depth) & (row["depth (km)"] >= test_settings.event.min_depth)))
-        assert(((row["longitude"] <= geo.coords.max_lng) & (row["longitude"] >= geo.coords.min_lng)))
+        assert(((row["longitude"] <= geo.coords.max_lon) & (row["longitude"] >= geo.coords.min_lon)))
         assert(((row["latitude"] <= geo.coords.max_lat) & (row["latitude"] >= geo.coords.min_lat)))
 
 

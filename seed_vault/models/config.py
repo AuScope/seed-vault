@@ -1024,47 +1024,47 @@ class SeismoLoaderSettings(BaseModel):
             # Parse bounding box coordinates
             min_lat = cls._check_val(config.get(section, 'minlatitude'), None, "float")
             max_lat = cls._check_val(config.get(section, 'maxlatitude'), None, "float")
-            min_lng = cls._check_val(config.get(section, 'minlongitude'), None, "float")
-            max_lng = cls._check_val(config.get(section, 'maxlongitude'), None, "float")
+            min_lon = cls._check_val(config.get(section, 'minlongitude'), None, "float")
+            max_lon = cls._check_val(config.get(section, 'maxlongitude'), None, "float")
 
             # Validate longitude range and adjust if necessary
-            if max_lng is not None and max_lng > 180:
-                max_lng -= 360
-                status_handler.add_warning("input_parameters" ,f"'maxlongitude' exceeded 180 in the [{section}] section. Adjusted to {max_lng}.")
-            if min_lng is not None and min_lng < -180:
-                min_lng += 360
-                status_handler.add_warning("input_parameters" ,f"'minlongitude' was below -180 in the [{section}] section. Adjusted to {min_lng}.")
+            if max_lon is not None and max_lon > 180:
+                max_lon -= 360
+                status_handler.add_warning("input_parameters" ,f"'maxlongitude' exceeded 180 in the [{section}] section. Adjusted to {max_lon}.")
+            if min_lon is not None and min_lon < -180:
+                min_lon += 360
+                status_handler.add_warning("input_parameters" ,f"'minlongitude' was below -180 in the [{section}] section. Adjusted to {min_lon}.")
 
             # Create bounding box constraint
             geo_constraint = GeometryConstraint(
                 coords=RectangleArea(
                     min_lat=min_lat,
                     max_lat=max_lat,
-                    min_lng=min_lng,
-                    max_lng=max_lng,
+                    min_lon=min_lon,
+                    max_lon=max_lon,
                 )
             )
 
         elif geo_constraint_type == GeoConstraintType.CIRCLE:
             # Parse circle area coordinates
             lat = cls._check_val(config.get(section, 'latitude'), None, "float")
-            lng = cls._check_val(config.get(section, 'longitude'), None, "float")
+            lon = cls._check_val(config.get(section, 'longitude'), None, "float")
             min_radius = cls._check_val(config.get(section, 'minsearchradius'), None, "float")
             max_radius = cls._check_val(config.get(section, 'maxsearchradius'), None, "float")
 
             # Validate longitude range and adjust if necessary
-            if lng is not None and lng > 180:
-                lng -= 360
-                status_handler.add_warning("input_parameters" ,f"'longitude' exceeded 180 in the [{section}] section. Adjusted to {lng}.")
-            if lng is not None and lng < -180:
-                lng += 360
-                status_handler.add_warning("input_parameters" ,f"'longitude' was below -180 in the [{section}] section. Adjusted to {lng}.")
+            if lon is not None and lon > 180:
+                lon -= 360
+                status_handler.add_warning("input_parameters" ,f"'longitude' exceeded 180 in the [{section}] section. Adjusted to {lon}.")
+            if lon is not None and lon < -180:
+                lon += 360
+                status_handler.add_warning("input_parameters" ,f"'longitude' was below -180 in the [{section}] section. Adjusted to {lon}.")
 
             # Create circular area constraint
             geo_constraint = GeometryConstraint(
                 coords=CircleArea(
                     lat=lat,
-                    lng=lng,
+                    lon=lon,
                     min_radius=min_radius,
                     max_radius=max_radius,
                 )
@@ -1148,15 +1148,15 @@ class SeismoLoaderSettings(BaseModel):
                 
                 if self.station.geo_constraint[0].geo_type == GeoConstraintType.CIRCLE:
                     safe_add_to_config(config, 'STATION', 'latitude', self.station.geo_constraint[0].coords.lat)
-                    safe_add_to_config(config, 'STATION', 'longitude', self.station.geo_constraint[0].coords.lng)
+                    safe_add_to_config(config, 'STATION', 'longitude', self.station.geo_constraint[0].coords.lon)
                     safe_add_to_config(config, 'STATION', 'minradius', self.station.geo_constraint[0].coords.min_radius)
                     safe_add_to_config(config, 'STATION', 'maxradius', self.station.geo_constraint[0].coords.max_radius)
 
                 if self.station.geo_constraint[0].geo_type == GeoConstraintType.BOUNDING:
                     safe_add_to_config(config, 'STATION', 'minlatitude', self.station.geo_constraint[0].coords.min_lat)
                     safe_add_to_config(config, 'STATION', 'maxlatitude', self.station.geo_constraint[0].coords.max_lat)
-                    safe_add_to_config(config, 'STATION', 'minlongitude', self.station.geo_constraint[0].coords.min_lng)
-                    safe_add_to_config(config, 'STATION', 'maxlongitude', self.station.geo_constraint[0].coords.max_lng)
+                    safe_add_to_config(config, 'STATION', 'minlongitude', self.station.geo_constraint[0].coords.min_lon)
+                    safe_add_to_config(config, 'STATION', 'maxlongitude', self.station.geo_constraint[0].coords.max_lon)
 
             safe_add_to_config(config, 'STATION', 'includerestricted', self.station.include_restricted)
             safe_add_to_config(config, 'STATION', 'level', self.station.level.value)
@@ -1193,15 +1193,15 @@ class SeismoLoaderSettings(BaseModel):
 
                 if self.event.geo_constraint[0].geo_type == GeoConstraintType.CIRCLE:
                     safe_add_to_config(config, 'EVENT', 'latitude', self.event.geo_constraint[0].coords.lat)
-                    safe_add_to_config(config, 'EVENT', 'longitude', self.event.geo_constraint[0].coords.lng)
+                    safe_add_to_config(config, 'EVENT', 'longitude', self.event.geo_constraint[0].coords.lon)
                     safe_add_to_config(config, 'EVENT', 'minsearchradius', self.event.geo_constraint[0].coords.min_radius)
                     safe_add_to_config(config, 'EVENT', 'maxsearchradius', self.event.geo_constraint[0].coords.max_radius)
 
                 if self.event.geo_constraint[0].geo_type == GeoConstraintType.BOUNDING:
                     safe_add_to_config(config, 'EVENT', 'minlatitude', self.event.geo_constraint[0].coords.min_lat)
                     safe_add_to_config(config, 'EVENT', 'maxlatitude', self.event.geo_constraint[0].coords.max_lat)
-                    safe_add_to_config(config, 'EVENT', 'minlongitude', self.event.geo_constraint[0].coords.min_lng)
-                    safe_add_to_config(config, 'EVENT', 'maxlongitude', self.event.geo_constraint[0].coords.max_lng)
+                    safe_add_to_config(config, 'EVENT', 'minlongitude', self.event.geo_constraint[0].coords.min_lon)
+                    safe_add_to_config(config, 'EVENT', 'maxlongitude', self.event.geo_constraint[0].coords.max_lon)
 
         return config
 

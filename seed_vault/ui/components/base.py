@@ -467,17 +467,17 @@ class BaseComponent:
 
         self.set_geo_constraint(new_geo)
 
-    def is_valid_rectangle(self, min_lat, max_lat, min_lng, max_lng):
+    def is_valid_rectangle(self, min_lat, max_lat, min_lon, max_lon):
         """Check if min/max latitude and longitude values are valid."""
         return (-90 <= min_lat <= 90 and -90 <= max_lat <= 90 and
-                -180 <= min_lng <= 180 and -180 <= max_lng <= 180 and
-                min_lat <= max_lat and min_lng <= max_lng)
+                -180 <= min_lon <= 180 and -180 <= max_lon <= 180 and
+                min_lat <= max_lat and min_lon <= max_lon)
 
-    def is_valid_circle(self, lat, lng, max_radius, min_radius):
+    def is_valid_circle(self, lat, lon, max_radius, min_radius):
         """Check if circle data is valid."""
         return (
             -90 <= lat <= 90 and
-            -180 <= lng <= 180 and
+            -180 <= lon <= 180 and
             max_radius > 0 and
             min_radius >= 0 and
             min_radius <= max_radius
@@ -495,16 +495,16 @@ class BaseComponent:
             self.df_circ = st.data_editor(original_df_circ, key=f"circ_area", hide_index=True)
 
             # Validate column names before applying validation
-            if {"lat", "lng", "max_radius", "min_radius"}.issubset(self.df_circ.columns):
+            if {"lat", "lon", "max_radius", "min_radius"}.issubset(self.df_circ.columns):
                 invalid_entries = self.df_circ[
                     ~self.df_circ.apply(lambda row: self.is_valid_circle(
-                        row["lat"], row["lng"], row["max_radius"], row["min_radius"]
+                        row["lat"], row["lon"], row["max_radius"], row["min_radius"]
                     ), axis=1)
                 ]
 
                 if not invalid_entries.empty:
                     st.warning(
-                        "Invalid circle data detected. Ensure lat is between -90 and 90, lng is between -180 and 180, "
+                        "Invalid circle data detected. Ensure lat is between -90 and 90, lon is between -180 and 180, "
                         "max_radius is positive, and min_radius ≤ max_radius."
                     )
                     return  # Stop further processing if validation fails
@@ -530,15 +530,15 @@ class BaseComponent:
             self.df_rect = st.data_editor(original_df_rect, key=f"rect_area", hide_index=True)
 
             # Validate column names before applying validation
-            if {"min_lat", "max_lat", "min_lng", "max_lng"}.issubset(self.df_rect.columns):
+            if {"min_lat", "max_lat", "min_lon", "max_lon"}.issubset(self.df_rect.columns):
                 invalid_entries = self.df_rect[
                     ~self.df_rect.apply(lambda row: self.is_valid_rectangle(
-                        row["min_lat"], row["max_lat"], row["min_lng"], row["max_lng"]
+                        row["min_lat"], row["max_lat"], row["min_lon"], row["max_lon"]
                     ), axis=1)
                 ]
 
                 if not invalid_entries.empty:
-                    st.warning("Invalid rectangle coordinates detected. Ensure min_lat ≤ max_lat and min_lng ≤ max_lng, with values within valid ranges (-90 to 90 for lat, -180 to 180 for lng).")
+                    st.warning("Invalid rectangle coordinates detected. Ensure min_lat ≤ max_lat and min_lon ≤ max_lon, with values within valid ranges (-90 to 90 for lat, -180 to 180 for lon).")
                     return  
 
             else:
@@ -615,7 +615,7 @@ class BaseComponent:
                 zoom_start=self.map_view_zoom,
                 map_center=[
                     self.map_view_center.get("lat", 0.0),
-                    self.map_view_center.get("lng", 0.0),
+                    self.map_view_center.get("lon", 0.0),
                 ]
             )
         
@@ -893,8 +893,8 @@ class BaseComponent:
 
         for geo in geo_constraints:
             if geo.geo_type == GeoConstraintType.CIRCLE:
-                lat, lng = geo.coords.lat, geo.coords.lng
-                matching_event = self.df_markers_prev[(self.df_markers_prev['latitude'] == lat) & (self.df_markers_prev['longitude'] == lng)]
+                lat, lon = geo.coords.lat, geo.coords.lon
+                matching_event = self.df_markers_prev[(self.df_markers_prev['latitude'] == lat) & (self.df_markers_prev['longitude'] == lon)]
 
                 if not matching_event.empty:
                     geo.coords.min_radius = min_radius_value
@@ -902,12 +902,12 @@ class BaseComponent:
             updated_constraints.append(geo)
 
         for _, row in self.df_markers_prev.iterrows():
-            lat, lng = row['latitude'], row['longitude']
+            lat, lon = row['latitude'], row['longitude']
             if not any(
-                geo.geo_type == GeoConstraintType.CIRCLE and geo.coords.lat == lat and geo.coords.lng == lng
+                geo.geo_type == GeoConstraintType.CIRCLE and geo.coords.lat == lat and geo.coords.lon == lon
                 for geo in updated_constraints
             ):
-                new_donut = CircleArea(lat=lat, lng=lng, min_radius=min_radius_value, max_radius=max_radius_value)
+                new_donut = CircleArea(lat=lat, lon=lon, min_radius=min_radius_value, max_radius=max_radius_value)
                 geo = GeometryConstraint(geo_type=GeoConstraintType.CIRCLE, coords=new_donut)
                 updated_constraints.append(geo)
 
@@ -916,7 +916,7 @@ class BaseComponent:
             if not (geo.geo_type == GeoConstraintType.CIRCLE and
                     self.df_markers_prev[
                         (self.df_markers_prev['latitude'] == geo.coords.lat) &
-                        (self.df_markers_prev['longitude'] == geo.coords.lng)
+                        (self.df_markers_prev['longitude'] == geo.coords.lon)
                     ].empty)
         ]
         self.set_geo_constraint(updated_constraints)
