@@ -205,7 +205,7 @@
         <span class="n">coords</span> <span class="o">=</span> <span class="n">area</span><span class="o">.</span><span class="n">coords</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="n">RectangleArea</span><span class="p">):</span>
             <span class="n">feature_group</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">folium</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">(</span>
-                <span class="n">bounds</span><span class="o">=</span><span class="p">[[</span><span class="n">coords</span><span class="o">.</span><span class="n">min_lat</span><span class="p">,</span> <span class="n">coords</span><span class="o">.</span><span class="n">min_lng</span><span class="p">],</span> <span class="p">[</span><span class="n">coords</span><span class="o">.</span><span class="n">max_lat</span><span class="p">,</span> <span class="n">coords</span><span class="o">.</span><span class="n">max_lng</span><span class="p">]],</span>
+                <span class="n">bounds</span><span class="o">=</span><span class="p">[[</span><span class="n">coords</span><span class="o">.</span><span class="n">min_lat</span><span class="p">,</span> <span class="n">coords</span><span class="o">.</span><span class="n">min_lon</span><span class="p">],</span> <span class="p">[</span><span class="n">coords</span><span class="o">.</span><span class="n">max_lat</span><span class="p">,</span> <span class="n">coords</span><span class="o">.</span><span class="n">max_lon</span><span class="p">]],</span>
                 <span class="n">color</span><span class="o">=</span><span class="n">coords</span><span class="o">.</span><span class="n">color</span><span class="p">,</span>
                 <span class="n">fill</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="n">fill_opacity</span><span class="o">=</span><span class="mf">0.5</span>
@@ -224,7 +224,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">coords</span><span class="o">.</span><span class="n">min_radius</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">feature_group</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">folium</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span>
-            <span class="n">location</span><span class="o">=</span><span class="p">[</span><span class="n">coords</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span> <span class="n">coords</span><span class="o">.</span><span class="n">lng</span><span class="p">],</span>
+            <span class="n">location</span><span class="o">=</span><span class="p">[</span><span class="n">coords</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span> <span class="n">coords</span><span class="o">.</span><span class="n">lon</span><span class="p">],</span>
             <span class="n">radius</span><span class="o">=</span><span class="n">degrees2kilometers</span><span class="p">(</span><span class="n">coords</span><span class="o">.</span><span class="n">max_radius</span><span class="p">)</span><span class="o">*</span><span class="mi">1000</span><span class="p">,</span>
             <span class="n">color</span><span class="o">=</span> <span class="n">AREA_COLOR</span><span class="p">,</span>
             <span class="n">fill</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -233,7 +233,7 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># Outer Circle</span>
         <span class="n">feature_group</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">folium</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span>
-            <span class="n">location</span><span class="o">=</span><span class="p">[</span><span class="n">coords</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span> <span class="n">coords</span><span class="o">.</span><span class="n">lng</span><span class="p">],</span>
+            <span class="n">location</span><span class="o">=</span><span class="p">[</span><span class="n">coords</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span> <span class="n">coords</span><span class="o">.</span><span class="n">lon</span><span class="p">],</span>
             <span class="n">radius</span><span class="o">=</span><span class="n">degrees2kilometers</span><span class="p">(</span><span class="n">coords</span><span class="o">.</span><span class="n">max_radius</span><span class="p">)</span><span class="o">*</span><span class="mi">1000</span><span class="p">,</span>
             <span class="n">color</span><span class="o">=</span><span class="n">coords</span><span class="o">.</span><span class="n">color</span><span class="p">,</span>
             <span class="n">fill</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -242,7 +242,7 @@
         <span class="p">))</span>
         <span class="c1"># Inner Circle</span>
         <span class="n">feature_group</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">folium</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span>
-            <span class="n">location</span><span class="o">=</span><span class="p">[</span><span class="n">coords</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span> <span class="n">coords</span><span class="o">.</span><span class="n">lng</span><span class="p">],</span>
+            <span class="n">location</span><span class="o">=</span><span class="p">[</span><span class="n">coords</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span> <span class="n">coords</span><span class="o">.</span><span class="n">lon</span><span class="p">],</span>
             <span class="n">radius</span><span class="o">=</span><span class="n">degrees2kilometers</span><span class="p">(</span><span class="n">coords</span><span class="o">.</span><span class="n">max_radius</span><span class="p">)</span><span class="o">*</span><span class="mi">1000</span><span class="p">,</span>
             <span class="n">color</span><span class="o">=</span><span class="n">coords</span><span class="o">.</span><span class="n">color</span><span class="p">,</span>
             <span class="n">fill</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -589,12 +589,12 @@
 <span class="s2">        // Example of adding a rectangle</span>
 <span class="s2">        {</span><span class="si">% f</span><span class="s2">or drawing in this.all_drawings %}</span>
 <span class="s2">            {</span><span class="si">% i</span><span class="s2">f drawing.geo_type == &#39;bounding&#39; %}</span>
-<span class="s2">                var bounds = [[{{drawing.coords.min_lat}}, {{drawing.coords.min_lng}}], [{{drawing.coords.max_lat}}, {{drawing.coords.max_lng}}]];</span>
+<span class="s2">                var bounds = [[{{drawing.coords.min_lat}}, {{drawing.coords.min_lon}}], [{{drawing.coords.max_lat}}, {{drawing.coords.max_lon}}]];</span>
 <span class="s2">                var rect = L.rectangle(bounds, </span><span class="si">{}</span><span class="s2">);</span>
 <span class="s2">                map.drawnItems.addLayer(rect);</span>
 <span class="s2">            {</span><span class="si">% e</span><span class="s2">ndif %}</span>
 <span class="s2">            {</span><span class="si">% i</span><span class="s2">f drawing.geo_type == &#39;circle&#39; %}</span>
-<span class="s2">                var circ = L.circle([{{drawing.coords.lat}}, {{drawing.coords.lng}}], {radius: {{drawing.coords.max_radius}}});</span>
+<span class="s2">                var circ = L.circle([{{drawing.coords.lat}}, {{drawing.coords.lon}}], {radius: {{drawing.coords.max_radius}}});</span>
 <span class="s2">                map.drawnItems.addLayer(circ);       </span>
 <span class="s2">            {</span><span class="si">% e</span><span class="s2">ndif %}                          </span>
 <span class="s2">        {</span><span class="si">% e</span><span class="s2">ndfor %}</span>
@@ -650,8 +650,8 @@
 <span class="sd">      it will return one or two GeometryConstraints.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">rect_bounds</span> <span class="o">=</span> <span class="n">geometry_constraint</span><span class="o">.</span><span class="n">coords</span>
-    <span class="n">lat_min</span><span class="p">,</span> <span class="n">lon_min</span> <span class="o">=</span> <span class="n">rect_bounds</span><span class="o">.</span><span class="n">min_lat</span><span class="p">,</span> <span class="n">rect_bounds</span><span class="o">.</span><span class="n">min_lng</span>
-    <span class="n">lat_max</span><span class="p">,</span> <span class="n">lon_max</span> <span class="o">=</span> <span class="n">rect_bounds</span><span class="o">.</span><span class="n">max_lat</span><span class="p">,</span> <span class="n">rect_bounds</span><span class="o">.</span><span class="n">max_lng</span>
+    <span class="n">lat_min</span><span class="p">,</span> <span class="n">lon_min</span> <span class="o">=</span> <span class="n">rect_bounds</span><span class="o">.</span><span class="n">min_lat</span><span class="p">,</span> <span class="n">rect_bounds</span><span class="o">.</span><span class="n">min_lon</span>
+    <span class="n">lat_max</span><span class="p">,</span> <span class="n">lon_max</span> <span class="o">=</span> <span class="n">rect_bounds</span><span class="o">.</span><span class="n">max_lat</span><span class="p">,</span> <span class="n">rect_bounds</span><span class="o">.</span><span class="n">max_lon</span>
     <span class="k">if</span> <span class="n">lon_min</span> <span class="o">&gt;=</span> <span class="o">-</span><span class="mi">180</span> <span class="ow">and</span> <span class="n">lon_max</span> <span class="o">&lt;=</span> <span class="mi">180</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">geometry_constraint</span><span class="p">]</span>
     
@@ -660,8 +660,8 @@
             <span class="n">coords</span><span class="o">=</span><span class="n">RectangleArea</span><span class="p">(</span>
                 <span class="n">min_lat</span><span class="o">=</span><span class="n">lat_min</span><span class="p">,</span>
                 <span class="n">max_lat</span><span class="o">=</span><span class="n">lat_max</span><span class="p">,</span>
-                <span class="n">min_lng</span><span class="o">=</span><span class="n">lon_min</span><span class="p">,</span>
-                <span class="n">max_lng</span><span class="o">=</span><span class="mi">180</span>
+                <span class="n">min_lon</span><span class="o">=</span><span class="n">lon_min</span><span class="p">,</span>
+                <span class="n">max_lon</span><span class="o">=</span><span class="mi">180</span>
             <span class="p">)</span>
         <span class="p">)</span>
         
@@ -669,8 +669,8 @@
             <span class="n">coords</span><span class="o">=</span><span class="n">RectangleArea</span><span class="p">(</span>
                 <span class="n">min_lat</span><span class="o">=</span><span class="n">lat_min</span><span class="p">,</span>
                 <span class="n">max_lat</span><span class="o">=</span><span class="n">lat_max</span><span class="p">,</span>
-                <span class="n">min_lng</span><span class="o">=-</span><span class="mi">180</span><span class="p">,</span>
-                <span class="n">max_lng</span><span class="o">=</span><span class="n">lon_max</span> <span class="o">-</span> <span class="mi">360</span>
+                <span class="n">min_lon</span><span class="o">=-</span><span class="mi">180</span><span class="p">,</span>
+                <span class="n">max_lon</span><span class="o">=</span><span class="n">lon_max</span> <span class="o">-</span> <span class="mi">360</span>
             <span class="p">)</span>
         <span class="p">)</span>
         
@@ -682,8 +682,8 @@
             <span class="n">coords</span><span class="o">=</span><span class="n">RectangleArea</span><span class="p">(</span>
                 <span class="n">min_lat</span><span class="o">=</span><span class="n">lat_min</span><span class="p">,</span>
                 <span class="n">max_lat</span><span class="o">=</span><span class="n">lat_max</span><span class="p">,</span>
-                <span class="n">min_lng</span><span class="o">=</span><span class="n">lon_min</span> <span class="o">+</span> <span class="mi">360</span><span class="p">,</span>  
-                <span class="n">max_lng</span><span class="o">=</span><span class="mi">180</span>
+                <span class="n">min_lon</span><span class="o">=</span><span class="n">lon_min</span> <span class="o">+</span> <span class="mi">360</span><span class="p">,</span>  
+                <span class="n">max_lon</span><span class="o">=</span><span class="mi">180</span>
             <span class="p">)</span>
         <span class="p">)</span>
         
@@ -692,8 +692,8 @@
             <span class="n">coords</span><span class="o">=</span><span class="n">RectangleArea</span><span class="p">(</span>
                 <span class="n">min_lat</span><span class="o">=</span><span class="n">lat_min</span><span class="p">,</span>
                 <span class="n">max_lat</span><span class="o">=</span><span class="n">lat_max</span><span class="p">,</span>
-                <span class="n">min_lng</span><span class="o">=-</span><span class="mi">180</span><span class="p">,</span>
-                <span class="n">max_lng</span><span class="o">=</span><span class="n">lon_max</span>
+                <span class="n">min_lon</span><span class="o">=-</span><span class="mi">180</span><span class="p">,</span>
+                <span class="n">max_lon</span><span class="o">=</span><span class="n">lon_max</span>
             <span class="p">)</span>
         <span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">left_rectangle</span><span class="p">,</span> <span class="n">main_rectangle</span><span class="p">)</span>
@@ -705,8 +705,8 @@
             <span class="n">coords</span><span class="o">=</span><span class="n">RectangleArea</span><span class="p">(</span>
                 <span class="n">min_lat</span><span class="o">=</span><span class="n">lat_min</span><span class="p">,</span>
                 <span class="n">max_lat</span><span class="o">=</span><span class="n">lat_max</span><span class="p">,</span>
-                <span class="n">min_lng</span><span class="o">=</span><span class="n">lon_min</span> <span class="o">+</span> <span class="mi">360</span><span class="p">,</span>
-                <span class="n">max_lng</span><span class="o">=</span><span class="n">lon_max</span> <span class="o">+</span> <span class="mi">360</span>
+                <span class="n">min_lon</span><span class="o">=</span><span class="n">lon_min</span> <span class="o">+</span> <span class="mi">360</span><span class="p">,</span>
+                <span class="n">max_lon</span><span class="o">=</span><span class="n">lon_max</span> <span class="o">+</span> <span class="mi">360</span>
             <span class="p">)</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">normalized_rectangle</span><span class="p">]</span>
@@ -717,8 +717,8 @@
             <span class="n">coords</span><span class="o">=</span><span class="n">RectangleArea</span><span class="p">(</span>
                 <span class="n">min_lat</span><span class="o">=</span><span class="n">lat_min</span><span class="p">,</span>
                 <span class="n">max_lat</span><span class="o">=</span><span class="n">lat_max</span><span class="p">,</span>
-                <span class="n">min_lng</span><span class="o">=</span><span class="n">lon_min</span> <span class="o">-</span> <span class="mi">360</span><span class="p">,</span>
-                <span class="n">max_lng</span><span class="o">=</span><span class="n">lon_max</span> <span class="o">-</span> <span class="mi">360</span>
+                <span class="n">min_lon</span><span class="o">=</span><span class="n">lon_min</span> <span class="o">-</span> <span class="mi">360</span><span class="p">,</span>
+                <span class="n">max_lon</span><span class="o">=</span><span class="n">lon_max</span> <span class="o">-</span> <span class="mi">360</span>
             <span class="p">)</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">normalized_rectangle</span><span class="p">]</span></div>
@@ -739,29 +739,29 @@
 <span class="sd">      the longitude will be adjusted to bring it within the [-180, 180] range.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">circle</span> <span class="o">=</span> <span class="n">geometry_constraint</span><span class="o">.</span><span class="n">coords</span>
-    <span class="n">center_lat</span><span class="p">,</span> <span class="n">center_lng</span><span class="p">,</span> <span class="n">radius</span> <span class="o">=</span> <span class="n">circle</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span> <span class="n">circle</span><span class="o">.</span><span class="n">lng</span><span class="p">,</span> <span class="n">circle</span><span class="o">.</span><span class="n">max_radius</span>
+    <span class="n">center_lat</span><span class="p">,</span> <span class="n">center_lon</span><span class="p">,</span> <span class="n">radius</span> <span class="o">=</span> <span class="n">circle</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span> <span class="n">circle</span><span class="o">.</span><span class="n">lon</span><span class="p">,</span> <span class="n">circle</span><span class="o">.</span><span class="n">max_radius</span>
 
     <span class="c1"># Case where the circle is within the main instance or partially overlaps it (no need to modify)</span>
-    <span class="k">if</span> <span class="o">-</span><span class="mi">180</span> <span class="o">&lt;=</span> <span class="n">center_lng</span> <span class="o">&lt;=</span> <span class="mi">180</span><span class="p">:</span>
+    <span class="k">if</span> <span class="o">-</span><span class="mi">180</span> <span class="o">&lt;=</span> <span class="n">center_lon</span> <span class="o">&lt;=</span> <span class="mi">180</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">geometry_constraint</span><span class="p">]</span>
     
-    <span class="c1"># Case where the circle is entirely in the left mirrored instance (center_lng &lt; -180)</span>
-    <span class="k">elif</span> <span class="n">center_lng</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mi">180</span><span class="p">:</span>
+    <span class="c1"># Case where the circle is entirely in the left mirrored instance (center_lon &lt; -180)</span>
+    <span class="k">elif</span> <span class="n">center_lon</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mi">180</span><span class="p">:</span>
         <span class="n">normalized_circle</span> <span class="o">=</span> <span class="n">GeometryConstraint</span><span class="p">(</span>
             <span class="n">coords</span><span class="o">=</span><span class="n">CircleArea</span><span class="p">(</span>
                 <span class="n">lat</span><span class="o">=</span><span class="n">center_lat</span><span class="p">,</span>
-                <span class="n">lng</span><span class="o">=</span><span class="n">center_lng</span> <span class="o">+</span> <span class="mi">360</span><span class="p">,</span>  <span class="c1"># Normalize center_lng to be within [-180, 180]</span>
+                <span class="n">lon</span><span class="o">=</span><span class="n">center_lon</span> <span class="o">+</span> <span class="mi">360</span><span class="p">,</span>  <span class="c1"># Normalize center_lon to be within [-180, 180]</span>
                 <span class="n">max_radius</span><span class="o">=</span><span class="n">radius</span>
             <span class="p">)</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">normalized_circle</span><span class="p">]</span>
 
-    <span class="c1"># Case where the circle is entirely in the right mirrored instance (center_lng &gt; 180)</span>
-    <span class="k">elif</span> <span class="n">center_lng</span> <span class="o">&gt;</span> <span class="mi">180</span><span class="p">:</span>
+    <span class="c1"># Case where the circle is entirely in the right mirrored instance (center_lon &gt; 180)</span>
+    <span class="k">elif</span> <span class="n">center_lon</span> <span class="o">&gt;</span> <span class="mi">180</span><span class="p">:</span>
         <span class="n">normalized_circle</span> <span class="o">=</span> <span class="n">GeometryConstraint</span><span class="p">(</span>
             <span class="n">coords</span><span class="o">=</span><span class="n">CircleArea</span><span class="p">(</span>
                 <span class="n">lat</span><span class="o">=</span><span class="n">center_lat</span><span class="p">,</span>
-                <span class="n">lng</span><span class="o">=</span><span class="n">center_lng</span> <span class="o">-</span> <span class="mi">360</span><span class="p">,</span>  <span class="c1"># Normalize center_lng to be within [-180, 180]</span>
+                <span class="n">lon</span><span class="o">=</span><span class="n">center_lon</span> <span class="o">-</span> <span class="mi">360</span><span class="p">,</span>  <span class="c1"># Normalize center_lon to be within [-180, 180]</span>
                 <span class="n">max_radius</span><span class="o">=</span><span class="n">radius</span>
             <span class="p">)</span>
         <span class="p">)</span>

@@ -104,16 +104,16 @@
 <span class="sd">    Attributes:</span>
 <span class="sd">        min_lat (float): The minimum latitude of the rectangle.</span>
 <span class="sd">        max_lat (float): The maximum latitude of the rectangle.</span>
-<span class="sd">        min_lng (float): The minimum longitude of the rectangle.</span>
-<span class="sd">        max_lng (float): The maximum longitude of the rectangle.</span>
+<span class="sd">        min_lon (float): The minimum longitude of the rectangle.</span>
+<span class="sd">        max_lon (float): The maximum longitude of the rectangle.</span>
 
 <span class="sd">    Properties:</span>
 <span class="sd">        color (str): Returns the predefined color associated with the area.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">min_lat</span><span class="p">:</span> <span class="nb">float</span>
     <span class="n">max_lat</span><span class="p">:</span> <span class="nb">float</span>
-    <span class="n">min_lng</span><span class="p">:</span> <span class="nb">float</span>
-    <span class="n">max_lng</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">min_lon</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">max_lon</span><span class="p">:</span> <span class="nb">float</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">color</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -133,7 +133,7 @@
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        lat (float): The latitude of the circle&#39;s center.</span>
-<span class="sd">        lng (float): The longitude of the circle&#39;s center.</span>
+<span class="sd">        lon (float): The longitude of the circle&#39;s center.</span>
 <span class="sd">        max_radius (float): The maximum radius of the circle.</span>
 <span class="sd">        min_radius (float, optional): The minimum radius of the circle. Defaults to `0`.</span>
 
@@ -141,7 +141,7 @@
 <span class="sd">        color (str): Returns the predefined color associated with the area.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">lat</span>   <span class="p">:</span> <span class="nb">float</span>
-    <span class="n">lng</span>   <span class="p">:</span> <span class="nb">float</span>
+    <span class="n">lon</span>   <span class="p">:</span> <span class="nb">float</span>
     <span class="n">max_radius</span><span class="p">:</span> <span class="nb">float</span>
     <span class="n">min_radius</span> <span class="p">:</span> <span class="nb">float</span><span class="o">=</span><span class="mi">0</span>
     <span class="nd">@property</span>

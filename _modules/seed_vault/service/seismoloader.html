@@ -1393,8 +1393,8 @@
                     <span class="n">curr_inv</span> <span class="o">=</span> <span class="n">station_client</span><span class="o">.</span><span class="n">get_stations</span><span class="p">(</span>
                         <span class="n">minlatitude</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">min_lat</span><span class="p">,</span>
                         <span class="n">maxlatitude</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">max_lat</span><span class="p">,</span>
-                        <span class="n">minlongitude</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">min_lng</span><span class="p">,</span>
-                        <span class="n">maxlongitude</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">max_lng</span><span class="p">,</span>
+                        <span class="n">minlongitude</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">min_lon</span><span class="p">,</span>
+                        <span class="n">maxlongitude</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">max_lon</span><span class="p">,</span>
                         <span class="o">**</span><span class="n">kwargs</span>
                     <span class="p">)</span>
                 <span class="k">elif</span> <span class="n">geo</span><span class="o">.</span><span class="n">geo_type</span> <span class="o">==</span> <span class="n">GeoConstraintType</span><span class="o">.</span><span class="n">CIRCLE</span><span class="p">:</span>
@@ -1402,7 +1402,7 @@
                         <span class="n">minradius</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">min_radius</span><span class="p">,</span>
                         <span class="n">maxradius</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">max_radius</span><span class="p">,</span>
                         <span class="n">latitude</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span>
-                        <span class="n">longitude</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">lng</span><span class="p">,</span>
+                        <span class="n">longitude</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">lon</span><span class="p">,</span>
                         <span class="o">**</span><span class="n">kwargs</span>
                     <span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
@@ -1544,7 +1544,7 @@
             <span class="k">if</span> <span class="n">geo</span><span class="o">.</span><span class="n">geo_type</span> <span class="o">==</span> <span class="n">GeoConstraintType</span><span class="o">.</span><span class="n">CIRCLE</span><span class="p">:</span>
                 <span class="n">cat</span> <span class="o">=</span> <span class="n">event_client</span><span class="o">.</span><span class="n">get_events</span><span class="p">(</span>
                     <span class="n">latitude</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span>
-                    <span class="n">longitude</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">lng</span><span class="p">,</span>
+                    <span class="n">longitude</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">lon</span><span class="p">,</span>
                     <span class="n">minradius</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">min_radius</span><span class="p">,</span>
                     <span class="n">maxradius</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">max_radius</span><span class="p">,</span>
                     <span class="o">**</span><span class="n">kwargs</span>
@@ -1555,9 +1555,9 @@
             <span class="k">elif</span> <span class="n">geo</span><span class="o">.</span><span class="n">geo_type</span> <span class="o">==</span> <span class="n">GeoConstraintType</span><span class="o">.</span><span class="n">BOUNDING</span><span class="p">:</span>
                 <span class="n">cat</span> <span class="o">=</span> <span class="n">event_client</span><span class="o">.</span><span class="n">get_events</span><span class="p">(</span>
                     <span class="n">minlatitude</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">min_lat</span><span class="p">,</span>
-                    <span class="n">minlongitude</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">min_lng</span><span class="p">,</span>
+                    <span class="n">minlongitude</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">min_lon</span><span class="p">,</span>
                     <span class="n">maxlatitude</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">max_lat</span><span class="p">,</span>
-                    <span class="n">maxlongitude</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">max_lng</span><span class="p">,</span>
+                    <span class="n">maxlongitude</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">max_lon</span><span class="p">,</span>
                     <span class="o">**</span><span class="n">kwargs</span>
                 <span class="p">)</span>
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span><span class="si">}</span><span class="s2"> events from </span><span class="si">{</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">client</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>

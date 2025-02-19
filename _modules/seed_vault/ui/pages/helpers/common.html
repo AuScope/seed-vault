@@ -214,9 +214,9 @@
     <span class="k">return</span> <span class="n">GeometryConstraint</span><span class="p">(</span>
             <span class="n">coords</span> <span class="o">=</span> <span class="n">RectangleArea</span><span class="p">(</span>
             <span class="n">min_lat</span> <span class="o">=</span> <span class="n">min_vals</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
-            <span class="n">min_lng</span> <span class="o">=</span> <span class="n">min_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">min_lon</span> <span class="o">=</span> <span class="n">min_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
             <span class="n">max_lat</span> <span class="o">=</span> <span class="n">max_vals</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
-            <span class="n">max_lng</span> <span class="o">=</span> <span class="n">max_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">max_lon</span> <span class="o">=</span> <span class="n">max_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
         <span class="p">)</span>
     <span class="p">)</span></div>
 
@@ -236,7 +236,7 @@
     <span class="k">return</span> <span class="n">GeometryConstraint</span><span class="p">(</span>
             <span class="n">coords</span> <span class="o">=</span> <span class="n">CircleArea</span><span class="p">(</span>
             <span class="n">lat</span> <span class="o">=</span> <span class="n">coords</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
-            <span class="n">lng</span> <span class="o">=</span> <span class="n">coords</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">lon</span> <span class="o">=</span> <span class="n">coords</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
             <span class="n">min_radius</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
             <span class="n">max_radius</span> <span class="o">=</span> <span class="n">kilometer2degrees</span><span class="p">(</span><span class="n">radius</span><span class="o">/</span><span class="mi">1000</span><span class="p">)</span>
         <span class="p">)</span>
