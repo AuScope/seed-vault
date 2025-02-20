@@ -16,16 +16,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from seed_vault.ui.components.continuous_waveform import ContinuousComponents
 from seed_vault.service.utils import check_client_services
+import time
 
 
-query_thread = None
 stop_event = threading.Event()
-
-
-if "query_done" not in st.session_state:
-    st.session_state["query_done"] = False
-if "trigger_rerun" not in st.session_state:
-    st.session_state["trigger_rerun"] = False
 
 def get_tele_filter(tr):
     # get a generic teleseismic filter band
@@ -238,55 +232,59 @@ class WaveformDisplay:
     
 
     def fetch_data(self):
+        """
+        Fetches waveform data in a background thread.
+
+        This function retrieves seismic waveform data asynchronously using the 
+        `run_event` function and updates the session state upon completion.
+
+        Updates:
+            - st.session_state["query_done"] (bool): Set to True when the task is complete.
+            - st.session_state["is_downloading"] (bool): Set to False when the task finishes.
+
+        Attributes:
+            self.streams (list): Stores the retrieved waveform data.
+        """        
         self.streams = run_event(self.settings, stop_event)
-        # st.session_state["query_done"] = True  # Mark as done
-        # st.session_state["trigger_rerun"] = True  # 🔹 Set flag for rerun
-
-        st.session_state.update({
-        "query_done": True,   # Mark query as done
-        "trigger_rerun": True # 🚀 Set flag for UI to trigger rerun
-    })
-        # if self.streams:
-        #     # Update filter menu with first stream
-        #     self.filter_menu.update_available_channels(self.streams[0])
-        #     st.success(f"Successfully retrieved waveforms for {len(self.streams)} events.")
-        # else:
-        #     st.warning("No waveforms retrieved. Please check your selection criteria.")
-
-        # st.rerun()  # Refresh UI after completion
-
-    # def retrieve_waveforms(self):
-    #     """Retrieve waveforms and store as ObsPy streams"""
-    #     global query_thread, stop_event
-    #     if not self.settings.event.selected_catalogs or not self.settings.station.selected_invs:
-    #         st.warning("Please select events and stations before downloading waveforms.")
-    #         return
-        
-    #     stop_event.clear()  # Reset the cancellation flag
-
-    #     query_thread = threading.Thread(target=self.fetch_data, daemon=True)
-    #     query_thread.start() 
-
-    #     st.session_state["query_done"] = False  # Reset query flag
-    #     st.session_state["trigger_rerun"] = False  # Reset rerun flag
+        st.session_state["query_done"] = True
+        st.session_state["is_downloading"] = False
 
 
     def retrieve_waveforms(self):
-        """Retrieve waveforms and store as ObsPy streams"""
+        """
+        Initiates the process of retrieving waveform data in a separate thread.
+
+        This function starts a new background thread to fetch waveform data and enables
+        UI polling to monitor the progress.
+
+        Actions:
+            - Checks if required event and station selections are made.
+            - Clears the stop event to reset any previous cancellation.
+            - Starts a new thread to execute `fetch_data()`.
+            - Updates Streamlit session state to track the progress.
+
+        Updates:
+            - st.session_state["query_thread"] (Thread): Stores the reference to the running thread.
+            - st.session_state["is_downloading"] (bool): Set to True while downloading is in progress.
+            - st.session_state["query_done"] (bool): Set to False initially.
+            - st.session_state["polling_active"] (bool): Enables periodic UI updates.
+        """        
+        global stop_event
         if not self.settings.event.selected_catalogs or not self.settings.station.selected_invs:
             st.warning("Please select events and stations before downloading waveforms.")
             return
-            
-        self.streams = run_event(self.settings)  # This now returns list of streams
-        
-        if self.streams:
-            # Update filter menu with first stream
-            self.filter_menu.update_available_channels(self.streams[0])
-            st.success(f"Successfully retrieved waveforms for {len(self.streams)} events.")
-        else:
-            st.warning("No waveforms retrieved. Please check your selection criteria.")
 
-            
+        stop_event.clear()  # Reset cancellation flag
+        st.session_state["query_thread"] = threading.Thread(target=self.fetch_data, daemon=True)
+        st.session_state["query_thread"].start()
+
+
+        st.session_state["is_downloading"] = True
+        st.session_state["query_done"] = False
+        st.session_state["polling_active"] = True
+
+        st.rerun()
+                
     def _get_trace_color(self, tr) -> str:
         """Get color based on channel component"""
         # Extract last character of channel code
@@ -842,59 +840,112 @@ class WaveformComponents:
         self.waveform_display = WaveformDisplay(settings, self.filter_menu)
         self.continuous_components = ContinuousComponents(settings)
         
+    def render_polling_ui(self):
+        """
+        Handles UI updates while monitoring the status of the background thread.
+
+        This function continuously checks if the waveform retrieval thread has finished
+        and updates the UI accordingly. It also allows the user to cancel an ongoing task.
+
+        Actions:
+            - Displays a "Downloading..." message while data is being fetched.
+            - Provides a cancel button to stop the download process.
+            - Stops polling and updates session state when the task is complete.
+
+        Updates:
+            - st.session_state["is_downloading"] (bool): Set to False when task completes or is canceled.
+            - st.session_state["query_done"] (bool): Set to True when the task finishes.
+            - st.session_state["polling_active"] (bool): Disabled when polling is no longer needed.
+
+        Raises:
+            - Displays an error message if the thread encounters an exception.
+        """        
+        status_placeholder = st.empty()
+        button_placeholder = st.empty()
+
+        if st.session_state.get("is_downloading", False):
+            with status_placeholder.container():
+                st.warning("Downloading... Please wait.")
+
+            with button_placeholder.container():
+                if st.button("Cancel Download", key="cancel_download"):
+                    stop_event.set()  # Signal cancellation
+                    st.warning("Cancelling query...")
+                    st.session_state["is_downloading"] = False
+                    st.session_state["query_done"] = True
+                    st.session_state["query_thread"] = None                    
+                    st.session_state["polling_active"] = False  # Stop polling
+                    st.rerun()  
+
+            query_thread = st.session_state.get("query_thread", None)
+            if query_thread and not query_thread.is_alive():
+                try:
+                    query_thread.join()  # Catch and handle exceptions
+                except Exception as e:
+                    st.error(f"Error in background thread: {e}")  
+
+                st.session_state["is_downloading"] = False
+                st.session_state["query_done"] = True
+                st.session_state["query_thread"] = None                
+                st.session_state["polling_active"] = False  # Stop polling
+                st.rerun()
+
+            if st.session_state.get("polling_active", False):
+                time.sleep(1)  # Wait for 1 second
+                st.rerun()
+
+        else:
+            status_placeholder.empty()
+            button_placeholder.empty()
+
+
     def render(self):
+        
+        if "query_done" not in st.session_state:
+            st.session_state["query_done"] = False
+        if "is_downloading" not in st.session_state:
+            st.session_state["is_downloading"] = False  
+        if "polling_active" not in st.session_state:
+            st.session_state["polling_active"] = False  
+        if "query_thread" not in st.session_state:
+            st.session_state["query_thread"] = None  
+
         if self.settings.selected_workflow == WorkflowType.CONTINUOUS:
-            # Use continuous components
             self.continuous_components.render()
         else:
             st.title("Waveform Analysis")
-            self.settings.waveform.force_redownload =  st.toggle(
-                "Force Re-download", 
-                value=self.settings.waveform.force_redownload, 
-                help= "If turned off, the app will try to avoid "
-                "downloading data that are already available locally."
-                " If flagged, it will redownload the data again."
+            self.settings.waveform.force_redownload = st.toggle(
+                "Force Re-download",
+                value=self.settings.waveform.force_redownload,
+                help="If turned off, the app will try to avoid "
+                    "downloading data that are already available locally. "
+                    "If flagged, it will redownload the data again."
             )
 
-            # Initialize the download state in session state if not exists
-            if "is_downloading" not in st.session_state:
-                st.session_state.is_downloading = False
+            col1, col2 = st.columns([2, 1])  # Layout for buttons
 
-            # Get Waveforms button with disabled state based on download status
-            get_waveforms_button = st.button(
-                "Get Waveforms",
-                key="get_waveforms",
-                disabled=st.session_state.is_downloading
-            )
+            with col1:
+                get_waveforms_button = st.button(
+                    "Get Waveforms",
+                    key="get_waveforms",
+                    disabled=st.session_state["is_downloading"]
+                )
 
+            with col2:
+                if st.session_state["is_downloading"]:
+                    self.render_polling_ui()
+
+            # If "Get Waveforms" is clicked, start downloading
             if get_waveforms_button:
-                st.session_state.is_downloading = True
-                st.rerun()  # Rerun to update button state
+                self.waveform_display.retrieve_waveforms()  
 
-            if st.session_state.is_downloading:
-                with st.spinner("Downloading waveforms..."):
-                    try:
-                        self.waveform_display.retrieve_waveforms()
-                        st.success("Download completed successfully!")
-                    except Exception as e:
-                        st.error(f"Error during download: {str(e)}")
-                    finally:
-                        st.session_state.is_downloading = False
-                        st.rerun()  # Rerun to update button state
+            # Render waveform display after query completes
+            if st.session_state["query_done"]:
+                current_stream = self.waveform_display.streams[0] if self.waveform_display.streams else None
+                self.filter_menu.render(current_stream)
 
-            if st.button("Cancel Download", key="cancel_download"):
-                stop_event.set()  # Signal cancellation
-                st.warning("Cancelling query...")
-                st.session_state.is_downloading = False
-                st.rerun()
-
-            # Render filter menu with current stream
-            current_stream = self.waveform_display.streams[0] if self.waveform_display.streams else None
-            self.filter_menu.render(current_stream)
-            
-            # Display waveforms if they exist
-            if self.waveform_display.streams:
-                self.waveform_display.render()
+                if self.waveform_display.streams:
+                    self.waveform_display.render()
 
 
 class MissingDataDisplay:
@@ -951,8 +1002,3 @@ class MissingDataDisplay:
                 use_container_width=True,
                 height=height
             )
-
-
-if st.session_state.get("trigger_rerun", False):
-    st.session_state["trigger_rerun"] = False  # Reset flag to prevent infinite loops
-    st.rerun()  # 🔹 Force UI update
