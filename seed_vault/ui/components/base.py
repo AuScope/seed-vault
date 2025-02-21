@@ -336,13 +336,15 @@ class BaseComponent:
                     step=1.0, key="event-pg-depth"
                 )
 
-                # Update button with disabled state based on service availability
-                if st.button(
-                    f"Update {self.TXT.STEP.title()}s",
-                    key=self.get_key_element(f"Update {self.TXT.STEP}s"),
-                    disabled=not is_service_available
-                ):
-                    self.refresh_map(reset_areas=False, clear_draw=False, rerun=False)
+                self.render_map_handles()
+
+                # # Update button with disabled state based on service availability
+                # if st.button(
+                #     f"Update {self.TXT.STEP.title()}s",
+                #     key=self.get_key_element(f"Update {self.TXT.STEP}s"),
+                #     disabled=not is_service_available
+                # ):
+                #     self.refresh_map(reset_areas=False, clear_draw=False, rerun=False)
                 
             c2_export = self.import_export()
 
@@ -438,13 +440,15 @@ class BaseComponent:
 
                 self.settings.station.level = Levels.CHANNEL
 
-                # Update button with disabled state based on service availability
-                if st.button(
-                    f"Update {self.TXT.STEP.title()}s",
-                    key=self.get_key_element(f"Update {self.TXT.STEP}s"),
-                    disabled=not is_service_available
-                ):
-                    self.refresh_map(reset_areas=False, clear_draw=False, rerun=False)
+                self.render_map_handles()
+
+                # # Update button with disabled state based on service availability
+                # if st.button(
+                #     f"Update {self.TXT.STEP.title()}s",
+                #     key=self.get_key_element(f"Update {self.TXT.STEP}s"),
+                #     disabled=not is_service_available
+                # ):
+                #     self.refresh_map(reset_areas=False, clear_draw=False, rerun=False)
 
             c2_export = self.import_export()
 
@@ -1000,20 +1004,33 @@ class BaseComponent:
     # RENDER
     # ===================
     def render_map_buttons(self):
-        c1, c2 = st.columns([1,1])
+        c1, c2, c3 = st.columns([1,1,1])
         with c1:
-            if st.button(f"Global {self.TXT.STEP.title()}s", key=self.get_key_element(f"Global {self.TXT.STEP}s")):
-                self.clear_all_data()
-                self.refresh_map(reset_areas=True, clear_draw=True, rerun=True, get_data=True)
+            if st.button(
+                f"Load {self.TXT.STEP.title()}s", 
+                key=self.get_key_element(f"Load {self.TXT.STEP}s")
+            ):
+                self.refresh_map(reset_areas=False, clear_draw=False, rerun=False)
+                # self.clear_all_data()
+                # self.refresh_map(reset_areas=True, clear_draw=True, rerun=True, get_data=True)
         with c2:
             if st.button(self.TXT.CLEAR_ALL_MAP_DATA, key=self.get_key_element(self.TXT.CLEAR_ALL_MAP_DATA)):
                 self.clear_all_data()
                 self.refresh_map(reset_areas=True, clear_draw=True, rerun=True, get_data=False)
 
-        if st.button("Reload", help="Reloads the map"):
-            self.refresh_map(get_data=False, rerun=True, recreate_map=True)
-        st.info("Use **Reload** button if the map is collapsed or some layers are missing.")
-        st.info(f"Use **map tools** to search **{self.TXT.STEP}s** in confined areas.")
+        with c3:
+            if st.button(
+                "Reload", 
+                help="Use Reload button if the map is collapsed or some layers are missing."
+            ):
+                self.refresh_map(get_data=False, rerun=True, recreate_map=True)
+
+    
+    def render_map_handles(self):
+        self.update_rectangle_areas()
+        self.update_circle_areas()
+        self.render_map_buttons()
+        
 
     def render_export_import(self):
         st.write(f"#### Export/Import {self.TXT.STEP.title()}s")
@@ -1046,35 +1063,11 @@ class BaseComponent:
 
         return c22
         
-    def render_actions_side_menu(self):        
-        st.write("### Actions")
-        # with st.expander(f"Actions", expanded = True):
-        tab1, tab2 = st.tabs(["Map", "Export/Import"])
-        with tab1:
-            self.render_map_buttons()
-        with tab2:
-            c2_export = self.render_export_import()
-
-        return c2_export
 
     def render_map_right_menu(self):
-        def handle_layers():
-            self.render_map_buttons()
-            self.update_rectangle_areas()
-            self.update_circle_areas()
-
-        with st.expander("Map", expanded=True):
-        # st.markdown(f"#### {self.TXT.GET_DATA_TITLE}")
-            if self.prev_step_type:
-                tab1, tab2 = st.tabs(["Data", f"Search Around {self.prev_step_type.title()}s"])
-                with tab1:
-                    handle_layers()
-                with tab2:
-                    self.display_prev_step_selection_table()
-            else:
-                handle_layers()       
-
-        # return c2_export
+        if self.prev_step_type:
+            with st.expander(f"Search Around {self.prev_step_type.title()}s", expanded=True):
+                self.display_prev_step_selection_table() 
 
     def render_map(self):
         if self.map_disp is not None:
@@ -1085,8 +1078,14 @@ class BaseComponent:
         # feature_groups = [fg for fg in [self.map_fg_area, self.map_fg_marker] if fg is not None]
         feature_groups = [fg for fg in [self.map_fg_area, self.map_fg_marker , self.map_fg_prev_selected_marker] if fg is not None]
         
+
+        info_display = f"ℹ️ Use **map tools** to search **{self.TXT.STEP}s** in confined areas. "
+        info_display += "ℹ️ Use **Reload** button if the map is collapsed or some layers are missing. "
+
         if self.fig_color_bar and self.step_type == Steps.EVENT:
-            st.caption("ℹ️ Marker size is associated with Earthquake magnitude")
+            info_display += "ℹ️ Marker size is associated with Earthquake magnitude."
+
+        st.caption(info_display)
         
         c1, c2 = st.columns([18,1])
         with c1:
@@ -1274,6 +1273,7 @@ class BaseComponent:
 
 
     def render(self):
+
         if self.has_error and "Import Error" not in self.error:
             c1_err, c2_err = st.columns([4,1])
             with c1_err:
@@ -1288,52 +1288,20 @@ class BaseComponent:
 
         if self.step_type == Steps.EVENT:
             c2_export = self.event_filter()
+        
 
         if self.step_type == Steps.STATION:
             c2_export = self.station_filter()
-
 
         self.get_prev_step_df()
 
         self.render_map()
 
-        # c1_top, c2_top = st.columns([2,1])
-
-        # with c2_top:
-        #     c2_export = self.render_map_right_menu()
-
-        # with c1_top:
-        #     self.render_map()
-
         if not self.df_markers.empty:
-            c1_bot, c2_bot = st.columns([1,3])
+            with st.expander(self.TXT.SELECT_DATA_TABLE_TITLE, expanded = not self.df_markers.empty):
+                self.render_data_table(c2_export)
 
-            with c1_bot:
-                with st.expander(self.TXT.SELECT_MARKER_TITLE, expanded = not self.df_markers.empty):
-                    self.render_marker_select()
-
-            with c2_bot:
-                with st.expander(self.TXT.SELECT_DATA_TABLE_TITLE, expanded = not self.df_markers.empty):
-                    self.render_data_table(c2_export)
-
-        
-        # if not self.df_markers.empty:
-        #     st.header(self.TXT.SELECT_DATA_TITLE)
-        #     tab1, tab2 = st.tabs(["📄 Table", "🌍 Map"])
-        #     with tab1:
-        #         st.write(self.TXT.SELECT_DATA_TABLE_MSG)
-        #         self.render_data_table()
-
-        #     with tab2:
-        #         st.write(self.TXT.SELECT_MARKER_MSG)
-        #         self.render_marker_select()
-
-            # c21, c22 = st.columns([2,1])            
-            # with c22:
-            #     self.render_marker_select()
-
-            # with c21:
-            #     self.render_data_table()
+    
 
 
 
