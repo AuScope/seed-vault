@@ -1004,8 +1004,8 @@ class BaseComponent:
     # RENDER
     # ===================
     def render_map_buttons(self):
-        c1, c2, c3 = st.columns([1,1,1])
-        with c1:
+        cc1, cc2, cc3 = st.columns([1,1,1])
+        with cc1:
             if st.button(
                 f"Load {self.TXT.STEP.title()}s", 
                 key=self.get_key_element(f"Load {self.TXT.STEP}s")
@@ -1013,17 +1013,23 @@ class BaseComponent:
                 self.refresh_map(reset_areas=False, clear_draw=False, rerun=False)
                 # self.clear_all_data()
                 # self.refresh_map(reset_areas=True, clear_draw=True, rerun=True, get_data=True)
-        with c2:
+
+
+        with cc2:
             if st.button(self.TXT.CLEAR_ALL_MAP_DATA, key=self.get_key_element(self.TXT.CLEAR_ALL_MAP_DATA)):
                 self.clear_all_data()
                 self.refresh_map(reset_areas=True, clear_draw=True, rerun=True, get_data=False)
 
-        with c3:
+        
+        with cc3:
             if st.button(
                 "Reload", 
-                help="Use Reload button if the map is collapsed or some layers are missing."
+                # help="Use Reload button if the map is collapsed or some layers are missing.",
+                key=self.get_key_element(f"ReLoad {self.TXT.STEP}s")
             ):
                 self.refresh_map(get_data=False, rerun=True, recreate_map=True)
+
+        
 
     
     def render_map_handles(self):
@@ -1130,7 +1136,7 @@ class BaseComponent:
 
     def render_marker_select(self):
         def handle_marker_select():
-            selected_data = self.get_selected_marker_info()
+            # selected_data = self.get_selected_marker_info()
 
             if 'is_selected' not in self.df_markers.columns:
                 self.df_markers['is_selected'] = False
@@ -1149,45 +1155,10 @@ class BaseComponent:
 
             except KeyError:
                 print("Selected map marker not found")
-                
-            # try:
-            #     if self.df_markers.loc[self.clicked_marker_info['id'] - 1, 'is_selected']:
-            #         st.success(selected_data)
-            #     else:
-            #         st.warning(selected_data)
+  
 
-            #     if self.clicked_marker_info['step'] == self.step_type:
-            #         if st.button("Add to Selection", key=self.get_key_element("Add to Selection")):
-            #             self.sync_df_markers_with_df_edit()
-            #             self.df_markers.loc[self.clicked_marker_info['id'] - 1, 'is_selected'] = True
-            #             self.refresh_map_selection()
-            #             return
-            
-
-            #     if self.df_markers.loc[self.clicked_marker_info['id'] - 1, 'is_selected']:
-            #         if st.button("Unselect", key=self.get_key_element("Unselect")):
-            #             self.df_markers.loc[self.clicked_marker_info['id'] - 1, 'is_selected'] = False
-            #             # map_component.clicked_marker_info = None
-            #             # map_component.map_output["last_object_clicked"] = None
-            #             self.refresh_map_selection()
-            #             return
-
-            # except KeyError:
-            #     print("Selected map marker not found")
-
-        def map_tools_card():
-            if not self.df_markers.empty:
-                # st.markdown(self.TXT.SELECT_MARKER_TITLE)
-                st.info(self.TXT.SELECT_MARKER_MSG)
-                if self.clicked_marker_info:
-                    handle_marker_select()
-
-            else:                
-                st.warning("No data available for the selected settings.")
-                    
-        # if not self.df_markers.empty:
-        map_tools_card()
-            # create_card(None, False, map_tools_card)
+        if self.clicked_marker_info:
+            handle_marker_select()
 
 
     def render_data_table(self, c5_map):
@@ -1298,6 +1269,7 @@ class BaseComponent:
         self.render_map()
 
         if not self.df_markers.empty:
+            self.render_marker_select()
             with st.expander(self.TXT.SELECT_DATA_TABLE_TITLE, expanded = not self.df_markers.empty):
                 self.render_data_table(c2_export)
 
