@@ -175,6 +175,12 @@ class BaseComponent:
     # FILTERS
     # ====================
     def refresh_filters(self):
+        """
+        Renders Export settings for all stages and Import settings only for stage 1.
+
+        - Allows users to download the current configuration (`config.cfg`) at all stages.
+        - Shows the import settings section only when `stage == 1`.
+        """        
         changes = self.settings.has_changed(self.old_settings)
         if changes.get('has_changed', False):
             self.old_settings      = deepcopy(self.settings)
@@ -216,43 +222,48 @@ class BaseComponent:
                 else:
                     st.caption("No config file available for download.")
 
-                st.markdown("#### 📂 Import Settings")
-                uploaded_file = st.file_uploader(
-                    "Import Settings",type=["cfg"], on_change=reset_import_setting_processed,
-                    help="Upload a config file (.cfg) to update settings." , label_visibility="collapsed"
-                )
+                # Import settings should only be displayed if stage == 1
+                if self.stage == 1:
+                    st.markdown("#### 📂 Import Settings")
+                    uploaded_file = st.file_uploader(
+                        "Import Settings",type=["cfg"], on_change=reset_import_setting_processed,
+                        help="Upload a config file (.cfg) to update settings." , label_visibility="collapsed"
+                    )
 
-                if uploaded_file:
-                    if not st.session_state.get('import_setting_processed', False):
-                        file_like_object = io.BytesIO(uploaded_file.getvalue())
-                        text_file_object = io.TextIOWrapper(file_like_object, encoding='utf-8')
+                    if uploaded_file:
+                        if not st.session_state.get('import_setting_processed', False):
+                            file_like_object = io.BytesIO(uploaded_file.getvalue())
+                            text_file_object = io.TextIOWrapper(file_like_object, encoding='utf-8')
 
-                        settings = SeismoLoaderSettings.from_cfg_file(text_file_object)
-                        if(settings.status_handler.has_errors()):
-                            errors = settings.status_handler.generate_status_report("errors")                           
-                            st.error(f"{errors}\n\n**Please review the errors in the imported file. Resolve them before proceeding.**")
+                            settings = SeismoLoaderSettings.from_cfg_file(text_file_object)
+                            if(settings.status_handler.has_errors()):
+                                errors = settings.status_handler.generate_status_report("errors")                           
+                                st.error(f"{errors}\n\n**Please review the errors in the imported file. Resolve them before proceeding.**")
 
-                            if(settings.status_handler.has_warnings()):
-                                warning = settings.status_handler.generate_status_report("warnings")                           
-                                st.warning(warning)                            
-                            settings.status_handler.display()
+                                if(settings.status_handler.has_warnings()):
+                                    warning = settings.status_handler.generate_status_report("warnings")                           
+                                    st.warning(warning)                            
+                                settings.status_handler.display()
 
-                        else:    
-                            self.clear_all_data()
-                            self.settings = settings
-                            self.settings.client_url_mapping.load()
+                            else:    
+                                settings.event.geo_constraint = []
+                                settings.station.geo_constraint = []           
+                                settings.event.selected_catalogs=Catalog(events=None)    
+                                settings.station.selected_invs = None
+                                
+                                self.clear_all_data()
+                                # self.settings = settings
+                                for key, value in vars(settings).items():
+                                    setattr(self.settings, key, value)
+                                self.df_markers_prev= pd.DataFrame()
+                                self.refresh_map(reset_areas=True, clear_draw=True)
+                                st.session_state['import_setting_processed'] = True   
+                                
+                                if(settings.status_handler.has_warnings()):
+                                    warning = settings.status_handler.generate_status_report("warnings")                           
+                                    st.warning(warning) 
 
-                            self.settings.event.geo_constraint = []
-                            self.settings.station.geo_constraint = []
-                            self.refresh_map(reset_areas=True, clear_draw=True)
-
-                            st.session_state['import_setting_processed'] = True   
-                            
-                            if(settings.status_handler.has_warnings()):
-                                warning = settings.status_handler.generate_status_report("warnings")                           
-                                st.warning(warning) 
-
-                            st.success("Settings imported successfully!")   
+                                st.success("Settings imported successfully!")   
             with tab2:
                 c2_export = self.render_export_import()
 
@@ -554,7 +565,6 @@ class BaseComponent:
 
 
     def update_selected_data(self):
-
         if self.df_data_edit is None or self.df_data_edit.empty:
             if 'is_selected' not in self.df_markers.columns:
                 self.df_markers['is_selected'] = False
@@ -572,6 +582,7 @@ class BaseComponent:
                             }
                         }
                     self.settings.event.selected_catalogs.append(event)
+
             return
         if self.step_type == Steps.STATION:
             self.settings.station.selected_invs = None
@@ -732,13 +743,16 @@ class BaseComponent:
         self.map_fg_area= None
         self.df_markers = pd.DataFrame()
         self.all_current_drawings = []
-        
+
         if self.step_type == Steps.EVENT:
             self.catalogs=Catalog()
             self.settings.event.geo_constraint = []
+            self.settings.event.selected_catalogs=Catalog(events=None)    
+
         if self.step_type == Steps.STATION:
             self.inventories = Inventory()
             self.settings.station.geo_constraint = []
+            self.settings.station.selected_invs = None
 
         self.update_rectangle_areas()
         self.update_circle_areas()
@@ -1253,7 +1267,6 @@ class BaseComponent:
 
 
     def render(self):
-
         if self.has_error and "Import Error" not in self.error:
             c1_err, c2_err = st.columns([4,1])
             with c1_err:
