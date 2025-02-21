@@ -1164,84 +1164,130 @@ class BaseComponent:
     def render_data_table(self, c5_map):
         if self.df_markers.empty:
             st.warning("No data available for the selected settings.")
-        else:
-            # st.info(self.TXT.SELECT_DATA_TABLE_MSG)
-            cols = self.df_markers.columns
-            orig_cols   = [col for col in cols if col != 'is_selected']
-            ordered_col = ['is_selected'] + orig_cols
+            return            
 
-            config = {col: {'disabled': True} for col in orig_cols}
+        # Ensure `is_selected` column exists
+        if 'is_selected' not in self.df_markers.columns:
+            self.df_markers['is_selected'] = False
 
-            if 'is_selected' not in self.df_markers.columns:
-                self.df_markers['is_selected'] = False
-            config['is_selected']  = st.column_config.CheckboxColumn(
-                'Select'
-            )
-            
-            state_key = f'initial_df_markers_{self.stage}'
+        # Define ordered columns
+        cols = self.df_markers.columns
+        orig_cols = [col for col in cols if col != 'is_selected']
+        ordered_col = ['is_selected'] + orig_cols
 
-            # Store the initial state in the session if not already stored
-            if  state_key not in st.session_state:
-                st.session_state[state_key] = self.df_markers.copy()
+        # Define config
+        config = {col: {'disabled': True} for col in orig_cols}
+        config['is_selected'] = st.column_config.CheckboxColumn('Select')
 
-            def data_table_view():
-                c1, c2, c3, c4, c5, c6 = st.columns([1,1,1,1,1,1])
-                with c1:
-                    st.write(f"Total Number of {self.TXT.STEP.title()}s: {len(self.df_markers)}")
-                with c2:
-                    if st.button("Select All", key=self.get_key_element("Select All")):
-                        self.df_markers['is_selected'] = True
-                with c3:
-                    if st.button("Unselect All", key=self.get_key_element("Unselect All")):
-                        self.df_markers['is_selected'] = False
-                
-                self.df_data_edit = st.data_editor(
-                    self.df_markers, 
-                    hide_index = True, 
-                    column_config=config, 
-                    column_order = ordered_col, 
-                    key=self.get_key_element("Data Table")
-                )           
-                
+        state_key = f'initial_df_markers_{self.stage}'
 
-                if len(self.df_data_edit) != len(st.session_state[state_key]):
-                    has_changed = True
-                else:
-                    has_changed = not self.df_data_edit.equals(st.session_state[state_key])
-                    
-                    if has_changed:
-                        df_sorted_new = self.df_data_edit.sort_values(by=self.df_data_edit.columns.tolist()).reset_index(drop=True)
-                        df_sorted_old = st.session_state[state_key].sort_values(by=st.session_state[state_key].columns.tolist()).reset_index(drop=True)
-                        has_changed = not df_sorted_new.equals(df_sorted_old)
+        # Store the initial state in the session if not already stored
+        if  state_key not in st.session_state:
+            st.session_state[state_key] = self.df_markers.copy()
 
-                if has_changed:
-                    st.session_state[state_key] = self.df_data_edit.copy()  # Save the unsorted version to preserve user sorting
-                    self.sync_df_markers_with_df_edit()
-                    self.refresh_map_selection()
+        self.data_table_view(ordered_col, config, state_key)
 
-            data_table_view()
-           
+
+        # Download button logic
+        is_disabled = 'is_selected' not in self.df_markers or self.df_markers['is_selected'].sum() == 0
+
         with c5_map:
-            # if (not self.df_markers.empty and len(self.df_markers[self.df_markers['is_selected']]) > 0):
-            is_disabled = self.df_markers.empty
-            if not is_disabled:                
-                is_disabled = 'is_selected' not in self.df_markers.columns
-                if 'is_selected' in list(self.df_markers.columns):
-                    is_disabled = len(self.df_markers[self.df_markers['is_selected']]) == 0
-                else:
-                    is_disabled = True
-                    
-
             st.download_button(
-                f"Download Selected", 
+                f"Download Selected",
                 key=self.get_key_element(f"Download Selected {self.TXT.STEP.title()}s"),
                 data=self.export_xml_bytes(export_selected=True),
-                file_name = f"{self.TXT.STEP}s_selected.xml",
+                file_name=f"{self.TXT.STEP}s_selected.xml",
                 mime="application/xml",
                 disabled=is_disabled
             )
-        # create_card(self.TXT.SELECT_DATA_TABLE_TITLE, False, data_table_view)
 
+    def data_table_view(self, ordered_col, config, state_key):
+        """Displays the full data table, allowing selection."""
+
+        c1, c2, c3 = st.columns([1,1,1])
+        with c1:
+            st.write(f"Total Number of {self.TXT.STEP.title()}s: {len(self.df_markers)}")
+                
+        with c2:
+            if st.button("Select All", key=self.get_key_element("Select All")):
+                self.df_markers['is_selected'] = True
+
+        with c3:
+            if st.button("Unselect All", key=self.get_key_element("Unselect All")):
+                self.df_markers['is_selected'] = False
+
+        
+        self.selected_items_view(state_key) 
+        self.df_data_edit = st.data_editor(
+            self.df_markers, 
+            hide_index = True, 
+            column_config=config, 
+            column_order = ordered_col, 
+            key=self.get_key_element("Data Table")
+        )           
+        
+
+        if len(self.df_data_edit) != len(st.session_state[state_key]):
+            has_changed = True
+        else:
+            has_changed = not self.df_data_edit.equals(st.session_state[state_key])
+            
+            if has_changed:
+                df_sorted_new = self.df_data_edit.sort_values(by=self.df_data_edit.columns.tolist()).reset_index(drop=True)
+                df_sorted_old = st.session_state[state_key].sort_values(by=st.session_state[state_key].columns.tolist()).reset_index(drop=True)
+                has_changed = not df_sorted_new.equals(df_sorted_old)
+
+        if has_changed:
+            st.session_state[state_key] = self.df_data_edit.copy()  # Save the unsorted version to preserve user sorting
+            self.sync_df_markers_with_df_edit()
+            self.refresh_map_selection()
+
+    def selected_items_view(self, state_key):
+        """Displays selected items using an actual `st.multiselect`, controlled by table selection."""
+
+        df_selected = self.df_markers[self.df_markers['is_selected']].copy()
+
+        if df_selected.empty:
+            return
+
+        preferred_column = "place"
+        unique_column = "magnitude"  # Extra column to make each entry unique
+
+        if preferred_column not in df_selected.columns or unique_column not in df_selected.columns:
+            st.warning(f"Column '{preferred_column}' or '{unique_column}' not found in the data!")
+            return
+
+        df_selected["display_label"] = df_selected[preferred_column] + " (" + df_selected[unique_column].astype(str) + ")"
+        
+        selected_items = df_selected["display_label"].tolist()
+
+        updated_selection = st.multiselect(
+            "Selected Items",
+            options=self.df_markers[self.df_markers['is_selected']].apply(lambda x: f"{x[preferred_column]} ({x[unique_column]})", axis=1).tolist(),
+            default=selected_items,
+            key="selected_items_list",
+            placeholder="Selected Items",
+            disabled=False
+        )
+
+        removed_items = set(selected_items) - set(updated_selection)
+
+        if removed_items:
+            for item in removed_items:
+                place_name, magnitude = item.rsplit(" (", 1)
+                magnitude = magnitude.rstrip(")")  # Remove closing bracket
+
+                item_index = self.df_markers[
+                    (self.df_markers[preferred_column] == place_name) & 
+                    (self.df_markers[unique_column].astype(str) == magnitude)
+                ].index.tolist()
+
+                if item_index:
+                    self.df_markers.at[item_index[0], 'is_selected'] = False  
+                    # self.sync_df_markers_with_df_edit()
+
+            st.session_state[state_key] = self.df_markers.copy()
+            self.refresh_map_selection()
 
     def render(self):
 
