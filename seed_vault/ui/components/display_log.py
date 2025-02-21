@@ -5,6 +5,7 @@ import time
 from contextlib import redirect_stdout, redirect_stderr
 from typing import Callable, List
 from queue import Queue
+from html import escape
 
 class ConsoleDisplay:
     def __init__(self):
@@ -17,16 +18,19 @@ class ConsoleDisplay:
             <style>
                 .terminal {
                     background-color: black;
-                    color: #00ff00;
+                    color: #ffffff;
                     font-family: 'Courier New', Courier, monospace;
+                    font-size: 12px;
                     padding: 10px;
                     border-radius: 5px;
-                    height: 400px;
+                    height: 600px;
                     overflow-y: auto;
+                    white-space: pre;
+                    tab-size: 4;
                 }
                 .stMarkdown {
                     overflow-y: auto;
-                    max-height: 400px;
+                    max-height: 600px;
                 }
             </style>
         """, unsafe_allow_html=True)
@@ -37,27 +41,31 @@ class ConsoleDisplay:
         new_output = output_buffer.read()
         
         if new_output:
-            # Split new output into lines and add to accumulated output
-            new_lines = new_output.splitlines()
-            self.accumulated_output.extend(new_lines)
+            # Add new output to accumulated output
+            self.accumulated_output.append(new_output)
             
-            # Create terminal display with auto-scroll
+            # HTML escape the content while preserving whitespace
+            escaped_content = escape(''.join(self.accumulated_output))
+            
+            # Create terminal display
             log_text = (
                 '<div class="terminal" id="log-terminal">'
-                '<pre>{}</pre>'
+                f'<pre style="margin: 0; white-space: pre; tab-size: 4;">{escaped_content}</pre>'
                 '</div>'
                 '<script>'
-                'var terminalDiv = document.getElementById("log-terminal");'
-                'if (terminalDiv) {{'
-                '    var observer = new MutationObserver(function(mutations) {{'
-                '        terminalDiv.scrollTop = terminalDiv.scrollHeight;'
-                '    }});'
-                '    observer.observe(terminalDiv, {{ childList: true, subtree: true }});'
-                '    terminalDiv.scrollTop = terminalDiv.scrollHeight;'
+                'if (window.terminal_scroll === undefined) {{'
+                '    window.terminal_scroll = function() {{'
+                '        var terminalDiv = document.getElementById("log-terminal");'
+                '        if (terminalDiv) {{'
+                '            terminalDiv.scrollTop = terminalDiv.scrollHeight;'
+                '        }}'
+                '    }};'
                 '}}'
+                'window.terminal_scroll();'
                 '</script>'
-            ).format('\n'.join(self.accumulated_output))
+            )
             
+            # Update the display
             log_container.markdown(log_text, unsafe_allow_html=True)
             
             # Update buffer position
@@ -104,7 +112,7 @@ class ConsoleDisplay:
                     
                     while process_thread.is_alive():
                         self._update_logs(output_buffer, log_container)
-                        time.sleep(0.1)
+                        time.sleep(0.03)
                     
                     process_thread.join()
                     self._update_logs(output_buffer, log_container)
@@ -117,4 +125,4 @@ class ConsoleDisplay:
 
             except Exception as e:
                 error_message = str(e)
-                return False, error_message 
+                return False, error_message

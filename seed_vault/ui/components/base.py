@@ -857,7 +857,7 @@ class BaseComponent:
         with c1:
             min_radius_str = st.text_input("Minimum radius (degree)", value="0")
         with c2:
-            max_radius_str = st.text_input("Maximum radius (degree)", value="30")
+            max_radius_str = st.text_input("Maximum radius (degree)", value="90")
 
         try:
             min_radius = float(min_radius_str)

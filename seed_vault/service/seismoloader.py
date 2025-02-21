@@ -238,7 +238,38 @@ def populate_database_from_sds(sds_path, db_path,
     search_patterns=["??.*.*.???.?.????.???"],
     newer_than=None, num_processes=None, gap_tolerance = 60):
 
-    """ Utility function to populate the archive_table in our database. """
+    """
+    Scan an SDS archive directory and populate a database with data availability.
+
+    Recursively searches an SDS (Seismic Data Structure) archive for MiniSEED files,
+    extracts their metadata, and records data availability in a SQLite database.
+    Supports parallel processing and can optionally filter for recently modified files.
+
+    Args:
+        sds_path (str): Path to the root SDS archive directory
+        db_path (str): Path to the SQLite database file
+        search_patterns (list, optional): List of file patterns to match.
+            Defaults to ["??.*.*.???.?.????.???"] (standard SDS naming pattern).
+        newer_than (str or UTCDateTime, optional): Only process files modified after
+            this time. Defaults to None (process all files).
+        num_processes (int, optional): Number of parallel processes to use.
+            Defaults to None (use all available CPU cores).
+        gap_tolerance (int, optional): Maximum time gap in seconds between segments
+            that should be considered continuous. Defaults to 60.
+
+    Notes:
+        - Uses DatabaseManager class to handle database operations
+        - Attempts multiprocessing but falls back to single process if it fails
+            (common on OSX and Windows)
+        - Follows symbolic links when walking directory tree
+        - Files are processed using miniseed_to_db_element() function
+        - After insertion, continuous segments are joined based on gap_tolerance
+        - Progress is displayed using tqdm progress bars
+        - If newer_than is provided, it's converted to a Unix timestamp for comparison
+
+    Raises:
+        RuntimeError: If bulk insertion into database fails
+    """
 
     db_manager = DatabaseManager(db_path)
 
@@ -290,7 +321,17 @@ def populate_database_from_sds(sds_path, db_path,
 
  
 def populate_database_from_files_dumb(cursor, file_paths=[]):
-    """ Quickly insert/update a few SDS archive files into the SQL database. "Dumb" version!"""
+    """
+    Simple version of database population from MiniSEED files without span merging.
+
+    A simplified "dumb" version that blindly replaces existing database entries
+    with identical network/station/location/channel codes, rather than checking for
+    and merging overlapping time spans.
+
+    Args:
+        cursor (sqlite3.Cursor): Database cursor for executing SQL commands
+        file_paths (list, optional): List of paths to MiniSeed files. Defaults to empty list.
+    """
     now = int(datetime.datetime.now().timestamp())
     for fp in file_paths:
         result  = miniseed_to_db_element(fp)
@@ -304,7 +345,38 @@ def populate_database_from_files_dumb(cursor, file_paths=[]):
 
 
 def populate_database_from_files(cursor, file_paths=[]):
-    """ Quickly insert/update a few SDS archive files into the SQL database. """
+    """
+    Insert or update MiniSEED file metadata into an SQL database.
+
+    Takes a list of SDS archive file paths, extracts metadata, and updates a database
+    tracking data availability. If data spans overlap with existing database entries,
+    the spans are merged. Uses miniseed_to_db_element() to parse file metadata.
+
+    Args:
+        cursor (sqlite3.Cursor): Database cursor for executing SQL commands
+        file_paths (list, optional): List of paths to MiniSeed files. Defaults to empty list.
+
+    Notes:
+        - Database must have an 'archive_data' table with columns:
+            * network (text)
+            * station (text)
+            * location (text)
+            * channel (text)
+            * starttime (integer): Unix timestamp
+            * endtime (integer): Unix timestamp
+            * importtime (integer): Unix timestamp of database insertion
+        - Handles overlapping time spans by merging them into a single entry
+        - Sets importtime to current Unix timestamp
+        - Skips files that fail metadata extraction (when miniseed_to_db_element returns None)
+
+    Examples:
+        >>> import sqlite3
+        >>> conn = sqlite3.connect('archive.db')
+        >>> cursor = conn.cursor()
+        >>> files = ['/path/to/IU.ANMO.00.BHZ.mseed', '/path/to/IU.ANMO.00.BHN.mseed']
+        >>> populate_database_from_files(cursor, files)
+        >>> conn.commit()
+    """
     now = int(datetime.datetime.now().timestamp())
     for fp in file_paths:
         result = miniseed_to_db_element(fp)
@@ -341,7 +413,44 @@ def populate_database_from_files(cursor, file_paths=[]):
 
 def collect_requests(inv, time0, time1, days_per_request=3, 
                      cha_pref=None, loc_pref=None):
-    """ Collect all requests required to download everything in inventory, split into X-day periods. """
+    """
+    Generate time-windowed data requests for all channels in an inventory.
+
+    Creates a list of data requests by breaking a time period into smaller windows
+    and collecting station metadata for each window. Can optionally filter for
+    preferred channels and location codes.
+
+    Args:
+        inv (obspy.core.inventory.Inventory): Station inventory to generate requests for
+        time0 (obspy.UTCDateTime): Start time for data requests
+        time1 (obspy.UTCDateTime): End time for data requests
+        days_per_request (int, optional): Length of each request window in days. 
+            Defaults to 3.
+        cha_pref (list, optional): List of preferred channel codes in priority order.
+            If provided, only these channels will be requested. Defaults to None.
+        loc_pref (list, optional): List of preferred location codes in priority order.
+            If provided, only these location codes will be requested. Defaults to None.
+
+    Returns:
+        list or None: List of tuples containing request parameters:
+            (network_code, station_code, location_code, channel_code, 
+             start_time_iso, end_time_iso)
+            Returns None if start time is greater than or equal to end time.
+
+    Notes:
+        - End time is capped at 120 seconds before current time
+        - Times in returned tuples are ISO formatted strings with 'Z' suffix
+        - Uses get_preferred_channels() if cha_pref or loc_pref are specified
+
+    Examples:
+        >>> from obspy import UTCDateTime
+        >>> t0 = UTCDateTime("2020-01-01")
+        >>> t1 = UTCDateTime("2020-01-10")
+        >>> requests = collect_requests(inventory, t0, t1, 
+        ...                           days_per_request=2,
+        ...                           cha_pref=['HHZ', 'BHZ'],
+        ...                           loc_pref=['', '00'])
+    """
 
     requests = []  # network, station, location, channel, starttime, endtime
 
@@ -374,8 +483,68 @@ def collect_requests(inv, time0, time1, days_per_request=3,
     return requests
 
 
+def remove_duplicate_events(catalog):
+    """
+    Remove duplicate events from an ObsPy Catalog based on resource IDs.
+
+    Takes a catalog of earthquake events and returns a new catalog containing only
+    unique events, where uniqueness is determined by the event's resource_id.
+    The first occurrence of each resource_id is kept.
+
+    Args:
+        catalog (obspy.core.event.Catalog): Input catalog containing earthquake events
+
+    Returns:
+        obspy.core.event.Catalog: New catalog containing only unique events
+
+    Examples:
+        >>> from obspy import read_events
+        >>> cat = read_events('events.xml')
+        >>> unique_cat = remove_duplicate_events(cat)
+        >>> print(f"Removed {len(cat) - len(unique_cat)} duplicate events")
+    """
+    out = obspy.core.event.Catalog()
+    eq_ids = set()
+
+    for event in catalog:
+        if event.resource_id not in eq_ids:
+            out.append(event)
+            eq_ids.add(event.resource_id)
+
+    return out
+
 def get_p_s_times(eq, dist_deg, ttmodel):
-    """ Get first P/S arrivals given an earthquake object, distance, and traveltime model. """
+    """
+    Calculate theoretical P and S wave arrival times for an earthquake at a given distance.
+
+    Uses a travel time model to compute the first P and S wave arrivals for a given
+    earthquake and distance. The first arrival (labeled as "P") may not necessarily be
+    a direct P wave. For S waves, only phases explicitly labeled as 'S' are considered.
+
+    Args:
+        eq (obspy.core.event.Event): Earthquake event object containing origin time
+            and depth information
+        dist_deg (float): Distance between source and receiver in degrees
+        ttmodel (obspy.taup.TauPyModel): Travel time model to use for calculations
+
+    Returns:
+        tuple: A tuple containing:
+            - (UTCDateTime or None): Time of first arrival ("P" wave)
+            - (UTCDateTime or None): Time of first S wave arrival
+              Returns (None, None) if travel time calculation fails
+
+    Notes:
+        - Earthquake depth is expected in meters in the QuakeML format and is
+          converted to kilometers for the travel time calculations
+        - For S waves, only searches for explicit 'S' phase arrivals
+        - Warns if no P arrival is found at any distance
+        - Warns if no S arrival is found at distances ≤ 90 degrees
+
+    Examples:
+        >>> from obspy.taup import TauPyModel
+        >>> model = TauPyModel(model="iasp91")
+        >>> p_time, s_time = get_p_s_times(earthquake, 45.3, model)
+    """
 
     eq_time = eq.origins[0].time
     eq_depth = eq.origins[0].depth / 1000  # depths are in meters for QuakeML
@@ -387,7 +556,7 @@ def get_p_s_times(eq, dist_deg, ttmodel):
             phase_list=['ttbasic']
         )
     except Exception as e:
-        print(f"Error calculating travel times: {str(e)}")
+        print(f"Error calculating travel times:\n {str(e)}")
         return None, None
 
     p_arrival_time = None
@@ -413,11 +582,39 @@ def get_p_s_times(eq, dist_deg, ttmodel):
 
 def select_highest_samplerate(inv, minSR=10, time=None):
     """
-    Where overlapping channels exist (e.g. 100 hz and 10 hz), filter out anything other than highest available samplerate.
-    Channels are considered duplicates if:
-        - When time is specified: same location code and both exist at that time
-        - When time is None: same location code and same time span
-    All channels must meet minSR requirement.
+    Filters an inventory to keep only the highest sample rate channels where duplicates exist.
+    
+    For each station in the inventory, this function identifies duplicate channels (those sharing
+    the same location code) and keeps only those with the highest sample rate. Channels must
+    meet the minimum sample rate requirement to be considered.
+
+    Args:
+        inv (obspy.core.inventory.Inventory): Input inventory object
+        minSR (float, optional): Minimum sample rate in Hz. Defaults to 10.
+        time (obspy.UTCDateTime, optional): Specific time to check channel existence.
+            If provided, channels are considered duplicates if they share the same
+            location code and both exist at that time. If None, channels are considered
+            duplicates if they share the same location code and time span. Defaults to None.
+
+    Returns:
+        obspy.core.inventory.Inventory: Filtered inventory containing only the highest
+            sample rate channels where duplicates existed.
+
+    Examples:
+        >>> # Filter inventory keeping only highest sample rate channels
+        >>> filtered_inv = select_highest_samplerate(inv)
+        >>> 
+        >>> # Filter for a specific time, minimum 1 Hz
+        >>> from obspy import UTCDateTime
+        >>> time = UTCDateTime("2020-01-01")
+        >>> filtered_inv = select_highest_samplerate(inv, minSR=1, time=time)
+
+    Notes:
+        - Channel duplicates are determined by location code and either:
+          * Existence at a specific time (if time is provided)
+          * Having identical time spans (if time is None)
+        - All retained channels must have sample rates >= minSR
+        - For duplicate channels, all channels with the highest sample rate are kept
     """
     if time:
         inv = inv.select(time=time)
@@ -609,6 +806,8 @@ def collect_requests_event(
     model_name = settings.event.model
     before_p_sec = settings.event.before_p_sec
     after_p_sec = settings.event.after_p_sec
+    min_radius = settings.event.min_radius
+    max_radius = settings.event.max_radius    
     highest_sr_only = settings.station.highest_samplerate_only
     cha_pref = settings.waveform.channel_pref
     loc_pref = settings.waveform.location_pref
@@ -645,14 +844,14 @@ def collect_requests_event(
                 sta_end = None
 
             # Check for existing arrivals
-            fetched_arrivals = db_manager.fetch_arrivals(
+            fetched_arrivals = db_manager.fetch_arrivals_distances(
                 str(eq.preferred_origin_id),
                 net.code,
                 sta.code
             )
 
             if fetched_arrivals:
-                p_time, s_time = fetched_arrivals
+                p_time, s_time, dist_km, dist_deg, azi = fetched_arrivals
                 t_start = p_time - abs(before_p_sec)
                 t_end = p_time + abs(after_p_sec)
                 p_arrivals[f"{net.code}.{sta.code}"] = p_time
@@ -676,7 +875,7 @@ def collect_requests_event(
                 t_end = (p_time + abs(after_p_sec)).timestamp
                 p_arrivals[f"{net.code}.{sta.code}"] = p_time.timestamp
 
-                # Prepare arrival data for database
+                # save these new arrivals to insert into database
                 arrivals_per_eq.append((
                     str(eq.preferred_origin_id),
                     eq.magnitudes[0].mag,
@@ -689,18 +888,26 @@ def collect_requests_event(
                     model_name
                 ))
 
-            # Generate requests for each channel
-            for cha in sta:
-                t_end = min(t_end, datetime.datetime.now().timestamp() - 120)
-                t_start = min(t_start, t_end)
-                requests_per_eq.append((
-                    net.code,
-                    sta.code,
-                    cha.location_code,
-                    cha.code,
-                    datetime.datetime.fromtimestamp(t_start, tz=datetime.timezone.utc).isoformat(),
-                    datetime.datetime.fromtimestamp(t_end, tz=datetime.timezone.utc).isoformat()
-                ))
+            # skip anything out of our search parameters
+            if dist_deg < min_radius:
+                print(f"    Skipping {net.code}.{sta.code} (distance {dist_deg:.1f} degrees < min_radius {min_radius:.1f})")
+                continue
+            elif dist_deg > max_radius:
+                print(f"    Skipping {net.code}.{sta.code} (distance {dist_deg:.1f} degrees > max_radius {max_radius:.1f})")
+                continue
+            else:
+                # Generate requests for each channel
+                for cha in sta:
+                    t_end = min(t_end, datetime.datetime.now().timestamp() - 120)
+                    t_start = min(t_start, t_end)
+                    requests_per_eq.append((
+                        net.code,
+                        sta.code,
+                        cha.location_code,
+                        cha.code,
+                        datetime.datetime.fromtimestamp(t_start, tz=datetime.timezone.utc).isoformat(),
+                        datetime.datetime.fromtimestamp(t_end, tz=datetime.timezone.utc).isoformat()
+                    ))
 
     return requests_per_eq, arrivals_per_eq, p_arrivals
 
@@ -978,20 +1185,20 @@ def archive_request(
                     )
                 except Exception as e:
                     if 'code: 204' in str(e):
-                        print(f"        No data for station {s}")
+                        print(f"\n        No data for station {s}")
                     else:
-                        print(f"Unusual error fetching data for station {s}: {str(e)}")
+                        print(f"Unusual error fetching data for station {s}:\n {str(e)}")
         else:
             st = wc.get_waveforms(**kwargs)
 
         # Log download statistics
         download_time = time.time() - time0
         download_size = sum(tr.data.nbytes for tr in st) / 1024**2  # MB
-        print(f"        Downloaded {download_size:.2f} MB @ {download_size/download_time:.2f} MB/s")
+        print(f"      > Downloaded {download_size:.2f} MB @ {download_size/download_time:.2f} MB/s")
 
     except Exception as e:
         if 'code: 204' in str(e):
-            print(f"        No data available")
+            print(f"      ~ No data available")
         else:
             print(f"{str(e)}")
         return
@@ -1044,7 +1251,7 @@ def archive_request(
                 if existing_st:
                     print(f"  ... Merging {full_path}")
             except Exception as e:
-                print(f"! Could not read {full_path}: {e}")
+                print(f"! Could not read {full_path}:\n {e}")
                 continue
         else:
             existing_st = day_stream
@@ -1066,15 +1273,15 @@ def archive_request(
                         existing_st.write(full_path, format="MSEED")
                         to_insert_db.append(stream_to_db_element(existing_st))
                     except Exception as e:
-                        print(f"Failed to write uncompressed MSEED to {full_path}: {e}")
+                        print(f"Failed to write uncompressed MSEED to {full_path}:\n {e}")
                 else:
-                    print(f"Failed to write {full_path}: {e}")
+                    print(f"Failed to write {full_path}:\n {e}")
 
     # Update database
     try:
         num_inserted = db_manager.bulk_insert_archive_data(to_insert_db)
     except Exception as e:
-        print("! Error with bulk_insert_archive_data: ", e)
+        print("! Error with bulk_insert_archive_data:", e)
 
 
 # MAIN RUN FUNCTIONS
@@ -1101,7 +1308,7 @@ def setup_paths(settings: SeismoLoaderSettings) -> Tuple[SeismoLoaderSettings, D
     """
     sds_path = settings.sds_path
     if not sds_path:
-        raise ValueError("SDS Path not set!")
+        raise ValueError("\nSDS Path not set!")
 
     # Setup SDS directory
     if not os.path.exists(sds_path):
@@ -1116,7 +1323,7 @@ def setup_paths(settings: SeismoLoaderSettings) -> Tuple[SeismoLoaderSettings, D
 
     return settings, db_manager
 
-
+# not in use?
 def get_selected_stations_at_channel_level(settings: SeismoLoaderSettings) -> SeismoLoaderSettings:
     """
     Update inventory information to include channel-level details for selected stations.
@@ -1151,7 +1358,7 @@ def get_selected_stations_at_channel_level(settings: SeismoLoaderSettings) -> Se
                 invs += updated_inventory
                 
             except Exception as e:
-                print(f"Error updating station {station.code}: {e}")
+                print(f"Error updating station {station.code}:\n{e}")
 
     settings.station.selected_invs = invs
     return settings
@@ -1230,10 +1437,11 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
         try: 
             inv = obspy.read_inventory(settings.station.local_inventory, level='channel')
         except Exception as e:
-            print(f"Could not read {settings.station.local_inventory}: {e}")
+            print(f"Could not read {settings.station.local_inventory}:\n{e}")
 
     # Query stations based on geographic constraints
     elif settings.station.geo_constraint:
+        # it would be wise to attempt to combine redundant searches here, if possible (TODO)
         for geo in settings.station.geo_constraint:
             curr_inv = None
             try:
@@ -1256,7 +1464,7 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
                 else:
                     print(f"Unknown Geometry type: {geo.geo_type}")
             except FDSNNoDataException:
-                print(f"No stations found in {station_client.base_url} with given geographic bounds")
+                print(f"No stations found at {station_client.base_url} with given geographic bounds")
 
             if curr_inv is not None:
                 inv = curr_inv if inv is None else inv + curr_inv
@@ -1265,10 +1473,11 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
         try:
             inv = station_client.get_stations(**kwargs)
         except FDSNNoDataException:
-            print(f"No stations found in {station_client.base_url} with given parameters")
+            print(f"No stations found at {station_client.base_url} with given parameters")
             return None
 
     if inv is None:
+        print("No inventory returned!?")
         return None
 
     # Apply station exclusions
@@ -1288,7 +1497,7 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
                     level='channel'
                 )
             except Exception as e:
-                print(f"Could not find requested station {net}.{sta} at {settings.station.client} \n{e}")
+                print(f"Could not find requested station {net}.{sta} at {settings.station.client}\n{e}")
                 continue
 
     # Apply final filters
@@ -1343,7 +1552,7 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
         except PermissionError:
             raise PermissionError(f"Permission denied: {settings.event.local_catalog}")
         except Exception as e:
-            raise Exception(f"Error reading catalog: {e}")
+            raise Exception(f"Error reading catalog:\n{e}")
 
     catalog = Catalog()
 
@@ -1385,6 +1594,7 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
 
     # Handle geographic constraints
     for geo in settings.event.geo_constraint:
+        # it would be wise to attempt to merge/minimize highly redundant searchest here
         try:
             if geo.geo_type == GeoConstraintType.CIRCLE:
                 cat = event_client.get_events(
@@ -1414,6 +1624,9 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
         except FDSNNoDataException:
             print(f"No events found for constraint: {geo.geo_type}")
             continue
+    
+    # Remove duplicates
+    catalog = remove_duplicate_events(catalog)
 
     return catalog
 
@@ -1458,7 +1671,7 @@ def run_continuous(settings: SeismoLoaderSettings):
     - The function logs detailed information about the processing steps and errors to aid
       in debugging and monitoring of data retrieval processes.
     """
-    print("Running run_continuous")
+    print("Running run_continuous\n----------------------")
     
     settings, db_manager = setup_paths(settings)
 
@@ -1512,46 +1725,21 @@ def run_continuous(settings: SeismoLoaderSettings):
 
     # Archive to disk and updated database
     for request in combined_requests:
-        print("\n Requesting: ", request)
+        print("Requesting: ", request)
         time.sleep(0.05) # to help ctrl-C out if needed
         try:
             archive_request(request, waveform_clients, settings.sds_path, db_manager)
         except Exception as e:
-            print("Continuous request not successful: ",request, " with exception: ", e)
+            print(f"Continuous request not successful: {request} with exception:\n {e}")
             continue
 
     # Cleanup the database
     try:
         db_manager.join_continuous_segments(settings.processing.gap_tolerance)
     except Exception as e:
-        print("! Error with join_continuous_segments: ", e)
+        print(f"! Error with join_continuous_segments:\n {e}")
 
-    # Going through all original requests
-    time_series = []
-    for req in requests:
-        data = pd.DataFrame()
-        query = SeismoQuery(
-            network = req[0].upper(),
-            station = req[1].upper(),
-            location = req[2].upper(),
-            channel = req[3].upper(),
-            starttime = req[4],
-            endtime = req[5]
-        )
-        try:
-            data = stream_to_dataframe(get_local_waveform(query, settings))
-        except Exception as e:
-            print(str(e))
-        
-        time_series.append({
-            'Network': query.network,
-            'Station': query.station,
-            'Location': query.location,
-            'Channel': query.channel,
-            'Data': data
-        })
-
-    return time_series
+    return True
 
 
 def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None):
@@ -1598,7 +1786,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
     - Data is archived in SDS format and the database is updated accordingly
     - Each stream in the output includes complete event metadata for analysis
     """
-    print("Running run_event")
+    print("Running run_event\n-----------------")
     
     settings, db_manager = setup_paths(settings)
     waveform_client = Client(settings.waveform.client)
@@ -1607,24 +1795,27 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
     try:
         ttmodel = TauPyModel(settings.event.model)
     except Exception as e:
-        print(f"\nFalling back to IASP91 model: {str(e)}")
+        print(f"Falling back to IASP91 model: {str(e)}")
         ttmodel = TauPyModel('IASP91')
 
     event_streams = []
     for i, eq in enumerate(settings.event.selected_catalogs):
-        print(f"\nProcessing event {i+1}/{len(settings.event.selected_catalogs)}")
+        print(f"\nProcessing event {i+1}/{len(settings.event.selected_catalogs)} {str(eq.origins[0].time)[0:16]} ({eq.origins[0].latitude:.2f}lat,{eq.origins[0].longitude:.2f}lon)")
         
         # Check for cancellation
         if stop_event and stop_event.is_set():
-            print("\nRun cancelled!")
+            print("Run cancelled!")
             return None
 
         # Collect requests for this event
-        requests, new_arrivals, p_arrivals = collect_requests_event(
-            eq, settings.station.selected_invs,
-            model=ttmodel,
-            settings=settings
-        )
+        try:
+            requests, new_arrivals, p_arrivals = collect_requests_event(
+                eq, settings.station.selected_invs,
+                model=ttmodel,
+                settings=settings
+            )
+        except Exception as e:
+            print(f"Issue running collect_requests_event in run_event:\n {e}")
 
         # Update arrival database
         if new_arrivals:
@@ -1632,13 +1823,13 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
 
         # Process data requests
         if settings.waveform.force_redownload:
-            print("\nForcing re-download as requested...")
+            print("Forcing re-download as requested...")
             pruned_requests = requests
         else:
             pruned_requests = prune_requests(requests, db_manager, settings.sds_path)
         
         if stop_event and stop_event.is_set():
-            print("\nRun cancelled!")
+            print("Run cancelled!")
             return None
 
         # Download new data if needed
@@ -1661,15 +1852,15 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
                     )
                     waveform_clients[cred_net] = new_client
                 except Exception as e:
-                    print(f"\nIssue creating client for {cred_net}: {str(e)}")
+                    print(f"Issue creating client for {cred_net}:\n {str(e)}")
 
             # Process requests
             for request in combined_requests:
                 if stop_event and stop_event.is_set():
-                    print("\nRun cancelled!")
+                    print("Run cancelled!")
                     return None
                 
-                print(f"\nRequesting: {request}")
+                print(f"Requesting: {request}")
                 try:
                     archive_request(
                         request,
@@ -1678,7 +1869,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
                         db_manager
                     )
                 except Exception as e:
-                    print(f"\nError archiving request {request}: {str(e)}")
+                    print(f"Error archiving request {request}:\n {str(e)}")
 
         # Read all data for this event
         event_stream = obspy.Stream()
@@ -1693,7 +1884,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
             )
             
             if stop_event and stop_event.is_set():
-                print("\nRun cancelled!")
+                print("Run cancelled!")
                 return None
             
             try:
@@ -1717,7 +1908,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
                     
                     event_stream += st
             except Exception as e:
-                print(f"\nError reading data for {query.network}.{query.station}: {str(e)}")
+                print(f"Error reading data for {query.network}.{query.station}:\n {str(e)}")
                 continue
 
         if len(event_stream) > 0:
@@ -1728,7 +1919,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
         print("\n~~ Cleaning up database ~~")
         db_manager.join_continuous_segments(settings.processing.gap_tolerance)
     except Exception as e:
-        print(f"\n! Error with join_continuous_segments: {str(e)}")
+        print(f"! Error with join_continuous_segments: {str(e)}")
 
     return event_streams
 
@@ -1736,7 +1927,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
 def run_main(
     settings: Optional[SeismoLoaderSettings] = None,
     from_file: Optional[str] = None
-) -> None:
+    ) -> None:
     """Main entry point for seismic data retrieval and processing.
 
     Coordinates the overall workflow for retrieving and processing seismic data,
@@ -1784,9 +1975,5 @@ def run_main(
         run_event(settings)
 
     ## Final database cleanup
-    #print("\n ~~ Cleaning up database ~~")
+    #print(" ~~ Cleaning up database ~~")
     #db_manager.join_continuous_segments(settings.processing.gap_tolerance)
-
-
-
-

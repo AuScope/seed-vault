@@ -12,6 +12,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from html import escape
 from seed_vault.ui.components.continuous_waveform import ContinuousComponents
 from seed_vault.service.utils import check_client_services
 from io import StringIO
@@ -1015,6 +1016,7 @@ class WaveformComponents:
             else:
                 st.button("Download PNG", disabled=True, use_container_width=True)
 
+    """
     def _render_log_view(self):
         st.title("Waveform Retrieval Logs")
         self.console._init_terminal_style()  # Initialize terminal styling
@@ -1030,6 +1032,34 @@ class WaveformComponents:
             st.markdown(log_text, unsafe_allow_html=True)
         else:
             st.info("No logs available yet. Perform a waveform download first.")
+    """
+    def _render_log_view(self):
+        st.title("Waveform Retrieval Logs")
+        self.console._init_terminal_style()  # Initialize terminal styling
+        
+        if self.console.accumulated_output:
+            escaped_content = escape('\n'.join(self.console.accumulated_output))
+            
+            log_text = (
+                '<div class="terminal" id="log-terminal">'
+                f'<pre style="margin: 0; white-space: pre; tab-size: 4;">{escaped_content}</pre>'
+                '</div>'
+                '<script>'
+                'if (window.terminal_scroll === undefined) {'
+                '    window.terminal_scroll = function() {'
+                '        var terminalDiv = document.getElementById("log-terminal");'
+                '        if (terminalDiv) {'
+                '            terminalDiv.scrollTop = terminalDiv.scrollHeight;'
+                '        }'
+                '    };'
+                '}'
+                'window.terminal_scroll();'
+                '</script>'
+            )
+            
+            st.markdown(log_text, unsafe_allow_html=True)
+        else:
+            st.info("Perform a waveform download first :)")
 
     def _execute_waveform_retrieval(self):
         """Wrap waveform retrieval with logging"""

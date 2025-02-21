@@ -311,7 +311,7 @@ class DatabaseManager:
                         [(id,) for id in chunk]
                     )
 
-        print(f"Database cleaned. Deleted {len(to_delete)} rows, updated {len(to_update)} rows.")
+        print(f"\nDatabase cleaned. Deleted {len(to_delete)} rows, updated {len(to_update)} rows.")
 
     def execute_query(self, query: str) -> Tuple[bool, str, Optional[pd.DataFrame]]:
         """
@@ -477,6 +477,7 @@ class DatabaseManager:
                 return [dict(zip(columns, result)) for result in results]
         return []
 
+    # this function may be redundant now, only using fetch_arrivals_distances (?)
     def fetch_arrivals(self, event_id: str, netcode: str, stacode: str) -> Optional[Tuple[float, float]]:
         """
         Retrieve P and S wave arrival times for a specific event and station.
