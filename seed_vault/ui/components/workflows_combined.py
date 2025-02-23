@@ -168,6 +168,8 @@ class CombinedBasedWorkflow:
         return True
     
     def render_stage_1(self):
+        # Add CSS to prevent scrolling on headers..
+        st.markdown("<style>.stMarkdown{overflow:visible !important;}</style>", unsafe_allow_html=True)
         
         c1, c2, c3 = st.columns([1, 1, 1])
         title = "Events" if self.settings.selected_workflow == WorkflowType.EVENT_BASED else "Stations"
@@ -177,7 +179,7 @@ class CombinedBasedWorkflow:
                 self.previous_stage()
 
         with c2:
-            st.write(f"### Step 1: Search & Select {title}")
+            st.markdown(f"### Step 1: Search & Select {title}", unsafe_allow_html=False)
 
         with c3:
             if st.button("Next"):
@@ -202,12 +204,14 @@ class CombinedBasedWorkflow:
             self.station_components.render()
 
     def render_stage_2(self):
+        # Add CSS to prevent scrolling on headers..
+        st.markdown("<style>.stMarkdown{overflow:visible !important;}</style>", unsafe_allow_html=True)
 
         c1, c2, c3 = st.columns([1, 1, 1])
 
         if self.settings.selected_workflow == WorkflowType.CONTINUOUS:
             with c2:
-                st.write("### Step 2: Get Waveforms")
+                st.markdown("### Step 2: Get Waveforms", unsafe_allow_html=False)
                 
             with c1:
                 if st.button("Previous"):
@@ -230,7 +234,7 @@ class CombinedBasedWorkflow:
                     self.previous_stage()
 
             with c2:
-                st.write(f"### Step 2: Search & Select {title}")                
+                st.markdown(f"### Step 2: Search & Select {title}", unsafe_allow_html=False)
 
             with c3:
                 if st.button("Next"):
@@ -251,12 +255,15 @@ class CombinedBasedWorkflow:
             self.station_components.render()
         elif self.settings.selected_workflow == WorkflowType.STATION_BASED:
             self.event_components.render()
-                   
+    
     def render_stage_3(self):
+        # Add CSS to prevent scrolling on headers..
+        st.markdown("<style>.stMarkdown{overflow:visible !important;}</style>", unsafe_allow_html=True)
+
         c1, c2, c3 = st.columns([1, 1, 1])
         with c2:
-            st.write("### Step 3: Waveforms")
-        if self.settings.selected_workflow == WorkflowType.EVENT_BASED: 
+            st.markdown("### Step 3: Waveforms", unsafe_allow_html=False)
+        if self.settings.selected_workflow == WorkflowType.EVENT_BASED:
             with c1:
                 if st.button("Previous"):
                     selected_idx = self.station_components.get_selected_idx()

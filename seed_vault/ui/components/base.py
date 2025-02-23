@@ -1,3 +1,6 @@
+import io
+import os
+import re
 from typing import List
 from copy import deepcopy
 import streamlit as st
@@ -6,7 +9,6 @@ import pandas as pd
 from datetime import datetime, time
 from obspy.core.event import Catalog, read_events
 from obspy.core.inventory import Inventory, read_inventory
-from io import BytesIO
 
 
 from seed_vault.ui.components.map import create_map, add_area_overlays, add_data_points, clear_map_layers, clear_map_draw,add_map_draw
@@ -22,9 +24,6 @@ from seed_vault.enums.config import GeoConstraintType, Levels
 from seed_vault.enums.ui import Steps
 
 from seed_vault.service.utils import convert_to_datetime, check_client_services, get_time_interval
-import io
-import os
-import re
 
 
 class BaseComponentTexts:
@@ -45,7 +44,7 @@ class BaseComponentTexts:
             self.SELECT_DATA_TITLE = "Select Events from Map or Table"
             self.SELECT_MARKER_TITLE = "#### Select Events from map"
             self.SELECT_MARKER_MSG   = "Select an event from map and Add to Selection."
-            self.SELECT_DATA_TABLE_TITLE = "Select Events from table"
+            self.SELECT_DATA_TABLE_TITLE = "Select Events from Table  ⤵️  or from Map  ↗️"
             self.SELECT_DATA_TABLE_MSG = "Tick events from the table to view your selected events on the map."
 
             self.PREV_SELECT_NO  = "Total Number of Selected Events"
@@ -60,7 +59,7 @@ class BaseComponentTexts:
             self.SELECT_DATA_TITLE = "Select Stations from Map or Table"
             self.SELECT_MARKER_TITLE = "#### Select Stations from map"
             self.SELECT_MARKER_MSG   = "Select a station from map and Add to Selection."
-            self.SELECT_DATA_TABLE_TITLE = "Select Stations from table"
+            self.SELECT_DATA_TABLE_TITLE = "Select Stations from table  ⤵️  or from Map  ↗️"
             self.SELECT_DATA_TABLE_MSG = "Tick stations from the table to view your selected stations on the map."
 
             self.PREV_SELECT_NO  = "Total Number of Selected Stations"
@@ -186,7 +185,6 @@ class BaseComponent:
             self.old_settings      = deepcopy(self.settings)
             save_filter(self.settings)
             st.rerun()
-
 
 
     def import_export(self):
@@ -630,7 +628,7 @@ class BaseComponent:
                 zoom_start=self.map_view_zoom,
                 map_center=[
                     self.map_view_center.get("lat", 0.0),
-                    self.map_view_center.get("lng", 0.0),
+                    self.map_view_center.get("lng", 175), # pacific ocean
                 ]
             )
         
@@ -758,8 +756,9 @@ class BaseComponent:
             self.settings.station.geo_constraint = []
             self.settings.station.selected_invs = None
 
-        self.update_rectangle_areas()
-        self.update_circle_areas()
+        # not sure if plotting these area tables is useful
+        #self.update_rectangle_areas()
+        #self.update_circle_areas()
 
 
     def get_selected_marker_info(self):
@@ -943,7 +942,7 @@ class BaseComponent:
     # FILES
     # ===================
     def export_xml_bytes(self, export_selected: bool = True):
-        with BytesIO() as f:
+        with io.BytesIO() as f:
             if not self.df_markers.empty and len(self.df_markers) > 0:
                 if export_selected:
                 # self.sync_df_markers_with_df_edit()
@@ -1033,8 +1032,9 @@ class BaseComponent:
 
     
     def render_map_handles(self):
-        self.update_rectangle_areas()
-        self.update_circle_areas()
+        # not sure if plotting these area tables is useful
+        #self.update_rectangle_areas()
+        #self.update_circle_areas()
         self.render_map_buttons()
         
 
@@ -1085,11 +1085,11 @@ class BaseComponent:
         feature_groups = [fg for fg in [self.map_fg_area, self.map_fg_marker , self.map_fg_prev_selected_marker] if fg is not None]
         
 
-        info_display = f"ℹ️ Use **map tools** to search **{self.TXT.STEP}s** in confined areas. "
-        info_display += "ℹ️ Use **Reload** button if the map is collapsed or some layers are missing. "
+        info_display = f"ℹ️ Use **shape tools** to search **{self.TXT.STEP}s** in confined areas   "
+        info_display += "\nℹ️ Use **Reload** button to refresh map if needed   "
 
-        if self.fig_color_bar and self.step_type == Steps.EVENT:
-            info_display += "ℹ️ Marker size is associated with Earthquake magnitude."
+        #if self.fig_color_bar and self.step_type == Steps.EVENT:
+        #    info_display += "ℹ️ Marker size is associated with Earthquake magnitude."
 
         st.caption(info_display)
         
@@ -1204,6 +1204,33 @@ class BaseComponent:
     def data_table_view(self, ordered_col, config, state_key):
         """Displays the full data table, allowing selection."""
 
+        # Add custom CSS to ensure full width and remove scrollbars
+        st.markdown("""
+            <style>
+                .element-container {
+                    width: 100% !important;
+                }
+                .stDataFrame {
+                    width: 100% !important;
+                    text-align: center !important;                    
+                }
+                .data-editor-container {
+                    width: 100% !important;
+                }
+                [data-testid="stDataFrame"] {
+                    width: 100% !important;                 
+                }
+                div[data-testid="stDataFrame"] > div {
+                    width: 100% !important;                  
+                }
+                div[data-testid="stDataFrame"] > div > iframe {
+                    width: 100% !important;
+                    text-align: center !important;                    
+                    min-height: calc(100vh - 300px);  # Adjust this value as needed
+                }                   
+            </style>
+        """, unsafe_allow_html=True)  
+
         c1, c2, c3 = st.columns([1,1,1])
         with c1:
             st.write(f"Total Number of {self.TXT.STEP.title()}s: {len(self.df_markers)}")
@@ -1215,16 +1242,49 @@ class BaseComponent:
         with c3:
             if st.button("Unselect All", key=self.get_key_element("Unselect All")):
                 self.df_markers['is_selected'] = False
-
         
+        # it would be prettier to merge "magnitude_type" with magnitude here.. TODO
+
         self.selected_items_view(state_key) 
+
+        # Set the height based on the number of rows (with a minimum and maximum)
+        num_rows = len(self.df_markers)
+        height = max(min(num_rows * 35 + 100, 800), 400)  # Adjust as needed
+
+        # Define desired column widths in pts
+        column_widths = {
+            "Select": 60,
+            "network": 60,
+            "station": 80,
+            "elevation": 80,
+            "longitude": 130,
+            "latitude": 130,
+            "start_date": 140,
+            "end_date": 140
+            }
+
+        for col in ordered_col:
+            
+            # Add width if this column should have a specific width
+            if col in column_widths:
+                config[col] = st.column_config.Column(
+                    col,
+                    width=column_widths[col]
+                )
+            else:
+                config[col] = st.column_config.Column(
+                    col,
+                )
+
         self.df_data_edit = st.data_editor(
             self.df_markers, 
             hide_index = True, 
             column_config=config, 
             column_order = ordered_col, 
-            key=self.get_key_element("Data Table")
-        )           
+            key=self.get_key_element("Data Table"),
+            height=height,
+            use_container_width=True
+        )
         
 
         if len(self.df_data_edit) != len(st.session_state[state_key]):
@@ -1253,6 +1313,7 @@ class BaseComponent:
         preferred_column = "place"
         unique_column = "magnitude"  # Extra column to make each entry unique
 
+        ## causing issue in STATION table which doesn't have "magnitude" (NEEDS REVIEW)
         if preferred_column not in df_selected.columns or unique_column not in df_selected.columns:
             st.warning(f"Column '{preferred_column}' or '{unique_column}' not found in the data!")
             return

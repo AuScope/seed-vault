@@ -246,7 +246,7 @@ class StationConfig(BaseModel):
         end_time=datetime.now().isoformat()
     )
     local_inventory    : Optional   [ str           ] = None
-    network            : Optional   [ str           ] = "_GSN"
+    network            : Optional   [ str           ] = "IU"
     station            : Optional   [ str           ] = "*"
     location           : Optional   [ str           ] = "*"
     channel            : Optional   [ str           ] = "?H?,?N?"

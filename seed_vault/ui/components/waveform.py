@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict, Union
 from obspy import Stream
 from obspy import UTCDateTime
 import threading
@@ -170,7 +170,7 @@ class WaveformFilterMenu:
             # Channel Priority Input
             channel_pref = st.text_input(
                 "Channel Priority",
-                value=self.settings.waveform.channel_pref, # or "CH,HH,BH,EH,HN,EN,SH,LH", ### this should just default to the config settings
+                value=self.settings.waveform.channel_pref,
                 help="Order of preferred channels (e.g., HH,BH,EH). Only the first existing channel in this list will be downloaded.",
                 key="channel_pref"
             )
@@ -190,7 +190,7 @@ class WaveformFilterMenu:
             # Location Priority Input
             location_pref = st.text_input(
                 "Location Priority",
-                value=self.settings.waveform.location_pref, # or "10,00,20,30", ### this should just default to the config settings
+                value=self.settings.waveform.location_pref,
                 help="Order of preferred location codes (e.g., 00,--,10,20). Only the first existing location code in this list will be downloaded.. Use -- or '' for blank location.",
                 key="location_pref"
             )
@@ -284,7 +284,9 @@ class WaveformDisplay:
         except ValueError as e:
             st.error(f"Error: {str(e)} Waveform client is set to {self.settings.waveform.client}, which seems does not exists. Please navigate to the settings page and use the Clients tab to add the client or fix the stored config.cfg file.")
         self.ttmodel = TauPyModel("iasp91")
-        self.streams = [] 
+        self.streams = []
+        self.missing_data = {}
+
     def apply_filters(self, stream: Stream) -> Stream:
         """Filter stream based on user selection"""
         filtered_stream = Stream()
@@ -302,7 +304,7 @@ class WaveformDisplay:
     
 
     def fetch_data(self):
-        self.streams = run_event(self.settings, stop_event)
+        self.streams,self.missing_data = run_event(self.settings, stop_event)
         # st.session_state["query_done"] = True  # Mark as done
         # st.session_state["trigger_rerun"] = True  # 🔹 Set flag for rerun
 
@@ -341,7 +343,7 @@ class WaveformDisplay:
             st.warning("Please select events and stations before downloading waveforms.")
             return
             
-        self.streams = run_event(self.settings)  # This now returns list of streams
+        self.streams,self.missing_data = run_event(self.settings)  # This now returns list of streams AND a dictionary with event_id keys of what is missing
         
         if self.streams:
             # Update filter menu with first stream
@@ -664,7 +666,7 @@ class WaveformDisplay:
         # Sort traces by distance (can't do via starttime since it's all the same station)
         for tr in stream:
             if not hasattr(tr.stats, 'distance_km') or not tr.stats.distance_km:
-                tr.stats.distance_km = 999999
+                tr.stats.distance_km = 99999
         stream = Stream(sorted(stream, key=lambda tr: tr.stats.distance_km))
         
         # Get current page's traces
@@ -802,6 +804,7 @@ class WaveformDisplay:
         # Create missing data display before checking streams
         missing_data_display = MissingDataDisplay(
             self.streams,
+            self.missing_data,
             self.settings
         )
         missing_data_display.render()
@@ -816,8 +819,9 @@ class WaveformDisplay:
                 st.warning("No events available.")
                 return
             
+            # it's possible an event doesn't have a magnitude TODO
             event_options = [
-                f"Event {i+1}: {event.origins[0].time} M{event.magnitudes[0].mag:.1f}"
+                f"Event {i+1}: {event.origins[0].time} M{event.magnitudes[0].mag:.1f} {event.extra.get('region', {}).get('value', 'Unknown Region')}"
                 for i, event in enumerate(events)
             ]
             selected_event_idx = st.selectbox(
@@ -1032,37 +1036,9 @@ class WaveformComponents:
             st.markdown(log_text, unsafe_allow_html=True)
         else:
             st.info("No logs available yet. Perform a waveform download first.")
-    """
-    def _render_log_view(self):
-        st.title("Waveform Retrieval Logs")
-        self.console._init_terminal_style()  # Initialize terminal styling
-        
-        if self.console.accumulated_output:
-            escaped_content = escape('\n'.join(self.console.accumulated_output))
-            
-            log_text = (
-                '<div class="terminal" id="log-terminal">'
-                f'<pre style="margin: 0; white-space: pre; tab-size: 4;">{escaped_content}</pre>'
-                '</div>'
-                '<script>'
-                'if (window.terminal_scroll === undefined) {'
-                '    window.terminal_scroll = function() {'
-                '        var terminalDiv = document.getElementById("log-terminal");'
-                '        if (terminalDiv) {'
-                '            terminalDiv.scrollTop = terminalDiv.scrollHeight;'
-                '        }'
-                '    };'
-                '}'
-                'window.terminal_scroll();'
-                '</script>'
-            )
-            
-            st.markdown(log_text, unsafe_allow_html=True)
-        else:
-            st.info("Perform a waveform download first :)")
 
     def _execute_waveform_retrieval(self):
-        """Wrap waveform retrieval with logging"""
+        #Wrap waveform retrieval with logging
         def retrieval_task():
             return self.waveform_display.retrieve_waveforms()
 
@@ -1088,9 +1064,75 @@ class WaveformComponents:
         if self.console.accumulated_output:
             st.session_state.console_logs = '<br>'.join(self.console.accumulated_output)
 
+    """
+    def _render_log_view(self):
+        """Display the logs in a terminal-style view"""
+        st.title("Event Retrieval Log")
+        
+        # Reuse the existing terminal styling
+        self.console._init_terminal_style()
+        
+        if self.console.accumulated_output:
+            # Use the existing preserve_whitespace method
+            preserved_content = self.console._preserve_whitespace('\n'.join(self.console.accumulated_output))
+            
+            log_text = (
+                '<div class="terminal" id="log-terminal">'
+                f'<pre>{preserved_content}</pre>'
+                '</div>'
+                '<script>'
+                'if (window.terminal_scroll === undefined) {'
+                '    window.terminal_scroll = function() {'
+                '        var terminalDiv = document.getElementById("log-terminal");'
+                '        if (terminalDiv) {'
+                '            terminalDiv.scrollTop = terminalDiv.scrollHeight;'
+                '        }'
+                '    };'
+                '}'
+                'window.terminal_scroll();'
+                '</script>'
+            )
+            
+            st.markdown(log_text, unsafe_allow_html=True)
+        else:
+            st.info("No logs available yet. Perform a waveform download first :)")
+
+    def _execute_waveform_retrieval(self):
+        """Execute waveform retrieval with appropriate logging"""
+        def retrieval_task():
+            return self.waveform_display.retrieve_waveforms()
+
+        show_live = st.session_state.get("waveform_view_mode") == "Log View"
+        
+        if show_live:
+            # Use existing console display for live logging
+            success, error = self.console.run_with_logs(
+                process_func=retrieval_task,
+                status_message="Downloading event waveforms..."
+            )
+        else:
+            # Capture output without displaying live
+            output_buffer = StringIO()
+            with redirect_stdout(output_buffer), redirect_stderr(output_buffer):
+                try:
+                    retrieval_task()
+                    success, error = True, ""
+                except Exception as e:
+                    success, error = False, str(e)
+                
+            # Store output in console's accumulated output
+            self.console.accumulated_output = output_buffer.getvalue().splitlines()
+
+        # Store in session state if needed
+        if self.console.accumulated_output:
+            st.session_state.console_logs = self.console.accumulated_output
+
+        return success, error
+
 class MissingDataDisplay:
-    def __init__(self, streams: List[Stream], settings: SeismoLoaderSettings):
+    def __init__(self, streams: List[Stream], missing_data: Dict[str, Union[List[str], str]], settings: SeismoLoaderSettings):
         self.streams = streams
+        self.missing_data = missing_data
         self.settings = settings
     
     def _format_event_time(self, event) -> str:
@@ -1101,24 +1143,49 @@ class MissingDataDisplay:
         """Identify events with no data and their missing channels"""
         missing_events = []
         
-        for event in self.settings.event.selected_catalogs:
+        # sort events by time? does this cause problems elsewhere? can we just sort selected_catalogs? do this elsewhere? REVIEW
+        try:
+            catalog = self.settings.event.selected_catalogs #.copy() #need copy?
+            catalog.events.sort(key=lambda x: getattr(x.origins[0], 'time', UTCDateTime(0)) if x.origins else UTCDateTime(0))
+        except Exception as e:
+            print("catalog sort problem",e)
+
+        for event in catalog:
             event_id = str(event.resource_id)
-            
-            # Find corresponding stream for this event
-            event_stream = None
-            for stream in self.streams:
-                if stream and stream[0].stats.event_id == event_id:
-                    event_stream = stream
-                    break
-            
-            if not event_stream or len(event_stream) == 0:
+
+            # Create a string for NSLCs which should have been downloaded (e.g. within search radius) but weren't for some reason
+            try:
+                if event_id not in self.missing_data.keys():
+                    continue
+
+                results = []
+                for station_key, value in self.missing_data[event_id].items():
+                    if value == "ALL":
+                        results.append(f"{station_key}.*")  # Indicate all channels missing
+                    elif value == '':
+                        continue
+                    elif isinstance(value, list):
+                        if value:  # If list not empty
+                            results.extend(value)  # Add all missing channels
+                if results:
+                    missing_data_str = ' '.join(results)
+                else:
+                    missing_data_str = None
+
+            except Exception as e:
+                missing_data_str = None
+                print("DEBUG: missing data dict issue",e)
+
+
+            if missing_data_str:
+                # Combine event ot, mag, region into one column
+                event_str = f"{self._format_event_time(event)},  M{event.magnitudes[0].mag:.1f},  {event.extra.get('region', {}).get('value', 'Unknown Region')}"
+
                 # Event completely missing
                 missing_events.append({
-                    'Event Time': self._format_event_time(event),
-                    'Magnitude': f"M{event.magnitudes[0].mag:.1f}",
-                    'Region': event.extra.get('region', {}).get('value', 'Unknown Region'),
-                    'Missing Channels': self.settings.waveform.channel_pref,
-                    'Depth (km)': event.origins[0].depth / 1000  # Convert to km
+                    'Event ID': event_id,
+                    'Event': event_str,
+                    'Missing Data': missing_data_str
                 })
         
         return missing_events
@@ -1128,7 +1195,7 @@ class MissingDataDisplay:
         missing_events = self._get_missing_events()
         
         if missing_events:
-            st.warning("⚠️ Events with No Data:")
+            st.warning("⚠️ Events with Missing Data:")
             
             # Create DataFrame from missing events
             df = pd.DataFrame(missing_events)
@@ -1140,7 +1207,8 @@ class MissingDataDisplay:
             st.dataframe(
                 df,
                 use_container_width=True,
-                height=height
+                height=height,
+                hide_index=True
             )
 
 

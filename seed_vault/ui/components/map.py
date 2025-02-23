@@ -28,14 +28,14 @@ icon = folium.DivIcon(html="""
     </svg>
 """)
 
-
-def create_map(map_center=[0.0, 0.0], zoom_start=2, map_id=None):
+def create_map(map_center=[0.0,0.0], zoom_start=2, map_id=None):
     """
     Create a base map with controls but without dynamic layers.
     """
     m = folium.Map(
         location=map_center,
         zoom_start=zoom_start,
+        min_zoom=2, # doesn't seem to work?
         id=map_id,
     )
 
@@ -58,7 +58,6 @@ def create_map(map_center=[0.0, 0.0], zoom_start=2, map_id=None):
     ).add_to(m)
     
     # m.location = [0, 0]
-
 
     add_draw_controls(m)
     add_fullscreen_control(m)
@@ -107,7 +106,7 @@ def add_area_overlays(areas):
                 bounds=[[coords.min_lat, coords.min_lon], [coords.max_lat, coords.max_lon]],
                 color=coords.color,
                 fill=True,
-                fill_opacity=0.5
+                fill_opacity=0.2
             ))
         elif isinstance(coords, CircleArea):
             add_circle_area(feature_group, coords)
@@ -118,28 +117,59 @@ def add_circle_area(feature_group, coords):
     """
     Add circle area (inner and outer) to the feature group.
     """
+    max_radius_m = degrees2kilometers(coords.max_radius)*1000
+
     if coords.min_radius == 0:
         feature_group.add_child(folium.Circle(
             location=[coords.lat, coords.lon],
-            radius=degrees2kilometers(coords.max_radius)*1000,
+            radius=max_radius_m,
             color= AREA_COLOR,
             fill=True,
-            fill_opacity=0.5
+            fill_opacity=0.2
         ))
     else:
-        # Outer Circle
+        min_radius_m = degrees2kilometers(coords.min_radius)*1000
+
+        # Outer circle fill to max_radius
         feature_group.add_child(folium.Circle(
             location=[coords.lat, coords.lon],
-            radius=degrees2kilometers(coords.max_radius)*1000,
+            radius=max_radius_m,
+            color='none',
+            fill=True,
+            fill_color=coords.color,
+            fill_opacity=0.2,
+            weight=0,
+            stroke=False
+        ))
+
+        # Add an unfilled circle to min_radius to mask inner area
+        # ...doesn't mask the original outer radius though (TODO?)
+        """
+        feature_group.add_child(folium.Circle(
+            location=[coords.lat, coords.lon],
+            radius=min_radius_m,
+            color='none',
+            fill=True,
+            fill_color='none',
+            fill_opacity=1,
+            weight=0,
+            stroke=False
+        ))
+        """
+
+        # Outer Circle border
+        feature_group.add_child(folium.Circle(
+            location=[coords.lat, coords.lon],
+            radius=max_radius_m,
             color=coords.color,
             fill=False,
-            dash_array='2, 4',
             weight=2,
         ))
-        # Inner Circle
+
+        # Inner Circle border
         feature_group.add_child(folium.Circle(
             location=[coords.lat, coords.lon],
-            radius=degrees2kilometers(coords.max_radius)*1000,
+            radius=min_radius_m,
             color=coords.color,
             fill=False,
             dash_array='2, 4',
@@ -318,12 +348,6 @@ def clear_map_layers(map_object):
         except Exception as e:
             print(f"Error clearing map layers: {e}")     
 
-#def get_marker_size(magnitude):
-#    import math
-#    base_size = 2.0
-#    scaling_factor = 2.5
-#    size = base_size + scaling_factor * math.log(magnitude + 1)
-#    return min(13.0, max(base_size, size))
 
 def get_marker_size(magnitude):
     if magnitude < 2:
@@ -333,12 +357,12 @@ def get_marker_size(magnitude):
     elif magnitude < 4:
         return 1.5
     if magnitude <= 5:
-        return 2.0
+        return 2.0   
     elif magnitude >= 8:
         return 14.0
     else:
         x = (magnitude - 5) / 3
-        return 2 + 12 * x**2
+        return 2 + 12 * x**2.3
 
 
 def get_marker_color(magnitude):
@@ -348,9 +372,11 @@ def get_marker_color(magnitude):
         return 'yellow'
     elif 2.4 <= magnitude < 5:
         return 'orange'
-    elif 5 <= magnitude < 7:
+    elif 5 <= magnitude < 6:
+        return 'orangered'
+    elif 6 <= magnitude < 7:
         return 'red'
-    elif 7 <= magnitude < 8.5:
+    elif 7 <= magnitude < 8.0:
         return 'magenta'
     else:
         return 'purple'
@@ -365,9 +391,6 @@ def get_color_map(df, c, offset=0.0, cmap='viridis'):
     norm = Normalize(vmin=min_val + offset * min_val, vmax=max_val - offset)
 
     return norm, colormap
-    
-
-
 
 
 def truncate_text(text, max_length=47):

@@ -20,20 +20,48 @@ class ConsoleDisplay:
                     background-color: black;
                     color: #ffffff;
                     font-family: 'Courier New', Courier, monospace;
-                    font-size: 12px;
+                    font-size: 12px !important;
                     padding: 10px;
                     border-radius: 5px;
-                    height: 600px;
+                    height: 800px;
                     overflow-y: auto;
                     white-space: pre;
                     tab-size: 4;
                 }
+                .terminal pre {
+                    margin: 0;
+                    white-space: pre-wrap;
+                    word-wrap: break-word;
+                    tab-size: 4;
+                    font-family: 'Courier New', Courier, monospace !important;
+                    font-size: 12px !important;
+                }
                 .stMarkdown {
                     overflow-y: auto;
-                    max-height: 600px;
+                    max-height: 800px;
                 }
             </style>
         """, unsafe_allow_html=True)
+
+    def _preserve_whitespace(self, text: str) -> str:
+        """
+        Preserve leading whitespace by converting spaces to non-breaking spaces
+        but only at the start of each line
+        """
+        lines = text.splitlines(True)  # Keep line endings
+        preserved_lines = []
+        
+        for line in lines:
+            # Count leading spaces
+            leading_space_count = len(line) - len(line.lstrip(' '))
+            if leading_space_count > 0:
+                # Replace leading spaces with &nbsp;
+                preserved_line = '&nbsp;' * leading_space_count + escape(line[leading_space_count:])
+                preserved_lines.append(preserved_line)
+            else:
+                preserved_lines.append(escape(line))
+        
+        return ''.join(preserved_lines)
 
     def _update_logs(self, output_buffer: StringIO, log_container: st.empty):
         """Update logs in terminal style"""
@@ -44,23 +72,23 @@ class ConsoleDisplay:
             # Add new output to accumulated output
             self.accumulated_output.append(new_output)
             
-            # HTML escape the content while preserving whitespace
-            escaped_content = escape(''.join(self.accumulated_output))
+            # Preserve whitespace while escaping content
+            preserved_content = self._preserve_whitespace(''.join(self.accumulated_output))
             
             # Create terminal display
             log_text = (
                 '<div class="terminal" id="log-terminal">'
-                f'<pre style="margin: 0; white-space: pre; tab-size: 4;">{escaped_content}</pre>'
+                f'<pre>{preserved_content}</pre>'
                 '</div>'
                 '<script>'
-                'if (window.terminal_scroll === undefined) {{'
-                '    window.terminal_scroll = function() {{'
+                'if (window.terminal_scroll === undefined) {'
+                '    window.terminal_scroll = function() {'
                 '        var terminalDiv = document.getElementById("log-terminal");'
-                '        if (terminalDiv) {{'
+                '        if (terminalDiv) {'
                 '            terminalDiv.scrollTop = terminalDiv.scrollHeight;'
-                '        }}'
-                '    }};'
-                '}}'
+                '        }'
+                '    };'
+                '}'
                 'window.terminal_scroll();'
                 '</script>'
             )
@@ -112,7 +140,7 @@ class ConsoleDisplay:
                     
                     while process_thread.is_alive():
                         self._update_logs(output_buffer, log_container)
-                        time.sleep(0.03)
+                        time.sleep(0.05)
                     
                     process_thread.join()
                     self._update_logs(output_buffer, log_container)

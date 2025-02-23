@@ -5,12 +5,14 @@ The main functions for SEED-vault, from original CLI-only version (Pickle 2024)
 
 import os
 import sys
+import copy
 import time
 import sqlite3
 import datetime
 import multiprocessing
 import configparser
 import pandas as pd
+import numpy as np
 from tqdm import tqdm
 import threading
 import random
@@ -890,10 +892,10 @@ def collect_requests_event(
 
             # skip anything out of our search parameters
             if dist_deg < min_radius:
-                print(f"    Skipping {net.code}.{sta.code} (distance {dist_deg:.1f} degrees < min_radius {min_radius:.1f})")
+                print(f"    Skipping {net.code}.{sta.code}  (distance {dist_deg:.1f} < min_radius {min_radius:.1f})")
                 continue
             elif dist_deg > max_radius:
-                print(f"    Skipping {net.code}.{sta.code} (distance {dist_deg:.1f} degrees > max_radius {max_radius:.1f})")
+                print(f"    Skipping {net.code}.{sta.code}  (distance {dist_deg:.1f} > max_radius {max_radius:.1f})")
                 continue
             else:
                 # Generate requests for each channel
@@ -964,6 +966,83 @@ def combine_requests(
     
     return combined_requests
 
+
+def get_missing_from_request(eq_id: str, requests: List[Tuple], st: obspy.Stream) -> dict:
+    """
+    Compare requested seismic data against what's present in a Stream.
+    Handles comma-separated values for location and channel codes.
+    
+    Parameters:
+    -----------
+    eq_id : str
+        Earthquake ID to use as dictionary key
+    requests : List[Tuple]
+        List of request tuples, each containing (network, station, location, channel, starttime, endtime)
+    st : Stream
+        ObsPy Stream object containing seismic traces
+        
+    Returns:
+    --------
+    dict
+        Nested dictionary with structure:
+        {eq_id: {
+            "network.station": value,
+            "network2.station2": value2,
+            ...
+        }}
+        where value is either:
+        - list of missing channel strings ("network.station.location.channel")
+        - "Not Attempted" if stream is empty
+        - "ALL" if all requested channels are missing
+        - [] if all requested channels are present
+    """
+    if not requests:
+        return {}
+    
+    result = {eq_id: {}}
+    
+    # Process each request
+    for request in requests:
+        net, sta, loc, cha, _, _ = request  # Ignore time windows
+        station_key = f"{net}.{sta}"
+        
+        # Split location and channel if comma-separated
+        locations = loc.split(',') if ',' in loc else [loc]
+        channels = cha.split(',') if ',' in cha else [cha]
+        
+        missing_channels = []
+        total_combinations = 0
+        missing_combinations = 0
+        
+        # Check all combinations
+        for location in locations:
+            for channel in channels:
+                total_combinations += 1
+                # Look for matching trace
+                found_match = False
+                for tr in st:
+                    if (tr.stats.network == net and 
+                        tr.stats.station == sta and
+                        tr.stats.location == (location if location else '') and
+                        fnmatch.fnmatch(tr.stats.channel, channel)):
+                        found_match = True
+                        break
+                
+                if not found_match:
+                    missing_combinations += 1
+                    missing_channels.append(
+                        f"{net}.{sta}.{location}.{channel}"
+                    )
+        
+        # Determine value for this station
+        if missing_combinations == total_combinations:  # nothing returned
+            result[eq_id][station_key] = "ALL"
+        elif missing_combinations == 0:  # everything returned
+            result[eq_id][station_key] = []
+        else:  # partial return
+            result[eq_id][station_key] = missing_channels
+    
+    return result
 
 def get_sds_filenames(
     n: str,
@@ -1439,26 +1518,64 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
         except Exception as e:
             print(f"Could not read {settings.station.local_inventory}:\n{e}")
 
+
     # Query stations based on geographic constraints
     elif settings.station.geo_constraint:
-        # it would be wise to attempt to combine redundant searches here, if possible (TODO)
-        for geo in settings.station.geo_constraint:
-            curr_inv = None
+
+        # Reduce number of circular constraints to reduce excessive client calls
+        bound_searches = [ele for ele in settings.station.geo_constraint 
+                        if ele.geo_type == GeoConstraintType.BOUNDING]
+
+        circle_searches = [ele for ele in settings.station.geo_constraint 
+                        if ele.geo_type == GeoConstraintType.CIRCLE]
+
+        if len(circle_searches) > 4: # not as strict for stations
+            new_circle_searches = []
+
+            circ_center_lat = sum(p.coords.lat for p in circle_searches) / len(circle_searches)
+        
+            lon_radians = [np.radians(p.coords.lon) for p in circle_searches]
+            avg_x = sum(np.cos(r) for r in lon_radians) / len(circle_searches)
+            avg_y = sum(np.sin(r) for r in lon_radians) / len(circle_searches)
+            circ_center_lon = np.degrees(np.arctan2(avg_y, avg_x))
+
+            circ_distances = [ np.sqrt((circ_center_lat - p.coords.lat)**2 + (circ_center_lon - p.coords.lon)**2)
+                            for p in circle_searches]
+            max_circ_distances = max(circ_distances)
+
+            mean_circ = copy.deepcopy(circle_searches[0])
+            mean_circ.coords.lat = circ_center_lat
+            mean_circ.coords.lon = circ_center_lon
+            if mean_circ.coords.min_radius > max_circ_distances:
+                mean_circ.coords.min_radius -= max_circ_distances
+            mean_circ.coords.max_radius += max_circ_distances
+
+            if max_circ_distances < 60: # in degrees. make this wider for stations
+                circle_searches = [mean_circ]
+            else: # go throught the list and remove what we can
+                new_circle_searches = [mean_circ]
+                for i, cs in enumerate(circle_searches):
+                    if circ_distances[i] >= 60:  # add any outliers
+                        new_circle_searches.append(cs)
+                circle_searches = new_circle_searches
+
+        for geo in bound_searches + circle_searches:
+            _inv = None
             try:
                 if geo.geo_type == GeoConstraintType.BOUNDING:
-                    curr_inv = station_client.get_stations(
-                        minlatitude=geo.coords.min_lat,
-                        maxlatitude=geo.coords.max_lat,
-                        minlongitude=geo.coords.min_lon,
-                        maxlongitude=geo.coords.max_lon,
+                    _inv = station_client.get_stations(
+                        minlatitude=round(geo.coords.min_lat,4),
+                        maxlatitude=round(geo.coords.max_lat,4),
+                        minlongitude=round(geo.coords.min_lon,4),
+                        maxlongitude=round(geo.coords.max_lon,4),
                         **kwargs
                     )
                 elif geo.geo_type == GeoConstraintType.CIRCLE:
-                    curr_inv = station_client.get_stations(
-                        minradius=geo.coords.min_radius,
-                        maxradius=geo.coords.max_radius,
-                        latitude=geo.coords.lat,
-                        longitude=geo.coords.lon,
+                    _inv = station_client.get_stations(
+                        minradius=max(0,round(geo.coords.min_radius,3)),
+                        maxradius=min(180,round(geo.coords.max_radius,3)),
+                        latitude=round(geo.coords.lat,4),
+                        longitude=round(geo.coords.lon,4),
                         **kwargs
                     )
                 else:
@@ -1466,8 +1583,8 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
             except FDSNNoDataException:
                 print(f"No stations found at {station_client.base_url} with given geographic bounds")
 
-            if curr_inv is not None:
-                inv = curr_inv if inv is None else inv + curr_inv
+            if _inv is not None:
+                inv = _inv if inv is None else inv + _inv
 
     else:  # Query without geographic constraints
         try:
@@ -1477,7 +1594,7 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
             return None
 
     if inv is None:
-        print("No inventory returned!?")
+        print("No inventory returned (!?)")
         return None
 
     # Apply station exclusions
@@ -1593,15 +1710,52 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
         return catalog
 
     # Handle geographic constraints
-    for geo in settings.event.geo_constraint:
-        # it would be wise to attempt to merge/minimize highly redundant searchest here
+    # But first.. reduce number of circular constraints to reduce excessive client calls
+    bound_searches = [ele for ele in settings.event.geo_constraint 
+                    if ele.geo_type == GeoConstraintType.BOUNDING]
+
+    circle_searches = [ele for ele in settings.event.geo_constraint 
+                    if ele.geo_type == GeoConstraintType.CIRCLE]
+
+    if len(circle_searches) > 1:
+        new_circle_searches = []
+
+        circ_center_lat = sum(p.coords.lat for p in circle_searches) / len(circle_searches)
+
+        lon_radians = [np.radians(p.coords.lon) for p in circle_searches]
+        avg_x = sum(np.cos(r) for r in lon_radians) / len(circle_searches)
+        avg_y = sum(np.sin(r) for r in lon_radians) / len(circle_searches)
+        circ_center_lon = np.degrees(np.arctan2(avg_y, avg_x))
+        
+        circ_distances = [ np.sqrt((circ_center_lat - p.coords.lat)**2 + (circ_center_lon - p.coords.lon)**2)
+                         for p in circle_searches]
+        max_circ_distances = max(circ_distances)
+
+        mean_circ = copy.deepcopy(circle_searches[0])
+        mean_circ.coords.lat = circ_center_lat
+        mean_circ.coords.lon = circ_center_lon
+        if mean_circ.coords.min_radius > max_circ_distances:
+            mean_circ.coords.min_radius -= max_circ_distances
+        mean_circ.coords.max_radius += max_circ_distances
+
+        if max_circ_distances < 15: # in degrees. all points packed in closely enough
+            circle_searches = [mean_circ]
+        else: # go throught the list and remove what we can
+            new_circle_searches = [mean_circ]
+            for i, cs in enumerate(circle_searches):
+                if circ_distances[i] >= 15:  # add any outliers
+                    new_circle_searches.append(cs)
+            circle_searches = new_circle_searches
+
+
+    for geo in bound_searches + circle_searches: 
         try:
             if geo.geo_type == GeoConstraintType.CIRCLE:
                 cat = event_client.get_events(
-                    latitude=geo.coords.lat,
-                    longitude=geo.coords.lon,
-                    minradius=geo.coords.min_radius,
-                    maxradius=geo.coords.max_radius,
+                    latitude=round(geo.coords.lat,4),
+                    longitude=round(geo.coords.lon,4),
+                    minradius=max(0,round(geo.coords.min_radius,3)),
+                    maxradius=min(180,round(geo.coords.max_radius,3)),
                     **kwargs
                 )
                 print(f"Found {len(cat)} events from {settings.event.client}")
@@ -1609,10 +1763,10 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
 
             elif geo.geo_type == GeoConstraintType.BOUNDING:
                 cat = event_client.get_events(
-                    minlatitude=geo.coords.min_lat,
-                    minlongitude=geo.coords.min_lon,
-                    maxlatitude=geo.coords.max_lat,
-                    maxlongitude=geo.coords.max_lon,
+                    minlatitude=round(geo.coords.min_lat,4),
+                    minlongitude=round(geo.coords.min_lon,4),
+                    maxlatitude=round(geo.coords.max_lat,4),
+                    maxlongitude=round(geo.coords.max_lon,4),
                     **kwargs
                 )
                 print(f"Found {len(cat)} events from {settings.event.client}")
@@ -1742,6 +1896,7 @@ def run_continuous(settings: SeismoLoaderSettings):
     return True
 
 
+
 def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None):
     """
     Processes and downloads seismic event data for each event in the provided catalog using
@@ -1786,7 +1941,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
     - Data is archived in SDS format and the database is updated accordingly
     - Each stream in the output includes complete event metadata for analysis
     """
-    print("Running run_event\n-----------------")
+    print(f"Running run_event\n-----------------")
     
     settings, db_manager = setup_paths(settings)
     waveform_client = Client(settings.waveform.client)
@@ -1799,8 +1954,9 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
         ttmodel = TauPyModel('IASP91')
 
     event_streams = []
+    all_missing = {}
     for i, eq in enumerate(settings.event.selected_catalogs):
-        print(f"\nProcessing event {i+1}/{len(settings.event.selected_catalogs)} {str(eq.origins[0].time)[0:16]} ({eq.origins[0].latitude:.2f}lat,{eq.origins[0].longitude:.2f}lon)")
+        print(f"\nProcessing event {i+1}/{len(settings.event.selected_catalogs)}  |  OT: {str(eq.origins[0].time)[0:16]} LAT: {eq.origins[0].latitude:.2f} LON: {eq.origins[0].longitude:.2f}")
         
         # Check for cancellation
         if stop_event and stop_event.is_set():
@@ -1911,8 +2067,17 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
                 print(f"Error reading data for {query.network}.{query.station}:\n {str(e)}")
                 continue
 
+        # Now attempt to keep track of what data was missing. Note that this is not catching out-of-bounds data, for better or worse (probably better)
+        missing = get_missing_from_request(str(eq.resource_id),requests,event_stream)
+        #print("DEBUG missing: ", missing)
+        #print(event_stream)
+        #print("DEBUG requests: ", requests)
+
+        all_missing.update(missing)
+
         if len(event_stream) > 0:
             event_streams.append(event_stream)
+
 
     # Final database cleanup
     try:
@@ -1921,7 +2086,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
     except Exception as e:
         print(f"! Error with join_continuous_segments: {str(e)}")
 
-    return event_streams
+    return event_streams, all_missing
 
 
 def run_main(

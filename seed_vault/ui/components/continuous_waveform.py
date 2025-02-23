@@ -94,7 +94,7 @@ class ContinuousFilterMenu:
                     self.settings.station.date_config.end_time = new_end
                     self.refresh_filters()
 
-        with st.sidebar.expander("Submitted NSLCs", expanded=True):
+        with st.sidebar.expander("Submitted NSLCs:", expanded=True):
             st.caption(f"Network: {self.settings.station.network}")
             st.caption(f"Station: {self.settings.station.station}")
             st.caption(f"Location: {self.settings.station.location}")
