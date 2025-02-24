@@ -94,20 +94,11 @@ class ContinuousFilterMenu:
                     self.settings.station.date_config.end_time = new_end
                     self.refresh_filters()
 
-            
-        with st.sidebar.expander("Waveform Details", expanded=True):
-            # Display the current values instead of input fields
-            st.text("Network:")
-            st.code(self.settings.station.network)
-            
-            st.text("Station:")
-            st.code(self.settings.station.station)
-            
-            st.text("Location:")
-            st.code(self.settings.station.location)
-            
-            st.text("Channel:")
-            st.code(self.settings.station.channel)
+        with st.sidebar.expander("Submitted NSLCs:", expanded=True):
+            st.caption(f"Network: {self.settings.station.network}")
+            st.caption(f"Station: {self.settings.station.station}")
+            st.caption(f"Location: {self.settings.station.location}")
+            st.caption(f"Channel: {self.settings.station.channel}")
 
 class ContinuousDisplay:
     def __init__(self, settings: SeismoLoaderSettings, filter_menu: ContinuousFilterMenu):
