@@ -162,9 +162,23 @@ class SeismoQuery(BaseModel):
         return cmb_str
     
     def cmb_str_n_s_to_props(self, cmb_n_s):
-        network, station = cmb_n_s.split(".")
-        setattr(self, 'network', network)
-        setattr(self, 'station', station)
+        lst_split = cmb_n_s.split(".")
+        if len(lst_split) < 2:
+            raise ValueError(f"Inputted station code is malformed: {cmb_n_s}")
+        
+        for item in lst_split:
+            if item == "":  # Add other validation checks here
+                raise ValueError(f"Inputted station code is malformed: {cmb_n_s}")
+        
+        setattr(self, 'network', lst_split[0])
+        setattr(self, 'station', lst_split[1])
+
+        if len(lst_split) == 3:
+            setattr(self, 'location', lst_split[2])
+
+        if len(lst_split) == 4:
+            setattr(self, 'channel', lst_split[3])
+        
 
 class DateConfig(BaseModel):
     """
