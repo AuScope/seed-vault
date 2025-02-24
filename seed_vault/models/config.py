@@ -630,6 +630,9 @@ class SeismoLoaderSettings(BaseModel):
     @classmethod
     def _parse_auth_section(cls, config, status_handler ):
         try:
+            if 'AUTH' not in config:
+                return []
+            
             credentials = list(config['AUTH'].items())
             return [
                 AuthConfig(nslc_code=nslc, username=cred.split(':')[0], password=cred.split(':')[1])

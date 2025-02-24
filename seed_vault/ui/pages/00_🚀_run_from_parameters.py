@@ -5,7 +5,7 @@ import jinja2
 import pickle
 
 st.set_page_config(
-    page_title="Run from Config",
+    page_title="Run from Parameters",
     # page_icon="⚙️",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -15,7 +15,7 @@ st.set_page_config(
 st.info(
     """
 In this page, you can directly set the search configs for your data and run the flow without needing
-to go through the steps of main flow. Suits use cases where you are quite familiar with the config
+to go through the steps of main flow. Suits use cases where you are quite familiar with the config parameter
 settings and when you do not want of much fine tuning on selection of Events and Stations.
 """
 )
