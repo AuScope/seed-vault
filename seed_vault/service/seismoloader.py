@@ -7,8 +7,9 @@ import os
 import sys
 import copy
 import time
+import fnmatch
 import sqlite3
-import datetime
+from datetime import datetime,timedelta,timezone
 import multiprocessing
 import configparser
 import pandas as pd
@@ -18,22 +19,28 @@ import threading
 import random
 from typing import Any, Dict, List, Tuple, Optional, Union
 from collections import defaultdict
-import fnmatch
 
-import obspy
+
+#import obspy
 from obspy import UTCDateTime
+from obspy.core.stream import read,Stream
+from obspy.core.inventory import read_inventory,Inventory
+from obspy.core.event import read_events,Event,Catalog
+
+
 from obspy.clients.fdsn import Client
 from obspy.taup import TauPyModel
-from obspy.core.inventory import Inventory
-from obspy.core.event import Event,Catalog
 from obspy.geodetics.base import locations2degrees,gps2dist_azimuth
+from obspy.clients.fdsn.header import URL_MAPPINGS, FDSNNoDataException
 
 from seed_vault.models.config import SeismoLoaderSettings, SeismoQuery
 from seed_vault.enums.config import DownloadType, GeoConstraintType
-from seed_vault.service.utils import is_in_enum
-from seed_vault.service.db import DatabaseManager
+from seed_vault.service.utils import is_in_enum,get_sds_filenames,to_timestamp,\
+    filter_inventory_by_geo_constraints,filter_catalog_by_geo_constraints
+from seed_vault.service.db import DatabaseManager,stream_to_db_element,miniseed_to_db_element,\
+    populate_database_from_sds,populate_database_from_files,populate_database_from_files_dumb
 from seed_vault.service.waveform import get_local_waveform, stream_to_dataframe
-from obspy.clients.fdsn.header import URL_MAPPINGS, FDSNNoDataException
+
 
 
 class CustomConfigParser(configparser.ConfigParser):
@@ -113,306 +120,6 @@ def read_config(config_file: str) -> CustomConfigParser:
     return processed_config
 
 
-def to_timestamp(time_obj: Union[int, float, datetime.datetime, UTCDateTime]) -> float:
-    """
-    Convert various time objects to Unix timestamp.
-
-    Args:
-        time_obj: Time object to convert. Can be one of:
-            - int/float: Already a timestamp
-            - datetime: Python datetime object
-            - UTCDateTime: ObsPy UTCDateTime object
-
-    Returns:
-        float: Unix timestamp (seconds since epoch).
-
-    Raises:
-        ValueError: If the input time object type is not supported.
-
-    Example:
-        >>> ts = to_timestamp(datetime.datetime.now())
-        >>> ts = to_timestamp(UTCDateTime())
-        >>> ts = to_timestamp(1234567890.0)
-    """
-    if isinstance(time_obj, (int, float)):
-        return float(time_obj)
-    elif isinstance(time_obj, datetime.datetime):
-        return time_obj.timestamp()
-    elif isinstance(time_obj, UTCDateTime):
-        return time_obj.timestamp
-    else:
-        raise ValueError(f"Unsupported time type: {type(time_obj)}")
-
-
-def miniseed_to_db_element(file_path: str) -> Optional[Tuple[str, str, str, str, str, str]]:
-    """
-    Convert a miniseed file to a database element tuple.
-
-    Processes a miniseed file and extracts relevant metadata for database storage.
-    Expects files in the format: network.station.location.channel.*.year.julday
-
-    Args:
-        file_path: Path to the miniseed file.
-
-    Returns:
-        Optional[Tuple[str, str, str, str, str, str]]: A tuple containing:
-            - network: Network code
-            - station: Station code
-            - location: Location code
-            - channel: Channel code
-            - start_time: ISO format start time
-            - end_time: ISO format end time
-            Returns None if file is invalid or cannot be processed.
-
-    Example:
-        >>> element = miniseed_to_db_element("/path/to/IU.ANMO.00.BHZ.D.2020.001")
-        >>> if element:
-        ...     network, station, location, channel, start, end = element
-    """
-    if not os.path.isfile(file_path):
-        return None
-    try:
-        file = os.path.basename(file_path)
-        parts = file.split('.')
-        if len(parts) != 7:
-            return None  # Skip files that don't match expected format
-        
-        network, station, location, channel, _, year, dayfolder = parts
-        
-        # Read the file to get actual start and end times
-        st = obspy.read(file_path, headonly=True)
-        
-        if len(st) == 0:
-            print(f"Warning: No traces found in {file_path}")
-            return None
-        
-        start_time = min(tr.stats.starttime for tr in st)
-        end_time = max(tr.stats.endtime for tr in st)
-        
-        return (network, station, location, channel,
-                start_time.isoformat(), end_time.isoformat())
-    
-    except Exception as e:
-        print(f"Error processing file {file_path}: {str(e)}")
-        return None
-
-
-def stream_to_db_element(st: obspy.Stream) -> Optional[Tuple[str, str, str, str, str, str]]:
-    """
-    Convert an ObsPy Stream object to a database element tuple.
-
-    Creates a database element from a stream, assuming all traces have the same
-    Network-Station-Location-Channel (NSLC) codes. This is typically faster than
-    reading from a file using miniseed_to_db_element.
-
-    Args:
-        st: ObsPy Stream object containing seismic traces.
-
-    Returns:
-        Optional[Tuple[str, str, str, str, str, str]]: A tuple containing:
-            - network: Network code
-            - station: Station code
-            - location: Location code
-            - channel: Channel code
-            - start_time: ISO format start time
-            - end_time: ISO format end time
-            Returns None if stream is empty.
-
-    Example:
-        >>> stream = obspy.read()
-        >>> element = stream_to_db_element(stream)
-        >>> if element:
-        ...     network, station, location, channel, start, end = element
-    """
-    if len(st) == 0:
-        print("Warning: Empty stream provided")
-        return None
-        
-    start_time = min(tr.stats.starttime for tr in st)
-    end_time = max(tr.stats.endtime for tr in st)
-        
-    return (st[0].stats.network, st[0].stats.station,
-            st[0].stats.location, st[0].stats.channel,
-            start_time.isoformat(), end_time.isoformat())
-
-
-def populate_database_from_sds(sds_path, db_path,
-    search_patterns=["??.*.*.???.?.????.???"],
-    newer_than=None, num_processes=None, gap_tolerance = 60):
-
-    """
-    Scan an SDS archive directory and populate a database with data availability.
-
-    Recursively searches an SDS (Seismic Data Structure) archive for MiniSEED files,
-    extracts their metadata, and records data availability in a SQLite database.
-    Supports parallel processing and can optionally filter for recently modified files.
-
-    Args:
-        sds_path (str): Path to the root SDS archive directory
-        db_path (str): Path to the SQLite database file
-        search_patterns (list, optional): List of file patterns to match.
-            Defaults to ["??.*.*.???.?.????.???"] (standard SDS naming pattern).
-        newer_than (str or UTCDateTime, optional): Only process files modified after
-            this time. Defaults to None (process all files).
-        num_processes (int, optional): Number of parallel processes to use.
-            Defaults to None (use all available CPU cores).
-        gap_tolerance (int, optional): Maximum time gap in seconds between segments
-            that should be considered continuous. Defaults to 60.
-
-    Notes:
-        - Uses DatabaseManager class to handle database operations
-        - Attempts multiprocessing but falls back to single process if it fails
-            (common on OSX and Windows)
-        - Follows symbolic links when walking directory tree
-        - Files are processed using miniseed_to_db_element() function
-        - After insertion, continuous segments are joined based on gap_tolerance
-        - Progress is displayed using tqdm progress bars
-        - If newer_than is provided, it's converted to a Unix timestamp for comparison
-
-    Raises:
-        RuntimeError: If bulk insertion into database fails
-    """
-
-    db_manager = DatabaseManager(db_path)
-
-    # Set to possibly the maximum number of CPUs!
-    if num_processes is None or num_processes <= 0:
-        num_processes = multiprocessing.cpu_count()
-    
-    # Convert newer_than (means to filter only new files) to timestamp
-    if newer_than:
-        newer_than = to_timestamp(newer_than)
-
-    # Collect all file paths
-    file_paths = []
-
-    for root, dirs, files in os.walk(sds_path,followlinks=True):
-        for f in files:
-            if any(fnmatch.fnmatch(f, pattern) for pattern in search_patterns):
-                file_path = os.path.join(root,f)
-                if newer_than is None or os.path.getmtime(file_path) > newer_than:
-                    file_paths.append(os.path.join(root, f))
-    
-    total_files = len(file_paths)
-    print(f"Found {total_files} files to process.")
-    
-    # Process files with or without multiprocessing
-    # TODO (currently having issues with OSX and undoubtably windows is going to be a bigger problem)
-    if num_processes > 1:
-        try:
-            with multiprocessing.Pool(processes=num_processes) as pool:
-                to_insert_db = list(tqdm(pool.imap(miniseed_to_db_element, file_paths), \
-                    total=total_files, desc="Processing files"))
-        except Exception as e:
-            print(f"Multiprocessing failed: {str(e)}. Falling back to single-process execution.")
-            num_processes = 1
-    else:
-        to_insert_db = []
-        for fp in tqdm(file_paths, desc="Scanning %s..." % sds_path):
-            to_insert_db.append(miniseed_to_db_element(fp))
-
-    # Update database
-    try:
-        num_inserted = db_manager.bulk_insert_archive_data(to_insert_db)
-    except Exception as e:
-        raise RuntimeError("Error with bulk_insert_archive_data") from e  
-
-    print(f"Processed {total_files} files, inserted {num_inserted} records into the database.")
-
-    db_manager.join_continuous_segments(gap_tolerance)
-
- 
-def populate_database_from_files_dumb(cursor, file_paths=[]):
-    """
-    Simple version of database population from MiniSEED files without span merging.
-
-    A simplified "dumb" version that blindly replaces existing database entries
-    with identical network/station/location/channel codes, rather than checking for
-    and merging overlapping time spans.
-
-    Args:
-        cursor (sqlite3.Cursor): Database cursor for executing SQL commands
-        file_paths (list, optional): List of paths to MiniSeed files. Defaults to empty list.
-    """
-    now = int(datetime.datetime.now().timestamp())
-    for fp in file_paths:
-        result  = miniseed_to_db_element(fp)
-        if result:
-            result = result + (now,)
-            cursor.execute('''
-                INSERT OR REPLACE INTO archive_data
-                (network, station, location, channel, starttime, endtime, importtime)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ''', result)
-
-
-def populate_database_from_files(cursor, file_paths=[]):
-    """
-    Insert or update MiniSEED file metadata into an SQL database.
-
-    Takes a list of SDS archive file paths, extracts metadata, and updates a database
-    tracking data availability. If data spans overlap with existing database entries,
-    the spans are merged. Uses miniseed_to_db_element() to parse file metadata.
-
-    Args:
-        cursor (sqlite3.Cursor): Database cursor for executing SQL commands
-        file_paths (list, optional): List of paths to MiniSeed files. Defaults to empty list.
-
-    Notes:
-        - Database must have an 'archive_data' table with columns:
-            * network (text)
-            * station (text)
-            * location (text)
-            * channel (text)
-            * starttime (integer): Unix timestamp
-            * endtime (integer): Unix timestamp
-            * importtime (integer): Unix timestamp of database insertion
-        - Handles overlapping time spans by merging them into a single entry
-        - Sets importtime to current Unix timestamp
-        - Skips files that fail metadata extraction (when miniseed_to_db_element returns None)
-
-    Examples:
-        >>> import sqlite3
-        >>> conn = sqlite3.connect('archive.db')
-        >>> cursor = conn.cursor()
-        >>> files = ['/path/to/IU.ANMO.00.BHZ.mseed', '/path/to/IU.ANMO.00.BHN.mseed']
-        >>> populate_database_from_files(cursor, files)
-        >>> conn.commit()
-    """
-    now = int(datetime.datetime.now().timestamp())
-    for fp in file_paths:
-        result = miniseed_to_db_element(fp)
-        if result:
-            network, station, location, channel, start_timestamp, end_timestamp = result
-            
-            # First check for existing overlapping spans
-            cursor.execute('''
-                SELECT starttime, endtime FROM archive_data
-                WHERE network = ? AND station = ? AND location = ? AND channel = ?
-                AND NOT (endtime < ? OR starttime > ?)
-            ''', (network, station, location, channel, start_timestamp, end_timestamp))
-            
-            overlaps = cursor.fetchall()
-            if overlaps:
-                # Merge with existing spans
-                start_timestamp = min(start_timestamp, min(row[0] for row in overlaps))
-                end_timestamp = max(end_timestamp, max(row[1] for row in overlaps))
-                
-                # Delete overlapping spans
-                cursor.execute('''
-                    DELETE FROM archive_data
-                    WHERE network = ? AND station = ? AND location = ? AND channel = ?
-                    AND NOT (endtime < ? OR starttime > ?)
-                ''', (network, station, location, channel, start_timestamp, end_timestamp))
-            
-            # Insert the new or merged span
-            cursor.execute('''
-                INSERT INTO archive_data
-                (network, station, location, channel, starttime, endtime, importtime)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ''', (network, station, location, channel, start_timestamp, end_timestamp, now))
-
-
 def collect_requests(inv, time0, time1, days_per_request=3, 
                      cha_pref=None, loc_pref=None):
     """
@@ -463,7 +170,7 @@ def collect_requests(inv, time0, time1, days_per_request=3,
     sub_inv = inv.select(time=time0)
     current_start = time0
     while current_start < time1:
-        current_end = min(current_start + datetime.timedelta(days=days_per_request), time1)
+        current_end = min(current_start + timedelta(days=days_per_request), time1)
         
         if cha_pref or loc_pref:
             sub_inv = get_preferred_channels(inv, cha_pref, loc_pref, current_start)
@@ -484,36 +191,6 @@ def collect_requests(inv, time0, time1, days_per_request=3,
     
     return requests
 
-
-def remove_duplicate_events(catalog):
-    """
-    Remove duplicate events from an ObsPy Catalog based on resource IDs.
-
-    Takes a catalog of earthquake events and returns a new catalog containing only
-    unique events, where uniqueness is determined by the event's resource_id.
-    The first occurrence of each resource_id is kept.
-
-    Args:
-        catalog (obspy.core.event.Catalog): Input catalog containing earthquake events
-
-    Returns:
-        obspy.core.event.Catalog: New catalog containing only unique events
-
-    Examples:
-        >>> from obspy import read_events
-        >>> cat = read_events('events.xml')
-        >>> unique_cat = remove_duplicate_events(cat)
-        >>> print(f"Removed {len(cat) - len(unique_cat)} duplicate events")
-    """
-    out = obspy.core.event.Catalog()
-    eq_ids = set()
-
-    for event in catalog:
-        if event.resource_id not in eq_ids:
-            out.append(event)
-            eq_ids.add(event.resource_id)
-
-    return out
 
 def get_p_s_times(eq, dist_deg, ttmodel):
     """
@@ -900,15 +577,15 @@ def collect_requests_event(
             else:
                 # Generate requests for each channel
                 for cha in sta:
-                    t_end = min(t_end, datetime.datetime.now().timestamp() - 120)
+                    t_end = min(t_end, datetime.now().timestamp() - 120)
                     t_start = min(t_start, t_end)
                     requests_per_eq.append((
                         net.code,
                         sta.code,
                         cha.location_code,
                         cha.code,
-                        datetime.datetime.fromtimestamp(t_start, tz=datetime.timezone.utc).isoformat(),
-                        datetime.datetime.fromtimestamp(t_end, tz=datetime.timezone.utc).isoformat()
+                        datetime.fromtimestamp(t_start, tz=timezone.utc).isoformat(),
+                        datetime.fromtimestamp(t_end, tz=timezone.utc).isoformat()
                     ))
 
     return requests_per_eq, arrivals_per_eq, p_arrivals
@@ -967,7 +644,7 @@ def combine_requests(
     return combined_requests
 
 
-def get_missing_from_request(eq_id: str, requests: List[Tuple], st: obspy.Stream) -> dict:
+def get_missing_from_request(eq_id: str, requests: List[Tuple], st: Stream) -> dict:
     """
     Compare requested seismic data against what's present in a Stream.
     Handles comma-separated values for location and channel codes.
@@ -1043,55 +720,6 @@ def get_missing_from_request(eq_id: str, requests: List[Tuple], st: obspy.Stream
             result[eq_id][station_key] = missing_channels
     
     return result
-
-def get_sds_filenames(
-    n: str,
-    s: str,
-    l: str,
-    c: str,
-    time_start: UTCDateTime,
-    time_end: UTCDateTime,
-    sds_path: str
-) -> List[str]:
-    """Generate SDS (SeisComP Data Structure) format filenames for a time range.
-
-    Creates a list of daily SDS format filenames for given network, station,
-    location, and channel codes over a specified time period.
-
-    Args:
-        n: Network code.
-        s: Station code.
-        l: Location code.
-        c: Channel code.
-        time_start: Start time for data requests.
-        time_end: End time for data requests.
-        sds_path: Root path of the SDS archive.
-
-    Returns:
-        List of SDS format filepaths in the form:
-        /sds_path/YEAR/NETWORK/STATION/CHANNEL.D/NET.STA.LOC.CHA.D.YEAR.DOY
-
-    Example:
-        >>> paths = get_sds_filenames(
-        ...     "IU", "ANMO", "00", "BHZ",
-        ...     UTCDateTime("2020-01-01"),
-        ...     UTCDateTime("2020-01-03"),
-        ...     "/data/seismic"
-        ... )
-    """
-    current_time = time_start
-    filenames = []
-    
-    while current_time <= time_end:
-        year = str(current_time.year)
-        doy = str(current_time.julday).zfill(3)
-        
-        path = f"{sds_path}/{year}/{n}/{s}/{c}.D/{n}.{s}.{l}.{c}.D.{year}.{doy}"
-        filenames.append(path)
-        
-        current_time += 86400  # Advance by one day in seconds
-    
-    return filenames
 
 
 def prune_requests(
@@ -1254,7 +882,7 @@ def archive_request(
 
         # Handle long station lists
         if len(request[1]) > 24:
-            st = obspy.Stream()
+            st = Stream()
             split_stations = request[1].split(',')
             for s in split_stations:
                 try:
@@ -1283,7 +911,7 @@ def archive_request(
         return
 
     # Group traces by day
-    traces_by_day = defaultdict(obspy.Stream)
+    traces_by_day = defaultdict(Stream)
     
     for tr in st:
         net = tr.stats.network
@@ -1294,7 +922,7 @@ def archive_request(
         endtime = tr.stats.endtime
 
         # Handle trace start leaking into previous day
-        day_boundary = UTCDateTime(starttime.date + datetime.timedelta(days=1))
+        day_boundary = UTCDateTime(starttime.date + timedelta(days=1))
         if (day_boundary - starttime) <= tr.stats.delta:
             starttime = day_boundary
         
@@ -1323,7 +951,7 @@ def archive_request(
         
         if os.path.exists(full_path):
             try:
-                existing_st = obspy.read(full_path)
+                existing_st = read(full_path)
                 existing_st += day_stream
                 existing_st.merge(method=-1, fill_value=None)
                 existing_st._cleanup(misalignment_threshold=0.25)
@@ -1337,7 +965,7 @@ def archive_request(
             if existing_st:
                 print(f"  ... Writing {full_path}")
 
-        existing_st = obspy.Stream([tr for tr in existing_st if len(tr.data) > 0])
+        existing_st = Stream([tr for tr in existing_st if len(tr.data) > 0])
 
         if existing_st:
             try:
@@ -1514,7 +1142,7 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
     # Try loading local inventory if specified
     if settings.station.local_inventory:
         try: 
-            inv = obspy.read_inventory(settings.station.local_inventory, level='channel')
+            inv = read_inventory(settings.station.local_inventory, level='channel')
         except Exception as e:
             print(f"Could not read {settings.station.local_inventory}:\n{e}")
 
@@ -1539,7 +1167,7 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
             avg_y = sum(np.sin(r) for r in lon_radians) / len(circle_searches)
             circ_center_lon = np.degrees(np.arctan2(avg_y, avg_x))
 
-            circ_distances = [ np.sqrt((circ_center_lat - p.coords.lat)**2 + (circ_center_lon - p.coords.lon)**2)
+            circ_distances = [ locations2degrees(circ_center_lat,circ_center_lon, p.coords.lat,p.coords.lon)
                             for p in circle_searches]
             max_circ_distances = max(circ_distances)
 
@@ -1585,6 +1213,12 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
 
             if _inv is not None:
                 inv = _inv if inv is None else inv + _inv
+
+        # Remove any events that may have been added by loosening geo searches. Also removes duplicates. 
+        try:
+            inv = filter_inventory_by_geo_constraints(inv,settings.station.geo_constraint)
+        except Exception as e:
+            print("filter_inventory_by_geo_constraits issue:",e)
 
     else:  # Query without geographic constraints
         try:
@@ -1663,7 +1297,7 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
     # Check for local catalog first
     if settings.event.local_catalog:
         try:
-            return obspy.read_events(settings.event.local_catalog)
+            return read_events(settings.event.local_catalog)
         except FileNotFoundError:
             raise FileNotFoundError(f"File not found: {settings.event.local_catalog}")
         except PermissionError:
@@ -1727,7 +1361,7 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
         avg_y = sum(np.sin(r) for r in lon_radians) / len(circle_searches)
         circ_center_lon = np.degrees(np.arctan2(avg_y, avg_x))
         
-        circ_distances = [ np.sqrt((circ_center_lat - p.coords.lat)**2 + (circ_center_lon - p.coords.lon)**2)
+        circ_distances = [ locations2degrees(circ_center_lat,circ_center_lon, p.coords.lat,p.coords.lon)
                          for p in circle_searches]
         max_circ_distances = max(circ_distances)
 
@@ -1780,7 +1414,13 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
             continue
     
     # Remove duplicates
-    catalog = remove_duplicate_events(catalog)
+    #catalog = remove_duplicate_events(catalog)
+
+    # Re-filter to remove anything that eclipsed original search. Also removes duplicates.
+    try:
+        catalog = filter_catalog_by_geo_constraints(catalog,settings.event.geo_constraint)
+    except Exception as e:
+        print("filter_catalog_by_geo_constraints issue:",e)
 
     return catalog
 
@@ -1956,7 +1596,10 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
     event_streams = []
     all_missing = {}
     for i, eq in enumerate(settings.event.selected_catalogs):
-        print(f"\nProcessing event {i+1}/{len(settings.event.selected_catalogs)}  |  OT: {str(eq.origins[0].time)[0:16]} LAT: {eq.origins[0].latitude:.2f} LON: {eq.origins[0].longitude:.2f}")
+        print(f"\nProcessing event {i+1}/{len(settings.event.selected_catalogs)}  \
+            |  OT: {str(eq.origins[0].time)[0:16]} \
+            LAT: {eq.origins[0].latitude:.2f} \
+            LON: {eq.origins[0].longitude:.2f}")
         
         # Check for cancellation
         if stop_event and stop_event.is_set():
@@ -2028,7 +1671,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
                     print(f"Error archiving request {request}:\n {str(e)}")
 
         # Read all data for this event
-        event_stream = obspy.Stream()
+        event_stream = Stream()
         for req in requests:
             query = SeismoQuery(
                 network=req[0],
@@ -2070,7 +1713,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
         # Now attempt to keep track of what data was missing. Note that this is not catching out-of-bounds data, for better or worse (probably better)
         missing = get_missing_from_request(str(eq.resource_id),requests,event_stream)
         #print("DEBUG missing: ", missing)
-        #print(event_stream)
+        #print("DEBUG stream: ", event_stream)
         #print("DEBUG requests: ", requests)
 
         all_missing.update(missing)
