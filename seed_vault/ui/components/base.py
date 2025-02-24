@@ -186,94 +186,12 @@ class BaseComponent:
             save_filter(self.settings)
             st.rerun()
 
-
-    def import_export(self):
-        def reset_import_setting_processed():
-            if uploaded_file is not None:
-                uploaded_file_info = f"{uploaded_file.name}-{uploaded_file.size}"               
-                if "uploaded_file_info" not in st.session_state or st.session_state.uploaded_file_info != uploaded_file_info:
-                    st.session_state['import_setting_processed'] = False
-                    st.session_state['uploaded_file_info'] = uploaded_file_info  
-
-        # st.sidebar.markdown("### Import/Export Settings")
-        
-        with st.expander("Import & Export", expanded=False):
-            tab1, tab2 = st.tabs(["Settings", f"{self.TXT.STEP.title()}s"])
-            with tab1:
-                config_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../service/config.cfg')
-                config_file_path = os.path.abspath(config_file_path)
-                
-                st.markdown("#### ⬇️ Export Settings")
-
-                if os.path.exists(config_file_path):
-                    with open(config_file_path, "r") as file:
-                        file_data = file.read()
-
-                    st.download_button(
-                        label="Download file",
-                        data=file_data,  
-                        file_name="config.cfg",  
-                        mime="application/octet-stream",  
-                        help="Download the current settings.",
-                        use_container_width=True,
-                    )
-                else:
-                    st.caption("No config file available for download.")
-
-                # Import settings should only be displayed if stage == 1
-                if self.stage == 1:
-                    st.markdown("#### 📂 Import Settings")
-                    uploaded_file = st.file_uploader(
-                        "Import Settings",type=["cfg"], on_change=reset_import_setting_processed,
-                        help="Upload a config file (.cfg) to update settings." , label_visibility="collapsed"
-                    )
-
-                    if uploaded_file:
-                        if not st.session_state.get('import_setting_processed', False):
-                            file_like_object = io.BytesIO(uploaded_file.getvalue())
-                            text_file_object = io.TextIOWrapper(file_like_object, encoding='utf-8')
-
-                            settings = SeismoLoaderSettings.from_cfg_file(text_file_object)
-                            if(settings.status_handler.has_errors()):
-                                errors = settings.status_handler.generate_status_report("errors")                           
-                                st.error(f"{errors}\n\n**Please review the errors in the imported file. Resolve them before proceeding.**")
-
-                                if(settings.status_handler.has_warnings()):
-                                    warning = settings.status_handler.generate_status_report("warnings")                           
-                                    st.warning(warning)                            
-                                settings.status_handler.display()
-
-                            else:    
-                                settings.event.geo_constraint = []
-                                settings.station.geo_constraint = []           
-                                settings.event.selected_catalogs=Catalog(events=None)    
-                                settings.station.selected_invs = None
-                                
-                                self.clear_all_data()
-                                # self.settings = settings
-                                for key, value in vars(settings).items():
-                                    setattr(self.settings, key, value)
-                                self.df_markers_prev= pd.DataFrame()
-                                self.refresh_map(reset_areas=True, clear_draw=True)
-                                st.session_state['import_setting_processed'] = True   
-                                
-                                if(settings.status_handler.has_warnings()):
-                                    warning = settings.status_handler.generate_status_report("warnings")                           
-                                    st.warning(warning) 
-
-                                st.success("Settings imported successfully!")   
-            with tab2:
-                c2_export = self.render_export_import()
-
-            return c2_export
-
     def event_filter(self):
 
         start_date, start_time = convert_to_datetime(self.settings.event.date_config.start_time)
         end_date, end_time     = convert_to_datetime(self.settings.event.date_config.end_time)
 
         with st.sidebar:
-            self.render_map_right_menu()
             with st.expander("### Filters", expanded=True):
                 client_options = list(self.settings.client_url_mapping.get_clients())
                 self.settings.event.client = st.selectbox(
@@ -334,22 +252,10 @@ class BaseComponent:
                     step=1.0, key="event-pg-depth"
                 )
 
-                self.render_map_handles()
-
-                # # Update button with disabled state based on service availability
-                # if st.button(
-                #     f"Update {self.TXT.STEP.title()}s",
-                #     key=self.get_key_element(f"Update {self.TXT.STEP}s"),
-                #     disabled=not is_service_available
-                # ):
-                #     self.refresh_map(reset_areas=False, clear_draw=False, rerun=False)
-                
-            c2_export = self.import_export()
-
+                self.render_map_buttons()
 
         self.refresh_filters()
 
-        return c2_export
 
 
     def station_filter(self):
@@ -362,9 +268,7 @@ class BaseComponent:
             start_time = time(hour=0, minute=0, second=0)
             end_time   = time(hour=1, minute=0, second=0)
 
-        with st.sidebar:
-            self.render_map_right_menu()
-                
+        with st.sidebar:                
             with st.expander("### Filters", expanded=True):
                 client_options = list(self.settings.client_url_mapping.get_clients())
                 self.settings.station.client = st.selectbox(
@@ -438,22 +342,9 @@ class BaseComponent:
 
                 self.settings.station.level = Levels.CHANNEL
 
-                self.render_map_handles()
-
-                # # Update button with disabled state based on service availability
-                # if st.button(
-                #     f"Update {self.TXT.STEP.title()}s",
-                #     key=self.get_key_element(f"Update {self.TXT.STEP}s"),
-                #     disabled=not is_service_available
-                # ):
-                #     self.refresh_map(reset_areas=False, clear_draw=False, rerun=False)
-
-            c2_export = self.import_export()
+                self.render_map_buttons()
 
         self.refresh_filters()
-        # save_filter(self.settings)
-
-        return c2_export
 
     # ====================
     # MAP
@@ -757,8 +648,8 @@ class BaseComponent:
             self.settings.station.selected_invs = None
 
         # not sure if plotting these area tables is useful
-        #self.update_rectangle_areas()
-        #self.update_circle_areas()
+        self.update_rectangle_areas()
+        self.update_circle_areas()
 
 
     def get_selected_marker_info(self):
@@ -941,6 +832,37 @@ class BaseComponent:
     # ===================
     # FILES
     # ===================
+    def exp_imp_events_stations(self):
+        st.write(f"#### Export/Import {self.TXT.STEP.title()}s")
+
+        c11, c22 = st.columns([1,1])
+        with c11:
+            # @NOTE: Download Selected had to be with the table.
+            # if (len(self.catalogs.events) > 0 or len(self.inventories.get_contents().get('stations')) > 0):
+            st.download_button(
+                f"Download All", 
+                key=self.get_key_element(f"Download All {self.TXT.STEP.title()}s"),
+                data=self.export_xml_bytes(export_selected=False),
+                file_name = f"{self.TXT.STEP}s.xml",
+                mime="application/xml",
+                disabled=(len(self.catalogs.events) == 0 and (self.inventories is None or len(self.inventories.get_contents().get('stations')) == 0))
+            )
+
+        def reset_uploaded_file_processed():
+            st.session_state['uploaded_file_processed'] = False
+
+        uploaded_file = st.file_uploader(f"Import {self.TXT.STEP.title()}s from a File", on_change=lambda:  reset_uploaded_file_processed())
+        if uploaded_file and not st.session_state['uploaded_file_processed']:
+            self.clear_all_data()
+            self.refresh_map(reset_areas=True, clear_draw=True)
+            self.handle_get_data(is_import=True, uploaded_file=uploaded_file)
+            st.session_state['uploaded_file_processed'] = True
+
+        if self.has_error and "Import Error" in self.error:
+            st.error(self.error)
+
+        return c22
+    
     def export_xml_bytes(self, export_selected: bool = True):
         with io.BytesIO() as f:
             if not self.df_markers.empty and len(self.df_markers) > 0:
@@ -1033,41 +955,92 @@ class BaseComponent:
     
     def render_map_handles(self):
         # not sure if plotting these area tables is useful
-        #self.update_rectangle_areas()
-        #self.update_circle_areas()
-        self.render_map_buttons()
+        with st.expander("Shape tools - edit areas", expanded=True):
+            self.update_rectangle_areas()
+            self.update_circle_areas()
+        # self.render_map_buttons()
         
 
-    def render_export_import(self):
-        st.write(f"#### Export/Import {self.TXT.STEP.title()}s")
+    def render_import_export(self):
+        def reset_import_setting_processed():
+            if uploaded_file is not None:
+                uploaded_file_info = f"{uploaded_file.name}-{uploaded_file.size}"               
+                if "uploaded_file_info" not in st.session_state or st.session_state.uploaded_file_info != uploaded_file_info:
+                    st.session_state['import_setting_processed'] = False
+                    st.session_state['uploaded_file_info'] = uploaded_file_info  
 
-        c11, c22 = st.columns([1,1])
-        with c11:
-            # @NOTE: Download Selected had to be with the table.
-            # if (len(self.catalogs.events) > 0 or len(self.inventories.get_contents().get('stations')) > 0):
-            st.download_button(
-                f"Download All", 
-                key=self.get_key_element(f"Download All {self.TXT.STEP.title()}s"),
-                data=self.export_xml_bytes(export_selected=False),
-                file_name = f"{self.TXT.STEP}s.xml",
-                mime="application/xml",
-                disabled=(len(self.catalogs.events) == 0 and (self.inventories is None or len(self.inventories.get_contents().get('stations')) == 0))
-            )
+        # st.sidebar.markdown("### Import/Export Settings")
+        
+        with st.expander("Import & Export", expanded=True):
+            tab1, tab2 = st.tabs([f"{self.TXT.STEP.title()}s", "Settings"])
+            with tab2:
+                config_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../service/config.cfg')
+                config_file_path = os.path.abspath(config_file_path)
+                
+                st.markdown("#### ⬇️ Export Settings")
 
-        def reset_uploaded_file_processed():
-            st.session_state['uploaded_file_processed'] = False
+                if os.path.exists(config_file_path):
+                    with open(config_file_path, "r") as file:
+                        file_data = file.read()
 
-        uploaded_file = st.file_uploader(f"Import {self.TXT.STEP.title()}s from a File", on_change=lambda:  reset_uploaded_file_processed())
-        if uploaded_file and not st.session_state['uploaded_file_processed']:
-            self.clear_all_data()
-            self.refresh_map(reset_areas=True, clear_draw=True)
-            self.handle_get_data(is_import=True, uploaded_file=uploaded_file)
-            st.session_state['uploaded_file_processed'] = True
+                    st.download_button(
+                        label="Download file",
+                        data=file_data,  
+                        file_name="config.cfg",  
+                        mime="application/octet-stream",  
+                        help="Download the current settings.",
+                        use_container_width=True,
+                    )
+                else:
+                    st.caption("No config file available for download.")
 
-        if self.has_error and "Import Error" in self.error:
-            st.error(self.error)
+                # Import settings should only be displayed if stage == 1
+                if self.stage == 1:
+                    st.markdown("#### 📂 Import Settings")
+                    uploaded_file = st.file_uploader(
+                        "Import Settings",type=["cfg"], on_change=reset_import_setting_processed,
+                        help="Upload a config file (.cfg) to update settings." , label_visibility="collapsed"
+                    )
 
-        return c22
+                    if uploaded_file:
+                        if not st.session_state.get('import_setting_processed', False):
+                            file_like_object = io.BytesIO(uploaded_file.getvalue())
+                            text_file_object = io.TextIOWrapper(file_like_object, encoding='utf-8')
+
+                            settings = SeismoLoaderSettings.from_cfg_file(text_file_object)
+                            if(settings.status_handler.has_errors()):
+                                errors = settings.status_handler.generate_status_report("errors")                           
+                                st.error(f"{errors}\n\n**Please review the errors in the imported file. Resolve them before proceeding.**")
+
+                                if(settings.status_handler.has_warnings()):
+                                    warning = settings.status_handler.generate_status_report("warnings")                           
+                                    st.warning(warning)                            
+                                settings.status_handler.display()
+
+                            else:    
+                                settings.event.geo_constraint = []
+                                settings.station.geo_constraint = []           
+                                settings.event.selected_catalogs=Catalog(events=None)    
+                                settings.station.selected_invs = None
+                                
+                                self.clear_all_data()
+                                # self.settings = settings
+                                for key, value in vars(settings).items():
+                                    setattr(self.settings, key, value)
+                                self.df_markers_prev= pd.DataFrame()
+                                self.refresh_map(reset_areas=True, clear_draw=True)
+                                st.session_state['import_setting_processed'] = True   
+                                
+                                if(settings.status_handler.has_warnings()):
+                                    warning = settings.status_handler.generate_status_report("warnings")                           
+                                    st.warning(warning) 
+
+                                st.success("Settings imported successfully!")   
+            with tab1:
+                c2_export = self.exp_imp_events_stations()
+
+            return c2_export
+    
         
 
     def render_map_right_menu(self):
@@ -1088,8 +1061,8 @@ class BaseComponent:
         info_display = f"ℹ️ Use **shape tools** to search **{self.TXT.STEP}s** in confined areas   "
         info_display += "\nℹ️ Use **Reload** button to refresh map if needed   "
 
-        #if self.fig_color_bar and self.step_type == Steps.EVENT:
-        #    info_display += "ℹ️ Marker size is associated with Earthquake magnitude."
+        if self.step_type == Steps.EVENT:
+           info_display += "\nℹ️ **Marker size** is associated with **earthquake magnitude**"
 
         st.caption(info_display)
         
@@ -1310,8 +1283,13 @@ class BaseComponent:
         if df_selected.empty:
             return
 
-        preferred_column = "place"
-        unique_column = "magnitude"  # Extra column to make each entry unique
+        if self.step_type == Steps.EVENT:
+            preferred_column = "place"
+            unique_column = "magnitude"  # Extra column to make each entry unique
+
+        if self.step_type == Steps.STATION:
+            preferred_column = "network"
+            unique_column = "station"  # Extra column to make each entry unique
 
         ## causing issue in STATION table which doesn't have "magnitude" (NEEDS REVIEW)
         if preferred_column not in df_selected.columns or unique_column not in df_selected.columns:
@@ -1352,6 +1330,10 @@ class BaseComponent:
 
     def render(self):
 
+        with st.sidebar:
+            self.render_map_handles()
+            self.render_map_right_menu()
+
         if self.has_error and "Import Error" not in self.error:
             c1_err, c2_err = st.columns([4,1])
             with c1_err:
@@ -1365,11 +1347,14 @@ class BaseComponent:
                     st.rerun()
 
         if self.step_type == Steps.EVENT:
-            c2_export = self.event_filter()
+            self.event_filter()
         
 
         if self.step_type == Steps.STATION:
-            c2_export = self.station_filter()
+            self.station_filter()
+
+        with st.sidebar:
+            c2_export = self.render_import_export()
 
         self.get_prev_step_df()
 
