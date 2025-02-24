@@ -281,20 +281,30 @@ class WaveformDisplay:
         self.ttmodel = TauPyModel("iasp91")
         self.streams = [] 
         self.console = ConsoleDisplay()  # Add console display
+        self.missing_data = {}
 
-    def apply_filters(self, stream: Stream) -> Stream:
+    def apply_filters(self, stream) -> Stream:
         """Filter stream based on user selection"""
         filtered_stream = Stream()
         
+        # Handle case where stream is a list of traces
+        if isinstance(stream, list):
+            stream = Stream(traces=stream)
+        
+        if not stream:
+            return filtered_stream
+        
         for tr in stream:
-            if (self.filter_menu.network_filter == "All networks" or 
-                tr.stats.network == self.filter_menu.network_filter) and \
-               (self.filter_menu.station_filter == "All stations" or 
-                tr.stats.station == self.filter_menu.station_filter) and \
-               (self.filter_menu.channel_filter == "All channels" or 
-                tr.stats.channel == self.filter_menu.channel_filter):
-                filtered_stream += tr
-                
+            try:
+                if (self.filter_menu.network_filter == "All networks" or 
+                    tr.stats.network == self.filter_menu.network_filter) and \
+                   (self.filter_menu.station_filter == "All stations" or 
+                    tr.stats.station == self.filter_menu.station_filter) and \
+                   (self.filter_menu.channel_filter == "All channels" or 
+                    tr.stats.channel == self.filter_menu.channel_filter):
+                    filtered_stream += tr
+            except AttributeError as e:
+                continue
         return filtered_stream
     
 
@@ -305,8 +315,13 @@ class WaveformDisplay:
         # Capture stdout/stderr for logging
         with redirect_stdout(StringIO()) as stdout, redirect_stderr(StringIO()) as stderr:
             try:
-                self.streams = run_event(self.settings, stop_event)
-                success = True
+                # Update to unpack the tuple returned by run_event
+                streams_and_missing = run_event(self.settings, stop_event)
+                if streams_and_missing:
+                    self.streams, self.missing_data = streams_and_missing
+                    success = True
+                else:
+                    success = False
             except Exception as e:
                 success = False
                 print(f"Error: {str(e)}")  # This will be captured in the output
@@ -790,14 +805,6 @@ class WaveformDisplay:
             key="view_selector_waveform"
         )
         
-        # Create missing data display before checking streams
-        missing_data_display = MissingDataDisplay(
-            self.streams,
-            self.missing_data,
-            self.settings
-        )
-        missing_data_display.render()
-        
         if not self.streams:
             st.info("No waveforms to display. Use the 'Get Waveforms' button to retrieve waveforms.")
             return
@@ -892,7 +899,13 @@ class WaveformDisplay:
                         st.pyplot(fig)
                 else:
                     st.warning("No waveforms available for the selected station.")
-
+        # Create missing data display before checking streams
+        missing_data_display = MissingDataDisplay(
+            self.streams,
+            self.missing_data,
+            self.settings
+        )
+        missing_data_display.render()
 class WaveformComponents:
     settings: SeismoLoaderSettings
     filter_menu: WaveformFilterMenu
