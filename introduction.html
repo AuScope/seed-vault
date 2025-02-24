@@ -44,7 +44,12 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Introduction</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Introduction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#features">Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#platforms">Platforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#flexible">Flexible</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="app.html">Seed Vault App</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli.html">CLI commands</a></li>
@@ -92,7 +97,49 @@
              
   <section id="introduction">
 <h1>Introduction<a class="headerlink" href="#introduction" title="Link to this heading"></a></h1>
-<p>Seed Vault is a seismic FDSN data search, view, and download tool.</p>
+<p>Seismology services around the globe utilise the FDSN protocol, a well-defined free and open standard for
+transmission and archiving of seismic waveform data, metadata, and earthquake information.</p>
+<p>Unfortunately this only benefits those who have the software skills to wrangle with low-level HTTP requests and responses.</p>
+<p>For the beginners, hobbyists and less software-savvy, the available pool of fully featured, open source, easy to use
+GUI driven software tools is very limited.</p>
+<p>To solve this problem we have created <strong>seed-vault</strong> an easy to use, open source GUI that has all the features required to access
+and store seismic data.</p>
+<section id="features">
+<h2>Features<a class="headerlink" href="#features" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Download &amp; view EQ arrival data via a station-to-event OR an event-to-station search</p></li>
+<li><p>Quickly download and archive bulk continuous data, saving your progress along the way</p></li>
+<li><p>View and plot event arrivals</p></li>
+<li><p>A CLI scripting tool to automate common jobs</p></li>
+<li><p>Search, export, or import earthquake event catalogs and station metadata</p></li>
+<li><p>Download restricted/embargoed data by storing auth passwords in local config</p></li>
+<li><p>Add and use custom FDSN servers</p></li>
+<li><p>Saves all downloaded data as miniseed in a local SDS database to speed up future retrievals</p></li>
+<li><p>Local sqlite3 database editor</p></li>
+<li><p>Load and save search parameters and configuration</p></li>
+</ul>
+</section>
+<section id="platforms">
+<h2>Platforms<a class="headerlink" href="#platforms" title="Link to this heading"></a></h2>
+<p>Runs on:</p>
+<ul class="simple">
+<li><p>Linux</p></li>
+<li><p>Windows</p></li>
+<li><p>MacOS</p></li>
+</ul>
+</section>
+<section id="flexible">
+<h2>Flexible<a class="headerlink" href="#flexible" title="Link to this heading"></a></h2>
+<p>Can run:</p>
+<ul class="simple">
+<li><p>As web service (local-only unsecured mode)</p></li>
+<li><p>From the command line (CLI)</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>This project is under active development.</strong></p>
+</div>
+</section>
 </section>
 
 
