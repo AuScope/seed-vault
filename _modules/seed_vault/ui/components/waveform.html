@@ -48,7 +48,18 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../app.html">Seed Vault App</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../app.html">Seed Vault App</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../app_main_flows.html">Main Flows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../app_run_from_config.html">Direct parameter input</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../app_db_explorer.html">Database Explorer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../app_settings.html">App Settings</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#data">Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#credentials">Credentials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#clients">Clients</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../cli.html">CLI commands</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../../seed_vault.html">seed_vault package</a><ul>
@@ -93,7 +104,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for seed_vault.ui.components.waveform</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">obspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Stream</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">obspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">UTCDateTime</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
@@ -107,12 +118,15 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">html</span><span class="w"> </span><span class="kn">import</span> <span class="n">escape</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.ui.components.continuous_waveform</span><span class="w"> </span><span class="kn">import</span> <span class="n">ContinuousComponents</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.service.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_client_services</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">io</span><span class="w"> </span><span class="kn">import</span> <span class="n">StringIO</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">redirect_stdout</span><span class="p">,</span> <span class="n">redirect_stderr</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.ui.pages.helpers.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">save_filter</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+
 
 
 <span class="n">query_thread</span> <span class="o">=</span> <span class="kc">None</span>
@@ -221,14 +235,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Waveform Controls&quot;</span><span class="p">)</span>
         
-        <span class="c1"># Add view selector at the top</span>
-        <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">radio</span><span class="p">(</span>
-            <span class="s2">&quot;View Mode&quot;</span><span class="p">,</span>
-            <span class="p">[</span><span class="s2">&quot;Waveform View&quot;</span><span class="p">,</span> <span class="s2">&quot;Log View&quot;</span><span class="p">],</span>
-            <span class="n">key</span><span class="o">=</span><span class="s2">&quot;waveform_view_mode&quot;</span><span class="p">,</span>
-            <span class="n">horizontal</span><span class="o">=</span><span class="kc">True</span>
-        <span class="p">)</span>
-        
+
         <span class="c1"># Step 1: Data Retrieval Settings</span>
         <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Step 1: Data Source&quot;</span><span class="p">,</span> <span class="n">expanded</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
             <span class="n">st</span><span class="o">.</span><span class="n">subheader</span><span class="p">(</span><span class="s2">&quot;🔍 Time Window&quot;</span><span class="p">)</span>
@@ -277,7 +284,7 @@
             <span class="c1"># Channel Priority Input</span>
             <span class="n">channel_pref</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">text_input</span><span class="p">(</span>
                 <span class="s2">&quot;Channel Priority&quot;</span><span class="p">,</span>
-                <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">waveform</span><span class="o">.</span><span class="n">channel_pref</span><span class="p">,</span> <span class="c1"># or &quot;CH,HH,BH,EH,HN,EN,SH,LH&quot;, ### this should just default to the config settings</span>
+                <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">waveform</span><span class="o">.</span><span class="n">channel_pref</span><span class="p">,</span>
                 <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Order of preferred channels (e.g., HH,BH,EH). Only the first existing channel in this list will be downloaded.&quot;</span><span class="p">,</span>
                 <span class="n">key</span><span class="o">=</span><span class="s2">&quot;channel_pref&quot;</span>
             <span class="p">)</span>
@@ -297,7 +304,7 @@
             <span class="c1"># Location Priority Input</span>
             <span class="n">location_pref</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">text_input</span><span class="p">(</span>
                 <span class="s2">&quot;Location Priority&quot;</span><span class="p">,</span>
-                <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">waveform</span><span class="o">.</span><span class="n">location_pref</span><span class="p">,</span> <span class="c1"># or &quot;10,00,20,30&quot;, ### this should just default to the config settings</span>
+                <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">waveform</span><span class="o">.</span><span class="n">location_pref</span><span class="p">,</span>
                 <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Order of preferred location codes (e.g., 00,--,10,20). Only the first existing location code in this list will be downloaded.. Use -- or &#39;&#39; for blank location.&quot;</span><span class="p">,</span>
                 <span class="n">key</span><span class="o">=</span><span class="s2">&quot;location_pref&quot;</span>
             <span class="p">)</span>
@@ -396,6 +403,8 @@
             <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2"> Waveform client is set to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">waveform</span><span class="o">.</span><span class="n">client</span><span class="si">}</span><span class="s2">, which seems does not exists. Please navigate to the settings page and use the Clients tab to add the client or fix the stored config.cfg file.&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ttmodel</span> <span class="o">=</span> <span class="n">TauPyModel</span><span class="p">(</span><span class="s2">&quot;iasp91&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">streams</span> <span class="o">=</span> <span class="p">[]</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">console</span> <span class="o">=</span> <span class="n">ConsoleDisplay</span><span class="p">()</span>  <span class="c1"># Add console display</span>
+
 <div class="viewcode-block" id="WaveformDisplay.apply_filters">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.waveform.WaveformDisplay.apply_filters">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">apply_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">:</span> <span class="n">Stream</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Stream</span><span class="p">:</span>
@@ -418,59 +427,53 @@
 <div class="viewcode-block" id="WaveformDisplay.fetch_data">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.waveform.WaveformDisplay.fetch_data">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">fetch_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">streams</span> <span class="o">=</span> <span class="n">run_event</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span> <span class="n">stop_event</span><span class="p">)</span>
-        <span class="c1"># st.session_state[&quot;query_done&quot;] = True  # Mark as done</span>
-        <span class="c1"># st.session_state[&quot;trigger_rerun&quot;] = True  # 🔹 Set flag for rerun</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fetches waveform data in a background thread with logging.</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="c1"># Capture stdout/stderr for logging</span>
+        <span class="k">with</span> <span class="n">redirect_stdout</span><span class="p">(</span><span class="n">StringIO</span><span class="p">())</span> <span class="k">as</span> <span class="n">stdout</span><span class="p">,</span> <span class="n">redirect_stderr</span><span class="p">(</span><span class="n">StringIO</span><span class="p">())</span> <span class="k">as</span> <span class="n">stderr</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">streams</span> <span class="o">=</span> <span class="n">run_event</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span> <span class="n">stop_event</span><span class="p">)</span>
+                <span class="n">success</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># This will be captured in the output</span>
+            
+            <span class="c1"># Capture output for logs</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="n">stdout</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span> <span class="o">+</span> <span class="n">stderr</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">output</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">accumulated_output</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
 
         <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
-        <span class="s2">&quot;query_done&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>   <span class="c1"># Mark query as done</span>
-        <span class="s2">&quot;trigger_rerun&quot;</span><span class="p">:</span> <span class="kc">True</span> <span class="c1"># 🚀 Set flag for UI to trigger rerun</span>
-    <span class="p">})</span></div>
-
-        <span class="c1"># if self.streams:</span>
-        <span class="c1">#     # Update filter menu with first stream</span>
-        <span class="c1">#     self.filter_menu.update_available_channels(self.streams[0])</span>
-        <span class="c1">#     st.success(f&quot;Successfully retrieved waveforms for {len(self.streams)} events.&quot;)</span>
-        <span class="c1"># else:</span>
-        <span class="c1">#     st.warning(&quot;No waveforms retrieved. Please check your selection criteria.&quot;)</span>
-
-        <span class="c1"># st.rerun()  # Refresh UI after completion</span>
-
-    <span class="c1"># def retrieve_waveforms(self):</span>
-    <span class="c1">#     &quot;&quot;&quot;Retrieve waveforms and store as ObsPy streams&quot;&quot;&quot;</span>
-    <span class="c1">#     global query_thread, stop_event</span>
-    <span class="c1">#     if not self.settings.event.selected_catalogs or not self.settings.station.selected_invs:</span>
-    <span class="c1">#         st.warning(&quot;Please select events and stations before downloading waveforms.&quot;)</span>
-    <span class="c1">#         return</span>
-        
-    <span class="c1">#     stop_event.clear()  # Reset the cancellation flag</span>
-
-    <span class="c1">#     query_thread = threading.Thread(target=self.fetch_data, daemon=True)</span>
-    <span class="c1">#     query_thread.start() </span>
-
-    <span class="c1">#     st.session_state[&quot;query_done&quot;] = False  # Reset query flag</span>
-    <span class="c1">#     st.session_state[&quot;trigger_rerun&quot;] = False  # Reset rerun flag</span>
+            <span class="s2">&quot;query_done&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;is_downloading&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;trigger_rerun&quot;</span><span class="p">:</span> <span class="kc">True</span>
+        <span class="p">})</span></div>
 
 
 <div class="viewcode-block" id="WaveformDisplay.retrieve_waveforms">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.waveform.WaveformDisplay.retrieve_waveforms">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">retrieve_waveforms</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Retrieve waveforms and store as ObsPy streams&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initiates waveform retrieval in a background thread with cancellation support</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">selected_catalogs</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">selected_invs</span><span class="p">:</span>
             <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Please select events and stations before downloading waveforms.&quot;</span><span class="p">)</span>
             <span class="k">return</span>
-            
-        <span class="bp">self</span><span class="o">.</span><span class="n">streams</span> <span class="o">=</span> <span class="n">run_event</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>  <span class="c1"># This now returns list of streams</span>
-        
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">streams</span><span class="p">:</span>
-            <span class="c1"># Update filter menu with first stream</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">filter_menu</span><span class="o">.</span><span class="n">update_available_channels</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">streams</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successfully retrieved waveforms for </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">streams</span><span class="p">)</span><span class="si">}</span><span class="s2"> events.&quot;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No waveforms retrieved. Please check your selection criteria.&quot;</span><span class="p">)</span></div>
+
+        <span class="n">stop_event</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>  <span class="c1"># Reset cancellation flag</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;query_thread&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fetch_data</span><span class="p">,</span> <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;query_thread&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+        <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+            <span class="s2">&quot;is_downloading&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;query_done&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;polling_active&quot;</span><span class="p">:</span> <span class="kc">True</span>
+        <span class="p">})</span>
+
+        <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span></div>
 
 
-            
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_trace_color</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tr</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get color based on channel component&quot;&quot;&quot;</span>
         <span class="c1"># Extract last character of channel code</span>
@@ -789,7 +792,7 @@
         <span class="c1"># Sort traces by distance (can&#39;t do via starttime since it&#39;s all the same station)</span>
         <span class="k">for</span> <span class="n">tr</span> <span class="ow">in</span> <span class="n">stream</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="p">,</span> <span class="s1">&#39;distance_km&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">distance_km</span><span class="p">:</span>
-                <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">distance_km</span> <span class="o">=</span> <span class="mi">999999</span>
+                <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">distance_km</span> <span class="o">=</span> <span class="mi">99999</span>
         <span class="n">stream</span> <span class="o">=</span> <span class="n">Stream</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">tr</span><span class="p">:</span> <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">distance_km</span><span class="p">))</span>
         
         <span class="c1"># Get current page&#39;s traces</span>
@@ -930,6 +933,7 @@
         <span class="c1"># Create missing data display before checking streams</span>
         <span class="n">missing_data_display</span> <span class="o">=</span> <span class="n">MissingDataDisplay</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">streams</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">missing_data</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">settings</span>
         <span class="p">)</span>
         <span class="n">missing_data_display</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
@@ -944,8 +948,9 @@
                 <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No events available.&quot;</span><span class="p">)</span>
                 <span class="k">return</span>
             
+            <span class="c1"># it&#39;s possible an event doesn&#39;t have a magnitude TODO</span>
             <span class="n">event_options</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="sa">f</span><span class="s2">&quot;Event </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">origins</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">time</span><span class="si">}</span><span class="s2"> M</span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">magnitudes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">mag</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Event </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">origins</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">time</span><span class="si">}</span><span class="s2"> M</span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">magnitudes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">mag</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;region&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Unknown Region&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
                 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">event</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">events</span><span class="p">)</span>
             <span class="p">]</span>
             <span class="n">selected_event_idx</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
@@ -1044,36 +1049,83 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">filter_menu</span> <span class="o">=</span> <span class="n">WaveformFilterMenu</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">waveform_display</span> <span class="o">=</span> <span class="n">WaveformDisplay</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_menu</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">continuous_components</span> <span class="o">=</span> <span class="n">ContinuousComponents</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">console</span> <span class="o">=</span> <span class="n">ConsoleDisplay</span><span class="p">()</span>  <span class="c1"># Add console display</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">console</span> <span class="o">=</span> <span class="n">ConsoleDisplay</span><span class="p">()</span>
         
+        <span class="c1"># Pass console to WaveformDisplay</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">waveform_display</span><span class="o">.</span><span class="n">console</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">console</span>
+        
+        <span class="c1"># Initialize session state</span>
+        <span class="n">required_states</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;is_downloading&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;query_done&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;polling_active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;query_thread&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;trigger_rerun&quot;</span><span class="p">:</span> <span class="kc">False</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">required_states</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">:</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+
+<div class="viewcode-block" id="WaveformComponents.render_polling_ui">
+<a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.waveform.WaveformComponents.render_polling_ui">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">render_polling_ui</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handles UI updates while monitoring background thread status</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;is_downloading&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">spinner</span><span class="p">(</span><span class="s2">&quot;Downloading waveforms... (this may take several minutes)&quot;</span><span class="p">):</span>
+                <span class="n">query_thread</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;query_thread&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">query_thread</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">query_thread</span><span class="o">.</span><span class="n">is_alive</span><span class="p">():</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">query_thread</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error in background thread: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="c1"># Add error to console output</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">accumulated_output</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">accumulated_output</span> <span class="o">=</span> <span class="p">[]</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">accumulated_output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+                        <span class="s2">&quot;is_downloading&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                        <span class="s2">&quot;query_done&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                        <span class="s2">&quot;query_thread&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="s2">&quot;polling_active&quot;</span><span class="p">:</span> <span class="kc">False</span>
+                    <span class="p">})</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span>
+
+                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;polling_active&quot;</span><span class="p">):</span>
+                    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>  <span class="c1"># Brief pause between checks</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span></div>
+
+
 <div class="viewcode-block" id="WaveformComponents.render">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.waveform.WaveformComponents.render">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">selected_workflow</span> <span class="o">==</span> <span class="n">WorkflowType</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">continuous_components</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
             <span class="k">return</span>
+
+        <span class="c1"># Create tabs for Waveform and Log views</span>
+        <span class="n">waveform_tab</span><span class="p">,</span> <span class="n">log_tab</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">tabs</span><span class="p">([</span><span class="s2">&quot;📊 Waveform View&quot;</span><span class="p">,</span> <span class="s2">&quot;📝 Log View&quot;</span><span class="p">])</span>
+
         
         <span class="c1"># Always render filter menu (sidebar) first</span>
         <span class="n">current_stream</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">waveform_display</span><span class="o">.</span><span class="n">streams</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">waveform_display</span><span class="o">.</span><span class="n">streams</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">filter_menu</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">current_stream</span><span class="p">)</span>
+
+        <span class="c1"># Handle content based on active tab</span>
+        <span class="k">with</span> <span class="n">waveform_tab</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_render_waveform_view</span><span class="p">()</span>
         
-        <span class="c1"># Then handle main content</span>
-        <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;waveform_view_mode&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;Log View&quot;</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_render_log_view</span><span class="p">()</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_render_waveform_view</span><span class="p">()</span></div>
+        <span class="k">with</span> <span class="n">log_tab</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_render_log_view</span><span class="p">()</span></div>
+
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_render_waveform_view</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">st</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Waveform Analysis&quot;</span><span class="p">)</span>
 
-        <span class="c1"># Initialize the download state in session state if not exists</span>
-        <span class="k">if</span> <span class="s2">&quot;is_downloading&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">:</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">is_downloading</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="k">if</span> <span class="s2">&quot;current_figure&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">:</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">current_figure</span> <span class="o">=</span> <span class="kc">None</span>
-
-        <span class="c1"># Create three columns for the controls (removed the fourth column)</span>
+        <span class="c1"># Create three columns for the controls</span>
         <span class="n">col1</span><span class="p">,</span> <span class="n">col2</span><span class="p">,</span> <span class="n">col3</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
         
         <span class="c1"># Force Re-download toggle in first column</span>
@@ -1091,7 +1143,7 @@
             <span class="n">get_waveforms_button</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span>
                 <span class="s2">&quot;Get Waveforms&quot;</span><span class="p">,</span>
                 <span class="n">key</span><span class="o">=</span><span class="s2">&quot;get_waveforms&quot;</span><span class="p">,</span>
-                <span class="n">disabled</span><span class="o">=</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">is_downloading</span><span class="p">,</span>
+                <span class="n">disabled</span><span class="o">=</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;is_downloading&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
                 <span class="n">use_container_width</span><span class="o">=</span><span class="kc">True</span>
             <span class="p">)</span>
 
@@ -1099,32 +1151,31 @@
         <span class="k">with</span> <span class="n">col3</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;Cancel Download&quot;</span><span class="p">,</span> 
                         <span class="n">key</span><span class="o">=</span><span class="s2">&quot;cancel_download&quot;</span><span class="p">,</span>
-                        <span class="n">disabled</span><span class="o">=</span><span class="ow">not</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">is_downloading</span><span class="p">,</span>
+                        <span class="n">disabled</span><span class="o">=</span><span class="ow">not</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;is_downloading&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
                         <span class="n">use_container_width</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
                 <span class="n">stop_event</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>  <span class="c1"># Signal cancellation</span>
                 <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Cancelling query...&quot;</span><span class="p">)</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">is_downloading</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+                    <span class="s2">&quot;is_downloading&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                    <span class="s2">&quot;polling_active&quot;</span><span class="p">:</span> <span class="kc">False</span>
+                <span class="p">})</span>
                 <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span>
 
+        <span class="c1"># Download status indicator</span>
+        <span class="n">status_container</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">empty</span><span class="p">()</span>
+        
+        <span class="c1"># Show appropriate status message</span>
         <span class="k">if</span> <span class="n">get_waveforms_button</span><span class="p">:</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">is_downloading</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span>  <span class="c1"># Immediate UI update</span>
-
-        <span class="c1"># Show progress spinner and status</span>
-        <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">is_downloading</span><span class="p">:</span>
-            <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">spinner</span><span class="p">(</span><span class="s2">&quot;Downloading waveforms... (this may take several minutes)&quot;</span><span class="p">):</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="c1"># Execute retrieval in the spinner context</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_execute_waveform_retrieval</span><span class="p">()</span>
-                    
-                    <span class="c1"># Check if still downloading (not cancelled)</span>
-                    <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">is_downloading</span><span class="p">:</span>
-                        <span class="n">st</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s2">&quot;Download completed successfully!&quot;</span><span class="p">)</span>
-                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                    <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Download failed: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="k">finally</span><span class="p">:</span>
-                    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">is_downloading</span> <span class="o">=</span> <span class="kc">False</span>
-                    <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span>
+            <span class="n">status_container</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting waveform download...&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">waveform_display</span><span class="o">.</span><span class="n">retrieve_waveforms</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;is_downloading&quot;</span><span class="p">):</span>
+            <span class="c1"># status_container.info(&quot;Downloading waveforms... (this may take several minutes)&quot;)</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">spinner</span><span class="p">(</span><span class="s2">&quot;Downloading waveforms... (this may take several minutes)&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">render_polling_ui</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;query_done&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">waveform_display</span><span class="o">.</span><span class="n">streams</span><span class="p">:</span>
+            <span class="n">status_container</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successfully retrieved waveforms for </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">waveform_display</span><span class="o">.</span><span class="n">streams</span><span class="p">)</span><span class="si">}</span><span class="s2"> events.&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;query_done&quot;</span><span class="p">):</span>
+            <span class="n">status_container</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No waveforms retrieved. Please check your selection criteria.&quot;</span><span class="p">)</span>
 
         <span class="c1"># Display waveforms if they exist</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">waveform_display</span><span class="o">.</span><span class="n">streams</span><span class="p">:</span>
@@ -1132,10 +1183,9 @@
 
         <span class="c1"># Add download button at the bottom of the sidebar</span>
         <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="p">:</span>
-            <span class="c1"># Add some visual separation</span>
             <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="s2">&quot;---&quot;</span><span class="p">)</span>
-            <span class="c1"># Download PNG button</span>
-            <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">current_figure</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;current_figure&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
                 <span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
                 <span class="n">buf</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">()</span>
                 <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">current_figure</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;png&#39;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
@@ -1151,55 +1201,27 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;Download PNG&quot;</span><span class="p">,</span> <span class="n">disabled</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">use_container_width</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
+
     <span class="k">def</span><span class="w"> </span><span class="nf">_render_log_view</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">st</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Waveform Retrieval Logs&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">_init_terminal_style</span><span class="p">()</span>  <span class="c1"># Initialize terminal styling</span>
         
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">accumulated_output</span><span class="p">:</span>
-            <span class="c1"># Use ConsoleDisplay&#39;s formatting</span>
             <span class="n">log_text</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="s1">&#39;&lt;div class=&quot;terminal&quot; id=&quot;log-terminal&quot;&gt;&#39;</span>
                 <span class="s1">&#39;&lt;pre&gt;</span><span class="si">{}</span><span class="s1">&lt;/pre&gt;&#39;</span>
                 <span class="s1">&#39;&lt;/div&gt;&#39;</span>
             <span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">accumulated_output</span><span class="p">))</span>
-            
             <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="n">log_text</span><span class="p">,</span> <span class="n">unsafe_allow_html</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;No logs available yet. Perform a waveform download first.&quot;</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_execute_waveform_retrieval</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Wrap waveform retrieval with logging&quot;&quot;&quot;</span>
-        <span class="k">def</span><span class="w"> </span><span class="nf">retrieval_task</span><span class="p">():</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">waveform_display</span><span class="o">.</span><span class="n">retrieve_waveforms</span><span class="p">()</span>
-
-        <span class="c1"># Only show live logs if in Log View</span>
-        <span class="n">show_live</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;waveform_view_mode&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;Log View&quot;</span>
-        
-        <span class="k">if</span> <span class="n">show_live</span><span class="p">:</span>
-            <span class="n">success</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">run_with_logs</span><span class="p">(</span>
-                <span class="n">process_func</span><span class="o">=</span><span class="n">retrieval_task</span><span class="p">,</span>
-                <span class="n">status_message</span><span class="o">=</span><span class="s2">&quot;Downloading event waveforms...&quot;</span>
-            <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">with</span> <span class="n">redirect_stdout</span><span class="p">(</span><span class="n">StringIO</span><span class="p">())</span> <span class="k">as</span> <span class="n">stdout</span><span class="p">,</span> <span class="n">redirect_stderr</span><span class="p">(</span><span class="n">StringIO</span><span class="p">())</span> <span class="k">as</span> <span class="n">stderr</span><span class="p">:</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">result</span> <span class="o">=</span> <span class="n">retrieval_task</span><span class="p">()</span>
-                    <span class="n">success</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;&quot;</span>
-                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                    <span class="n">success</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-                
-                <span class="n">output</span> <span class="o">=</span> <span class="n">stdout</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span> <span class="o">+</span> <span class="n">stderr</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">accumulated_output</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
-        
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">accumulated_output</span><span class="p">:</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">console_logs</span> <span class="o">=</span> <span class="s1">&#39;&lt;br&gt;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">accumulated_output</span><span class="p">)</span></div>
-
+            <span class="n">st</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;No logs available yet. Perform a waveform download first.&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="MissingDataDisplay">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.waveform.MissingDataDisplay">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">MissingDataDisplay</span><span class="p">:</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">streams</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Stream</span><span class="p">],</span> <span class="n">settings</span><span class="p">:</span> <span class="n">SeismoLoaderSettings</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">streams</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Stream</span><span class="p">],</span> <span class="n">missing_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]],</span> <span class="n">settings</span><span class="p">:</span> <span class="n">SeismoLoaderSettings</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">streams</span> <span class="o">=</span> <span class="n">streams</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">missing_data</span> <span class="o">=</span> <span class="n">missing_data</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">settings</span>
     
     <span class="k">def</span><span class="w"> </span><span class="nf">_format_event_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -1210,24 +1232,49 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Identify events with no data and their missing channels&quot;&quot;&quot;</span>
         <span class="n">missing_events</span> <span class="o">=</span> <span class="p">[]</span>
         
-        <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">selected_catalogs</span><span class="p">:</span>
+        <span class="c1"># sort events by time? does this cause problems elsewhere? can we just sort selected_catalogs? do this elsewhere? REVIEW</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">catalog</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">selected_catalogs</span> <span class="c1">#.copy() #need copy?</span>
+            <span class="n">catalog</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">origins</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="n">UTCDateTime</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">origins</span> <span class="k">else</span> <span class="n">UTCDateTime</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;catalog sort problem&quot;</span><span class="p">,</span><span class="n">e</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">catalog</span><span class="p">:</span>
             <span class="n">event_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">resource_id</span><span class="p">)</span>
-            
-            <span class="c1"># Find corresponding stream for this event</span>
-            <span class="n">event_stream</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="k">for</span> <span class="n">stream</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">streams</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">stream</span> <span class="ow">and</span> <span class="n">stream</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">event_id</span> <span class="o">==</span> <span class="n">event_id</span><span class="p">:</span>
-                    <span class="n">event_stream</span> <span class="o">=</span> <span class="n">stream</span>
-                    <span class="k">break</span>
-            
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">event_stream</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">event_stream</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+
+            <span class="c1"># Create a string for NSLCs which should have been downloaded (e.g. within search radius) but weren&#39;t for some reason</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">event_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="k">continue</span>
+
+                <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">station_key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_data</span><span class="p">[</span><span class="n">event_id</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;ALL&quot;</span><span class="p">:</span>
+                        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">station_key</span><span class="si">}</span><span class="s2">.*&quot;</span><span class="p">)</span>  <span class="c1"># Indicate all channels missing</span>
+                    <span class="k">elif</span> <span class="n">value</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="n">value</span><span class="p">:</span>  <span class="c1"># If list not empty</span>
+                            <span class="n">results</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>  <span class="c1"># Add all missing channels</span>
+                <span class="k">if</span> <span class="n">results</span><span class="p">:</span>
+                    <span class="n">missing_data_str</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">missing_data_str</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">missing_data_str</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;DEBUG: missing data dict issue&quot;</span><span class="p">,</span><span class="n">e</span><span class="p">)</span>
+
+
+            <span class="k">if</span> <span class="n">missing_data_str</span><span class="p">:</span>
+                <span class="c1"># Combine event ot, mag, region into one column</span>
+                <span class="n">event_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_format_event_time</span><span class="p">(</span><span class="n">event</span><span class="p">)</span><span class="si">}</span><span class="s2">,  M</span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">magnitudes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">mag</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">,  </span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;region&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Unknown Region&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+
                 <span class="c1"># Event completely missing</span>
                 <span class="n">missing_events</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
-                    <span class="s1">&#39;Event Time&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_event_time</span><span class="p">(</span><span class="n">event</span><span class="p">),</span>
-                    <span class="s1">&#39;Magnitude&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;M</span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">magnitudes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">mag</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-                    <span class="s1">&#39;Region&#39;</span><span class="p">:</span> <span class="n">event</span><span class="o">.</span><span class="n">extra</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;region&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="s1">&#39;Unknown Region&#39;</span><span class="p">),</span>
-                    <span class="s1">&#39;Missing Channels&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">waveform</span><span class="o">.</span><span class="n">channel_pref</span><span class="p">,</span>
-                    <span class="s1">&#39;Depth (km)&#39;</span><span class="p">:</span> <span class="n">event</span><span class="o">.</span><span class="n">origins</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">depth</span> <span class="o">/</span> <span class="mi">1000</span>  <span class="c1"># Convert to km</span>
+                    <span class="s1">&#39;Event ID&#39;</span><span class="p">:</span> <span class="n">event_id</span><span class="p">,</span>
+                    <span class="s1">&#39;Event&#39;</span><span class="p">:</span> <span class="n">event_str</span><span class="p">,</span>
+                    <span class="s1">&#39;Missing Data&#39;</span><span class="p">:</span> <span class="n">missing_data_str</span>
                 <span class="p">})</span>
         
         <span class="k">return</span> <span class="n">missing_events</span>
@@ -1239,7 +1286,7 @@
         <span class="n">missing_events</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_missing_events</span><span class="p">()</span>
         
         <span class="k">if</span> <span class="n">missing_events</span><span class="p">:</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;⚠️ Events with No Data:&quot;</span><span class="p">)</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;⚠️ Events with Missing Data:&quot;</span><span class="p">)</span>
             
             <span class="c1"># Create DataFrame from missing events</span>
             <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">missing_events</span><span class="p">)</span>
@@ -1251,7 +1298,8 @@
             <span class="n">st</span><span class="o">.</span><span class="n">dataframe</span><span class="p">(</span>
                 <span class="n">df</span><span class="p">,</span>
                 <span class="n">use_container_width</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">height</span><span class="o">=</span><span class="n">height</span>
+                <span class="n">height</span><span class="o">=</span><span class="n">height</span><span class="p">,</span>
+                <span class="n">hide_index</span><span class="o">=</span><span class="kc">True</span>
             <span class="p">)</span></div>
 </div>
 

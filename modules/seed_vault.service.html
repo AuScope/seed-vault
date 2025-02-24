@@ -49,7 +49,18 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../usage.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../app.html">Seed Vault App</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../app.html">Seed Vault App</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../app_main_flows.html">Main Flows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../app_run_from_config.html">Direct parameter input</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../app_db_explorer.html">Database Explorer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../app_settings.html">App Settings</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../app_settings.html#data">Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../app_settings.html#credentials">Credentials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../app_settings.html#clients">Clients</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../cli.html">CLI commands</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../modules.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../seed_vault.html">seed_vault package</a><ul>
@@ -563,7 +574,55 @@ Special key ‘open’ is used for default client.</p></li>
 <dl class="py function">
 <dt class="sig sig-object py" id="seed_vault.service.seismoloader.collect_requests">
 <span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">collect_requests</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">days_per_request</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cha_pref</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loc_pref</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/seismoloader.html#collect_requests"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.collect_requests" title="Link to this definition"></a></dt>
-<dd><p>Collect all requests required to download everything in inventory, split into X-day periods.</p>
+<dd><p>Generate time-windowed data requests for all channels in an inventory.</p>
+<p>Creates a list of data requests by breaking a time period into smaller windows
+and collecting station metadata for each window. Can optionally filter for
+preferred channels and location codes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inv</strong> (<em>obspy.core.inventory.Inventory</em>) – Station inventory to generate requests for</p></li>
+<li><p><strong>time0</strong> (<em>obspy.UTCDateTime</em>) – Start time for data requests</p></li>
+<li><p><strong>time1</strong> (<em>obspy.UTCDateTime</em>) – End time for data requests</p></li>
+<li><p><strong>days_per_request</strong> (<em>int</em><em>, </em><em>optional</em>) – Length of each request window in days.
+Defaults to 3.</p></li>
+<li><p><strong>cha_pref</strong> (<em>list</em><em>, </em><em>optional</em>) – List of preferred channel codes in priority order.
+If provided, only these channels will be requested. Defaults to None.</p></li>
+<li><p><strong>loc_pref</strong> (<em>list</em><em>, </em><em>optional</em>) – List of preferred location codes in priority order.
+If provided, only these location codes will be requested. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl>
+<dt>List of tuples containing request parameters:</dt><dd><dl class="simple">
+<dt>(network_code, station_code, location_code, channel_code,</dt><dd><p>start_time_iso, end_time_iso)</p>
+</dd>
+</dl>
+<p>Returns None if start time is greater than or equal to end time.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list or None</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>End time is capped at 120 seconds before current time</p></li>
+<li><p>Times in returned tuples are ISO formatted strings with ‘Z’ suffix</p></li>
+<li><p>Uses get_preferred_channels() if cha_pref or loc_pref are specified</p></li>
+</ul>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">obspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">UTCDateTime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t0</span> <span class="o">=</span> <span class="n">UTCDateTime</span><span class="p">(</span><span class="s2">&quot;2020-01-01&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t1</span> <span class="o">=</span> <span class="n">UTCDateTime</span><span class="p">(</span><span class="s2">&quot;2020-01-10&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">requests</span> <span class="o">=</span> <span class="n">collect_requests</span><span class="p">(</span><span class="n">inventory</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">t1</span><span class="p">,</span>
+<span class="gp">... </span>                          <span class="n">days_per_request</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<span class="gp">... </span>                          <span class="n">cha_pref</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;HHZ&#39;</span><span class="p">,</span> <span class="s1">&#39;BHZ&#39;</span><span class="p">],</span>
+<span class="gp">... </span>                          <span class="n">loc_pref</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;00&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
@@ -677,9 +736,93 @@ Returns empty catalog if no events found.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.seismoloader.get_missing_from_request">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">get_missing_from_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eq_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">requests</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">st</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/seismoloader.html#get_missing_from_request"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.get_missing_from_request" title="Link to this definition"></a></dt>
+<dd><p>Compare requested seismic data against what’s present in a Stream.
+Handles comma-separated values for location and channel codes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
+</dd>
+</dl>
+<section id="parameters">
+<h3>Parameters:<a class="headerlink" href="#parameters" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>eq_id<span class="classifier">str</span></dt><dd><p>Earthquake ID to use as dictionary key</p>
+</dd>
+<dt>requests<span class="classifier">List[Tuple]</span></dt><dd><p>List of request tuples, each containing (network, station, location, channel, starttime, endtime)</p>
+</dd>
+<dt>st<span class="classifier">Stream</span></dt><dd><p>ObsPy Stream object containing seismic traces</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h3>Returns:<a class="headerlink" href="#returns" title="Link to this heading"></a></h3>
+<p>:
+dict</p>
+<blockquote>
+<div><p>Nested dictionary with structure:
+{eq_id: {</p>
+<blockquote>
+<div><p>“network.station”: value,
+“network2.station2”: value2,
+…</p>
+</div></blockquote>
+<p>}}
+where value is either:
+- list of missing channel strings (“network.station.location.channel”)
+- “Not Attempted” if stream is empty
+- “ALL” if all requested channels are missing
+- [] if all requested channels are present</p>
+</div></blockquote>
+</section>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="seed_vault.service.seismoloader.get_p_s_times">
 <span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">get_p_s_times</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dist_deg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ttmodel</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/seismoloader.html#get_p_s_times"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.get_p_s_times" title="Link to this definition"></a></dt>
-<dd><p>Get first P/S arrivals given an earthquake object, distance, and traveltime model.</p>
+<dd><p>Calculate theoretical P and S wave arrival times for an earthquake at a given distance.</p>
+<p>Uses a travel time model to compute the first P and S wave arrivals for a given
+earthquake and distance. The first arrival (labeled as “P”) may not necessarily be
+a direct P wave. For S waves, only phases explicitly labeled as ‘S’ are considered.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>eq</strong> (<em>obspy.core.event.Event</em>) – Earthquake event object containing origin time
+and depth information</p></li>
+<li><p><strong>dist_deg</strong> (<em>float</em>) – Distance between source and receiver in degrees</p></li>
+<li><p><strong>ttmodel</strong> (<em>obspy.taup.TauPyModel</em>) – Travel time model to use for calculations</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A tuple containing:</dt><dd><ul class="simple">
+<li><p>(UTCDateTime or None): Time of first arrival (“P” wave)</p></li>
+<li><p>(UTCDateTime or None): Time of first S wave arrival
+Returns (None, None) if travel time calculation fails</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Earthquake depth is expected in meters in the QuakeML format and is
+converted to kilometers for the travel time calculations</p></li>
+<li><p>For S waves, only searches for explicit ‘S’ phase arrivals</p></li>
+<li><p>Warns if no P arrival is found at any distance</p></li>
+<li><p>Warns if no S arrival is found at distances ≤ 90 degrees</p></li>
+</ul>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">obspy.taup</span><span class="w"> </span><span class="kn">import</span> <span class="n">TauPyModel</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">TauPyModel</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&quot;iasp91&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p_time</span><span class="p">,</span> <span class="n">s_time</span> <span class="o">=</span> <span class="n">get_p_s_times</span><span class="p">(</span><span class="n">earthquake</span><span class="p">,</span> <span class="mf">45.3</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
@@ -859,19 +1002,107 @@ Expects files in the format: network.station.location.channel.*.year.julday</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="seed_vault.service.seismoloader.populate_database_from_files">
 <span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">populate_database_from_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cursor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_paths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/seismoloader.html#populate_database_from_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.populate_database_from_files" title="Link to this definition"></a></dt>
-<dd><p>Quickly insert/update a few SDS archive files into the SQL database.</p>
+<dd><p>Insert or update MiniSEED file metadata into an SQL database.</p>
+<p>Takes a list of SDS archive file paths, extracts metadata, and updates a database
+tracking data availability. If data spans overlap with existing database entries,
+the spans are merged. Uses miniseed_to_db_element() to parse file metadata.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cursor</strong> (<em>sqlite3.Cursor</em>) – Database cursor for executing SQL commands</p></li>
+<li><p><strong>file_paths</strong> (<em>list</em><em>, </em><em>optional</em>) – List of paths to MiniSeed files. Defaults to empty list.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>Database must have an ‘archive_data’ table with columns:</dt><dd><ul>
+<li><p>network (text)</p></li>
+<li><p>station (text)</p></li>
+<li><p>location (text)</p></li>
+<li><p>channel (text)</p></li>
+<li><p>starttime (integer): Unix timestamp</p></li>
+<li><p>endtime (integer): Unix timestamp</p></li>
+<li><p>importtime (integer): Unix timestamp of database insertion</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>Handles overlapping time spans by merging them into a single entry</p></li>
+<li><p>Sets importtime to current Unix timestamp</p></li>
+<li><p>Skips files that fail metadata extraction (when miniseed_to_db_element returns None)</p></li>
+</ul>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">sqlite3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">conn</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s1">&#39;archive.db&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cursor</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;/path/to/IU.ANMO.00.BHZ.mseed&#39;</span><span class="p">,</span> <span class="s1">&#39;/path/to/IU.ANMO.00.BHN.mseed&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">populate_database_from_files</span><span class="p">(</span><span class="n">cursor</span><span class="p">,</span> <span class="n">files</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="seed_vault.service.seismoloader.populate_database_from_files_dumb">
 <span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">populate_database_from_files_dumb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cursor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_paths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/seismoloader.html#populate_database_from_files_dumb"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.populate_database_from_files_dumb" title="Link to this definition"></a></dt>
-<dd><p>Quickly insert/update a few SDS archive files into the SQL database. “Dumb” version!</p>
+<dd><p>Simple version of database population from MiniSEED files without span merging.</p>
+<p>A simplified “dumb” version that blindly replaces existing database entries
+with identical network/station/location/channel codes, rather than checking for
+and merging overlapping time spans.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cursor</strong> (<em>sqlite3.Cursor</em>) – Database cursor for executing SQL commands</p></li>
+<li><p><strong>file_paths</strong> (<em>list</em><em>, </em><em>optional</em>) – List of paths to MiniSeed files. Defaults to empty list.</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="seed_vault.service.seismoloader.populate_database_from_sds">
 <span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">populate_database_from_sds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sds_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">search_patterns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['??.*.*.???.?.????.???']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">newer_than</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_processes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gap_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">60</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/seismoloader.html#populate_database_from_sds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.populate_database_from_sds" title="Link to this definition"></a></dt>
-<dd><p>Utility function to populate the archive_table in our database.</p>
+<dd><p>Scan an SDS archive directory and populate a database with data availability.</p>
+<p>Recursively searches an SDS (Seismic Data Structure) archive for MiniSEED files,
+extracts their metadata, and records data availability in a SQLite database.
+Supports parallel processing and can optionally filter for recently modified files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sds_path</strong> (<em>str</em>) – Path to the root SDS archive directory</p></li>
+<li><p><strong>db_path</strong> (<em>str</em>) – Path to the SQLite database file</p></li>
+<li><p><strong>search_patterns</strong> (<em>list</em><em>, </em><em>optional</em>) – List of file patterns to match.
+Defaults to [“??.*.*.???.?.????.???”] (standard SDS naming pattern).</p></li>
+<li><p><strong>newer_than</strong> (<em>str</em><em> or </em><em>UTCDateTime</em><em>, </em><em>optional</em>) – Only process files modified after
+this time. Defaults to None (process all files).</p></li>
+<li><p><strong>num_processes</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of parallel processes to use.
+Defaults to None (use all available CPU cores).</p></li>
+<li><p><strong>gap_tolerance</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum time gap in seconds between segments
+that should be considered continuous. Defaults to 60.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Uses DatabaseManager class to handle database operations</p></li>
+<li><dl class="simple">
+<dt>Attempts multiprocessing but falls back to single process if it fails</dt><dd><p>(common on OSX and Windows)</p>
+</dd>
+</dl>
+</li>
+<li><p>Follows symbolic links when walking directory tree</p></li>
+<li><p>Files are processed using miniseed_to_db_element() function</p></li>
+<li><p>After insertion, continuous segments are joined based on gap_tolerance</p></li>
+<li><p>Progress is displayed using tqdm progress bars</p></li>
+<li><p>If newer_than is provided, it’s converted to a Unix timestamp for comparison</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>RuntimeError</strong> – If bulk insertion into database fails</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -936,6 +1167,33 @@ other sections are converted to lowercase.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">config</span> <span class="o">=</span> <span class="n">read_config</span><span class="p">(</span><span class="s2">&quot;config.ini&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">auth_value</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;AUTH&quot;</span><span class="p">,</span> <span class="s2">&quot;ApiKey&quot;</span><span class="p">)</span>  <span class="c1"># Case preserved</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">other_value</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;settings&quot;</span><span class="p">,</span> <span class="s2">&quot;parameter&quot;</span><span class="p">)</span>  <span class="c1"># Converted to lowercase</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.seismoloader.remove_duplicate_events">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">remove_duplicate_events</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">catalog</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/seismoloader.html#remove_duplicate_events"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.remove_duplicate_events" title="Link to this definition"></a></dt>
+<dd><p>Remove duplicate events from an ObsPy Catalog based on resource IDs.</p>
+<p>Takes a catalog of earthquake events and returns a new catalog containing only
+unique events, where uniqueness is determined by the event’s resource_id.
+The first occurrence of each resource_id is kept.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>catalog</strong> (<em>obspy.core.event.Catalog</em>) – Input catalog containing earthquake events</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>New catalog containing only unique events</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>obspy.core.event.Catalog</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">obspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_events</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cat</span> <span class="o">=</span> <span class="n">read_events</span><span class="p">(</span><span class="s1">&#39;events.xml&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">unique_cat</span> <span class="o">=</span> <span class="n">remove_duplicate_events</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Removed </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">unique_cat</span><span class="p">)</span><span class="si">}</span><span class="s2"> duplicate events&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -1075,15 +1333,50 @@ Only used if settings is None.</p></li>
 <dl class="py function">
 <dt class="sig sig-object py" id="seed_vault.service.seismoloader.select_highest_samplerate">
 <span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">select_highest_samplerate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minSR</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/seismoloader.html#select_highest_samplerate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.select_highest_samplerate" title="Link to this definition"></a></dt>
-<dd><p>Where overlapping channels exist (e.g. 100 hz and 10 hz), filter out anything other than highest available samplerate.
-Channels are considered duplicates if:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>When time is specified: same location code and both exist at that time</p></li>
-<li><p>When time is None: same location code and same time span</p></li>
+<dd><p>Filters an inventory to keep only the highest sample rate channels where duplicates exist.</p>
+<p>For each station in the inventory, this function identifies duplicate channels (those sharing
+the same location code) and keeps only those with the highest sample rate. Channels must
+meet the minimum sample rate requirement to be considered.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inv</strong> (<em>obspy.core.inventory.Inventory</em>) – Input inventory object</p></li>
+<li><p><strong>minSR</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum sample rate in Hz. Defaults to 10.</p></li>
+<li><p><strong>time</strong> (<em>obspy.UTCDateTime</em><em>, </em><em>optional</em>) – Specific time to check channel existence.
+If provided, channels are considered duplicates if they share the same
+location code and both exist at that time. If None, channels are considered
+duplicates if they share the same location code and time span. Defaults to None.</p></li>
 </ul>
-</div></blockquote>
-<p>All channels must meet minSR requirement.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Filtered inventory containing only the highest</dt><dd><p>sample rate channels where duplicates existed.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>obspy.core.inventory.Inventory</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Filter inventory keeping only highest sample rate channels</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">filtered_inv</span> <span class="o">=</span> <span class="n">select_highest_samplerate</span><span class="p">(</span><span class="n">inv</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Filter for a specific time, minimum 1 Hz</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">obspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">UTCDateTime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">time</span> <span class="o">=</span> <span class="n">UTCDateTime</span><span class="p">(</span><span class="s2">&quot;2020-01-01&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">filtered_inv</span> <span class="o">=</span> <span class="n">select_highest_samplerate</span><span class="p">(</span><span class="n">inv</span><span class="p">,</span> <span class="n">minSR</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="n">time</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Channel duplicates are determined by location code and either:
+* Existence at a specific time (if time is provided)
+* Having identical time spans (if time is None)</p></li>
+<li><p>All retained channels must have sample rates &gt;= minSR</p></li>
+<li><p>For duplicate channels, all channels with the highest sample rate are kept</p></li>
+</ul>
 </dd></dl>
 
 <dl class="py function">

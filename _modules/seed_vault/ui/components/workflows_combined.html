@@ -48,7 +48,18 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../app.html">Seed Vault App</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../app.html">Seed Vault App</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../app_main_flows.html">Main Flows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../app_run_from_config.html">Direct parameter input</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../app_db_explorer.html">Database Explorer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../app_settings.html">App Settings</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#data">Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#credentials">Credentials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#clients">Clients</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../cli.html">CLI commands</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../../seed_vault.html">seed_vault package</a><ul>
@@ -285,6 +296,8 @@
 <div class="viewcode-block" id="CombinedBasedWorkflow.render_stage_1">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.render_stage_1">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">render_stage_1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Add CSS to prevent scrolling on headers..</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="s2">&quot;&lt;style&gt;.stMarkdown{overflow:visible !important;}&lt;/style&gt;&quot;</span><span class="p">,</span> <span class="n">unsafe_allow_html</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         
         <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">,</span> <span class="n">c3</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
         <span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;Events&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">selected_workflow</span> <span class="o">==</span> <span class="n">WorkflowType</span><span class="o">.</span><span class="n">EVENT_BASED</span> <span class="k">else</span> <span class="s2">&quot;Stations&quot;</span>
@@ -294,7 +307,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">previous_stage</span><span class="p">()</span>
 
         <span class="k">with</span> <span class="n">c2</span><span class="p">:</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;### Step 1: Search &amp; Select </span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;### Step 1: Search &amp; Select </span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">unsafe_allow_html</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
         <span class="k">with</span> <span class="n">c3</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;Next&quot;</span><span class="p">):</span>
@@ -322,12 +335,14 @@
 <div class="viewcode-block" id="CombinedBasedWorkflow.render_stage_2">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.render_stage_2">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">render_stage_2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Add CSS to prevent scrolling on headers..</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="s2">&quot;&lt;style&gt;.stMarkdown{overflow:visible !important;}&lt;/style&gt;&quot;</span><span class="p">,</span> <span class="n">unsafe_allow_html</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">,</span> <span class="n">c3</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">selected_workflow</span> <span class="o">==</span> <span class="n">WorkflowType</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="p">:</span>
             <span class="k">with</span> <span class="n">c2</span><span class="p">:</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;### Step 2: Get Waveforms&quot;</span><span class="p">)</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="s2">&quot;### Step 2: Get Waveforms&quot;</span><span class="p">,</span> <span class="n">unsafe_allow_html</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
                 
             <span class="k">with</span> <span class="n">c1</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;Previous&quot;</span><span class="p">):</span>
@@ -350,7 +365,7 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">previous_stage</span><span class="p">()</span>
 
             <span class="k">with</span> <span class="n">c2</span><span class="p">:</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;### Step 2: Search &amp; Select </span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>                
+                <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;### Step 2: Search &amp; Select </span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">unsafe_allow_html</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
             <span class="k">with</span> <span class="n">c3</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;Next&quot;</span><span class="p">):</span>
@@ -372,14 +387,17 @@
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">selected_workflow</span> <span class="o">==</span> <span class="n">WorkflowType</span><span class="o">.</span><span class="n">STATION_BASED</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">event_components</span><span class="o">.</span><span class="n">render</span><span class="p">()</span></div>
 
-                   
+    
 <div class="viewcode-block" id="CombinedBasedWorkflow.render_stage_3">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.render_stage_3">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">render_stage_3</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Add CSS to prevent scrolling on headers..</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="s2">&quot;&lt;style&gt;.stMarkdown{overflow:visible !important;}&lt;/style&gt;&quot;</span><span class="p">,</span> <span class="n">unsafe_allow_html</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
         <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">,</span> <span class="n">c3</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
         <span class="k">with</span> <span class="n">c2</span><span class="p">:</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;### Step 3: Waveforms&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">selected_workflow</span> <span class="o">==</span> <span class="n">WorkflowType</span><span class="o">.</span><span class="n">EVENT_BASED</span><span class="p">:</span> 
+            <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="s2">&quot;### Step 3: Waveforms&quot;</span><span class="p">,</span> <span class="n">unsafe_allow_html</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">selected_workflow</span> <span class="o">==</span> <span class="n">WorkflowType</span><span class="o">.</span><span class="n">EVENT_BASED</span><span class="p">:</span>
             <span class="k">with</span> <span class="n">c1</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;Previous&quot;</span><span class="p">):</span>
                     <span class="n">selected_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">station_components</span><span class="o">.</span><span class="n">get_selected_idx</span><span class="p">()</span>

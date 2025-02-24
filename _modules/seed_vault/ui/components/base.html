@@ -48,7 +48,18 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../app.html">Seed Vault App</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../app.html">Seed Vault App</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../app_main_flows.html">Main Flows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../app_run_from_config.html">Direct parameter input</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../app_db_explorer.html">Database Explorer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../app_settings.html">App Settings</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#data">Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#credentials">Credentials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#clients">Clients</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../cli.html">CLI commands</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../../seed_vault.html">seed_vault package</a><ul>
@@ -93,7 +104,10 @@
            <div itemprop="articleBody">
              
   <h1>Source code for seed_vault.ui.components.base</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">streamlit</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">st</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">streamlit_folium</span><span class="w"> </span><span class="kn">import</span> <span class="n">st_folium</span>
@@ -101,7 +115,6 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">time</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">obspy.core.event</span><span class="w"> </span><span class="kn">import</span> <span class="n">Catalog</span><span class="p">,</span> <span class="n">read_events</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">obspy.core.inventory</span><span class="w"> </span><span class="kn">import</span> <span class="n">Inventory</span><span class="p">,</span> <span class="n">read_inventory</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">io</span><span class="w"> </span><span class="kn">import</span> <span class="n">BytesIO</span>
 
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.ui.components.map</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_map</span><span class="p">,</span> <span class="n">add_area_overlays</span><span class="p">,</span> <span class="n">add_data_points</span><span class="p">,</span> <span class="n">clear_map_layers</span><span class="p">,</span> <span class="n">clear_map_draw</span><span class="p">,</span><span class="n">add_map_draw</span>
@@ -117,9 +130,6 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.enums.ui</span><span class="w"> </span><span class="kn">import</span> <span class="n">Steps</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.service.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">convert_to_datetime</span><span class="p">,</span> <span class="n">check_client_services</span><span class="p">,</span> <span class="n">get_time_interval</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 
 
 <div class="viewcode-block" id="BaseComponentTexts">
@@ -142,7 +152,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">SELECT_DATA_TITLE</span> <span class="o">=</span> <span class="s2">&quot;Select Events from Map or Table&quot;</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">SELECT_MARKER_TITLE</span> <span class="o">=</span> <span class="s2">&quot;#### Select Events from map&quot;</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">SELECT_MARKER_MSG</span>   <span class="o">=</span> <span class="s2">&quot;Select an event from map and Add to Selection.&quot;</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">SELECT_DATA_TABLE_TITLE</span> <span class="o">=</span> <span class="s2">&quot;Select Events from table&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">SELECT_DATA_TABLE_TITLE</span> <span class="o">=</span> <span class="s2">&quot;Select Events from Table  ⤵️  or from Map  ↗️&quot;</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">SELECT_DATA_TABLE_MSG</span> <span class="o">=</span> <span class="s2">&quot;Tick events from the table to view your selected events on the map.&quot;</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">PREV_SELECT_NO</span>  <span class="o">=</span> <span class="s2">&quot;Total Number of Selected Events&quot;</span>
@@ -157,7 +167,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">SELECT_DATA_TITLE</span> <span class="o">=</span> <span class="s2">&quot;Select Stations from Map or Table&quot;</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">SELECT_MARKER_TITLE</span> <span class="o">=</span> <span class="s2">&quot;#### Select Stations from map&quot;</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">SELECT_MARKER_MSG</span>   <span class="o">=</span> <span class="s2">&quot;Select a station from map and Add to Selection.&quot;</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">SELECT_DATA_TABLE_TITLE</span> <span class="o">=</span> <span class="s2">&quot;Select Stations from table&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">SELECT_DATA_TABLE_TITLE</span> <span class="o">=</span> <span class="s2">&quot;Select Stations from table  ⤵️  or from Map  ↗️&quot;</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">SELECT_DATA_TABLE_MSG</span> <span class="o">=</span> <span class="s2">&quot;Tick stations from the table to view your selected stations on the map.&quot;</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">PREV_SELECT_NO</span>  <span class="o">=</span> <span class="s2">&quot;Total Number of Selected Stations&quot;</span>
@@ -286,91 +296,17 @@
 <div class="viewcode-block" id="BaseComponent.refresh_filters">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.refresh_filters">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">refresh_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Renders Export settings for all stages and Import settings only for stage 1.</span>
+
+<span class="sd">        - Allows users to download the current configuration (`config.cfg`) at all stages.</span>
+<span class="sd">        - Shows the import settings section only when `stage == 1`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
         <span class="n">changes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">has_changed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">old_settings</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">changes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;has_changed&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">old_settings</span>      <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
             <span class="n">save_filter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
             <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span></div>
-
-
-
-
-<div class="viewcode-block" id="BaseComponent.import_export">
-<a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.import_export">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">import_export</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">def</span><span class="w"> </span><span class="nf">reset_import_setting_processed</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">uploaded_file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">uploaded_file_info</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">uploaded_file</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">uploaded_file</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2">&quot;</span>               
-                <span class="k">if</span> <span class="s2">&quot;uploaded_file_info&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span> <span class="ow">or</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">uploaded_file_info</span> <span class="o">!=</span> <span class="n">uploaded_file_info</span><span class="p">:</span>
-                    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s1">&#39;import_setting_processed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
-                    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s1">&#39;uploaded_file_info&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">uploaded_file_info</span>  
-
-        <span class="c1"># st.sidebar.markdown(&quot;### Import/Export Settings&quot;)</span>
-        
-        <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Import &amp; Export&quot;</span><span class="p">,</span> <span class="n">expanded</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-            <span class="n">tab1</span><span class="p">,</span> <span class="n">tab2</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">tabs</span><span class="p">([</span><span class="s2">&quot;Settings&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">])</span>
-            <span class="k">with</span> <span class="n">tab1</span><span class="p">:</span>
-                <span class="n">config_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)),</span> <span class="s1">&#39;../../service/config.cfg&#39;</span><span class="p">)</span>
-                <span class="n">config_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">config_file_path</span><span class="p">)</span>
-                
-                <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="s2">&quot;#### ⬇️ Export Settings&quot;</span><span class="p">)</span>
-
-                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">config_file_path</span><span class="p">):</span>
-                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_file_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-                        <span class="n">file_data</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-
-                    <span class="n">st</span><span class="o">.</span><span class="n">download_button</span><span class="p">(</span>
-                        <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Download file&quot;</span><span class="p">,</span>
-                        <span class="n">data</span><span class="o">=</span><span class="n">file_data</span><span class="p">,</span>  
-                        <span class="n">file_name</span><span class="o">=</span><span class="s2">&quot;config.cfg&quot;</span><span class="p">,</span>  
-                        <span class="n">mime</span><span class="o">=</span><span class="s2">&quot;application/octet-stream&quot;</span><span class="p">,</span>  
-                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Download the current settings.&quot;</span><span class="p">,</span>
-                        <span class="n">use_container_width</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                    <span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">st</span><span class="o">.</span><span class="n">caption</span><span class="p">(</span><span class="s2">&quot;No config file available for download.&quot;</span><span class="p">)</span>
-
-                <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="s2">&quot;#### 📂 Import Settings&quot;</span><span class="p">)</span>
-                <span class="n">uploaded_file</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">file_uploader</span><span class="p">(</span>
-                    <span class="s2">&quot;Import Settings&quot;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;cfg&quot;</span><span class="p">],</span> <span class="n">on_change</span><span class="o">=</span><span class="n">reset_import_setting_processed</span><span class="p">,</span>
-                    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Upload a config file (.cfg) to update settings.&quot;</span> <span class="p">,</span> <span class="n">label_visibility</span><span class="o">=</span><span class="s2">&quot;collapsed&quot;</span>
-                <span class="p">)</span>
-
-                <span class="k">if</span> <span class="n">uploaded_file</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="ow">not</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;import_setting_processed&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
-                        <span class="n">file_like_object</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">uploaded_file</span><span class="o">.</span><span class="n">getvalue</span><span class="p">())</span>
-                        <span class="n">text_file_object</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">TextIOWrapper</span><span class="p">(</span><span class="n">file_like_object</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
-
-                        <span class="n">settings</span> <span class="o">=</span> <span class="n">SeismoLoaderSettings</span><span class="o">.</span><span class="n">from_cfg_file</span><span class="p">(</span><span class="n">text_file_object</span><span class="p">)</span>
-                        <span class="k">if</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">status_handler</span><span class="o">.</span><span class="n">has_errors</span><span class="p">()):</span>
-                            <span class="n">errors</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">status_handler</span><span class="o">.</span><span class="n">generate_status_report</span><span class="p">(</span><span class="s2">&quot;errors&quot;</span><span class="p">)</span>                           
-                            <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">errors</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">**Please review the errors in the imported file. Resolve them before proceeding.**&quot;</span><span class="p">)</span>
-
-                            <span class="k">if</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">status_handler</span><span class="o">.</span><span class="n">has_warnings</span><span class="p">()):</span>
-                                <span class="n">warning</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">status_handler</span><span class="o">.</span><span class="n">generate_status_report</span><span class="p">(</span><span class="s2">&quot;warnings&quot;</span><span class="p">)</span>                           
-                                <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">warning</span><span class="p">)</span>                            
-                            <span class="n">settings</span><span class="o">.</span><span class="n">status_handler</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
-
-                        <span class="k">else</span><span class="p">:</span>    
-                            <span class="bp">self</span><span class="o">.</span><span class="n">clear_all_data</span><span class="p">()</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">settings</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">client_url_mapping</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
-
-                            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">geo_constraint</span> <span class="o">=</span> <span class="p">[]</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">geo_constraint</span> <span class="o">=</span> <span class="p">[]</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">refresh_map</span><span class="p">(</span><span class="n">reset_areas</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">clear_draw</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-                            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s1">&#39;import_setting_processed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>   
-                            
-                            <span class="k">if</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">status_handler</span><span class="o">.</span><span class="n">has_warnings</span><span class="p">()):</span>
-                                <span class="n">warning</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">status_handler</span><span class="o">.</span><span class="n">generate_status_report</span><span class="p">(</span><span class="s2">&quot;warnings&quot;</span><span class="p">)</span>                           
-                                <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">warning</span><span class="p">)</span> 
-
-                            <span class="n">st</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s2">&quot;Settings imported successfully!&quot;</span><span class="p">)</span>   
-            <span class="k">with</span> <span class="n">tab2</span><span class="p">:</span>
-                <span class="n">c2_export</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">render_export_import</span><span class="p">()</span>
-
-            <span class="k">return</span> <span class="n">c2_export</span></div>
 
 
 <div class="viewcode-block" id="BaseComponent.event_filter">
@@ -381,7 +317,6 @@
         <span class="n">end_date</span><span class="p">,</span> <span class="n">end_time</span>     <span class="o">=</span> <span class="n">convert_to_datetime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span><span class="p">)</span>
 
         <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">render_map_right_menu</span><span class="p">()</span>
             <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;### Filters&quot;</span><span class="p">,</span> <span class="n">expanded</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
                 <span class="n">client_options</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">client_url_mapping</span><span class="o">.</span><span class="n">get_clients</span><span class="p">())</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
@@ -442,20 +377,10 @@
                     <span class="n">step</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;event-pg-depth&quot;</span>
                 <span class="p">)</span>
 
-                <span class="c1"># Update button with disabled state based on service availability</span>
-                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Update </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">,</span>
-                    <span class="n">key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_key_element</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Update </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">),</span>
-                    <span class="n">disabled</span><span class="o">=</span><span class="ow">not</span> <span class="n">is_service_available</span>
-                <span class="p">):</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">refresh_map</span><span class="p">(</span><span class="n">reset_areas</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">clear_draw</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">rerun</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-                
-            <span class="n">c2_export</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">import_export</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">render_map_buttons</span><span class="p">()</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">refresh_filters</span><span class="p">()</span></div>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">refresh_filters</span><span class="p">()</span>
-
-        <span class="k">return</span> <span class="n">c2_export</span></div>
 
 
 
@@ -471,9 +396,7 @@
             <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="p">(</span><span class="n">hour</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">minute</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">second</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
             <span class="n">end_time</span>   <span class="o">=</span> <span class="n">time</span><span class="p">(</span><span class="n">hour</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">minute</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">second</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-        <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">render_map_right_menu</span><span class="p">()</span>
-                
+        <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="p">:</span>                
             <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;### Filters&quot;</span><span class="p">,</span> <span class="n">expanded</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
                 <span class="n">client_options</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">client_url_mapping</span><span class="o">.</span><span class="n">get_clients</span><span class="p">())</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
@@ -547,20 +470,9 @@
 
                 <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="n">Levels</span><span class="o">.</span><span class="n">CHANNEL</span>
 
-                <span class="c1"># Update button with disabled state based on service availability</span>
-                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Update </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">,</span>
-                    <span class="n">key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_key_element</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Update </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">),</span>
-                    <span class="n">disabled</span><span class="o">=</span><span class="ow">not</span> <span class="n">is_service_available</span>
-                <span class="p">):</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">refresh_map</span><span class="p">(</span><span class="n">reset_areas</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">clear_draw</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">rerun</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">render_map_buttons</span><span class="p">()</span>
 
-            <span class="n">c2_export</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">import_export</span><span class="p">()</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">refresh_filters</span><span class="p">()</span>
-        <span class="c1"># save_filter(self.settings)</span>
-
-        <span class="k">return</span> <span class="n">c2_export</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">refresh_filters</span><span class="p">()</span></div>
 
 
     <span class="c1"># ====================</span>
@@ -695,7 +607,6 @@
 <div class="viewcode-block" id="BaseComponent.update_selected_data">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.update_selected_data">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">update_selected_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_data_edit</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_data_edit</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
             <span class="k">if</span> <span class="s1">&#39;is_selected&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="p">[</span><span class="s1">&#39;is_selected&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
@@ -713,6 +624,7 @@
                             <span class="p">}</span>
                         <span class="p">}</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">selected_catalogs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+
             <span class="k">return</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">STATION</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">selected_invs</span> <span class="o">=</span> <span class="kc">None</span>
@@ -765,7 +677,7 @@
                 <span class="n">zoom_start</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">map_view_zoom</span><span class="p">,</span>
                 <span class="n">map_center</span><span class="o">=</span><span class="p">[</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">map_view_center</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">map_view_center</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;lon&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">map_view_center</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;lng&quot;</span><span class="p">,</span> <span class="mi">175</span><span class="p">),</span> <span class="c1"># pacific ocean</span>
                 <span class="p">]</span>
             <span class="p">)</span>
         
@@ -891,14 +803,18 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">map_fg_area</span><span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">all_current_drawings</span> <span class="o">=</span> <span class="p">[]</span>
-        
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">EVENT</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">catalogs</span><span class="o">=</span><span class="n">Catalog</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">geo_constraint</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">selected_catalogs</span><span class="o">=</span><span class="n">Catalog</span><span class="p">(</span><span class="n">events</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>    
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">STATION</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">inventories</span> <span class="o">=</span> <span class="n">Inventory</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">geo_constraint</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">selected_invs</span> <span class="o">=</span> <span class="kc">None</span>
 
+        <span class="c1"># not sure if plotting these area tables is useful</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update_rectangle_areas</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update_circle_areas</span><span class="p">()</span></div>
 
@@ -945,7 +861,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">refresh_map_selection</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">selected_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_selected_idx</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update_selected_data</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">refresh_map</span><span class="p">(</span><span class="n">reset_areas</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">selected_idx</span><span class="o">=</span><span class="n">selected_idx</span><span class="p">,</span> <span class="n">rerun</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">refresh_map</span><span class="p">(</span><span class="n">reset_areas</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">selected_idx</span><span class="o">=</span><span class="n">selected_idx</span><span class="p">,</span> <span class="n">rerun</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">recreate_map</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
 
 
@@ -1022,7 +938,7 @@
         <span class="k">with</span> <span class="n">c1</span><span class="p">:</span>
             <span class="n">min_radius_str</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">text_input</span><span class="p">(</span><span class="s2">&quot;Minimum radius (degree)&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="s2">&quot;0&quot;</span><span class="p">)</span>
         <span class="k">with</span> <span class="n">c2</span><span class="p">:</span>
-            <span class="n">max_radius_str</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">text_input</span><span class="p">(</span><span class="s2">&quot;Maximum radius (degree)&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="s2">&quot;30&quot;</span><span class="p">)</span>
+            <span class="n">max_radius_str</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">text_input</span><span class="p">(</span><span class="s2">&quot;Maximum radius (degree)&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="s2">&quot;90&quot;</span><span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="n">min_radius</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">min_radius_str</span><span class="p">)</span>
@@ -1111,10 +1027,44 @@
     <span class="c1"># ===================</span>
     <span class="c1"># FILES</span>
     <span class="c1"># ===================</span>
+<div class="viewcode-block" id="BaseComponent.exp_imp_events_stations">
+<a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.exp_imp_events_stations">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">exp_imp_events_stations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;#### Export/Import </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
+
+        <span class="n">c11</span><span class="p">,</span> <span class="n">c22</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">with</span> <span class="n">c11</span><span class="p">:</span>
+            <span class="c1"># @NOTE: Download Selected had to be with the table.</span>
+            <span class="c1"># if (len(self.catalogs.events) &gt; 0 or len(self.inventories.get_contents().get(&#39;stations&#39;)) &gt; 0):</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">download_button</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Download All&quot;</span><span class="p">,</span> 
+                <span class="n">key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_key_element</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Download All </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">),</span>
+                <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">export_xml_bytes</span><span class="p">(</span><span class="n">export_selected</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+                <span class="n">file_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="si">}</span><span class="s2">s.xml&quot;</span><span class="p">,</span>
+                <span class="n">mime</span><span class="o">=</span><span class="s2">&quot;application/xml&quot;</span><span class="p">,</span>
+                <span class="n">disabled</span><span class="o">=</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">catalogs</span><span class="o">.</span><span class="n">events</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inventories</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inventories</span><span class="o">.</span><span class="n">get_contents</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;stations&#39;</span><span class="p">))</span> <span class="o">==</span> <span class="mi">0</span><span class="p">))</span>
+            <span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">reset_uploaded_file_processed</span><span class="p">():</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s1">&#39;uploaded_file_processed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="n">uploaded_file</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">file_uploader</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Import </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="si">}</span><span class="s2">s from a File&quot;</span><span class="p">,</span> <span class="n">on_change</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span>  <span class="n">reset_uploaded_file_processed</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">uploaded_file</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s1">&#39;uploaded_file_processed&#39;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">clear_all_data</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">refresh_map</span><span class="p">(</span><span class="n">reset_areas</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">clear_draw</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">handle_get_data</span><span class="p">(</span><span class="n">is_import</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">uploaded_file</span><span class="o">=</span><span class="n">uploaded_file</span><span class="p">)</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s1">&#39;uploaded_file_processed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_error</span> <span class="ow">and</span> <span class="s2">&quot;Import Error&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">c22</span></div>
+
+    
 <div class="viewcode-block" id="BaseComponent.export_xml_bytes">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.export_xml_bytes">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">export_xml_bytes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">export_selected</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
-        <span class="k">with</span> <span class="n">BytesIO</span><span class="p">()</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">()</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="o">.</span><span class="n">empty</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">export_selected</span><span class="p">:</span>
                 <span class="c1"># self.sync_df_markers_with_df_edit()</span>
@@ -1187,91 +1137,138 @@
 <div class="viewcode-block" id="BaseComponent.render_map_buttons">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.render_map_buttons">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">render_map_buttons</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
-        <span class="k">with</span> <span class="n">c1</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Global </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_key_element</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Global </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">clear_all_data</span><span class="p">()</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">refresh_map</span><span class="p">(</span><span class="n">reset_areas</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">clear_draw</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rerun</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">get_data</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="k">with</span> <span class="n">c2</span><span class="p">:</span>
+        <span class="n">cc1</span><span class="p">,</span> <span class="n">cc2</span><span class="p">,</span> <span class="n">cc3</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">with</span> <span class="n">cc1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Load </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">,</span> 
+                <span class="n">key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_key_element</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Load </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
+            <span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">refresh_map</span><span class="p">(</span><span class="n">reset_areas</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">clear_draw</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">rerun</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="c1"># self.clear_all_data()</span>
+                <span class="c1"># self.refresh_map(reset_areas=True, clear_draw=True, rerun=True, get_data=True)</span>
+
+
+        <span class="k">with</span> <span class="n">cc2</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">CLEAR_ALL_MAP_DATA</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_key_element</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">CLEAR_ALL_MAP_DATA</span><span class="p">)):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">clear_all_data</span><span class="p">()</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">refresh_map</span><span class="p">(</span><span class="n">reset_areas</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">clear_draw</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rerun</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">get_data</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;Reload&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Reloads the map&quot;</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">refresh_map</span><span class="p">(</span><span class="n">get_data</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">rerun</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">recreate_map</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">st</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Use **Reload** button if the map is collapsed or some layers are missing.&quot;</span><span class="p">)</span>
-        <span class="n">st</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Use **map tools** to search **</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="si">}</span><span class="s2">s** in confined areas.&quot;</span><span class="p">)</span></div>
+        
+        <span class="k">with</span> <span class="n">cc3</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span>
+                <span class="s2">&quot;Reload&quot;</span><span class="p">,</span> 
+                <span class="c1"># help=&quot;Use Reload button if the map is collapsed or some layers are missing.&quot;,</span>
+                <span class="n">key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_key_element</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ReLoad </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
+            <span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">refresh_map</span><span class="p">(</span><span class="n">get_data</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">rerun</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">recreate_map</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
-
-<div class="viewcode-block" id="BaseComponent.render_export_import">
-<a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.render_export_import">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">render_export_import</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;#### Export/Import </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
-
-        <span class="n">c11</span><span class="p">,</span> <span class="n">c22</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
-        <span class="k">with</span> <span class="n">c11</span><span class="p">:</span>
-            <span class="c1"># @NOTE: Download Selected had to be with the table.</span>
-            <span class="c1"># if (len(self.catalogs.events) &gt; 0 or len(self.inventories.get_contents().get(&#39;stations&#39;)) &gt; 0):</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">download_button</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Download All&quot;</span><span class="p">,</span> 
-                <span class="n">key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_key_element</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Download All </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">),</span>
-                <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">export_xml_bytes</span><span class="p">(</span><span class="n">export_selected</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
-                <span class="n">file_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="si">}</span><span class="s2">s.xml&quot;</span><span class="p">,</span>
-                <span class="n">mime</span><span class="o">=</span><span class="s2">&quot;application/xml&quot;</span><span class="p">,</span>
-                <span class="n">disabled</span><span class="o">=</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">catalogs</span><span class="o">.</span><span class="n">events</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inventories</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inventories</span><span class="o">.</span><span class="n">get_contents</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;stations&#39;</span><span class="p">))</span> <span class="o">==</span> <span class="mi">0</span><span class="p">))</span>
-            <span class="p">)</span>
-
-        <span class="k">def</span><span class="w"> </span><span class="nf">reset_uploaded_file_processed</span><span class="p">():</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s1">&#39;uploaded_file_processed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
-
-        <span class="n">uploaded_file</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">file_uploader</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Import </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="si">}</span><span class="s2">s from a File&quot;</span><span class="p">,</span> <span class="n">on_change</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span>  <span class="n">reset_uploaded_file_processed</span><span class="p">())</span>
-        <span class="k">if</span> <span class="n">uploaded_file</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s1">&#39;uploaded_file_processed&#39;</span><span class="p">]:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">clear_all_data</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">refresh_map</span><span class="p">(</span><span class="n">reset_areas</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">clear_draw</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">handle_get_data</span><span class="p">(</span><span class="n">is_import</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">uploaded_file</span><span class="o">=</span><span class="n">uploaded_file</span><span class="p">)</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s1">&#39;uploaded_file_processed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_error</span> <span class="ow">and</span> <span class="s2">&quot;Import Error&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">:</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">c22</span></div>
 
         
-<div class="viewcode-block" id="BaseComponent.render_actions_side_menu">
-<a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.render_actions_side_menu">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">render_actions_side_menu</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>        
-        <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;### Actions&quot;</span><span class="p">)</span>
-        <span class="c1"># with st.expander(f&quot;Actions&quot;, expanded = True):</span>
-        <span class="n">tab1</span><span class="p">,</span> <span class="n">tab2</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">tabs</span><span class="p">([</span><span class="s2">&quot;Map&quot;</span><span class="p">,</span> <span class="s2">&quot;Export/Import&quot;</span><span class="p">])</span>
-        <span class="k">with</span> <span class="n">tab1</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">render_map_buttons</span><span class="p">()</span>
-        <span class="k">with</span> <span class="n">tab2</span><span class="p">:</span>
-            <span class="n">c2_export</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">render_export_import</span><span class="p">()</span>
 
-        <span class="k">return</span> <span class="n">c2_export</span></div>
+    
+<div class="viewcode-block" id="BaseComponent.render_map_handles">
+<a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.render_map_handles">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">render_map_handles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># not sure if plotting these area tables is useful</span>
+        <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Shape tools - edit areas&quot;</span><span class="p">,</span> <span class="n">expanded</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_rectangle_areas</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_circle_areas</span><span class="p">()</span></div>
 
+        <span class="c1"># self.render_map_buttons()</span>
+        
+
+<div class="viewcode-block" id="BaseComponent.render_import_export">
+<a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.render_import_export">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">render_import_export</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">reset_import_setting_processed</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">uploaded_file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">uploaded_file_info</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">uploaded_file</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">uploaded_file</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2">&quot;</span>               
+                <span class="k">if</span> <span class="s2">&quot;uploaded_file_info&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span> <span class="ow">or</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">uploaded_file_info</span> <span class="o">!=</span> <span class="n">uploaded_file_info</span><span class="p">:</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s1">&#39;import_setting_processed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s1">&#39;uploaded_file_info&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">uploaded_file_info</span>  
+
+        <span class="c1"># st.sidebar.markdown(&quot;### Import/Export Settings&quot;)</span>
+        
+        <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Import &amp; Export&quot;</span><span class="p">,</span> <span class="n">expanded</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="n">tab1</span><span class="p">,</span> <span class="n">tab2</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">tabs</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">,</span> <span class="s2">&quot;Settings&quot;</span><span class="p">])</span>
+            <span class="k">with</span> <span class="n">tab2</span><span class="p">:</span>
+                <span class="n">config_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)),</span> <span class="s1">&#39;../../service/config.cfg&#39;</span><span class="p">)</span>
+                <span class="n">config_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">config_file_path</span><span class="p">)</span>
+                
+                <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="s2">&quot;#### ⬇️ Export Settings&quot;</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">config_file_path</span><span class="p">):</span>
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_file_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                        <span class="n">file_data</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+                    <span class="n">st</span><span class="o">.</span><span class="n">download_button</span><span class="p">(</span>
+                        <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Download file&quot;</span><span class="p">,</span>
+                        <span class="n">data</span><span class="o">=</span><span class="n">file_data</span><span class="p">,</span>  
+                        <span class="n">file_name</span><span class="o">=</span><span class="s2">&quot;config.cfg&quot;</span><span class="p">,</span>  
+                        <span class="n">mime</span><span class="o">=</span><span class="s2">&quot;application/octet-stream&quot;</span><span class="p">,</span>  
+                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Download the current settings.&quot;</span><span class="p">,</span>
+                        <span class="n">use_container_width</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">caption</span><span class="p">(</span><span class="s2">&quot;No config file available for download.&quot;</span><span class="p">)</span>
+
+                <span class="c1"># Import settings should only be displayed if stage == 1</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stage</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="s2">&quot;#### 📂 Import Settings&quot;</span><span class="p">)</span>
+                    <span class="n">uploaded_file</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">file_uploader</span><span class="p">(</span>
+                        <span class="s2">&quot;Import Settings&quot;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;cfg&quot;</span><span class="p">],</span> <span class="n">on_change</span><span class="o">=</span><span class="n">reset_import_setting_processed</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Upload a config file (.cfg) to update settings.&quot;</span> <span class="p">,</span> <span class="n">label_visibility</span><span class="o">=</span><span class="s2">&quot;collapsed&quot;</span>
+                    <span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">uploaded_file</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;import_setting_processed&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+                            <span class="n">file_like_object</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">uploaded_file</span><span class="o">.</span><span class="n">getvalue</span><span class="p">())</span>
+                            <span class="n">text_file_object</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">TextIOWrapper</span><span class="p">(</span><span class="n">file_like_object</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+
+                            <span class="n">settings</span> <span class="o">=</span> <span class="n">SeismoLoaderSettings</span><span class="o">.</span><span class="n">from_cfg_file</span><span class="p">(</span><span class="n">text_file_object</span><span class="p">)</span>
+                            <span class="k">if</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">status_handler</span><span class="o">.</span><span class="n">has_errors</span><span class="p">()):</span>
+                                <span class="n">errors</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">status_handler</span><span class="o">.</span><span class="n">generate_status_report</span><span class="p">(</span><span class="s2">&quot;errors&quot;</span><span class="p">)</span>                           
+                                <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">errors</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">**Please review the errors in the imported file. Resolve them before proceeding.**&quot;</span><span class="p">)</span>
+
+                                <span class="k">if</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">status_handler</span><span class="o">.</span><span class="n">has_warnings</span><span class="p">()):</span>
+                                    <span class="n">warning</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">status_handler</span><span class="o">.</span><span class="n">generate_status_report</span><span class="p">(</span><span class="s2">&quot;warnings&quot;</span><span class="p">)</span>                           
+                                    <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">warning</span><span class="p">)</span>                            
+                                <span class="n">settings</span><span class="o">.</span><span class="n">status_handler</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
+
+                            <span class="k">else</span><span class="p">:</span>    
+                                <span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">geo_constraint</span> <span class="o">=</span> <span class="p">[]</span>
+                                <span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">geo_constraint</span> <span class="o">=</span> <span class="p">[]</span>           
+                                <span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">selected_catalogs</span><span class="o">=</span><span class="n">Catalog</span><span class="p">(</span><span class="n">events</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>    
+                                <span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">selected_invs</span> <span class="o">=</span> <span class="kc">None</span>
+                                
+                                <span class="bp">self</span><span class="o">.</span><span class="n">clear_all_data</span><span class="p">()</span>
+                                <span class="c1"># self.settings = settings</span>
+                                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                                    <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">df_markers_prev</span><span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">refresh_map</span><span class="p">(</span><span class="n">reset_areas</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">clear_draw</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                                <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s1">&#39;import_setting_processed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>   
+                                
+                                <span class="k">if</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">status_handler</span><span class="o">.</span><span class="n">has_warnings</span><span class="p">()):</span>
+                                    <span class="n">warning</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">status_handler</span><span class="o">.</span><span class="n">generate_status_report</span><span class="p">(</span><span class="s2">&quot;warnings&quot;</span><span class="p">)</span>                           
+                                    <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">warning</span><span class="p">)</span> 
+
+                                <span class="n">st</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s2">&quot;Settings imported successfully!&quot;</span><span class="p">)</span>   
+            <span class="k">with</span> <span class="n">tab1</span><span class="p">:</span>
+                <span class="n">c2_export</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">exp_imp_events_stations</span><span class="p">()</span>
+
+            <span class="k">return</span> <span class="n">c2_export</span></div>
+
+    
+        
 
 <div class="viewcode-block" id="BaseComponent.render_map_right_menu">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.render_map_right_menu">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">render_map_right_menu</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">def</span><span class="w"> </span><span class="nf">handle_layers</span><span class="p">():</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">render_map_buttons</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">update_rectangle_areas</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">update_circle_areas</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prev_step_type</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Search Around </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prev_step_type</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">,</span> <span class="n">expanded</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">display_prev_step_selection_table</span><span class="p">()</span> </div>
 
-        <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Map&quot;</span><span class="p">,</span> <span class="n">expanded</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="c1"># st.markdown(f&quot;#### {self.TXT.GET_DATA_TITLE}&quot;)</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prev_step_type</span><span class="p">:</span>
-                <span class="n">tab1</span><span class="p">,</span> <span class="n">tab2</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">tabs</span><span class="p">([</span><span class="s2">&quot;Data&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Search Around </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prev_step_type</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">])</span>
-                <span class="k">with</span> <span class="n">tab1</span><span class="p">:</span>
-                    <span class="n">handle_layers</span><span class="p">()</span>
-                <span class="k">with</span> <span class="n">tab2</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">display_prev_step_selection_table</span><span class="p">()</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">handle_layers</span><span class="p">()</span>       </div>
-
-
-        <span class="c1"># return c2_export</span>
 
 <div class="viewcode-block" id="BaseComponent.render_map">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.render_map">[docs]</a>
@@ -1284,8 +1281,14 @@
         <span class="c1"># feature_groups = [fg for fg in [self.map_fg_area, self.map_fg_marker] if fg is not None]</span>
         <span class="n">feature_groups</span> <span class="o">=</span> <span class="p">[</span><span class="n">fg</span> <span class="k">for</span> <span class="n">fg</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">map_fg_area</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">map_fg_marker</span> <span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">map_fg_prev_selected_marker</span><span class="p">]</span> <span class="k">if</span> <span class="n">fg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
         
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fig_color_bar</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">EVENT</span><span class="p">:</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">caption</span><span class="p">(</span><span class="s2">&quot;ℹ️ Marker size is associated with Earthquake magnitude&quot;</span><span class="p">)</span>
+
+        <span class="n">info_display</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;ℹ️ Use **shape tools** to search **</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="si">}</span><span class="s2">s** in confined areas   &quot;</span>
+        <span class="n">info_display</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">ℹ️ Use **Reload** button to refresh map if needed   &quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">EVENT</span><span class="p">:</span>
+           <span class="n">info_display</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">ℹ️ **Marker size** is associated with **earthquake magnitude**&quot;</span>
+
+        <span class="n">st</span><span class="o">.</span><span class="n">caption</span><span class="p">(</span><span class="n">info_display</span><span class="p">)</span>
         
         <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">18</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
         <span class="k">with</span> <span class="n">c1</span><span class="p">:</span>
@@ -1333,63 +1336,30 @@
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.render_marker_select">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">render_marker_select</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">def</span><span class="w"> </span><span class="nf">handle_marker_select</span><span class="p">():</span>
-            <span class="n">selected_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_selected_marker_info</span><span class="p">()</span>
+            <span class="c1"># selected_data = self.get_selected_marker_info()</span>
 
             <span class="k">if</span> <span class="s1">&#39;is_selected&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="p">[</span><span class="s1">&#39;is_selected&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
 
-            <span class="c1"># try:</span>
-            <span class="c1">#     if self.clicked_marker_info[&#39;step&#39;] == self.step_type:</span>
-            <span class="c1">#         if self.df_markers.loc[self.clicked_marker_info[&#39;id&#39;] - 1, &#39;is_selected&#39;]:</span>
-            <span class="c1">#             self.df_markers.loc[self.clicked_marker_info[&#39;id&#39;] - 1, &#39;is_selected&#39;] = False</span>
-            <span class="c1">#             self.refresh_map_selection()                        </span>
-            <span class="c1">#         else:</span>
-            <span class="c1">#             self.sync_df_markers_with_df_edit()</span>
-            <span class="c1">#             self.df_markers.loc[self.clicked_marker_info[&#39;id&#39;] - 1, &#39;is_selected&#39;] = True</span>
-            <span class="c1">#             self.refresh_map_selection()</span>
-
-            <span class="c1"># except KeyError:</span>
-            <span class="c1">#     print(&quot;Selected map marker not found&quot;)</span>
-                
             <span class="k">try</span><span class="p">:</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">clicked_marker_info</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;is_selected&#39;</span><span class="p">]:</span>
-                    <span class="n">st</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="n">selected_data</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">selected_data</span><span class="p">)</span>
-
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">clicked_marker_info</span><span class="p">[</span><span class="s1">&#39;step&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;Add to Selection&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_key_element</span><span class="p">(</span><span class="s2">&quot;Add to Selection&quot;</span><span class="p">)):</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">clicked_marker_info</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;is_selected&#39;</span><span class="p">]:</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">sync_df_markers_with_df_edit</span><span class="p">()</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">clicked_marker_info</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;is_selected&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">refresh_map_selection</span><span class="p">()</span>
-                        <span class="k">return</span>
-            
-
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">clicked_marker_info</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;is_selected&#39;</span><span class="p">]:</span>
-                    <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;Unselect&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_key_element</span><span class="p">(</span><span class="s2">&quot;Unselect&quot;</span><span class="p">)):</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">clicked_marker_info</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;is_selected&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
-                        <span class="c1"># map_component.clicked_marker_info = None</span>
-                        <span class="c1"># map_component.map_output[&quot;last_object_clicked&quot;] = None</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">refresh_map_selection</span><span class="p">()</span>
-                        <span class="k">return</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">clicked_marker_info</span> <span class="o">=</span> <span class="kc">None</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">refresh_map_selection</span><span class="p">()</span>                                           
+                    <span class="c1"># else:</span>
+                    <span class="c1">#     self.df_markers.loc[self.clicked_marker_info[&#39;id&#39;] - 1, &#39;is_selected&#39;] = False</span>
+                    <span class="c1">#     self.refresh_map_selection()     </span>
+                        
 
             <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Selected map marker not found&quot;</span><span class="p">)</span>
+  
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">map_tools_card</span><span class="p">():</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
-                <span class="c1"># st.markdown(self.TXT.SELECT_MARKER_TITLE)</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">SELECT_MARKER_MSG</span><span class="p">)</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">clicked_marker_info</span><span class="p">:</span>
-                    <span class="n">handle_marker_select</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">clicked_marker_info</span><span class="p">:</span>
+            <span class="n">handle_marker_select</span><span class="p">()</span></div>
 
-            <span class="k">else</span><span class="p">:</span>                
-                <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No data available for the selected settings.&quot;</span><span class="p">)</span>
-                    
-        <span class="c1"># if not self.df_markers.empty:</span>
-        <span class="n">map_tools_card</span><span class="p">()</span></div>
-
-            <span class="c1"># create_card(None, False, map_tools_card)</span>
 
 
 <div class="viewcode-block" id="BaseComponent.render_data_table">
@@ -1397,84 +1367,211 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">render_data_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c5_map</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
             <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No data available for the selected settings.&quot;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># st.info(self.TXT.SELECT_DATA_TABLE_MSG)</span>
-            <span class="n">cols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="o">.</span><span class="n">columns</span>
-            <span class="n">orig_cols</span>   <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">cols</span> <span class="k">if</span> <span class="n">col</span> <span class="o">!=</span> <span class="s1">&#39;is_selected&#39;</span><span class="p">]</span>
-            <span class="n">ordered_col</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;is_selected&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">orig_cols</span>
+            <span class="k">return</span>            
 
-            <span class="n">config</span> <span class="o">=</span> <span class="p">{</span><span class="n">col</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;disabled&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">orig_cols</span><span class="p">}</span>
+        <span class="c1"># Ensure `is_selected` column exists</span>
+        <span class="k">if</span> <span class="s1">&#39;is_selected&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="p">[</span><span class="s1">&#39;is_selected&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
 
-            <span class="k">if</span> <span class="s1">&#39;is_selected&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="p">[</span><span class="s1">&#39;is_selected&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="n">config</span><span class="p">[</span><span class="s1">&#39;is_selected&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">column_config</span><span class="o">.</span><span class="n">CheckboxColumn</span><span class="p">(</span>
-                <span class="s1">&#39;Select&#39;</span>
-            <span class="p">)</span>
-            
-            <span class="n">state_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;initial_df_markers_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">stage</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="c1"># Define ordered columns</span>
+        <span class="n">cols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="o">.</span><span class="n">columns</span>
+        <span class="n">orig_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">cols</span> <span class="k">if</span> <span class="n">col</span> <span class="o">!=</span> <span class="s1">&#39;is_selected&#39;</span><span class="p">]</span>
+        <span class="n">ordered_col</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;is_selected&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">orig_cols</span>
 
-            <span class="c1"># Store the initial state in the session if not already stored</span>
-            <span class="k">if</span>  <span class="n">state_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">:</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="n">state_key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="c1"># Define config</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="p">{</span><span class="n">col</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;disabled&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">orig_cols</span><span class="p">}</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;is_selected&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">column_config</span><span class="o">.</span><span class="n">CheckboxColumn</span><span class="p">(</span><span class="s1">&#39;Select&#39;</span><span class="p">)</span>
 
-            <span class="k">def</span><span class="w"> </span><span class="nf">data_table_view</span><span class="p">():</span>
-                <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">,</span> <span class="n">c3</span><span class="p">,</span> <span class="n">c4</span><span class="p">,</span> <span class="n">c5</span><span class="p">,</span> <span class="n">c6</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
-                <span class="k">with</span> <span class="n">c1</span><span class="p">:</span>
-                    <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total Number of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="si">}</span><span class="s2">s: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="k">with</span> <span class="n">c2</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;Select All&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_key_element</span><span class="p">(</span><span class="s2">&quot;Select All&quot;</span><span class="p">)):</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="p">[</span><span class="s1">&#39;is_selected&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-                <span class="k">with</span> <span class="n">c3</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;Unselect All&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_key_element</span><span class="p">(</span><span class="s2">&quot;Unselect All&quot;</span><span class="p">)):</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="p">[</span><span class="s1">&#39;is_selected&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">state_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;initial_df_markers_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">stage</span><span class="si">}</span><span class="s1">&#39;</span>
+
+        <span class="c1"># Store the initial state in the session if not already stored</span>
+        <span class="k">if</span>  <span class="n">state_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="n">state_key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_table_view</span><span class="p">(</span><span class="n">ordered_col</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">state_key</span><span class="p">)</span>
 
 
-                <span class="bp">self</span><span class="o">.</span><span class="n">df_data_edit</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">data_editor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="p">,</span> <span class="n">hide_index</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">column_config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="n">column_order</span> <span class="o">=</span> <span class="n">ordered_col</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_key_element</span><span class="p">(</span><span class="s2">&quot;Data Table&quot;</span><span class="p">))</span>           
-                
+        <span class="c1"># Download button logic</span>
+        <span class="n">is_disabled</span> <span class="o">=</span> <span class="s1">&#39;is_selected&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="p">[</span><span class="s1">&#39;is_selected&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span>
 
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_data_edit</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="n">state_key</span><span class="p">]):</span>
-                    <span class="n">has_changed</span> <span class="o">=</span> <span class="kc">True</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">has_changed</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_data_edit</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="n">state_key</span><span class="p">])</span>
-                    
-                    <span class="k">if</span> <span class="n">has_changed</span><span class="p">:</span>
-                        <span class="n">df_sorted_new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_data_edit</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">df_data_edit</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-                        <span class="n">df_sorted_old</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="n">state_key</span><span class="p">]</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="n">state_key</span><span class="p">]</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-                        <span class="n">has_changed</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">df_sorted_new</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">df_sorted_old</span><span class="p">)</span>
-
-                <span class="k">if</span> <span class="n">has_changed</span><span class="p">:</span>
-                    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="n">state_key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_data_edit</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># Save the unsorted version to preserve user sorting</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">sync_df_markers_with_df_edit</span><span class="p">()</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">refresh_map_selection</span><span class="p">()</span>
-
-            <span class="n">data_table_view</span><span class="p">()</span>
-           
         <span class="k">with</span> <span class="n">c5_map</span><span class="p">:</span>
-            <span class="c1"># if (not self.df_markers.empty and len(self.df_markers[self.df_markers[&#39;is_selected&#39;]]) &gt; 0):</span>
-            <span class="n">is_disabled</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="o">.</span><span class="n">empty</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_disabled</span><span class="p">:</span>                
-                <span class="n">is_disabled</span> <span class="o">=</span> <span class="s1">&#39;is_selected&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="o">.</span><span class="n">columns</span>
-                <span class="k">if</span> <span class="s1">&#39;is_selected&#39;</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="o">.</span><span class="n">columns</span><span class="p">):</span>
-                    <span class="n">is_disabled</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="p">[</span><span class="s1">&#39;is_selected&#39;</span><span class="p">]])</span> <span class="o">==</span> <span class="mi">0</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">is_disabled</span> <span class="o">=</span> <span class="kc">True</span>
-                    
-
             <span class="n">st</span><span class="o">.</span><span class="n">download_button</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Download Selected&quot;</span><span class="p">,</span> 
+                <span class="sa">f</span><span class="s2">&quot;Download Selected&quot;</span><span class="p">,</span>
                 <span class="n">key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_key_element</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Download Selected </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">),</span>
                 <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">export_xml_bytes</span><span class="p">(</span><span class="n">export_selected</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-                <span class="n">file_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="si">}</span><span class="s2">s_selected.xml&quot;</span><span class="p">,</span>
+                <span class="n">file_name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="si">}</span><span class="s2">s_selected.xml&quot;</span><span class="p">,</span>
                 <span class="n">mime</span><span class="o">=</span><span class="s2">&quot;application/xml&quot;</span><span class="p">,</span>
                 <span class="n">disabled</span><span class="o">=</span><span class="n">is_disabled</span>
             <span class="p">)</span></div>
 
-        <span class="c1"># create_card(self.TXT.SELECT_DATA_TABLE_TITLE, False, data_table_view)</span>
+
+<div class="viewcode-block" id="BaseComponent.data_table_view">
+<a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.data_table_view">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">data_table_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ordered_col</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">state_key</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Displays the full data table, allowing selection.&quot;&quot;&quot;</span>
+
+        <span class="c1"># Add custom CSS to ensure full width and remove scrollbars</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            &lt;style&gt;</span>
+<span class="s2">                .element-container {</span>
+<span class="s2">                    width: 100% !important;</span>
+<span class="s2">                }</span>
+<span class="s2">                .stDataFrame {</span>
+<span class="s2">                    width: 100% !important;</span>
+<span class="s2">                    text-align: center !important;                    </span>
+<span class="s2">                }</span>
+<span class="s2">                .data-editor-container {</span>
+<span class="s2">                    width: 100% !important;</span>
+<span class="s2">                }</span>
+<span class="s2">                [data-testid=&quot;stDataFrame&quot;] {</span>
+<span class="s2">                    width: 100% !important;                 </span>
+<span class="s2">                }</span>
+<span class="s2">                div[data-testid=&quot;stDataFrame&quot;] &gt; div {</span>
+<span class="s2">                    width: 100% !important;                  </span>
+<span class="s2">                }</span>
+<span class="s2">                div[data-testid=&quot;stDataFrame&quot;] &gt; div &gt; iframe {</span>
+<span class="s2">                    width: 100% !important;</span>
+<span class="s2">                    text-align: center !important;                    </span>
+<span class="s2">                    min-height: calc(100vh - 300px);  # Adjust this value as needed</span>
+<span class="s2">                }                   </span>
+<span class="s2">            &lt;/style&gt;</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">,</span> <span class="n">unsafe_allow_html</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  
+
+        <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">,</span> <span class="n">c3</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">with</span> <span class="n">c1</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total Number of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="si">}</span><span class="s2">s: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                
+        <span class="k">with</span> <span class="n">c2</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;Select All&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_key_element</span><span class="p">(</span><span class="s2">&quot;Select All&quot;</span><span class="p">)):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="p">[</span><span class="s1">&#39;is_selected&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">with</span> <span class="n">c3</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;Unselect All&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_key_element</span><span class="p">(</span><span class="s2">&quot;Unselect All&quot;</span><span class="p">)):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="p">[</span><span class="s1">&#39;is_selected&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+        
+        <span class="c1"># it would be prettier to merge &quot;magnitude_type&quot; with magnitude here.. TODO</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">selected_items_view</span><span class="p">(</span><span class="n">state_key</span><span class="p">)</span> 
+
+        <span class="c1"># Set the height based on the number of rows (with a minimum and maximum)</span>
+        <span class="n">num_rows</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="p">)</span>
+        <span class="n">height</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">num_rows</span> <span class="o">*</span> <span class="mi">35</span> <span class="o">+</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">800</span><span class="p">),</span> <span class="mi">400</span><span class="p">)</span>  <span class="c1"># Adjust as needed</span>
+
+        <span class="c1"># Define desired column widths in pts</span>
+        <span class="n">column_widths</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;Select&quot;</span><span class="p">:</span> <span class="mi">60</span><span class="p">,</span>
+            <span class="s2">&quot;network&quot;</span><span class="p">:</span> <span class="mi">60</span><span class="p">,</span>
+            <span class="s2">&quot;station&quot;</span><span class="p">:</span> <span class="mi">80</span><span class="p">,</span>
+            <span class="s2">&quot;elevation&quot;</span><span class="p">:</span> <span class="mi">80</span><span class="p">,</span>
+            <span class="s2">&quot;longitude&quot;</span><span class="p">:</span> <span class="mi">130</span><span class="p">,</span>
+            <span class="s2">&quot;latitude&quot;</span><span class="p">:</span> <span class="mi">130</span><span class="p">,</span>
+            <span class="s2">&quot;start_date&quot;</span><span class="p">:</span> <span class="mi">140</span><span class="p">,</span>
+            <span class="s2">&quot;end_date&quot;</span><span class="p">:</span> <span class="mi">140</span>
+            <span class="p">}</span>
+
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">ordered_col</span><span class="p">:</span>
+            
+            <span class="c1"># Add width if this column should have a specific width</span>
+            <span class="k">if</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">column_widths</span><span class="p">:</span>
+                <span class="n">config</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">column_config</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span>
+                    <span class="n">col</span><span class="p">,</span>
+                    <span class="n">width</span><span class="o">=</span><span class="n">column_widths</span><span class="p">[</span><span class="n">col</span><span class="p">]</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">config</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">column_config</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span>
+                    <span class="n">col</span><span class="p">,</span>
+                <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">df_data_edit</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">data_editor</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="p">,</span> 
+            <span class="n">hide_index</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> 
+            <span class="n">column_config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> 
+            <span class="n">column_order</span> <span class="o">=</span> <span class="n">ordered_col</span><span class="p">,</span> 
+            <span class="n">key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_key_element</span><span class="p">(</span><span class="s2">&quot;Data Table&quot;</span><span class="p">),</span>
+            <span class="n">height</span><span class="o">=</span><span class="n">height</span><span class="p">,</span>
+            <span class="n">use_container_width</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+        
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_data_edit</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="n">state_key</span><span class="p">]):</span>
+            <span class="n">has_changed</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">has_changed</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_data_edit</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="n">state_key</span><span class="p">])</span>
+            
+            <span class="k">if</span> <span class="n">has_changed</span><span class="p">:</span>
+                <span class="n">df_sorted_new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_data_edit</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">df_data_edit</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">df_sorted_old</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="n">state_key</span><span class="p">]</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="n">state_key</span><span class="p">]</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">has_changed</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">df_sorted_new</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">df_sorted_old</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">has_changed</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="n">state_key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_data_edit</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># Save the unsorted version to preserve user sorting</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sync_df_markers_with_df_edit</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">refresh_map_selection</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="BaseComponent.selected_items_view">
+<a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.selected_items_view">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">selected_items_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_key</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Displays selected items using an actual `st.multiselect`, controlled by table selection.&quot;&quot;&quot;</span>
+
+        <span class="n">df_selected</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="p">[</span><span class="s1">&#39;is_selected&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">df_selected</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">EVENT</span><span class="p">:</span>
+            <span class="n">preferred_column</span> <span class="o">=</span> <span class="s2">&quot;place&quot;</span>
+            <span class="n">unique_column</span> <span class="o">=</span> <span class="s2">&quot;magnitude&quot;</span>  <span class="c1"># Extra column to make each entry unique</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">STATION</span><span class="p">:</span>
+            <span class="n">preferred_column</span> <span class="o">=</span> <span class="s2">&quot;network&quot;</span>
+            <span class="n">unique_column</span> <span class="o">=</span> <span class="s2">&quot;station&quot;</span>  <span class="c1"># Extra column to make each entry unique</span>
+
+        <span class="c1">## causing issue in STATION table which doesn&#39;t have &quot;magnitude&quot; (NEEDS REVIEW)</span>
+        <span class="k">if</span> <span class="n">preferred_column</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">df_selected</span><span class="o">.</span><span class="n">columns</span> <span class="ow">or</span> <span class="n">unique_column</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">df_selected</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Column &#39;</span><span class="si">{</span><span class="n">preferred_column</span><span class="si">}</span><span class="s2">&#39; or &#39;</span><span class="si">{</span><span class="n">unique_column</span><span class="si">}</span><span class="s2">&#39; not found in the data!&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="n">df_selected</span><span class="p">[</span><span class="s2">&quot;display_label&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_selected</span><span class="p">[</span><span class="n">preferred_column</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot; (&quot;</span> <span class="o">+</span> <span class="n">df_selected</span><span class="p">[</span><span class="n">unique_column</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;)&quot;</span>
+        
+        <span class="n">selected_items</span> <span class="o">=</span> <span class="n">df_selected</span><span class="p">[</span><span class="s2">&quot;display_label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+        <span class="n">updated_selection</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">multiselect</span><span class="p">(</span>
+            <span class="s2">&quot;Selected Items&quot;</span><span class="p">,</span>
+            <span class="n">options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="p">[</span><span class="s1">&#39;is_selected&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">x</span><span class="p">[</span><span class="n">preferred_column</span><span class="p">]</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">x</span><span class="p">[</span><span class="n">unique_column</span><span class="p">]</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+            <span class="n">default</span><span class="o">=</span><span class="n">selected_items</span><span class="p">,</span>
+            <span class="n">key</span><span class="o">=</span><span class="s2">&quot;selected_items_list&quot;</span><span class="p">,</span>
+            <span class="n">placeholder</span><span class="o">=</span><span class="s2">&quot;Selected Items&quot;</span><span class="p">,</span>
+            <span class="n">disabled</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+
+        <span class="n">removed_items</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">selected_items</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">updated_selection</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">removed_items</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">removed_items</span><span class="p">:</span>
+                <span class="n">place_name</span><span class="p">,</span> <span class="n">magnitude</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">&quot; (&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">magnitude</span> <span class="o">=</span> <span class="n">magnitude</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;)&quot;</span><span class="p">)</span>  <span class="c1"># Remove closing bracket</span>
+
+                <span class="n">item_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="p">[</span>
+                    <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="p">[</span><span class="n">preferred_column</span><span class="p">]</span> <span class="o">==</span> <span class="n">place_name</span><span class="p">)</span> <span class="o">&amp;</span> 
+                    <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="p">[</span><span class="n">unique_column</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span> <span class="o">==</span> <span class="n">magnitude</span><span class="p">)</span>
+                <span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+                <span class="k">if</span> <span class="n">item_index</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">item_index</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;is_selected&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>  
+                    <span class="c1"># self.sync_df_markers_with_df_edit()</span>
+
+            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="n">state_key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">refresh_map_selection</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="BaseComponent.render">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.render">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">render_map_handles</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">render_map_right_menu</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_error</span> <span class="ow">and</span> <span class="s2">&quot;Import Error&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">:</span>
             <span class="n">c1_err</span><span class="p">,</span> <span class="n">c2_err</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">4</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
@@ -1489,55 +1586,27 @@
                     <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">EVENT</span><span class="p">:</span>
-            <span class="n">c2_export</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_filter</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">event_filter</span><span class="p">()</span>
+        
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">STATION</span><span class="p">:</span>
-            <span class="n">c2_export</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">station_filter</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">station_filter</span><span class="p">()</span>
 
+        <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="p">:</span>
+            <span class="n">c2_export</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">render_import_export</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">get_prev_step_df</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">render_map</span><span class="p">()</span>
 
-        <span class="c1"># c1_top, c2_top = st.columns([2,1])</span>
-
-        <span class="c1"># with c2_top:</span>
-        <span class="c1">#     c2_export = self.render_map_right_menu()</span>
-
-        <span class="c1"># with c1_top:</span>
-        <span class="c1">#     self.render_map()</span>
-
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
-            <span class="n">c1_bot</span><span class="p">,</span> <span class="n">c2_bot</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span>
-
-            <span class="k">with</span> <span class="n">c1_bot</span><span class="p">:</span>
-                <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">SELECT_MARKER_TITLE</span><span class="p">,</span> <span class="n">expanded</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="o">.</span><span class="n">empty</span><span class="p">):</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">render_marker_select</span><span class="p">()</span>
-
-            <span class="k">with</span> <span class="n">c2_bot</span><span class="p">:</span>
-                <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">SELECT_DATA_TABLE_TITLE</span><span class="p">,</span> <span class="n">expanded</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="o">.</span><span class="n">empty</span><span class="p">):</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">render_data_table</span><span class="p">(</span><span class="n">c2_export</span><span class="p">)</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">render_marker_select</span><span class="p">()</span>
+            <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">SELECT_DATA_TABLE_TITLE</span><span class="p">,</span> <span class="n">expanded</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="o">.</span><span class="n">empty</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">render_data_table</span><span class="p">(</span><span class="n">c2_export</span><span class="p">)</span></div>
 </div>
 
 
-        
-        <span class="c1"># if not self.df_markers.empty:</span>
-        <span class="c1">#     st.header(self.TXT.SELECT_DATA_TITLE)</span>
-        <span class="c1">#     tab1, tab2 = st.tabs([&quot;📄 Table&quot;, &quot;🌍 Map&quot;])</span>
-        <span class="c1">#     with tab1:</span>
-        <span class="c1">#         st.write(self.TXT.SELECT_DATA_TABLE_MSG)</span>
-        <span class="c1">#         self.render_data_table()</span>
-
-        <span class="c1">#     with tab2:</span>
-        <span class="c1">#         st.write(self.TXT.SELECT_MARKER_MSG)</span>
-        <span class="c1">#         self.render_marker_select()</span>
-
-            <span class="c1"># c21, c22 = st.columns([2,1])            </span>
-            <span class="c1"># with c22:</span>
-            <span class="c1">#     self.render_marker_select()</span>
-
-            <span class="c1"># with c21:</span>
-            <span class="c1">#     self.render_data_table()</span>
+    
 
 
 

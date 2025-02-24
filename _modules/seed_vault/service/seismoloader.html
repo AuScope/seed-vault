@@ -48,7 +48,18 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../app.html">Seed Vault App</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../app.html">Seed Vault App</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../app_main_flows.html">Main Flows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../app_run_from_config.html">Direct parameter input</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../app_db_explorer.html">Database Explorer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../app_settings.html">App Settings</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../app_settings.html#data">Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../app_settings.html#credentials">Credentials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../app_settings.html#clients">Clients</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../../cli.html">CLI commands</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../modules.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../seed_vault.html">seed_vault package</a><ul>
@@ -100,12 +111,14 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">sqlite3</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">multiprocessing</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">configparser</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
@@ -353,7 +366,38 @@
     <span class="n">search_patterns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;??.*.*.???.?.????.???&quot;</span><span class="p">],</span>
     <span class="n">newer_than</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_processes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gap_tolerance</span> <span class="o">=</span> <span class="mi">60</span><span class="p">):</span>
 
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Utility function to populate the archive_table in our database. &quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Scan an SDS archive directory and populate a database with data availability.</span>
+
+<span class="sd">    Recursively searches an SDS (Seismic Data Structure) archive for MiniSEED files,</span>
+<span class="sd">    extracts their metadata, and records data availability in a SQLite database.</span>
+<span class="sd">    Supports parallel processing and can optionally filter for recently modified files.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        sds_path (str): Path to the root SDS archive directory</span>
+<span class="sd">        db_path (str): Path to the SQLite database file</span>
+<span class="sd">        search_patterns (list, optional): List of file patterns to match.</span>
+<span class="sd">            Defaults to [&quot;??.*.*.???.?.????.???&quot;] (standard SDS naming pattern).</span>
+<span class="sd">        newer_than (str or UTCDateTime, optional): Only process files modified after</span>
+<span class="sd">            this time. Defaults to None (process all files).</span>
+<span class="sd">        num_processes (int, optional): Number of parallel processes to use.</span>
+<span class="sd">            Defaults to None (use all available CPU cores).</span>
+<span class="sd">        gap_tolerance (int, optional): Maximum time gap in seconds between segments</span>
+<span class="sd">            that should be considered continuous. Defaults to 60.</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        - Uses DatabaseManager class to handle database operations</span>
+<span class="sd">        - Attempts multiprocessing but falls back to single process if it fails</span>
+<span class="sd">            (common on OSX and Windows)</span>
+<span class="sd">        - Follows symbolic links when walking directory tree</span>
+<span class="sd">        - Files are processed using miniseed_to_db_element() function</span>
+<span class="sd">        - After insertion, continuous segments are joined based on gap_tolerance</span>
+<span class="sd">        - Progress is displayed using tqdm progress bars</span>
+<span class="sd">        - If newer_than is provided, it&#39;s converted to a Unix timestamp for comparison</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        RuntimeError: If bulk insertion into database fails</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">db_manager</span> <span class="o">=</span> <span class="n">DatabaseManager</span><span class="p">(</span><span class="n">db_path</span><span class="p">)</span>
 
@@ -408,7 +452,17 @@
 <div class="viewcode-block" id="populate_database_from_files_dumb">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.seismoloader.populate_database_from_files_dumb">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">populate_database_from_files_dumb</span><span class="p">(</span><span class="n">cursor</span><span class="p">,</span> <span class="n">file_paths</span><span class="o">=</span><span class="p">[]):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Quickly insert/update a few SDS archive files into the SQL database. &quot;Dumb&quot; version!&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Simple version of database population from MiniSEED files without span merging.</span>
+
+<span class="sd">    A simplified &quot;dumb&quot; version that blindly replaces existing database entries</span>
+<span class="sd">    with identical network/station/location/channel codes, rather than checking for</span>
+<span class="sd">    and merging overlapping time spans.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        cursor (sqlite3.Cursor): Database cursor for executing SQL commands</span>
+<span class="sd">        file_paths (list, optional): List of paths to MiniSeed files. Defaults to empty list.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">now</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">timestamp</span><span class="p">())</span>
     <span class="k">for</span> <span class="n">fp</span> <span class="ow">in</span> <span class="n">file_paths</span><span class="p">:</span>
         <span class="n">result</span>  <span class="o">=</span> <span class="n">miniseed_to_db_element</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
@@ -425,7 +479,38 @@
 <div class="viewcode-block" id="populate_database_from_files">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.seismoloader.populate_database_from_files">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">populate_database_from_files</span><span class="p">(</span><span class="n">cursor</span><span class="p">,</span> <span class="n">file_paths</span><span class="o">=</span><span class="p">[]):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Quickly insert/update a few SDS archive files into the SQL database. &quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Insert or update MiniSEED file metadata into an SQL database.</span>
+
+<span class="sd">    Takes a list of SDS archive file paths, extracts metadata, and updates a database</span>
+<span class="sd">    tracking data availability. If data spans overlap with existing database entries,</span>
+<span class="sd">    the spans are merged. Uses miniseed_to_db_element() to parse file metadata.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        cursor (sqlite3.Cursor): Database cursor for executing SQL commands</span>
+<span class="sd">        file_paths (list, optional): List of paths to MiniSeed files. Defaults to empty list.</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        - Database must have an &#39;archive_data&#39; table with columns:</span>
+<span class="sd">            * network (text)</span>
+<span class="sd">            * station (text)</span>
+<span class="sd">            * location (text)</span>
+<span class="sd">            * channel (text)</span>
+<span class="sd">            * starttime (integer): Unix timestamp</span>
+<span class="sd">            * endtime (integer): Unix timestamp</span>
+<span class="sd">            * importtime (integer): Unix timestamp of database insertion</span>
+<span class="sd">        - Handles overlapping time spans by merging them into a single entry</span>
+<span class="sd">        - Sets importtime to current Unix timestamp</span>
+<span class="sd">        - Skips files that fail metadata extraction (when miniseed_to_db_element returns None)</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; import sqlite3</span>
+<span class="sd">        &gt;&gt;&gt; conn = sqlite3.connect(&#39;archive.db&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; cursor = conn.cursor()</span>
+<span class="sd">        &gt;&gt;&gt; files = [&#39;/path/to/IU.ANMO.00.BHZ.mseed&#39;, &#39;/path/to/IU.ANMO.00.BHN.mseed&#39;]</span>
+<span class="sd">        &gt;&gt;&gt; populate_database_from_files(cursor, files)</span>
+<span class="sd">        &gt;&gt;&gt; conn.commit()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">now</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">timestamp</span><span class="p">())</span>
     <span class="k">for</span> <span class="n">fp</span> <span class="ow">in</span> <span class="n">file_paths</span><span class="p">:</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">miniseed_to_db_element</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
@@ -465,7 +550,44 @@
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.seismoloader.collect_requests">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">collect_requests</span><span class="p">(</span><span class="n">inv</span><span class="p">,</span> <span class="n">time0</span><span class="p">,</span> <span class="n">time1</span><span class="p">,</span> <span class="n">days_per_request</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> 
                      <span class="n">cha_pref</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">loc_pref</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Collect all requests required to download everything in inventory, split into X-day periods. &quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate time-windowed data requests for all channels in an inventory.</span>
+
+<span class="sd">    Creates a list of data requests by breaking a time period into smaller windows</span>
+<span class="sd">    and collecting station metadata for each window. Can optionally filter for</span>
+<span class="sd">    preferred channels and location codes.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        inv (obspy.core.inventory.Inventory): Station inventory to generate requests for</span>
+<span class="sd">        time0 (obspy.UTCDateTime): Start time for data requests</span>
+<span class="sd">        time1 (obspy.UTCDateTime): End time for data requests</span>
+<span class="sd">        days_per_request (int, optional): Length of each request window in days. </span>
+<span class="sd">            Defaults to 3.</span>
+<span class="sd">        cha_pref (list, optional): List of preferred channel codes in priority order.</span>
+<span class="sd">            If provided, only these channels will be requested. Defaults to None.</span>
+<span class="sd">        loc_pref (list, optional): List of preferred location codes in priority order.</span>
+<span class="sd">            If provided, only these location codes will be requested. Defaults to None.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list or None: List of tuples containing request parameters:</span>
+<span class="sd">            (network_code, station_code, location_code, channel_code, </span>
+<span class="sd">             start_time_iso, end_time_iso)</span>
+<span class="sd">            Returns None if start time is greater than or equal to end time.</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        - End time is capped at 120 seconds before current time</span>
+<span class="sd">        - Times in returned tuples are ISO formatted strings with &#39;Z&#39; suffix</span>
+<span class="sd">        - Uses get_preferred_channels() if cha_pref or loc_pref are specified</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; from obspy import UTCDateTime</span>
+<span class="sd">        &gt;&gt;&gt; t0 = UTCDateTime(&quot;2020-01-01&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; t1 = UTCDateTime(&quot;2020-01-10&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; requests = collect_requests(inventory, t0, t1, </span>
+<span class="sd">        ...                           days_per_request=2,</span>
+<span class="sd">        ...                           cha_pref=[&#39;HHZ&#39;, &#39;BHZ&#39;],</span>
+<span class="sd">        ...                           loc_pref=[&#39;&#39;, &#39;00&#39;])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">requests</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># network, station, location, channel, starttime, endtime</span>
 
@@ -499,10 +621,73 @@
 
 
 
+<div class="viewcode-block" id="remove_duplicate_events">
+<a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.seismoloader.remove_duplicate_events">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">remove_duplicate_events</span><span class="p">(</span><span class="n">catalog</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Remove duplicate events from an ObsPy Catalog based on resource IDs.</span>
+
+<span class="sd">    Takes a catalog of earthquake events and returns a new catalog containing only</span>
+<span class="sd">    unique events, where uniqueness is determined by the event&#39;s resource_id.</span>
+<span class="sd">    The first occurrence of each resource_id is kept.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        catalog (obspy.core.event.Catalog): Input catalog containing earthquake events</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        obspy.core.event.Catalog: New catalog containing only unique events</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; from obspy import read_events</span>
+<span class="sd">        &gt;&gt;&gt; cat = read_events(&#39;events.xml&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; unique_cat = remove_duplicate_events(cat)</span>
+<span class="sd">        &gt;&gt;&gt; print(f&quot;Removed {len(cat) - len(unique_cat)} duplicate events&quot;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">obspy</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">Catalog</span><span class="p">()</span>
+    <span class="n">eq_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">catalog</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">resource_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">eq_ids</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+            <span class="n">eq_ids</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">resource_id</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
 <div class="viewcode-block" id="get_p_s_times">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.seismoloader.get_p_s_times">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_p_s_times</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">dist_deg</span><span class="p">,</span> <span class="n">ttmodel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Get first P/S arrivals given an earthquake object, distance, and traveltime model. &quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate theoretical P and S wave arrival times for an earthquake at a given distance.</span>
+
+<span class="sd">    Uses a travel time model to compute the first P and S wave arrivals for a given</span>
+<span class="sd">    earthquake and distance. The first arrival (labeled as &quot;P&quot;) may not necessarily be</span>
+<span class="sd">    a direct P wave. For S waves, only phases explicitly labeled as &#39;S&#39; are considered.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        eq (obspy.core.event.Event): Earthquake event object containing origin time</span>
+<span class="sd">            and depth information</span>
+<span class="sd">        dist_deg (float): Distance between source and receiver in degrees</span>
+<span class="sd">        ttmodel (obspy.taup.TauPyModel): Travel time model to use for calculations</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: A tuple containing:</span>
+<span class="sd">            - (UTCDateTime or None): Time of first arrival (&quot;P&quot; wave)</span>
+<span class="sd">            - (UTCDateTime or None): Time of first S wave arrival</span>
+<span class="sd">              Returns (None, None) if travel time calculation fails</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        - Earthquake depth is expected in meters in the QuakeML format and is</span>
+<span class="sd">          converted to kilometers for the travel time calculations</span>
+<span class="sd">        - For S waves, only searches for explicit &#39;S&#39; phase arrivals</span>
+<span class="sd">        - Warns if no P arrival is found at any distance</span>
+<span class="sd">        - Warns if no S arrival is found at distances ≤ 90 degrees</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; from obspy.taup import TauPyModel</span>
+<span class="sd">        &gt;&gt;&gt; model = TauPyModel(model=&quot;iasp91&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; p_time, s_time = get_p_s_times(earthquake, 45.3, model)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">eq_time</span> <span class="o">=</span> <span class="n">eq</span><span class="o">.</span><span class="n">origins</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">time</span>
     <span class="n">eq_depth</span> <span class="o">=</span> <span class="n">eq</span><span class="o">.</span><span class="n">origins</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">depth</span> <span class="o">/</span> <span class="mi">1000</span>  <span class="c1"># depths are in meters for QuakeML</span>
@@ -514,7 +699,7 @@
             <span class="n">phase_list</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;ttbasic&#39;</span><span class="p">]</span>
         <span class="p">)</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error calculating travel times: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error calculating travel times:</span><span class="se">\n</span><span class="s2"> </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
 
     <span class="n">p_arrival_time</span> <span class="o">=</span> <span class="kc">None</span>
@@ -543,11 +728,39 @@
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.seismoloader.select_highest_samplerate">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">select_highest_samplerate</span><span class="p">(</span><span class="n">inv</span><span class="p">,</span> <span class="n">minSR</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Where overlapping channels exist (e.g. 100 hz and 10 hz), filter out anything other than highest available samplerate.</span>
-<span class="sd">    Channels are considered duplicates if:</span>
-<span class="sd">        - When time is specified: same location code and both exist at that time</span>
-<span class="sd">        - When time is None: same location code and same time span</span>
-<span class="sd">    All channels must meet minSR requirement.</span>
+<span class="sd">    Filters an inventory to keep only the highest sample rate channels where duplicates exist.</span>
+<span class="sd">    </span>
+<span class="sd">    For each station in the inventory, this function identifies duplicate channels (those sharing</span>
+<span class="sd">    the same location code) and keeps only those with the highest sample rate. Channels must</span>
+<span class="sd">    meet the minimum sample rate requirement to be considered.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        inv (obspy.core.inventory.Inventory): Input inventory object</span>
+<span class="sd">        minSR (float, optional): Minimum sample rate in Hz. Defaults to 10.</span>
+<span class="sd">        time (obspy.UTCDateTime, optional): Specific time to check channel existence.</span>
+<span class="sd">            If provided, channels are considered duplicates if they share the same</span>
+<span class="sd">            location code and both exist at that time. If None, channels are considered</span>
+<span class="sd">            duplicates if they share the same location code and time span. Defaults to None.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        obspy.core.inventory.Inventory: Filtered inventory containing only the highest</span>
+<span class="sd">            sample rate channels where duplicates existed.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; # Filter inventory keeping only highest sample rate channels</span>
+<span class="sd">        &gt;&gt;&gt; filtered_inv = select_highest_samplerate(inv)</span>
+<span class="sd">        &gt;&gt;&gt; </span>
+<span class="sd">        &gt;&gt;&gt; # Filter for a specific time, minimum 1 Hz</span>
+<span class="sd">        &gt;&gt;&gt; from obspy import UTCDateTime</span>
+<span class="sd">        &gt;&gt;&gt; time = UTCDateTime(&quot;2020-01-01&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; filtered_inv = select_highest_samplerate(inv, minSR=1, time=time)</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        - Channel duplicates are determined by location code and either:</span>
+<span class="sd">          * Existence at a specific time (if time is provided)</span>
+<span class="sd">          * Having identical time spans (if time is None)</span>
+<span class="sd">        - All retained channels must have sample rates &gt;= minSR</span>
+<span class="sd">        - For duplicate channels, all channels with the highest sample rate are kept</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">time</span><span class="p">:</span>
         <span class="n">inv</span> <span class="o">=</span> <span class="n">inv</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">time</span><span class="p">)</span>
@@ -745,6 +958,8 @@
     <span class="n">model_name</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">model</span>
     <span class="n">before_p_sec</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">before_p_sec</span>
     <span class="n">after_p_sec</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">after_p_sec</span>
+    <span class="n">min_radius</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">min_radius</span>
+    <span class="n">max_radius</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">max_radius</span>    
     <span class="n">highest_sr_only</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">highest_samplerate_only</span>
     <span class="n">cha_pref</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">waveform</span><span class="o">.</span><span class="n">channel_pref</span>
     <span class="n">loc_pref</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">waveform</span><span class="o">.</span><span class="n">location_pref</span>
@@ -781,14 +996,14 @@
                 <span class="n">sta_end</span> <span class="o">=</span> <span class="kc">None</span>
 
             <span class="c1"># Check for existing arrivals</span>
-            <span class="n">fetched_arrivals</span> <span class="o">=</span> <span class="n">db_manager</span><span class="o">.</span><span class="n">fetch_arrivals</span><span class="p">(</span>
+            <span class="n">fetched_arrivals</span> <span class="o">=</span> <span class="n">db_manager</span><span class="o">.</span><span class="n">fetch_arrivals_distances</span><span class="p">(</span>
                 <span class="nb">str</span><span class="p">(</span><span class="n">eq</span><span class="o">.</span><span class="n">preferred_origin_id</span><span class="p">),</span>
                 <span class="n">net</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
                 <span class="n">sta</span><span class="o">.</span><span class="n">code</span>
             <span class="p">)</span>
 
             <span class="k">if</span> <span class="n">fetched_arrivals</span><span class="p">:</span>
-                <span class="n">p_time</span><span class="p">,</span> <span class="n">s_time</span> <span class="o">=</span> <span class="n">fetched_arrivals</span>
+                <span class="n">p_time</span><span class="p">,</span> <span class="n">s_time</span><span class="p">,</span> <span class="n">dist_km</span><span class="p">,</span> <span class="n">dist_deg</span><span class="p">,</span> <span class="n">azi</span> <span class="o">=</span> <span class="n">fetched_arrivals</span>
                 <span class="n">t_start</span> <span class="o">=</span> <span class="n">p_time</span> <span class="o">-</span> <span class="nb">abs</span><span class="p">(</span><span class="n">before_p_sec</span><span class="p">)</span>
                 <span class="n">t_end</span> <span class="o">=</span> <span class="n">p_time</span> <span class="o">+</span> <span class="nb">abs</span><span class="p">(</span><span class="n">after_p_sec</span><span class="p">)</span>
                 <span class="n">p_arrivals</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">net</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">sta</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">p_time</span>
@@ -812,7 +1027,7 @@
                 <span class="n">t_end</span> <span class="o">=</span> <span class="p">(</span><span class="n">p_time</span> <span class="o">+</span> <span class="nb">abs</span><span class="p">(</span><span class="n">after_p_sec</span><span class="p">))</span><span class="o">.</span><span class="n">timestamp</span>
                 <span class="n">p_arrivals</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">net</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">sta</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">p_time</span><span class="o">.</span><span class="n">timestamp</span>
 
-                <span class="c1"># Prepare arrival data for database</span>
+                <span class="c1"># save these new arrivals to insert into database</span>
                 <span class="n">arrivals_per_eq</span><span class="o">.</span><span class="n">append</span><span class="p">((</span>
                     <span class="nb">str</span><span class="p">(</span><span class="n">eq</span><span class="o">.</span><span class="n">preferred_origin_id</span><span class="p">),</span>
                     <span class="n">eq</span><span class="o">.</span><span class="n">magnitudes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">mag</span><span class="p">,</span>
@@ -825,18 +1040,26 @@
                     <span class="n">model_name</span>
                 <span class="p">))</span>
 
-            <span class="c1"># Generate requests for each channel</span>
-            <span class="k">for</span> <span class="n">cha</span> <span class="ow">in</span> <span class="n">sta</span><span class="p">:</span>
-                <span class="n">t_end</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">t_end</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">timestamp</span><span class="p">()</span> <span class="o">-</span> <span class="mi">120</span><span class="p">)</span>
-                <span class="n">t_start</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">t_start</span><span class="p">,</span> <span class="n">t_end</span><span class="p">)</span>
-                <span class="n">requests_per_eq</span><span class="o">.</span><span class="n">append</span><span class="p">((</span>
-                    <span class="n">net</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
-                    <span class="n">sta</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
-                    <span class="n">cha</span><span class="o">.</span><span class="n">location_code</span><span class="p">,</span>
-                    <span class="n">cha</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
-                    <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">t_start</span><span class="p">,</span> <span class="n">tz</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
-                    <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">t_end</span><span class="p">,</span> <span class="n">tz</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
-                <span class="p">))</span>
+            <span class="c1"># skip anything out of our search parameters</span>
+            <span class="k">if</span> <span class="n">dist_deg</span> <span class="o">&lt;</span> <span class="n">min_radius</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Skipping </span><span class="si">{</span><span class="n">net</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">sta</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">  (distance </span><span class="si">{</span><span class="n">dist_deg</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> &lt; min_radius </span><span class="si">{</span><span class="n">min_radius</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">elif</span> <span class="n">dist_deg</span> <span class="o">&gt;</span> <span class="n">max_radius</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Skipping </span><span class="si">{</span><span class="n">net</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">sta</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">  (distance </span><span class="si">{</span><span class="n">dist_deg</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> &gt; max_radius </span><span class="si">{</span><span class="n">max_radius</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Generate requests for each channel</span>
+                <span class="k">for</span> <span class="n">cha</span> <span class="ow">in</span> <span class="n">sta</span><span class="p">:</span>
+                    <span class="n">t_end</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">t_end</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">timestamp</span><span class="p">()</span> <span class="o">-</span> <span class="mi">120</span><span class="p">)</span>
+                    <span class="n">t_start</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">t_start</span><span class="p">,</span> <span class="n">t_end</span><span class="p">)</span>
+                    <span class="n">requests_per_eq</span><span class="o">.</span><span class="n">append</span><span class="p">((</span>
+                        <span class="n">net</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+                        <span class="n">sta</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+                        <span class="n">cha</span><span class="o">.</span><span class="n">location_code</span><span class="p">,</span>
+                        <span class="n">cha</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+                        <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">t_start</span><span class="p">,</span> <span class="n">tz</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+                        <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">t_end</span><span class="p">,</span> <span class="n">tz</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+                    <span class="p">))</span>
 
     <span class="k">return</span> <span class="n">requests_per_eq</span><span class="p">,</span> <span class="n">arrivals_per_eq</span><span class="p">,</span> <span class="n">p_arrivals</span></div>
 
@@ -896,6 +1119,86 @@
     
     <span class="k">return</span> <span class="n">combined_requests</span></div>
 
+
+
+<div class="viewcode-block" id="get_missing_from_request">
+<a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.seismoloader.get_missing_from_request">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_missing_from_request</span><span class="p">(</span><span class="n">eq_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">requests</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">],</span> <span class="n">st</span><span class="p">:</span> <span class="n">obspy</span><span class="o">.</span><span class="n">Stream</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compare requested seismic data against what&#39;s present in a Stream.</span>
+<span class="sd">    Handles comma-separated values for location and channel codes.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters:</span>
+<span class="sd">    -----------</span>
+<span class="sd">    eq_id : str</span>
+<span class="sd">        Earthquake ID to use as dictionary key</span>
+<span class="sd">    requests : List[Tuple]</span>
+<span class="sd">        List of request tuples, each containing (network, station, location, channel, starttime, endtime)</span>
+<span class="sd">    st : Stream</span>
+<span class="sd">        ObsPy Stream object containing seismic traces</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">    --------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Nested dictionary with structure:</span>
+<span class="sd">        {eq_id: {</span>
+<span class="sd">            &quot;network.station&quot;: value,</span>
+<span class="sd">            &quot;network2.station2&quot;: value2,</span>
+<span class="sd">            ...</span>
+<span class="sd">        }}</span>
+<span class="sd">        where value is either:</span>
+<span class="sd">        - list of missing channel strings (&quot;network.station.location.channel&quot;)</span>
+<span class="sd">        - &quot;Not Attempted&quot; if stream is empty</span>
+<span class="sd">        - &quot;ALL&quot; if all requested channels are missing</span>
+<span class="sd">        - [] if all requested channels are present</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">requests</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{}</span>
+    
+    <span class="n">result</span> <span class="o">=</span> <span class="p">{</span><span class="n">eq_id</span><span class="p">:</span> <span class="p">{}}</span>
+    
+    <span class="c1"># Process each request</span>
+    <span class="k">for</span> <span class="n">request</span> <span class="ow">in</span> <span class="n">requests</span><span class="p">:</span>
+        <span class="n">net</span><span class="p">,</span> <span class="n">sta</span><span class="p">,</span> <span class="n">loc</span><span class="p">,</span> <span class="n">cha</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">request</span>  <span class="c1"># Ignore time windows</span>
+        <span class="n">station_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">net</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">sta</span><span class="si">}</span><span class="s2">&quot;</span>
+        
+        <span class="c1"># Split location and channel if comma-separated</span>
+        <span class="n">locations</span> <span class="o">=</span> <span class="n">loc</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="s1">&#39;,&#39;</span> <span class="ow">in</span> <span class="n">loc</span> <span class="k">else</span> <span class="p">[</span><span class="n">loc</span><span class="p">]</span>
+        <span class="n">channels</span> <span class="o">=</span> <span class="n">cha</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="s1">&#39;,&#39;</span> <span class="ow">in</span> <span class="n">cha</span> <span class="k">else</span> <span class="p">[</span><span class="n">cha</span><span class="p">]</span>
+        
+        <span class="n">missing_channels</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">total_combinations</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">missing_combinations</span> <span class="o">=</span> <span class="mi">0</span>
+        
+        <span class="c1"># Check all combinations</span>
+        <span class="k">for</span> <span class="n">location</span> <span class="ow">in</span> <span class="n">locations</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">channel</span> <span class="ow">in</span> <span class="n">channels</span><span class="p">:</span>
+                <span class="n">total_combinations</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="c1"># Look for matching trace</span>
+                <span class="n">found_match</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">for</span> <span class="n">tr</span> <span class="ow">in</span> <span class="n">st</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">network</span> <span class="o">==</span> <span class="n">net</span> <span class="ow">and</span> 
+                        <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">station</span> <span class="o">==</span> <span class="n">sta</span> <span class="ow">and</span>
+                        <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">location</span> <span class="o">==</span> <span class="p">(</span><span class="n">location</span> <span class="k">if</span> <span class="n">location</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="ow">and</span>
+                        <span class="n">fnmatch</span><span class="o">.</span><span class="n">fnmatch</span><span class="p">(</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">channel</span><span class="p">,</span> <span class="n">channel</span><span class="p">)):</span>
+                        <span class="n">found_match</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">break</span>
+                
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">found_match</span><span class="p">:</span>
+                    <span class="n">missing_combinations</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">missing_channels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">net</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">sta</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">location</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">channel</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+        
+        <span class="c1"># Determine value for this station</span>
+        <span class="k">if</span> <span class="n">missing_combinations</span> <span class="o">==</span> <span class="n">total_combinations</span><span class="p">:</span>  <span class="c1"># nothing returned</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">eq_id</span><span class="p">][</span><span class="n">station_key</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;ALL&quot;</span>
+        <span class="k">elif</span> <span class="n">missing_combinations</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># everything returned</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">eq_id</span><span class="p">][</span><span class="n">station_key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># partial return</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">eq_id</span><span class="p">][</span><span class="n">station_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">missing_channels</span>
+    
+    <span class="k">return</span> <span class="n">result</span></div>
 
 
 <div class="viewcode-block" id="get_sds_filenames">
@@ -1126,20 +1429,20 @@
                     <span class="p">)</span>
                 <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                     <span class="k">if</span> <span class="s1">&#39;code: 204&#39;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">):</span>
-                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;        No data for station </span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">        No data for station </span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                     <span class="k">else</span><span class="p">:</span>
-                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unusual error fetching data for station </span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unusual error fetching data for station </span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="s2"> </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">st</span> <span class="o">=</span> <span class="n">wc</span><span class="o">.</span><span class="n">get_waveforms</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="c1"># Log download statistics</span>
         <span class="n">download_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">time0</span>
         <span class="n">download_size</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">tr</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">nbytes</span> <span class="k">for</span> <span class="n">tr</span> <span class="ow">in</span> <span class="n">st</span><span class="p">)</span> <span class="o">/</span> <span class="mi">1024</span><span class="o">**</span><span class="mi">2</span>  <span class="c1"># MB</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;        Downloaded </span><span class="si">{</span><span class="n">download_size</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> MB @ </span><span class="si">{</span><span class="n">download_size</span><span class="o">/</span><span class="n">download_time</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> MB/s&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;      &gt; Downloaded </span><span class="si">{</span><span class="n">download_size</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> MB @ </span><span class="si">{</span><span class="n">download_size</span><span class="o">/</span><span class="n">download_time</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> MB/s&quot;</span><span class="p">)</span>
 
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="k">if</span> <span class="s1">&#39;code: 204&#39;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">):</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;        No data available&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;      ~ No data available&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">return</span>
@@ -1192,7 +1495,7 @@
                 <span class="k">if</span> <span class="n">existing_st</span><span class="p">:</span>
                     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  ... Merging </span><span class="si">{</span><span class="n">full_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;! Could not read </span><span class="si">{</span><span class="n">full_path</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;! Could not read </span><span class="si">{</span><span class="n">full_path</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="s2"> </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="k">continue</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">existing_st</span> <span class="o">=</span> <span class="n">day_stream</span>
@@ -1214,15 +1517,15 @@
                         <span class="n">existing_st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">full_path</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;MSEED&quot;</span><span class="p">)</span>
                         <span class="n">to_insert_db</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stream_to_db_element</span><span class="p">(</span><span class="n">existing_st</span><span class="p">))</span>
                     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to write uncompressed MSEED to </span><span class="si">{</span><span class="n">full_path</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to write uncompressed MSEED to </span><span class="si">{</span><span class="n">full_path</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="s2"> </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to write </span><span class="si">{</span><span class="n">full_path</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to write </span><span class="si">{</span><span class="n">full_path</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="s2"> </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="c1"># Update database</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">num_inserted</span> <span class="o">=</span> <span class="n">db_manager</span><span class="o">.</span><span class="n">bulk_insert_archive_data</span><span class="p">(</span><span class="n">to_insert_db</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;! Error with bulk_insert_archive_data: &quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span></div>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;! Error with bulk_insert_archive_data:&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span></div>
 
 
 
@@ -1252,7 +1555,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">sds_path</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">sds_path</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">sds_path</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;SDS Path not set!&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">SDS Path not set!&quot;</span><span class="p">)</span>
 
     <span class="c1"># Setup SDS directory</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">sds_path</span><span class="p">):</span>
@@ -1268,7 +1571,7 @@
     <span class="k">return</span> <span class="n">settings</span><span class="p">,</span> <span class="n">db_manager</span></div>
 
 
-
+<span class="c1"># not in use?</span>
 <div class="viewcode-block" id="get_selected_stations_at_channel_level">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.seismoloader.get_selected_stations_at_channel_level">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_selected_stations_at_channel_level</span><span class="p">(</span><span class="n">settings</span><span class="p">:</span> <span class="n">SeismoLoaderSettings</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SeismoLoaderSettings</span><span class="p">:</span>
@@ -1305,7 +1608,7 @@
                 <span class="n">invs</span> <span class="o">+=</span> <span class="n">updated_inventory</span>
                 
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error updating station </span><span class="si">{</span><span class="n">station</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error updating station </span><span class="si">{</span><span class="n">station</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">selected_invs</span> <span class="o">=</span> <span class="n">invs</span>
     <span class="k">return</span> <span class="n">settings</span></div>
@@ -1387,45 +1690,85 @@
         <span class="k">try</span><span class="p">:</span> 
             <span class="n">inv</span> <span class="o">=</span> <span class="n">obspy</span><span class="o">.</span><span class="n">read_inventory</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">local_inventory</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s1">&#39;channel&#39;</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not read </span><span class="si">{</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">local_inventory</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not read </span><span class="si">{</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">local_inventory</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
 
     <span class="c1"># Query stations based on geographic constraints</span>
     <span class="k">elif</span> <span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">geo_constraint</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">geo</span> <span class="ow">in</span> <span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">geo_constraint</span><span class="p">:</span>
-            <span class="n">curr_inv</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Reduce number of circular constraints to reduce excessive client calls</span>
+        <span class="n">bound_searches</span> <span class="o">=</span> <span class="p">[</span><span class="n">ele</span> <span class="k">for</span> <span class="n">ele</span> <span class="ow">in</span> <span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">geo_constraint</span> 
+                        <span class="k">if</span> <span class="n">ele</span><span class="o">.</span><span class="n">geo_type</span> <span class="o">==</span> <span class="n">GeoConstraintType</span><span class="o">.</span><span class="n">BOUNDING</span><span class="p">]</span>
+
+        <span class="n">circle_searches</span> <span class="o">=</span> <span class="p">[</span><span class="n">ele</span> <span class="k">for</span> <span class="n">ele</span> <span class="ow">in</span> <span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">geo_constraint</span> 
+                        <span class="k">if</span> <span class="n">ele</span><span class="o">.</span><span class="n">geo_type</span> <span class="o">==</span> <span class="n">GeoConstraintType</span><span class="o">.</span><span class="n">CIRCLE</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">circle_searches</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">4</span><span class="p">:</span> <span class="c1"># not as strict for stations</span>
+            <span class="n">new_circle_searches</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="n">circ_center_lat</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">lat</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">circle_searches</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">circle_searches</span><span class="p">)</span>
+        
+            <span class="n">lon_radians</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">lon</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">circle_searches</span><span class="p">]</span>
+            <span class="n">avg_x</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">lon_radians</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">circle_searches</span><span class="p">)</span>
+            <span class="n">avg_y</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">lon_radians</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">circle_searches</span><span class="p">)</span>
+            <span class="n">circ_center_lon</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">avg_y</span><span class="p">,</span> <span class="n">avg_x</span><span class="p">))</span>
+
+            <span class="n">circ_distances</span> <span class="o">=</span> <span class="p">[</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">circ_center_lat</span> <span class="o">-</span> <span class="n">p</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">lat</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">circ_center_lon</span> <span class="o">-</span> <span class="n">p</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">lon</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+                            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">circle_searches</span><span class="p">]</span>
+            <span class="n">max_circ_distances</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">circ_distances</span><span class="p">)</span>
+
+            <span class="n">mean_circ</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">circle_searches</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">mean_circ</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">lat</span> <span class="o">=</span> <span class="n">circ_center_lat</span>
+            <span class="n">mean_circ</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">lon</span> <span class="o">=</span> <span class="n">circ_center_lon</span>
+            <span class="k">if</span> <span class="n">mean_circ</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">min_radius</span> <span class="o">&gt;</span> <span class="n">max_circ_distances</span><span class="p">:</span>
+                <span class="n">mean_circ</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">min_radius</span> <span class="o">-=</span> <span class="n">max_circ_distances</span>
+            <span class="n">mean_circ</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">max_radius</span> <span class="o">+=</span> <span class="n">max_circ_distances</span>
+
+            <span class="k">if</span> <span class="n">max_circ_distances</span> <span class="o">&lt;</span> <span class="mi">60</span><span class="p">:</span> <span class="c1"># in degrees. make this wider for stations</span>
+                <span class="n">circle_searches</span> <span class="o">=</span> <span class="p">[</span><span class="n">mean_circ</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span> <span class="c1"># go throught the list and remove what we can</span>
+                <span class="n">new_circle_searches</span> <span class="o">=</span> <span class="p">[</span><span class="n">mean_circ</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">cs</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">circle_searches</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">circ_distances</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">60</span><span class="p">:</span>  <span class="c1"># add any outliers</span>
+                        <span class="n">new_circle_searches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cs</span><span class="p">)</span>
+                <span class="n">circle_searches</span> <span class="o">=</span> <span class="n">new_circle_searches</span>
+
+        <span class="k">for</span> <span class="n">geo</span> <span class="ow">in</span> <span class="n">bound_searches</span> <span class="o">+</span> <span class="n">circle_searches</span><span class="p">:</span>
+            <span class="n">_inv</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">geo</span><span class="o">.</span><span class="n">geo_type</span> <span class="o">==</span> <span class="n">GeoConstraintType</span><span class="o">.</span><span class="n">BOUNDING</span><span class="p">:</span>
-                    <span class="n">curr_inv</span> <span class="o">=</span> <span class="n">station_client</span><span class="o">.</span><span class="n">get_stations</span><span class="p">(</span>
-                        <span class="n">minlatitude</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">min_lat</span><span class="p">,</span>
-                        <span class="n">maxlatitude</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">max_lat</span><span class="p">,</span>
-                        <span class="n">minlongitude</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">min_lon</span><span class="p">,</span>
-                        <span class="n">maxlongitude</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">max_lon</span><span class="p">,</span>
+                    <span class="n">_inv</span> <span class="o">=</span> <span class="n">station_client</span><span class="o">.</span><span class="n">get_stations</span><span class="p">(</span>
+                        <span class="n">minlatitude</span><span class="o">=</span><span class="nb">round</span><span class="p">(</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">min_lat</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span>
+                        <span class="n">maxlatitude</span><span class="o">=</span><span class="nb">round</span><span class="p">(</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">max_lat</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span>
+                        <span class="n">minlongitude</span><span class="o">=</span><span class="nb">round</span><span class="p">(</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">min_lon</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span>
+                        <span class="n">maxlongitude</span><span class="o">=</span><span class="nb">round</span><span class="p">(</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">max_lon</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span>
                         <span class="o">**</span><span class="n">kwargs</span>
                     <span class="p">)</span>
                 <span class="k">elif</span> <span class="n">geo</span><span class="o">.</span><span class="n">geo_type</span> <span class="o">==</span> <span class="n">GeoConstraintType</span><span class="o">.</span><span class="n">CIRCLE</span><span class="p">:</span>
-                    <span class="n">curr_inv</span> <span class="o">=</span> <span class="n">station_client</span><span class="o">.</span><span class="n">get_stations</span><span class="p">(</span>
-                        <span class="n">minradius</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">min_radius</span><span class="p">,</span>
-                        <span class="n">maxradius</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">max_radius</span><span class="p">,</span>
-                        <span class="n">latitude</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span>
-                        <span class="n">longitude</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">lon</span><span class="p">,</span>
+                    <span class="n">_inv</span> <span class="o">=</span> <span class="n">station_client</span><span class="o">.</span><span class="n">get_stations</span><span class="p">(</span>
+                        <span class="n">minradius</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">round</span><span class="p">(</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">min_radius</span><span class="p">,</span><span class="mi">3</span><span class="p">)),</span>
+                        <span class="n">maxradius</span><span class="o">=</span><span class="nb">min</span><span class="p">(</span><span class="mi">180</span><span class="p">,</span><span class="nb">round</span><span class="p">(</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">max_radius</span><span class="p">,</span><span class="mi">3</span><span class="p">)),</span>
+                        <span class="n">latitude</span><span class="o">=</span><span class="nb">round</span><span class="p">(</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span>
+                        <span class="n">longitude</span><span class="o">=</span><span class="nb">round</span><span class="p">(</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">lon</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span>
                         <span class="o">**</span><span class="n">kwargs</span>
                     <span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown Geometry type: </span><span class="si">{</span><span class="n">geo</span><span class="o">.</span><span class="n">geo_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">except</span> <span class="n">FDSNNoDataException</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No stations found in </span><span class="si">{</span><span class="n">station_client</span><span class="o">.</span><span class="n">base_url</span><span class="si">}</span><span class="s2"> with given geographic bounds&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No stations found at </span><span class="si">{</span><span class="n">station_client</span><span class="o">.</span><span class="n">base_url</span><span class="si">}</span><span class="s2"> with given geographic bounds&quot;</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="n">curr_inv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">inv</span> <span class="o">=</span> <span class="n">curr_inv</span> <span class="k">if</span> <span class="n">inv</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">inv</span> <span class="o">+</span> <span class="n">curr_inv</span>
+            <span class="k">if</span> <span class="n">_inv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">inv</span> <span class="o">=</span> <span class="n">_inv</span> <span class="k">if</span> <span class="n">inv</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">inv</span> <span class="o">+</span> <span class="n">_inv</span>
 
     <span class="k">else</span><span class="p">:</span>  <span class="c1"># Query without geographic constraints</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">inv</span> <span class="o">=</span> <span class="n">station_client</span><span class="o">.</span><span class="n">get_stations</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">FDSNNoDataException</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No stations found in </span><span class="si">{</span><span class="n">station_client</span><span class="o">.</span><span class="n">base_url</span><span class="si">}</span><span class="s2"> with given parameters&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No stations found at </span><span class="si">{</span><span class="n">station_client</span><span class="o">.</span><span class="n">base_url</span><span class="si">}</span><span class="s2"> with given parameters&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
 
     <span class="k">if</span> <span class="n">inv</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No inventory returned (!?)&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>
 
     <span class="c1"># Apply station exclusions</span>
@@ -1445,7 +1788,7 @@
                     <span class="n">level</span><span class="o">=</span><span class="s1">&#39;channel&#39;</span>
                 <span class="p">)</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not find requested station </span><span class="si">{</span><span class="n">net</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">sta</span><span class="si">}</span><span class="s2"> at </span><span class="si">{</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">client</span><span class="si">}</span><span class="s2"> </span><span class="se">\n</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not find requested station </span><span class="si">{</span><span class="n">net</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">sta</span><span class="si">}</span><span class="s2"> at </span><span class="si">{</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">client</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="k">continue</span>
 
     <span class="c1"># Apply final filters</span>
@@ -1503,7 +1846,7 @@
         <span class="k">except</span> <span class="ne">PermissionError</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">PermissionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Permission denied: </span><span class="si">{</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">local_catalog</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error reading catalog: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error reading catalog:</span><span class="se">\n</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="n">catalog</span> <span class="o">=</span> <span class="n">Catalog</span><span class="p">()</span>
 
@@ -1544,14 +1887,52 @@
         <span class="k">return</span> <span class="n">catalog</span>
 
     <span class="c1"># Handle geographic constraints</span>
-    <span class="k">for</span> <span class="n">geo</span> <span class="ow">in</span> <span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">geo_constraint</span><span class="p">:</span>
+    <span class="c1"># But first.. reduce number of circular constraints to reduce excessive client calls</span>
+    <span class="n">bound_searches</span> <span class="o">=</span> <span class="p">[</span><span class="n">ele</span> <span class="k">for</span> <span class="n">ele</span> <span class="ow">in</span> <span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">geo_constraint</span> 
+                    <span class="k">if</span> <span class="n">ele</span><span class="o">.</span><span class="n">geo_type</span> <span class="o">==</span> <span class="n">GeoConstraintType</span><span class="o">.</span><span class="n">BOUNDING</span><span class="p">]</span>
+
+    <span class="n">circle_searches</span> <span class="o">=</span> <span class="p">[</span><span class="n">ele</span> <span class="k">for</span> <span class="n">ele</span> <span class="ow">in</span> <span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">geo_constraint</span> 
+                    <span class="k">if</span> <span class="n">ele</span><span class="o">.</span><span class="n">geo_type</span> <span class="o">==</span> <span class="n">GeoConstraintType</span><span class="o">.</span><span class="n">CIRCLE</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">circle_searches</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">new_circle_searches</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">circ_center_lat</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">lat</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">circle_searches</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">circle_searches</span><span class="p">)</span>
+
+        <span class="n">lon_radians</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">lon</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">circle_searches</span><span class="p">]</span>
+        <span class="n">avg_x</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">lon_radians</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">circle_searches</span><span class="p">)</span>
+        <span class="n">avg_y</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">lon_radians</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">circle_searches</span><span class="p">)</span>
+        <span class="n">circ_center_lon</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">avg_y</span><span class="p">,</span> <span class="n">avg_x</span><span class="p">))</span>
+        
+        <span class="n">circ_distances</span> <span class="o">=</span> <span class="p">[</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">circ_center_lat</span> <span class="o">-</span> <span class="n">p</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">lat</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">circ_center_lon</span> <span class="o">-</span> <span class="n">p</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">lon</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+                         <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">circle_searches</span><span class="p">]</span>
+        <span class="n">max_circ_distances</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">circ_distances</span><span class="p">)</span>
+
+        <span class="n">mean_circ</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">circle_searches</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">mean_circ</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">lat</span> <span class="o">=</span> <span class="n">circ_center_lat</span>
+        <span class="n">mean_circ</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">lon</span> <span class="o">=</span> <span class="n">circ_center_lon</span>
+        <span class="k">if</span> <span class="n">mean_circ</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">min_radius</span> <span class="o">&gt;</span> <span class="n">max_circ_distances</span><span class="p">:</span>
+            <span class="n">mean_circ</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">min_radius</span> <span class="o">-=</span> <span class="n">max_circ_distances</span>
+        <span class="n">mean_circ</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">max_radius</span> <span class="o">+=</span> <span class="n">max_circ_distances</span>
+
+        <span class="k">if</span> <span class="n">max_circ_distances</span> <span class="o">&lt;</span> <span class="mi">15</span><span class="p">:</span> <span class="c1"># in degrees. all points packed in closely enough</span>
+            <span class="n">circle_searches</span> <span class="o">=</span> <span class="p">[</span><span class="n">mean_circ</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span> <span class="c1"># go throught the list and remove what we can</span>
+            <span class="n">new_circle_searches</span> <span class="o">=</span> <span class="p">[</span><span class="n">mean_circ</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">cs</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">circle_searches</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">circ_distances</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">15</span><span class="p">:</span>  <span class="c1"># add any outliers</span>
+                    <span class="n">new_circle_searches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cs</span><span class="p">)</span>
+            <span class="n">circle_searches</span> <span class="o">=</span> <span class="n">new_circle_searches</span>
+
+
+    <span class="k">for</span> <span class="n">geo</span> <span class="ow">in</span> <span class="n">bound_searches</span> <span class="o">+</span> <span class="n">circle_searches</span><span class="p">:</span> 
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">geo</span><span class="o">.</span><span class="n">geo_type</span> <span class="o">==</span> <span class="n">GeoConstraintType</span><span class="o">.</span><span class="n">CIRCLE</span><span class="p">:</span>
                 <span class="n">cat</span> <span class="o">=</span> <span class="n">event_client</span><span class="o">.</span><span class="n">get_events</span><span class="p">(</span>
-                    <span class="n">latitude</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span>
-                    <span class="n">longitude</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">lon</span><span class="p">,</span>
-                    <span class="n">minradius</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">min_radius</span><span class="p">,</span>
-                    <span class="n">maxradius</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">max_radius</span><span class="p">,</span>
+                    <span class="n">latitude</span><span class="o">=</span><span class="nb">round</span><span class="p">(</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span>
+                    <span class="n">longitude</span><span class="o">=</span><span class="nb">round</span><span class="p">(</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">lon</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span>
+                    <span class="n">minradius</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">round</span><span class="p">(</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">min_radius</span><span class="p">,</span><span class="mi">3</span><span class="p">)),</span>
+                    <span class="n">maxradius</span><span class="o">=</span><span class="nb">min</span><span class="p">(</span><span class="mi">180</span><span class="p">,</span><span class="nb">round</span><span class="p">(</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">max_radius</span><span class="p">,</span><span class="mi">3</span><span class="p">)),</span>
                     <span class="o">**</span><span class="n">kwargs</span>
                 <span class="p">)</span>
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span><span class="si">}</span><span class="s2"> events from </span><span class="si">{</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">client</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -1559,10 +1940,10 @@
 
             <span class="k">elif</span> <span class="n">geo</span><span class="o">.</span><span class="n">geo_type</span> <span class="o">==</span> <span class="n">GeoConstraintType</span><span class="o">.</span><span class="n">BOUNDING</span><span class="p">:</span>
                 <span class="n">cat</span> <span class="o">=</span> <span class="n">event_client</span><span class="o">.</span><span class="n">get_events</span><span class="p">(</span>
-                    <span class="n">minlatitude</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">min_lat</span><span class="p">,</span>
-                    <span class="n">minlongitude</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">min_lon</span><span class="p">,</span>
-                    <span class="n">maxlatitude</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">max_lat</span><span class="p">,</span>
-                    <span class="n">maxlongitude</span><span class="o">=</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">max_lon</span><span class="p">,</span>
+                    <span class="n">minlatitude</span><span class="o">=</span><span class="nb">round</span><span class="p">(</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">min_lat</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span>
+                    <span class="n">minlongitude</span><span class="o">=</span><span class="nb">round</span><span class="p">(</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">min_lon</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span>
+                    <span class="n">maxlatitude</span><span class="o">=</span><span class="nb">round</span><span class="p">(</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">max_lat</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span>
+                    <span class="n">maxlongitude</span><span class="o">=</span><span class="nb">round</span><span class="p">(</span><span class="n">geo</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">max_lon</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span>
                     <span class="o">**</span><span class="n">kwargs</span>
                 <span class="p">)</span>
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span><span class="si">}</span><span class="s2"> events from </span><span class="si">{</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">client</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -1574,6 +1955,9 @@
         <span class="k">except</span> <span class="n">FDSNNoDataException</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No events found for constraint: </span><span class="si">{</span><span class="n">geo</span><span class="o">.</span><span class="n">geo_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">continue</span>
+    
+    <span class="c1"># Remove duplicates</span>
+    <span class="n">catalog</span> <span class="o">=</span> <span class="n">remove_duplicate_events</span><span class="p">(</span><span class="n">catalog</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">catalog</span></div>
 
@@ -1621,7 +2005,7 @@
 <span class="sd">    - The function logs detailed information about the processing steps and errors to aid</span>
 <span class="sd">      in debugging and monitoring of data retrieval processes.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Running run_continuous&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Running run_continuous</span><span class="se">\n</span><span class="s2">----------------------&quot;</span><span class="p">)</span>
     
     <span class="n">settings</span><span class="p">,</span> <span class="n">db_manager</span> <span class="o">=</span> <span class="n">setup_paths</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
 
@@ -1675,46 +2059,22 @@
 
     <span class="c1"># Archive to disk and updated database</span>
     <span class="k">for</span> <span class="n">request</span> <span class="ow">in</span> <span class="n">combined_requests</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> Requesting: &quot;</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Requesting: &quot;</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
         <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.05</span><span class="p">)</span> <span class="c1"># to help ctrl-C out if needed</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">archive_request</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">waveform_clients</span><span class="p">,</span> <span class="n">settings</span><span class="o">.</span><span class="n">sds_path</span><span class="p">,</span> <span class="n">db_manager</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Continuous request not successful: &quot;</span><span class="p">,</span><span class="n">request</span><span class="p">,</span> <span class="s2">&quot; with exception: &quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Continuous request not successful: </span><span class="si">{</span><span class="n">request</span><span class="si">}</span><span class="s2"> with exception:</span><span class="se">\n</span><span class="s2"> </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">continue</span>
 
     <span class="c1"># Cleanup the database</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">db_manager</span><span class="o">.</span><span class="n">join_continuous_segments</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">processing</span><span class="o">.</span><span class="n">gap_tolerance</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;! Error with join_continuous_segments: &quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;! Error with join_continuous_segments:</span><span class="se">\n</span><span class="s2"> </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-    <span class="c1"># Going through all original requests</span>
-    <span class="n">time_series</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">req</span> <span class="ow">in</span> <span class="n">requests</span><span class="p">:</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
-        <span class="n">query</span> <span class="o">=</span> <span class="n">SeismoQuery</span><span class="p">(</span>
-            <span class="n">network</span> <span class="o">=</span> <span class="n">req</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span>
-            <span class="n">station</span> <span class="o">=</span> <span class="n">req</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span>
-            <span class="n">location</span> <span class="o">=</span> <span class="n">req</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span>
-            <span class="n">channel</span> <span class="o">=</span> <span class="n">req</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span>
-            <span class="n">starttime</span> <span class="o">=</span> <span class="n">req</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span>
-            <span class="n">endtime</span> <span class="o">=</span> <span class="n">req</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
-        <span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="n">stream_to_dataframe</span><span class="p">(</span><span class="n">get_local_waveform</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">settings</span><span class="p">))</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
-        
-        <span class="n">time_series</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
-            <span class="s1">&#39;Network&#39;</span><span class="p">:</span> <span class="n">query</span><span class="o">.</span><span class="n">network</span><span class="p">,</span>
-            <span class="s1">&#39;Station&#39;</span><span class="p">:</span> <span class="n">query</span><span class="o">.</span><span class="n">station</span><span class="p">,</span>
-            <span class="s1">&#39;Location&#39;</span><span class="p">:</span> <span class="n">query</span><span class="o">.</span><span class="n">location</span><span class="p">,</span>
-            <span class="s1">&#39;Channel&#39;</span><span class="p">:</span> <span class="n">query</span><span class="o">.</span><span class="n">channel</span><span class="p">,</span>
-            <span class="s1">&#39;Data&#39;</span><span class="p">:</span> <span class="n">data</span>
-        <span class="p">})</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
 
-    <span class="k">return</span> <span class="n">time_series</span></div>
 
 
 
@@ -1764,7 +2124,7 @@
 <span class="sd">    - Data is archived in SDS format and the database is updated accordingly</span>
 <span class="sd">    - Each stream in the output includes complete event metadata for analysis</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Running run_event&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running run_event</span><span class="se">\n</span><span class="s2">-----------------&quot;</span><span class="p">)</span>
     
     <span class="n">settings</span><span class="p">,</span> <span class="n">db_manager</span> <span class="o">=</span> <span class="n">setup_paths</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
     <span class="n">waveform_client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">waveform</span><span class="o">.</span><span class="n">client</span><span class="p">)</span>
@@ -1773,24 +2133,28 @@
     <span class="k">try</span><span class="p">:</span>
         <span class="n">ttmodel</span> <span class="o">=</span> <span class="n">TauPyModel</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Falling back to IASP91 model: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Falling back to IASP91 model: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">ttmodel</span> <span class="o">=</span> <span class="n">TauPyModel</span><span class="p">(</span><span class="s1">&#39;IASP91&#39;</span><span class="p">)</span>
 
     <span class="n">event_streams</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">all_missing</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">eq</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">selected_catalogs</span><span class="p">):</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Processing event </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">selected_catalogs</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Processing event </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">selected_catalogs</span><span class="p">)</span><span class="si">}</span><span class="s2">  |  OT: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">eq</span><span class="o">.</span><span class="n">origins</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">time</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="mi">16</span><span class="p">]</span><span class="si">}</span><span class="s2"> LAT: </span><span class="si">{</span><span class="n">eq</span><span class="o">.</span><span class="n">origins</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">latitude</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> LON: </span><span class="si">{</span><span class="n">eq</span><span class="o">.</span><span class="n">origins</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">longitude</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         
         <span class="c1"># Check for cancellation</span>
         <span class="k">if</span> <span class="n">stop_event</span> <span class="ow">and</span> <span class="n">stop_event</span><span class="o">.</span><span class="n">is_set</span><span class="p">():</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Run cancelled!&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Run cancelled!&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
 
         <span class="c1"># Collect requests for this event</span>
-        <span class="n">requests</span><span class="p">,</span> <span class="n">new_arrivals</span><span class="p">,</span> <span class="n">p_arrivals</span> <span class="o">=</span> <span class="n">collect_requests_event</span><span class="p">(</span>
-            <span class="n">eq</span><span class="p">,</span> <span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">selected_invs</span><span class="p">,</span>
-            <span class="n">model</span><span class="o">=</span><span class="n">ttmodel</span><span class="p">,</span>
-            <span class="n">settings</span><span class="o">=</span><span class="n">settings</span>
-        <span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">requests</span><span class="p">,</span> <span class="n">new_arrivals</span><span class="p">,</span> <span class="n">p_arrivals</span> <span class="o">=</span> <span class="n">collect_requests_event</span><span class="p">(</span>
+                <span class="n">eq</span><span class="p">,</span> <span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">selected_invs</span><span class="p">,</span>
+                <span class="n">model</span><span class="o">=</span><span class="n">ttmodel</span><span class="p">,</span>
+                <span class="n">settings</span><span class="o">=</span><span class="n">settings</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Issue running collect_requests_event in run_event:</span><span class="se">\n</span><span class="s2"> </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="c1"># Update arrival database</span>
         <span class="k">if</span> <span class="n">new_arrivals</span><span class="p">:</span>
@@ -1798,13 +2162,13 @@
 
         <span class="c1"># Process data requests</span>
         <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">waveform</span><span class="o">.</span><span class="n">force_redownload</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Forcing re-download as requested...&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Forcing re-download as requested...&quot;</span><span class="p">)</span>
             <span class="n">pruned_requests</span> <span class="o">=</span> <span class="n">requests</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">pruned_requests</span> <span class="o">=</span> <span class="n">prune_requests</span><span class="p">(</span><span class="n">requests</span><span class="p">,</span> <span class="n">db_manager</span><span class="p">,</span> <span class="n">settings</span><span class="o">.</span><span class="n">sds_path</span><span class="p">)</span>
         
         <span class="k">if</span> <span class="n">stop_event</span> <span class="ow">and</span> <span class="n">stop_event</span><span class="o">.</span><span class="n">is_set</span><span class="p">():</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Run cancelled!&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Run cancelled!&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
 
         <span class="c1"># Download new data if needed</span>
@@ -1827,15 +2191,15 @@
                     <span class="p">)</span>
                     <span class="n">waveform_clients</span><span class="p">[</span><span class="n">cred_net</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_client</span>
                 <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Issue creating client for </span><span class="si">{</span><span class="n">cred_net</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Issue creating client for </span><span class="si">{</span><span class="n">cred_net</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="s2"> </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
             <span class="c1"># Process requests</span>
             <span class="k">for</span> <span class="n">request</span> <span class="ow">in</span> <span class="n">combined_requests</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">stop_event</span> <span class="ow">and</span> <span class="n">stop_event</span><span class="o">.</span><span class="n">is_set</span><span class="p">():</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Run cancelled!&quot;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Run cancelled!&quot;</span><span class="p">)</span>
                     <span class="k">return</span> <span class="kc">None</span>
                 
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Requesting: </span><span class="si">{</span><span class="n">request</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Requesting: </span><span class="si">{</span><span class="n">request</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">archive_request</span><span class="p">(</span>
                         <span class="n">request</span><span class="p">,</span>
@@ -1844,7 +2208,7 @@
                         <span class="n">db_manager</span>
                     <span class="p">)</span>
                 <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Error archiving request </span><span class="si">{</span><span class="n">request</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error archiving request </span><span class="si">{</span><span class="n">request</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="s2"> </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="c1"># Read all data for this event</span>
         <span class="n">event_stream</span> <span class="o">=</span> <span class="n">obspy</span><span class="o">.</span><span class="n">Stream</span><span class="p">()</span>
@@ -1859,7 +2223,7 @@
             <span class="p">)</span>
             
             <span class="k">if</span> <span class="n">stop_event</span> <span class="ow">and</span> <span class="n">stop_event</span><span class="o">.</span><span class="n">is_set</span><span class="p">():</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Run cancelled!&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Run cancelled!&quot;</span><span class="p">)</span>
                 <span class="k">return</span> <span class="kc">None</span>
             
             <span class="k">try</span><span class="p">:</span>
@@ -1883,20 +2247,29 @@
                     
                     <span class="n">event_stream</span> <span class="o">+=</span> <span class="n">st</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Error reading data for </span><span class="si">{</span><span class="n">query</span><span class="o">.</span><span class="n">network</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">query</span><span class="o">.</span><span class="n">station</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error reading data for </span><span class="si">{</span><span class="n">query</span><span class="o">.</span><span class="n">network</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">query</span><span class="o">.</span><span class="n">station</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="s2"> </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="k">continue</span>
+
+        <span class="c1"># Now attempt to keep track of what data was missing. Note that this is not catching out-of-bounds data, for better or worse (probably better)</span>
+        <span class="n">missing</span> <span class="o">=</span> <span class="n">get_missing_from_request</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">eq</span><span class="o">.</span><span class="n">resource_id</span><span class="p">),</span><span class="n">requests</span><span class="p">,</span><span class="n">event_stream</span><span class="p">)</span>
+        <span class="c1">#print(&quot;DEBUG missing: &quot;, missing)</span>
+        <span class="c1">#print(event_stream)</span>
+        <span class="c1">#print(&quot;DEBUG requests: &quot;, requests)</span>
+
+        <span class="n">all_missing</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">event_stream</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">event_streams</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event_stream</span><span class="p">)</span>
+
 
     <span class="c1"># Final database cleanup</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">~~ Cleaning up database ~~&quot;</span><span class="p">)</span>
         <span class="n">db_manager</span><span class="o">.</span><span class="n">join_continuous_segments</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">processing</span><span class="o">.</span><span class="n">gap_tolerance</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">! Error with join_continuous_segments: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;! Error with join_continuous_segments: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">event_streams</span></div>
+    <span class="k">return</span> <span class="n">event_streams</span><span class="p">,</span> <span class="n">all_missing</span></div>
 
 
 
@@ -1905,7 +2278,7 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">run_main</span><span class="p">(</span>
     <span class="n">settings</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SeismoLoaderSettings</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">from_file</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Main entry point for seismic data retrieval and processing.</span>
 
 <span class="sd">    Coordinates the overall workflow for retrieving and processing seismic data,</span>
@@ -1954,12 +2327,8 @@
 
 
     <span class="c1">## Final database cleanup</span>
-    <span class="c1">#print(&quot;\n ~~ Cleaning up database ~~&quot;)</span>
+    <span class="c1">#print(&quot; ~~ Cleaning up database ~~&quot;)</span>
     <span class="c1">#db_manager.join_continuous_segments(settings.processing.gap_tolerance)</span>
-
-
-
-
 </pre></div>
 
            </div>

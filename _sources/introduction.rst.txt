@@ -33,9 +33,9 @@ Platforms
 
 Runs on:
 
-* Linux
-* Windows
-* MacOS
+  * Linux
+  * Windows
+  * MacOS
 
 
 Flexible
@@ -43,11 +43,10 @@ Flexible
 
 Can run:
 
-* As web service (local-only unsecured mode)
-* From the command line (CLI)
+  * As web service (local-only unsecured mode)
+  * From the command line (CLI)
 
 
 .. note::
 
    **This project is under active development.**
-

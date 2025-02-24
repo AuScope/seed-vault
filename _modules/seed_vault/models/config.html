@@ -48,7 +48,18 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../app.html">Seed Vault App</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../app.html">Seed Vault App</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../app_main_flows.html">Main Flows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../app_run_from_config.html">Direct parameter input</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../app_db_explorer.html">Database Explorer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../app_settings.html">App Settings</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../app_settings.html#data">Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../app_settings.html#credentials">Credentials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../app_settings.html#clients">Clients</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../../cli.html">CLI commands</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../modules.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../seed_vault.html">seed_vault package</a><ul>
@@ -276,11 +287,25 @@
 <div class="viewcode-block" id="SeismoQuery.cmb_str_n_s_to_props">
 <a class="viewcode-back" href="../../../seed_vault.models.html#seed_vault.models.config.SeismoQuery.cmb_str_n_s_to_props">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">cmb_str_n_s_to_props</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmb_n_s</span><span class="p">):</span>
-        <span class="n">network</span><span class="p">,</span> <span class="n">station</span> <span class="o">=</span> <span class="n">cmb_n_s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
-        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;network&#39;</span><span class="p">,</span> <span class="n">network</span><span class="p">)</span>
-        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;station&#39;</span><span class="p">,</span> <span class="n">station</span><span class="p">)</span></div>
+        <span class="n">lst_split</span> <span class="o">=</span> <span class="n">cmb_n_s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst_split</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Inputted station code is malformed: </span><span class="si">{</span><span class="n">cmb_n_s</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">lst_split</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">item</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>  <span class="c1"># Add other validation checks here</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Inputted station code is malformed: </span><span class="si">{</span><span class="n">cmb_n_s</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;network&#39;</span><span class="p">,</span> <span class="n">lst_split</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;station&#39;</span><span class="p">,</span> <span class="n">lst_split</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst_split</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;location&#39;</span><span class="p">,</span> <span class="n">lst_split</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst_split</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;channel&#39;</span><span class="p">,</span> <span class="n">lst_split</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span></div>
 </div>
 
+        
 
 <div class="viewcode-block" id="DateConfig">
 <a class="viewcode-back" href="../../../seed_vault.models.html#seed_vault.models.config.DateConfig">[docs]</a>
@@ -376,7 +401,7 @@
         <span class="n">end_time</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
     <span class="p">)</span>
     <span class="n">local_inventory</span>    <span class="p">:</span> <span class="n">Optional</span>   <span class="p">[</span> <span class="nb">str</span>           <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">network</span>            <span class="p">:</span> <span class="n">Optional</span>   <span class="p">[</span> <span class="nb">str</span>           <span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;_GSN&quot;</span>
+    <span class="n">network</span>            <span class="p">:</span> <span class="n">Optional</span>   <span class="p">[</span> <span class="nb">str</span>           <span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;IU&quot;</span>
     <span class="n">station</span>            <span class="p">:</span> <span class="n">Optional</span>   <span class="p">[</span> <span class="nb">str</span>           <span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;*&quot;</span>
     <span class="n">location</span>           <span class="p">:</span> <span class="n">Optional</span>   <span class="p">[</span> <span class="nb">str</span>           <span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;*&quot;</span>
     <span class="n">channel</span>            <span class="p">:</span> <span class="n">Optional</span>   <span class="p">[</span> <span class="nb">str</span>           <span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;?H?,?N?&quot;</span>
@@ -776,6 +801,9 @@
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_parse_auth_section</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">status_handler</span> <span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;AUTH&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[]</span>
+            
             <span class="n">credentials</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;AUTH&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
             <span class="k">return</span> <span class="p">[</span>
                 <span class="n">AuthConfig</span><span class="p">(</span><span class="n">nslc_code</span><span class="o">=</span><span class="n">nslc</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="n">cred</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">password</span><span class="o">=</span><span class="n">cred</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>

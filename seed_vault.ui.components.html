@@ -51,7 +51,18 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="app.html">Seed Vault App</a></li>
+<li class="toctree-l1"><a class="reference internal" href="app.html">Seed Vault App</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="app_main_flows.html">Main Flows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="app_run_from_config.html">Direct parameter input</a></li>
+<li class="toctree-l2"><a class="reference internal" href="app_db_explorer.html">Database Explorer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="app_settings.html">App Settings</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="app_settings.html#data">Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="app_settings.html#credentials">Credentials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="app_settings.html#clients">Clients</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="cli.html">CLI commands</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="seed_vault.html">seed_vault package</a><ul class="current">
@@ -159,6 +170,12 @@
 <span class="sig-name descname"><span class="pre">cols_to_exclude</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['detail',</span> <span class="pre">'is_selected']</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.cols_to_exclude" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.data_table_view">
+<span class="sig-name descname"><span class="pre">data_table_view</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ordered_col</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state_key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.data_table_view"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.data_table_view" title="Link to this definition"></a></dt>
+<dd><p>Displays the full data table, allowing selection.</p>
+</dd></dl>
+
 <dl class="py attribute">
 <dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.df_circ">
 <span class="sig-name descname"><span class="pre">df_circ</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.df_circ" title="Link to this definition"></a></dt>
@@ -202,6 +219,11 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.event_filter">
 <span class="sig-name descname"><span class="pre">event_filter</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.event_filter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.event_filter" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.exp_imp_events_stations">
+<span class="sig-name descname"><span class="pre">exp_imp_events_stations</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.exp_imp_events_stations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.exp_imp_events_stations" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -257,11 +279,6 @@
 <dl class="py attribute">
 <dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.has_error">
 <span class="sig-name descname"><span class="pre">has_error</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.has_error" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.import_export">
-<span class="sig-name descname"><span class="pre">import_export</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.import_export"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.import_export" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -349,7 +366,12 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.refresh_filters">
 <span class="sig-name descname"><span class="pre">refresh_filters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.refresh_filters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.refresh_filters" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Renders Export settings for all stages and Import settings only for stage 1.</p>
+<ul class="simple">
+<li><p>Allows users to download the current configuration (<cite>config.cfg</cite>) at all stages.</p></li>
+<li><p>Shows the import settings section only when <cite>stage == 1</cite>.</p></li>
+</ul>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.refresh_map">
@@ -367,18 +389,13 @@
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.render_actions_side_menu">
-<span class="sig-name descname"><span class="pre">render_actions_side_menu</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.render_actions_side_menu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.render_actions_side_menu" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.render_data_table">
 <span class="sig-name descname"><span class="pre">render_data_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c5_map</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.render_data_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.render_data_table" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.render_export_import">
-<span class="sig-name descname"><span class="pre">render_export_import</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.render_export_import"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.render_export_import" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.render_import_export">
+<span class="sig-name descname"><span class="pre">render_import_export</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.render_import_export"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.render_import_export" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -389,6 +406,11 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.render_map_buttons">
 <span class="sig-name descname"><span class="pre">render_map_buttons</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.render_map_buttons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.render_map_buttons" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.render_map_handles">
+<span class="sig-name descname"><span class="pre">render_map_handles</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.render_map_handles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.render_map_handles" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -405,6 +427,12 @@
 <dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.reset_markers">
 <span class="sig-name descname"><span class="pre">reset_markers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.reset_markers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.reset_markers" title="Link to this definition"></a></dt>
 <dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.selected_items_view">
+<span class="sig-name descname"><span class="pre">selected_items_view</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state_key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.selected_items_view"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.selected_items_view" title="Link to this definition"></a></dt>
+<dd><p>Displays selected items using an actual <cite>st.multiselect</cite>, controlled by table selection.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.set_geo_constraint">
@@ -952,7 +980,7 @@ enforce_padding: puts the content in columns to enforce artificial padding.</p>
 <span id="seed-vault-ui-components-waveform-module"></span><h2>seed_vault.ui.components.waveform module<a class="headerlink" href="#module-seed_vault.ui.components.waveform" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="seed_vault.ui.components.waveform.MissingDataDisplay">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.waveform.</span></span><span class="sig-name descname"><span class="pre">MissingDataDisplay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">streams</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#MissingDataDisplay"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.MissingDataDisplay" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.waveform.</span></span><span class="sig-name descname"><span class="pre">MissingDataDisplay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">streams</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">missing_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#MissingDataDisplay"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.MissingDataDisplay" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.waveform.MissingDataDisplay.render">
@@ -986,6 +1014,12 @@ enforce_padding: puts the content in columns to enforce artificial padding.</p>
 <span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#WaveformComponents.render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformComponents.render" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformComponents.render_polling_ui">
+<span class="sig-name descname"><span class="pre">render_polling_ui</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#WaveformComponents.render_polling_ui"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformComponents.render_polling_ui" title="Link to this definition"></a></dt>
+<dd><p>Handles UI updates while monitoring background thread status</p>
+</dd></dl>
+
 <dl class="py attribute">
 <dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformComponents.settings">
 <span class="sig-name descname"><span class="pre">settings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings"><code class="xref py py-class docutils literal notranslate"><span class="pre">SeismoLoaderSettings</span></code></a></em><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformComponents.settings" title="Link to this definition"></a></dt>
@@ -1016,7 +1050,8 @@ enforce_padding: puts the content in columns to enforce artificial padding.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformDisplay.fetch_data">
 <span class="sig-name descname"><span class="pre">fetch_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#WaveformDisplay.fetch_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformDisplay.fetch_data" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Fetches waveform data in a background thread with logging.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformDisplay.plot_event_view">
@@ -1038,7 +1073,7 @@ enforce_padding: puts the content in columns to enforce artificial padding.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformDisplay.retrieve_waveforms">
 <span class="sig-name descname"><span class="pre">retrieve_waveforms</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#WaveformDisplay.retrieve_waveforms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformDisplay.retrieve_waveforms" title="Link to this definition"></a></dt>
-<dd><p>Retrieve waveforms and store as ObsPy streams</p>
+<dd><p>Initiates waveform retrieval in a background thread with cancellation support</p>
 </dd></dl>
 
 </dd></dl>
