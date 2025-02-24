@@ -19,6 +19,8 @@ from io import StringIO
 from contextlib import redirect_stdout, redirect_stderr
 from copy import deepcopy
 from seed_vault.ui.pages.helpers.common import save_filter
+import time
+
 
 
 query_thread = None
@@ -114,14 +116,7 @@ class WaveformFilterMenu:
     def render(self, stream=None):
         st.sidebar.title("Waveform Controls")
         
-        # Add view selector at the top
-        st.sidebar.radio(
-            "View Mode",
-            ["Waveform View", "Log View"],
-            key="waveform_view_mode",
-            horizontal=True
-        )
-        
+
         # Step 1: Data Retrieval Settings
         with st.sidebar.expander("Step 1: Data Source", expanded=True):
             st.subheader("🔍 Time Window")
@@ -284,8 +279,8 @@ class WaveformDisplay:
         except ValueError as e:
             st.error(f"Error: {str(e)} Waveform client is set to {self.settings.waveform.client}, which seems does not exists. Please navigate to the settings page and use the Clients tab to add the client or fix the stored config.cfg file.")
         self.ttmodel = TauPyModel("iasp91")
-        self.streams = []
-        self.missing_data = {}
+        self.streams = [] 
+        self.console = ConsoleDisplay()  # Add console display
 
     def apply_filters(self, stream: Stream) -> Stream:
         """Filter stream based on user selection"""
@@ -304,55 +299,49 @@ class WaveformDisplay:
     
 
     def fetch_data(self):
-        self.streams,self.missing_data = run_event(self.settings, stop_event)
-        # st.session_state["query_done"] = True  # Mark as done
-        # st.session_state["trigger_rerun"] = True  # 🔹 Set flag for rerun
+        """
+        Fetches waveform data in a background thread with logging.
+        """        
+        # Capture stdout/stderr for logging
+        with redirect_stdout(StringIO()) as stdout, redirect_stderr(StringIO()) as stderr:
+            try:
+                self.streams = run_event(self.settings, stop_event)
+                success = True
+            except Exception as e:
+                success = False
+                print(f"Error: {str(e)}")  # This will be captured in the output
+            
+            # Capture output for logs
+            output = stdout.getvalue() + stderr.getvalue()
+            if output:
+                self.console.accumulated_output = output.splitlines()
 
         st.session_state.update({
-        "query_done": True,   # Mark query as done
-        "trigger_rerun": True # 🚀 Set flag for UI to trigger rerun
-    })
-        # if self.streams:
-        #     # Update filter menu with first stream
-        #     self.filter_menu.update_available_channels(self.streams[0])
-        #     st.success(f"Successfully retrieved waveforms for {len(self.streams)} events.")
-        # else:
-        #     st.warning("No waveforms retrieved. Please check your selection criteria.")
-
-        # st.rerun()  # Refresh UI after completion
-
-    # def retrieve_waveforms(self):
-    #     """Retrieve waveforms and store as ObsPy streams"""
-    #     global query_thread, stop_event
-    #     if not self.settings.event.selected_catalogs or not self.settings.station.selected_invs:
-    #         st.warning("Please select events and stations before downloading waveforms.")
-    #         return
-        
-    #     stop_event.clear()  # Reset the cancellation flag
-
-    #     query_thread = threading.Thread(target=self.fetch_data, daemon=True)
-    #     query_thread.start() 
-
-    #     st.session_state["query_done"] = False  # Reset query flag
-    #     st.session_state["trigger_rerun"] = False  # Reset rerun flag
-
+            "query_done": True,
+            "is_downloading": False,
+            "trigger_rerun": True
+        })
 
     def retrieve_waveforms(self):
-        """Retrieve waveforms and store as ObsPy streams"""
+        """
+        Initiates waveform retrieval in a background thread with cancellation support
+        """
         if not self.settings.event.selected_catalogs or not self.settings.station.selected_invs:
             st.warning("Please select events and stations before downloading waveforms.")
             return
-            
-        self.streams,self.missing_data = run_event(self.settings)  # This now returns list of streams AND a dictionary with event_id keys of what is missing
-        
-        if self.streams:
-            # Update filter menu with first stream
-            self.filter_menu.update_available_channels(self.streams[0])
-            st.success(f"Successfully retrieved waveforms for {len(self.streams)} events.")
-        else:
-            st.warning("No waveforms retrieved. Please check your selection criteria.")
 
-            
+        stop_event.clear()  # Reset cancellation flag
+        st.session_state["query_thread"] = threading.Thread(target=self.fetch_data, daemon=True)
+        st.session_state["query_thread"].start()
+
+        st.session_state.update({
+            "is_downloading": True,
+            "query_done": False,
+            "polling_active": True
+        })
+
+        st.rerun()
+
     def _get_trace_color(self, tr) -> str:
         """Get color based on channel component"""
         # Extract last character of channel code
@@ -916,33 +905,77 @@ class WaveformComponents:
         self.filter_menu = WaveformFilterMenu(settings)
         self.waveform_display = WaveformDisplay(settings, self.filter_menu)
         self.continuous_components = ContinuousComponents(settings)
-        self.console = ConsoleDisplay()  # Add console display
+        self.console = ConsoleDisplay()
         
+        # Pass console to WaveformDisplay
+        self.waveform_display.console = self.console
+        
+        # Initialize session state
+        required_states = {
+            "is_downloading": False,
+            "query_done": False,
+            "polling_active": False,
+            "query_thread": None,
+            "trigger_rerun": False
+        }
+        for key, val in required_states.items():
+            if key not in st.session_state:
+                st.session_state[key] = val
+
+    def render_polling_ui(self):
+        """
+        Handles UI updates while monitoring background thread status
+        """
+        if st.session_state.get("is_downloading", False):
+            with st.spinner("Downloading waveforms... (this may take several minutes)"):
+                query_thread = st.session_state.get("query_thread")
+                if query_thread and not query_thread.is_alive():
+                    try:
+                        query_thread.join()
+                    except Exception as e:
+                        st.error(f"Error in background thread: {e}")
+                        # Add error to console output
+                        if not self.console.accumulated_output:
+                            self.console.accumulated_output = []
+                        self.console.accumulated_output.append(f"Error: {str(e)}")
+
+                    st.session_state.update({
+                        "is_downloading": False,
+                        "query_done": True,
+                        "query_thread": None,
+                        "polling_active": False
+                    })
+                    st.rerun()
+
+                if st.session_state.get("polling_active"):
+                    time.sleep(0.5)  # Brief pause between checks
+                    st.rerun()
+
     def render(self):
         if self.settings.selected_workflow == WorkflowType.CONTINUOUS:
             self.continuous_components.render()
             return
+
+        # Create tabs for Waveform and Log views
+        waveform_tab, log_tab = st.tabs(["📊 Waveform View", "📝 Log View"])
+
         
         # Always render filter menu (sidebar) first
         current_stream = self.waveform_display.streams[0] if self.waveform_display.streams else None
         self.filter_menu.render(current_stream)
-        
-        # Then handle main content
-        if st.session_state.get("waveform_view_mode") == "Log View":
-            self._render_log_view()
-        else:
+
+        # Handle content based on active tab
+        with waveform_tab:
             self._render_waveform_view()
+        
+        with log_tab:
+            self._render_log_view()
+
 
     def _render_waveform_view(self):
         st.title("Waveform Analysis")
 
-        # Initialize the download state in session state if not exists
-        if "is_downloading" not in st.session_state:
-            st.session_state.is_downloading = False
-        if "current_figure" not in st.session_state:
-            st.session_state.current_figure = None
-
-        # Create three columns for the controls (removed the fourth column)
+        # Create three columns for the controls
         col1, col2, col3 = st.columns(3)
         
         # Force Re-download toggle in first column
@@ -960,7 +993,7 @@ class WaveformComponents:
             get_waveforms_button = st.button(
                 "Get Waveforms",
                 key="get_waveforms",
-                disabled=st.session_state.is_downloading,
+                disabled=st.session_state.get("is_downloading", False),
                 use_container_width=True
             )
 
@@ -968,32 +1001,31 @@ class WaveformComponents:
         with col3:
             if st.button("Cancel Download", 
                         key="cancel_download",
-                        disabled=not st.session_state.is_downloading,
+                        disabled=not st.session_state.get("is_downloading", False),
                         use_container_width=True):
                 stop_event.set()  # Signal cancellation
                 st.warning("Cancelling query...")
-                st.session_state.is_downloading = False
+                st.session_state.update({
+                    "is_downloading": False,
+                    "polling_active": False
+                })
                 st.rerun()
 
+        # Download status indicator
+        status_container = st.empty()
+        
+        # Show appropriate status message
         if get_waveforms_button:
-            st.session_state.is_downloading = True
-            st.rerun()  # Immediate UI update
-
-        # Show progress spinner and status
-        if st.session_state.is_downloading:
-            with st.spinner("Downloading waveforms... (this may take several minutes)"):
-                try:
-                    # Execute retrieval in the spinner context
-                    self._execute_waveform_retrieval()
-                    
-                    # Check if still downloading (not cancelled)
-                    if st.session_state.is_downloading:
-                        st.success("Download completed successfully!")
-                except Exception as e:
-                    st.error(f"Download failed: {str(e)}")
-                finally:
-                    st.session_state.is_downloading = False
-                    st.rerun()
+            status_container.info("Starting waveform download...")
+            self.waveform_display.retrieve_waveforms()
+        elif st.session_state.get("is_downloading"):
+            # status_container.info("Downloading waveforms... (this may take several minutes)")
+            st.spinner("Downloading waveforms... (this may take several minutes)")
+            self.render_polling_ui()
+        elif st.session_state.get("query_done") and self.waveform_display.streams:
+            status_container.success(f"Successfully retrieved waveforms for {len(self.waveform_display.streams)} events.")
+        elif st.session_state.get("query_done"):
+            status_container.warning("No waveforms retrieved. Please check your selection criteria.")
 
         # Display waveforms if they exist
         if self.waveform_display.streams:
@@ -1001,10 +1033,9 @@ class WaveformComponents:
 
         # Add download button at the bottom of the sidebar
         with st.sidebar:
-            # Add some visual separation
             st.markdown("---")
-            # Download PNG button
-            if st.session_state.current_figure is not None:
+            if st.session_state.get("current_figure") is not None:
+
                 import io
                 buf = io.BytesIO()
                 st.session_state.current_figure.savefig(buf, format='png', dpi=300, bbox_inches='tight')
@@ -1020,115 +1051,20 @@ class WaveformComponents:
             else:
                 st.button("Download PNG", disabled=True, use_container_width=True)
 
-    """
+
     def _render_log_view(self):
         st.title("Waveform Retrieval Logs")
         self.console._init_terminal_style()  # Initialize terminal styling
         
         if self.console.accumulated_output:
-            # Use ConsoleDisplay's formatting
             log_text = (
                 '<div class="terminal" id="log-terminal">'
                 '<pre>{}</pre>'
                 '</div>'
             ).format('\n'.join(self.console.accumulated_output))
-            
             st.markdown(log_text, unsafe_allow_html=True)
         else:
             st.info("No logs available yet. Perform a waveform download first.")
-
-    def _execute_waveform_retrieval(self):
-        #Wrap waveform retrieval with logging
-        def retrieval_task():
-            return self.waveform_display.retrieve_waveforms()
-
-        # Only show live logs if in Log View
-        show_live = st.session_state.get("waveform_view_mode") == "Log View"
-        
-        if show_live:
-            success, error = self.console.run_with_logs(
-                process_func=retrieval_task,
-                status_message="Downloading event waveforms..."
-            )
-        else:
-            with redirect_stdout(StringIO()) as stdout, redirect_stderr(StringIO()) as stderr:
-                try:
-                    result = retrieval_task()
-                    success, error = True, ""
-                except Exception as e:
-                    success, error = False, str(e)
-                
-                output = stdout.getvalue() + stderr.getvalue()
-                self.console.accumulated_output = output.splitlines()
-        
-        if self.console.accumulated_output:
-            st.session_state.console_logs = '<br>'.join(self.console.accumulated_output)
-
-    """
-    def _render_log_view(self):
-        """Display the logs in a terminal-style view"""
-        st.title("Event Retrieval Log")
-        
-        # Reuse the existing terminal styling
-        self.console._init_terminal_style()
-        
-        if self.console.accumulated_output:
-            # Use the existing preserve_whitespace method
-            preserved_content = self.console._preserve_whitespace('\n'.join(self.console.accumulated_output))
-            
-            log_text = (
-                '<div class="terminal" id="log-terminal">'
-                f'<pre>{preserved_content}</pre>'
-                '</div>'
-                '<script>'
-                'if (window.terminal_scroll === undefined) {'
-                '    window.terminal_scroll = function() {'
-                '        var terminalDiv = document.getElementById("log-terminal");'
-                '        if (terminalDiv) {'
-                '            terminalDiv.scrollTop = terminalDiv.scrollHeight;'
-                '        }'
-                '    };'
-                '}'
-                'window.terminal_scroll();'
-                '</script>'
-            )
-            
-            st.markdown(log_text, unsafe_allow_html=True)
-        else:
-            st.info("No logs available yet. Perform a waveform download first :)")
-
-    def _execute_waveform_retrieval(self):
-        """Execute waveform retrieval with appropriate logging"""
-        def retrieval_task():
-            return self.waveform_display.retrieve_waveforms()
-
-        show_live = st.session_state.get("waveform_view_mode") == "Log View"
-        
-        if show_live:
-            # Use existing console display for live logging
-            success, error = self.console.run_with_logs(
-                process_func=retrieval_task,
-                status_message="Downloading event waveforms..."
-            )
-        else:
-            # Capture output without displaying live
-            output_buffer = StringIO()
-            with redirect_stdout(output_buffer), redirect_stderr(output_buffer):
-                try:
-                    retrieval_task()
-                    success, error = True, ""
-                except Exception as e:
-                    success, error = False, str(e)
-                
-            # Store output in console's accumulated output
-            self.console.accumulated_output = output_buffer.getvalue().splitlines()
-
-        # Store in session state if needed
-        if self.console.accumulated_output:
-            st.session_state.console_logs = self.console.accumulated_output
-
-        return success, error
-
 class MissingDataDisplay:
     def __init__(self, streams: List[Stream], missing_data: Dict[str, Union[List[str], str]], settings: SeismoLoaderSettings):
         self.streams = streams
