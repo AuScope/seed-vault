@@ -279,7 +279,8 @@ class WaveformDisplay:
         except ValueError as e:
             st.error(f"Error: {str(e)} Waveform client is set to {self.settings.waveform.client}, which seems does not exists. Please navigate to the settings page and use the Clients tab to add the client or fix the stored config.cfg file.")
         self.ttmodel = TauPyModel("iasp91")
-        self.streams = [] 
+        self.streams = []
+        self.missing_data = {}
         self.console = ConsoleDisplay()  # Add console display
 
     def apply_filters(self, stream: Stream) -> Stream:
@@ -305,7 +306,7 @@ class WaveformDisplay:
         # Capture stdout/stderr for logging
         with redirect_stdout(StringIO()) as stdout, redirect_stderr(StringIO()) as stderr:
             try:
-                self.streams = run_event(self.settings, stop_event)
+                self.streams,self.missing_data = run_event(self.settings, stop_event) # This now returns list of streams AND a dictionary with event_id keys of what is missing
                 success = True
             except Exception as e:
                 success = False
@@ -476,7 +477,7 @@ class WaveformDisplay:
                         # Add trace label
                         label = f'{tr.stats.network}.{tr.stats.station}.{tr.stats.location or ""}.{tr.stats.channel}'
                         if hasattr(tr.stats, 'distance_km'):
-                            label += f' ({tr.stats.distance_km:.1f} km)'
+                            label += f' {tr.stats.distance_km:.1f} km'
                         if hasattr(tr.stats, 'filterband'):
                             event_info += f", {tr.stats.filterband[0]}-{tr.stats.filterband[1]}Hz"
                         ax.text(-self.settings.event.before_p_sec * 0.95, 
@@ -569,6 +570,7 @@ class WaveformDisplay:
         
         # Process each trace
         for i, tr in enumerate(current_stream):
+            print("DEBUG plotted trace:",tr)
             ax = axes[i]
 
             # Calculate and add an appropriate filter for plotting
@@ -607,7 +609,7 @@ class WaveformDisplay:
                 # Format station label with distance
                 station_info = f"{tr.stats.network}.{tr.stats.station}.{tr.stats.location or ''}.{tr.stats.channel}"
                 if hasattr(tr.stats, 'distance_km'):
-                    station_info += f" ({tr.stats.distance_km:.1f} km)"
+                    station_info += f" {tr.stats.distance_km:.1f} km"
                 if hasattr(tr.stats, 'filterband'):
                     station_info += f", {tr.stats.filterband[0]}-{tr.stats.filterband[1]}Hz"
                 
@@ -652,7 +654,7 @@ class WaveformDisplay:
         if not stream:
             return
         
-        # Sort traces by distance (can't do via starttime since it's all the same station)
+        # Sort traces by distance
         for tr in stream:
             if not hasattr(tr.stats, 'distance_km') or not tr.stats.distance_km:
                 tr.stats.distance_km = 99999
@@ -735,6 +737,8 @@ class WaveformDisplay:
                 # TODO: Add distance, magnitude, and region to station_info
                 if hasattr(tr.stats, 'distance_km'):
                     event_info.append(f"{tr.stats.distance_km:.1f} km")
+                if hasattr(tr.stats, 'event_time'):
+                    event_info.append(f"OT:{str(tr.stats.event_time)[0:19]}")                    
                 if hasattr(tr.stats, 'event_magnitude'):
                     event_info.append(f"M{tr.stats.event_magnitude:.1f}")
                 if hasattr(tr.stats, 'event_region'):
@@ -1081,7 +1085,7 @@ class MissingDataDisplay:
         
         # sort events by time? does this cause problems elsewhere? can we just sort selected_catalogs? do this elsewhere? REVIEW
         try:
-            catalog = self.settings.event.selected_catalogs #.copy() #need copy?
+            catalog = self.settings.event.selected_catalogs.copy() #need copy?
             catalog.events.sort(key=lambda x: getattr(x.origins[0], 'time', UTCDateTime(0)) if x.origins else UTCDateTime(0))
         except Exception as e:
             print("catalog sort problem",e)

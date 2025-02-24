@@ -593,7 +593,7 @@ class BaseComponent:
                 # self.inventories = get_station_data(self.settings.model_dump_json())
                 if is_import:
                     self.import_xml(uploaded_file)
-                else:                    
+                else:
                     self.inventories = get_station_data(self.settings)
                 if self.inventories:
                     self.df_markers = station_response_to_df(self.inventories)

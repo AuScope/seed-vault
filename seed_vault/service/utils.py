@@ -1,8 +1,17 @@
+from typing import Any, Dict, List, Tuple, Optional, Union
+
 from datetime import datetime, date, time, timedelta, timezone
 from dateutil.relativedelta import relativedelta
-from obspy.clients.fdsn import Client
+
 import streamlit as st
 
+from obspy import UTCDateTime
+from obspy.clients.fdsn import Client
+from obspy.core.inventory import Inventory
+from obspy.core.event import Event,Catalog
+from obspy.geodetics import locations2degrees
+
+from seed_vault.enums.config import GeoConstraintType
 
 def is_in_enum(item, enum_class):
     return item in (member.value for member in enum_class)
@@ -62,6 +71,37 @@ def convert_to_datetime(value):
     return date.today(), time(0, 0, 0)
 
 
+def to_timestamp(time_obj: Union[int, float, datetime, UTCDateTime]) -> float:
+    """
+    Convert various time objects to Unix timestamp.
+
+    Args:
+        time_obj: Time object to convert. Can be one of:
+            - int/float: Already a timestamp
+            - datetime: Python datetime object
+            - UTCDateTime: ObsPy UTCDateTime object
+
+    Returns:
+        float: Unix timestamp (seconds since epoch).
+
+    Raises:
+        ValueError: If the input time object type is not supported.
+
+    Example:
+        >>> ts = to_timestamp(datetime.now())
+        >>> ts = to_timestamp(UTCDateTime())
+        >>> ts = to_timestamp(1234567890.0)
+    """
+    if isinstance(time_obj, (int, float)):
+        return float(time_obj)
+    elif isinstance(time_obj, datetime):
+        return time_obj.timestamp()
+    elif isinstance(time_obj, UTCDateTime):
+        return time_obj.timestamp
+    else:
+        raise ValueError(f"Unsupported time type: {type(time_obj)}")
+
+
 def check_client_services(client_name: str):
     """Check which services are available for a given client name."""
     try:
@@ -78,4 +118,238 @@ def check_client_services(client_name: str):
             'station': False,
             'event': False,
             'dataselect': False
-        } 
+        }
+
+def get_sds_filenames(
+    n: str,
+    s: str,
+    l: str,
+    c: str,
+    time_start: UTCDateTime,
+    time_end: UTCDateTime,
+    sds_path: str
+) -> List[str]:
+    """Generate SDS (SeisComP Data Structure) format filenames for a time range.
+
+    Creates a list of daily SDS format filenames for given network, station,
+    location, and channel codes over a specified time period.
+
+    Args:
+        n: Network code.
+        s: Station code.
+        l: Location code.
+        c: Channel code.
+        time_start: Start time for data requests.
+        time_end: End time for data requests.
+        sds_path: Root path of the SDS archive.
+
+    Returns:
+        List of SDS format filepaths in the form:
+        /sds_path/YEAR/NETWORK/STATION/CHANNEL.D/NET.STA.LOC.CHA.D.YEAR.DOY
+
+    Example:
+        >>> paths = get_sds_filenames(
+        ...     "IU", "ANMO", "00", "BHZ",
+        ...     UTCDateTime("2020-01-01"),
+        ...     UTCDateTime("2020-01-03"),
+        ...     "/data/seismic"
+        ... )
+    """
+    current_time = time_start
+    filenames = []
+    
+    while current_time <= time_end:
+        year = str(current_time.year)
+        doy = str(current_time.julday).zfill(3)
+        
+        path = f"{sds_path}/{year}/{n}/{s}/{c}.D/{n}.{s}.{l}.{c}.D.{year}.{doy}"
+        filenames.append(path)
+        
+        current_time += 86400  # Advance by one day in seconds
+    
+    return filenames
+
+# not sure if used anymore.. also a feature of filter_catalog_by_geo_constraints
+def remove_duplicate_events(catalog):
+    """
+    Remove duplicate events from an ObsPy Catalog based on resource IDs.
+
+    Takes a catalog of earthquake events and returns a new catalog containing only
+    unique events, where uniqueness is determined by the event's resource_id.
+    The first occurrence of each resource_id is kept.
+
+    Args:
+        catalog (obspy.core.event.Catalog): Input catalog containing earthquake events
+
+    Returns:
+        obspy.core.event.Catalog: New catalog containing only unique events
+
+    Examples:
+        >>> from obspy import read_events
+        >>> cat = read_events('events.xml')
+        >>> unique_cat = remove_duplicate_events(cat)
+        >>> print(f"Removed {len(cat) - len(unique_cat)} duplicate events")
+    """
+    out = Catalog()
+    eq_ids = set()
+
+    for event in catalog:
+        if event.resource_id not in eq_ids:
+            out.append(event)
+            eq_ids.add(event.resource_id)
+
+    return out
+
+def filter_catalog_by_geo_constraints(catalog: Catalog, constraints) -> Catalog:
+    """
+    Filter an ObsPy event catalog to include events within ANY of original search constraints. 
+    This should be done to clean up any superfluous events that our reducted get_event calls
+    may have introduced.
+    
+    Parameters:
+    -----------
+    catalog : obspy.core.event.Catalog
+        The input event catalog to filter
+    constraints: settings.event.geo_constraint (whatever object type this is TODO)
+        
+    Returns:
+    --------
+    obspy.core.event.Catalog
+        A new catalog containing events within any of the specified circles
+    """
+    if len(constraints) == 0:
+        return catalog
+
+    filtered_events = []
+
+    for event in catalog:
+
+        # Filter out duplicates while we're here
+        if event in filtered_events:
+            continue
+
+        try:
+            event_lat = event.origins[0].latitude
+            event_lon = event.origins[0].longitude
+        except (IndexError, AttributeError):
+            continue
+
+        for geo in constraints:
+            if geo.geo_type == GeoConstraintType.BOUNDING:
+
+                # Check latitude first since it's simpler
+                if not (geo.coords.min_lat <= event_lat <= geo.coords.max_lat):
+                    continue
+                    
+                # Handle longitude, accounting for meridian crossing
+                lon_in_bounds = False
+                if geo.coords.min_lon <= geo.coords.max_lon:
+                    # Normal case: box doesn't cross meridian
+                    lon_in_bounds = geo.coords.min_lon <= event_lon <= geo.coords.max_lon
+                else:
+                    # Box crosses meridian - event must be either:
+                    # 1) Greater than min_lon (e.g., 170 to 180) or
+                    # 2) Less than max_lon (e.g., -180 to -170)
+                    lon_in_bounds = event_lon >= geo.coords.min_lon or event_lon <= geo.coords.max_lon
+                
+                if lon_in_bounds:
+                    filtered_events.append(event)
+                    break
+
+            elif geo.geo_type == GeoConstraintType.CIRCLE:
+
+                if not geo.coords.max_radius:
+                    geo.coords.max_radius = 180
+                if not geo.coords.min_radius:
+                    geo.coords.min_radius = 0
+
+                distance = locations2degrees(event_lat, event_lon, geo.coords.lat, geo.coords.lon)
+                    
+                if geo.coords.min_radius <= distance <= geo.coords.max_radius:
+                    filtered_events.append(event)
+                    break
+            else:
+                filtered_events.append(event)
+
+    return Catalog(events=filtered_events)
+
+def filter_inventory_by_geo_constraints(inventory: Inventory, constraints) -> Inventory:
+    """
+    Filter an ObsPy inventory to include stations within ANY of the original search constraints.
+    
+    Parameters:
+    -----------
+    inventory : obspy.Inventory
+        The input inventory to filter
+    constraints: settings.event.geo_constraint
+        List of geographical constraints
+        
+    Returns:
+    --------
+    obspy.Inventory
+        A new inventory containing only stations within any of the specified constraints
+    """
+    if len(constraints) == 0:
+        return inventory
+
+    # Create new networks list for filtered inventory
+    networks = []
+    
+    for network in inventory:
+        # Create new stations list for this network
+        filtered_stations = []
+        
+        for station in network:
+
+            # Filter out duplicates while we're here
+            if station in filtered_stations:
+                continue
+
+            station_lat = station.latitude
+            station_lon = station.longitude
+            
+            # Check each constraint
+            for geo in constraints:
+                if geo.geo_type == GeoConstraintType.BOUNDING:
+                    # Check latitude first
+                    if not (geo.coords.min_lat <= station_lat <= geo.coords.max_lat):
+                        continue
+                        
+                    # Handle longitude, accounting for meridian crossing
+                    lon_in_bounds = False
+                    if geo.coords.min_lon <= geo.coords.max_lon:
+                        # Normal case: box doesn't cross meridian
+                        lon_in_bounds = geo.coords.min_lon <= station_lon <= geo.coords.max_lon
+                    else:
+                        # Box crosses meridian
+                        lon_in_bounds = station_lon >= geo.coords.min_lon or station_lon <= geo.coords.max_lon
+                    
+                    if lon_in_bounds:
+                        filtered_stations.append(station)
+                        break  # Found a matching constraint, no need to check others
+                        
+                elif geo.geo_type == GeoConstraintType.CIRCLE:
+                    if not geo.coords.max_radius:
+                        geo.coords.max_radius = 180
+                    if not geo.coords.min_radius:
+                        geo.coords.min_radius = 0
+                        
+                    distance = locations2degrees(station_lat, station_lon, 
+                                              geo.coords.lat, geo.coords.lon)
+                        
+                    if geo.coords.min_radius <= distance <= geo.coords.max_radius:
+                        filtered_stations.append(station)
+                        break
+                        
+                else:
+                    filtered_stations.append(station)
+        
+        # If we found any stations in this network, add the network to our result
+        if filtered_stations:
+            # Create a copy of the network with only the filtered stations
+            filtered_network = network.copy()
+            filtered_network.stations = filtered_stations
+            networks.append(filtered_network)
+    
+    # Create new inventory with only the networks that had matching stations
+    return Inventory(networks=networks, source=inventory.source, sender=inventory.sender)
