@@ -31,6 +31,9 @@ def parse_time(time_str):
       successful, it returns the parsed time in ISO format. If parsing fails for all formats, it returns
       `None`.
     """
+    if not time_str:
+        return None
+
     try:
         return UTCDateTime(time_str).isoformat()
     except:
@@ -243,7 +246,7 @@ class StationConfig(BaseModel):
         end_time=datetime.now().isoformat()
     )
     local_inventory    : Optional   [ str           ] = None
-    network            : Optional   [ str           ] = "_GSN"
+    network            : Optional   [ str           ] = "IU"
     station            : Optional   [ str           ] = "*"
     location           : Optional   [ str           ] = "*"
     channel            : Optional   [ str           ] = "?H?,?N?"
@@ -746,11 +749,11 @@ class SeismoLoaderSettings(BaseModel):
 
         geo_constraint_station = cls._parse_geo_constraint(cls, config, 'STATION', status_handler)
 
-        # Parse force_stations
+        # Parse force_stations (can be network.station.location.channel)
         force_stations_cmb_n_s = config.get(station_section, 'force_stations', fallback='').split(',')
         force_stations = [SeismoQuery(cmb_str_n_s=cmb_n_s) for cmb_n_s in force_stations_cmb_n_s if cmb_n_s.strip()]
 
-        # Parse exclude_stations
+        # Parse exclude_stations (just network.station)
         exclude_stations_cmb_n_s = config.get(station_section, 'exclude_stations', fallback='').split(',')
         exclude_stations = [SeismoQuery(cmb_str_n_s=cmb_n_s) for cmb_n_s in exclude_stations_cmb_n_s if cmb_n_s.strip()]
 
@@ -758,15 +761,13 @@ class SeismoLoaderSettings(BaseModel):
         local_inventory = cls.parse_optional(config.get(station_section, 'local_inventory', fallback=None))
         highest_samplerate_only = cls._check_val(config.get(station_section, "highest_samplerate_only", fallback=False), False, "bool")
 
- 
-
         # Parse include_restricted
         include_restricted = cls._check_val(
             config.get(station_section, 'include_restricted', fallback='False'), False, "bool"
         )
 
         # Parse level
-        level = config.get(station_section, 'level', fallback=None)
+        level = config.get(station_section, 'level', fallback='channel')
         if level is None:  # Key is missing
             status_handler.add_error("input_parameters", f"'level' is missing in the [{station_section}] section. Please specify a level (e.g., 'channel').")
         else:
@@ -1023,47 +1024,47 @@ class SeismoLoaderSettings(BaseModel):
             # Parse bounding box coordinates
             min_lat = cls._check_val(config.get(section, 'minlatitude'), None, "float")
             max_lat = cls._check_val(config.get(section, 'maxlatitude'), None, "float")
-            min_lng = cls._check_val(config.get(section, 'minlongitude'), None, "float")
-            max_lng = cls._check_val(config.get(section, 'maxlongitude'), None, "float")
+            min_lon = cls._check_val(config.get(section, 'minlongitude'), None, "float")
+            max_lon = cls._check_val(config.get(section, 'maxlongitude'), None, "float")
 
             # Validate longitude range and adjust if necessary
-            if max_lng is not None and max_lng > 180:
-                max_lng -= 360
-                status_handler.add_warning("input_parameters" ,f"'maxlongitude' exceeded 180 in the [{section}] section. Adjusted to {max_lng}.")
-            if min_lng is not None and min_lng < -180:
-                min_lng += 360
-                status_handler.add_warning("input_parameters" ,f"'minlongitude' was below -180 in the [{section}] section. Adjusted to {min_lng}.")
+            if max_lon is not None and max_lon > 180:
+                max_lon -= 360
+                status_handler.add_warning("input_parameters" ,f"'maxlongitude' exceeded 180 in the [{section}] section. Adjusted to {max_lon}.")
+            if min_lon is not None and min_lon < -180:
+                min_lon += 360
+                status_handler.add_warning("input_parameters" ,f"'minlongitude' was below -180 in the [{section}] section. Adjusted to {min_lon}.")
 
             # Create bounding box constraint
             geo_constraint = GeometryConstraint(
                 coords=RectangleArea(
                     min_lat=min_lat,
                     max_lat=max_lat,
-                    min_lng=min_lng,
-                    max_lng=max_lng,
+                    min_lon=min_lon,
+                    max_lon=max_lon,
                 )
             )
 
         elif geo_constraint_type == GeoConstraintType.CIRCLE:
             # Parse circle area coordinates
             lat = cls._check_val(config.get(section, 'latitude'), None, "float")
-            lng = cls._check_val(config.get(section, 'longitude'), None, "float")
+            lon = cls._check_val(config.get(section, 'longitude'), None, "float")
             min_radius = cls._check_val(config.get(section, 'minsearchradius'), None, "float")
             max_radius = cls._check_val(config.get(section, 'maxsearchradius'), None, "float")
 
             # Validate longitude range and adjust if necessary
-            if lng is not None and lng > 180:
-                lng -= 360
-                status_handler.add_warning("input_parameters" ,f"'longitude' exceeded 180 in the [{section}] section. Adjusted to {lng}.")
-            if lng is not None and lng < -180:
-                lng += 360
-                status_handler.add_warning("input_parameters" ,f"'longitude' was below -180 in the [{section}] section. Adjusted to {lng}.")
+            if lon is not None and lon > 180:
+                lon -= 360
+                status_handler.add_warning("input_parameters" ,f"'longitude' exceeded 180 in the [{section}] section. Adjusted to {lon}.")
+            if lon is not None and lon < -180:
+                lon += 360
+                status_handler.add_warning("input_parameters" ,f"'longitude' was below -180 in the [{section}] section. Adjusted to {lon}.")
 
             # Create circular area constraint
             geo_constraint = GeometryConstraint(
                 coords=CircleArea(
                     lat=lat,
-                    lng=lng,
+                    lon=lon,
                     min_radius=min_radius,
                     max_radius=max_radius,
                 )
@@ -1147,15 +1148,15 @@ class SeismoLoaderSettings(BaseModel):
                 
                 if self.station.geo_constraint[0].geo_type == GeoConstraintType.CIRCLE:
                     safe_add_to_config(config, 'STATION', 'latitude', self.station.geo_constraint[0].coords.lat)
-                    safe_add_to_config(config, 'STATION', 'longitude', self.station.geo_constraint[0].coords.lng)
+                    safe_add_to_config(config, 'STATION', 'longitude', self.station.geo_constraint[0].coords.lon)
                     safe_add_to_config(config, 'STATION', 'minradius', self.station.geo_constraint[0].coords.min_radius)
                     safe_add_to_config(config, 'STATION', 'maxradius', self.station.geo_constraint[0].coords.max_radius)
 
                 if self.station.geo_constraint[0].geo_type == GeoConstraintType.BOUNDING:
                     safe_add_to_config(config, 'STATION', 'minlatitude', self.station.geo_constraint[0].coords.min_lat)
                     safe_add_to_config(config, 'STATION', 'maxlatitude', self.station.geo_constraint[0].coords.max_lat)
-                    safe_add_to_config(config, 'STATION', 'minlongitude', self.station.geo_constraint[0].coords.min_lng)
-                    safe_add_to_config(config, 'STATION', 'maxlongitude', self.station.geo_constraint[0].coords.max_lng)
+                    safe_add_to_config(config, 'STATION', 'minlongitude', self.station.geo_constraint[0].coords.min_lon)
+                    safe_add_to_config(config, 'STATION', 'maxlongitude', self.station.geo_constraint[0].coords.max_lon)
 
             safe_add_to_config(config, 'STATION', 'includerestricted', self.station.include_restricted)
             safe_add_to_config(config, 'STATION', 'level', self.station.level.value)
@@ -1192,15 +1193,15 @@ class SeismoLoaderSettings(BaseModel):
 
                 if self.event.geo_constraint[0].geo_type == GeoConstraintType.CIRCLE:
                     safe_add_to_config(config, 'EVENT', 'latitude', self.event.geo_constraint[0].coords.lat)
-                    safe_add_to_config(config, 'EVENT', 'longitude', self.event.geo_constraint[0].coords.lng)
+                    safe_add_to_config(config, 'EVENT', 'longitude', self.event.geo_constraint[0].coords.lon)
                     safe_add_to_config(config, 'EVENT', 'minsearchradius', self.event.geo_constraint[0].coords.min_radius)
                     safe_add_to_config(config, 'EVENT', 'maxsearchradius', self.event.geo_constraint[0].coords.max_radius)
 
                 if self.event.geo_constraint[0].geo_type == GeoConstraintType.BOUNDING:
                     safe_add_to_config(config, 'EVENT', 'minlatitude', self.event.geo_constraint[0].coords.min_lat)
                     safe_add_to_config(config, 'EVENT', 'maxlatitude', self.event.geo_constraint[0].coords.max_lat)
-                    safe_add_to_config(config, 'EVENT', 'minlongitude', self.event.geo_constraint[0].coords.min_lng)
-                    safe_add_to_config(config, 'EVENT', 'maxlongitude', self.event.geo_constraint[0].coords.max_lng)
+                    safe_add_to_config(config, 'EVENT', 'minlongitude', self.event.geo_constraint[0].coords.min_lon)
+                    safe_add_to_config(config, 'EVENT', 'maxlongitude', self.event.geo_constraint[0].coords.max_lon)
 
         return config
 
@@ -1329,4 +1330,49 @@ class SeismoLoaderSettings(BaseModel):
             SeismoLoaderSettings: The loaded instance of the class.
         """
         with open(pickle_path, "rb") as f:
-            return pickle.load(f)        
+            return pickle.load(f)
+        
+
+    def has_changed(self, old_settings: "SeismoLoaderSettings") -> Dict[str, bool]:
+        """
+        Compare self with old_settings and return a dictionary indicating which parts have changed.
+
+        Args:
+            old_settings (SeismoLoaderSettings): The old settings to compare against.
+
+        Returns:
+            Dict[str, bool]: A dictionary with keys indicating which properties changed.
+        """
+        changes = {
+            "has_changed": False,
+            "event": False,
+            "station": False,
+            "waveform": False,
+            "settings": False,
+        }
+
+        if not isinstance(old_settings, SeismoLoaderSettings):
+            raise TypeError("old_settings must be an instance of SeismoLoaderSettings")
+
+        # Compare each component and update the dictionary accordingly
+        if self.event != old_settings.event:
+            changes["event"] = True
+            changes["has_changed"] = True
+
+        if self.station != old_settings.station:
+            changes["station"] = True
+            changes["has_changed"] = True
+
+        if self.waveform != old_settings.waveform:
+            changes["waveform"] = True
+            changes["has_changed"] = True
+
+        if (self.sds_path != old_settings.sds_path or
+            self.db_path != old_settings.db_path or 
+            self.processing != old_settings.processing or
+            self.auths != old_settings.auths
+            ):
+            changes["settings"] = True
+            changes["has_changed"] = True
+
+        return changes

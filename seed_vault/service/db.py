@@ -1,3 +1,11 @@
+"""
+Database management module for the SEED-vault archive
+
+This module provides a DatabaseManager class for handling seismic data storage in SQLite,
+including archive data and arrival data. It implements connection management, data insertion,
+querying, and database maintenance operations.
+"""
+
 import sqlite3
 import contextlib
 import time
@@ -6,13 +14,24 @@ import datetime
 from pathlib import Path
 from obspy import UTCDateTime
 import pandas as pd
-from typing import Union
+from typing import Union, List, Dict, Tuple, Optional, Any
 
-def to_timestamp(time_obj):
-    """ Anything to timestamp helper """
+def to_timestamp(time_obj: Union[int, float, datetime.datetime, UTCDateTime]) -> float:
+    """
+    Convert various time objects to Unix timestamp.
+
+    Args:
+        time_obj: Time object to convert. Can be int/float timestamp, datetime, or UTCDateTime.
+
+    Returns:
+        float: Unix timestamp.
+
+    Raises:
+        ValueError: If the time object type is not supported.
+    """
     if isinstance(time_obj, (int, float)):
         return float(time_obj)
-    elif isinstance(time_obj, datetime):
+    elif isinstance(time_obj, datetime.datetime):
         return time_obj.timestamp()
     elif isinstance(time_obj, UTCDateTime):
         return time_obj.timestamp
@@ -20,16 +39,45 @@ def to_timestamp(time_obj):
         raise ValueError(f"Unsupported time type: {type(time_obj)}")
 
 class DatabaseManager:
-    def __init__(self, db_path):
+    """
+    Manages seismic data storage and retrieval using SQLite.
+
+    This class handles database connections, table creation, data insertion,
+    and querying for seismic archive and arrival data.
+
+    Attributes:
+        db_path (str): Path to the SQLite database file.
+    """
+
+    def __init__(self, db_path: str):
+        """Initialize DatabaseManager with database path.
+
+        Args:
+            db_path: Path where the SQLite database should be created/accessed.
+        """
         self.db_path = db_path
         parent_dir = Path(db_path).parent
         parent_dir.mkdir(parents=True, exist_ok=True)
         self.setup_database()
+
     @contextlib.contextmanager
-    def connection(self, max_retries=3, initial_delay=1):
-        """Context manager for safe database connections with retry mechanism."""
+    def connection(self, max_retries: int = 3, initial_delay: float = 1):
+        """
+        Context manager for database connections with retry mechanism.
+
+        Args:
+            max_retries: Maximum number of connection retry attempts.
+            initial_delay: Initial delay between retries in seconds.
+
+        Yields:
+            sqlite3.Connection: Database connection object.
+
+        Raises:
+            sqlite3.OperationalError: If database connection fails after all retries.
+        """
         retry_count = 0
         delay = initial_delay
+        
         while retry_count < max_retries:
             try:
                 conn = sqlite3.connect(self.db_path, timeout=20)
@@ -53,11 +101,12 @@ class DatabaseManager:
                     conn.close()
 
     def setup_database(self):
+        """
+        Initialize database schema with required tables and indices."""
         with self.connection() as conn:
             cursor = conn.cursor()
             
             # Create archive_data table
-            # starttime and endtime are isoformat, importtime is timestamp
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS archive_data (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -78,26 +127,6 @@ class DatabaseManager:
             ''')
             
             # Create arrival_data table
-                # event_id / unique eventID which usually points to a web address
-                # e_mag / earthquake magnitude
-                # e_lat / earthquake origin latitude
-                # e_lon / earthquake origin longitude
-                # e_depth / earthquake depth (km)
-                # e_time / earthquake origin time (utc)
-                # s_netcode / station network code
-                # s_stacode / station station code
-                # s_lat / station latitude
-                # s_lon / station longitude
-                # s_elev / station elevation (km)
-                # s_start / station start date (timestamp) * some scenarios where there are multiple stations at different times
-                # s_end / station end date (timestamp) * NULL if station is still running
-                # dist_deg / distance between event and station in degrees
-                # dist_km / distance between event and station in km
-                # azimuth / azimuth from EVENT to STATION
-                # p_arrival / estimated p arrival at station (timestamp)
-                # s_arrival / estimated S arrival at station (timestamp)
-                # model / 1D earth model used in TauP
-                # importtime / timestamp
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS arrival_data (
                     event_id TEXT,
@@ -119,21 +148,22 @@ class DatabaseManager:
                     p_arrival REAL,
                     s_arrival REAL,
                     model TEXT,
-                    importtime,
+                    importtime REAL,
                     PRIMARY KEY (event_id, s_netcode, s_stacode, s_start)
                 )
             ''')
 
-    def display_contents(self, table_name, start_time=0, end_time=4102444799, limit=100):
+    def display_contents(self, table_name: str, start_time: Union[int, float, datetime.datetime, UTCDateTime] = 0,
+                        end_time: Union[int, float, datetime.datetime, UTCDateTime] = 4102444799, limit: int = 100):
         """
-        Display the contents of a specified table within a given time range.
-        
-        :param table_name: Name of the table to query (e.g., 'archive_data' or 'arrival_data')
-        :param starttime: Start time for the query (can be timestamp, datetime, or UTCDateTime)
-        :param endtime: End time for the query (can be timestamp, datetime, or UTCDateTime)
-        :param limit: Maximum number of rows to return
-        """
+        Display contents of a specified table within a given time range.
 
+        Args:
+            table_name: Name of the table to query ('archive_data' or 'arrival_data').
+            start_time: Start time for the query.
+            end_time: End time for the query.
+            limit: Maximum number of rows to return.
+        """
         try:
             start_timestamp = to_timestamp(start_time)
             end_timestamp = to_timestamp(end_time)
@@ -144,12 +174,10 @@ class DatabaseManager:
         with self.connection() as conn:
             cursor = conn.cursor()
             
-            # Get column names
             cursor.execute(f"PRAGMA table_info({table_name})")
             columns = [col[1] for col in cursor.fetchall()]
             
-            # Construct and execute query
-            query = f"""
+            query = """
                 SELECT * FROM {table_name}
                 WHERE importtime BETWEEN ? AND ?
                 ORDER BY importtime
@@ -157,10 +185,8 @@ class DatabaseManager:
             """
             cursor.execute(query, (start_timestamp, end_timestamp, limit))
             
-            # Fetch results
             results = cursor.fetchall()
             
-            # Print results
             print(f"\nContents of {table_name} (limited to {limit} rows):")
             print("=" * 80)
             print(" | ".join(columns))
@@ -170,27 +196,46 @@ class DatabaseManager:
             
             print(f"\nTotal rows: {len(results)}")
 
-    # tools to clean / maintain tables if they get very large or many elements deleted (not currently implemented)
     def reindex_archive_data(self):
+        """Rebuild the index on archive_data table."""
         with self.connection() as conn:
             cursor = conn.cursor()
             cursor.execute("REINDEX idx_archive_data")
 
     def vacuum_database(self):
+        """Rebuild the database file to reclaim unused space."""
         with self.connection() as conn:
             conn.execute("VACUUM")
 
-    def analyze_table(self, table_name):
+    def analyze_table(self, table_name: str):
+        """Update table statistics for query optimization.
+
+        Args:
+            table_name: Name of the table to analyze.
+        """
         with self.connection() as conn:
             cursor = conn.cursor()
             cursor.execute(f"ANALYZE {table_name}")
 
-    def delete_elements(self, table_name, start_time=0, end_time=4102444799):
-        """ Delete elements from table_name between start and end_time """
+    def delete_elements(self, table_name: str, 
+                       start_time: Union[int, float, datetime.datetime, UTCDateTime] = 0,
+                       end_time: Union[int, float, datetime.datetime, UTCDateTime] = 4102444799) -> int:
+        """
+        Delete elements from specified table within time range.
 
-        if table_name.lower() not in ['archive_data','arrival_data']:
-            print("table_name must be archive_data or arrival_data")
-            return 0
+        Args:
+            table_name: Name of the table ('archive_data' or 'arrival_data').
+            start_time: Start time for deletion range.
+            end_time: End time for deletion range.
+
+        Returns:
+            int: Number of deleted rows.
+
+        Raises:
+            ValueError: If table_name is invalid or time format is incorrect.
+        """
+        if table_name.lower() not in ['archive_data', 'arrival_data']:
+            raise ValueError("table_name must be archive_data or arrival_data")
 
         try:
             start_timestamp = to_timestamp(start_time)
@@ -200,28 +245,23 @@ class DatabaseManager:
 
         with self.connection() as conn:
             cursor = conn.cursor()
-            
-            query = f'''
+            query = """
                 DELETE FROM {table_name}
                 WHERE importtime >= ? AND importtime <= ?
-            '''
-            
+            """
             cursor.execute(query, (start_timestamp, end_timestamp))
-            
-            deleted_count = cursor.rowcount
-            
-            return deleted_count
+            return cursor.rowcount
 
-    def join_continuous_segments(self, gap_tolerance=30):
+    def join_continuous_segments(self, gap_tolerance: float = 30):
         """
-        Join continuous data segments in the database, even across day boundaries.
-        
-        :param gap_tolerance: Maximum allowed gap (in seconds) to still consider segments continuous
+        Join continuous data segments in the database.
+
+        Args:
+            gap_tolerance: Maximum allowed gap (in seconds) to consider segments continuous.
         """
         with self.connection() as conn:
             cursor = conn.cursor()
             
-            # Fetch all data sorted by network, station, location, channel, and starttime
             cursor.execute('''
                 SELECT id, network, station, location, channel, starttime, endtime, importtime
                 FROM archive_data
@@ -229,7 +269,6 @@ class DatabaseManager:
             ''')
             
             all_data = cursor.fetchall()
-            
             to_delete = []
             to_update = []
             current_segment = None
@@ -242,35 +281,28 @@ class DatabaseManager:
                 if current_segment is None:
                     current_segment = list(row)
                 else:
-                    # Check if this segment is continuous with the current one
                     if (network == current_segment[1] and
                         station == current_segment[2] and
                         location == current_segment[3] and
                         channel == current_segment[4] and
                         starttime - UTCDateTime(current_segment[6]) <= gap_tolerance):
                         
-                        # Extend the current segment
                         current_segment[6] = max(endtime, UTCDateTime(current_segment[6])).isoformat()
-                        # Keep the latest importtime
-                        current_segment[7] = max(importtime, current_segment[7]) ### bug if database was deleted and both are None
+                        current_segment[7] = max(importtime, current_segment[7]) if importtime and current_segment[7] else None
                         to_delete.append(id)
                     else:
-                        # Start a new segment
                         to_update.append(tuple(current_segment))
                         current_segment = list(row)
             
-            # Don't forget the last segment
             if current_segment:
                 to_update.append(tuple(current_segment))
             
-            # Perform updates
             cursor.executemany('''
                 UPDATE archive_data
                 SET endtime = ?, importtime = ?
                 WHERE id = ?
             ''', [(row[6], row[7], row[0]) for row in to_update])
             
-            # Delete the merged segments (break into pieces to avoid SQL3 limit)
             if to_delete:
                 for i in range(0, len(to_delete), 500):
                     chunk = to_delete[i:i + 500]
@@ -279,75 +311,59 @@ class DatabaseManager:
                         [(id,) for id in chunk]
                     )
 
-        print(f"Database cleaned. Deleted {len(to_delete)} rows, updated {len(to_update)} rows.")
+        print(f"\nDatabase cleaned. Deleted {len(to_delete)} rows, updated {len(to_update)} rows.")
 
-
-    def run_query(self,query):
-        """Run any query!"""
-        with self.connection() as conn:
-            cursor = conn.cursor()
-            try:
-                cursor.execute(query)
-            except sqlite3.Error as e:
-                print(f"SQLite error: {e}")
-                # Print the SQL statement and the data being inserted
-        return
-    
-
-    def execute_query(self, query: str) -> tuple[bool, Union[pd.DataFrame, str]]:
+    def execute_query(self, query: str) -> Tuple[bool, str, Optional[pd.DataFrame]]:
         """
-        Execute any SQL query and return results along with a flag indicating if it's tabular data.
-        
+        Execute an SQL query and return results.
+
         Args:
-            query (str): SQL query to execute
-            
+            query: SQL query to execute.
+
         Returns:
-            tuple: (is_data: bool, result: Union[pd.DataFrame, str])
-            - is_data: True if query returns tabular data, False otherwise
-            - result: DataFrame for SELECT queries, status message for other queries
+            Tuple containing:
+                - bool: Whether an error occurred
+                - str: Status message or error description
+                - Optional[pd.DataFrame]: Results for SELECT queries, None otherwise
         """
-        # List of SQL commands that modify data
         modify_commands = {'INSERT', 'UPDATE', 'DELETE', 'DROP', 'CREATE', 'ALTER', 'TRUNCATE'}
-        
-        # Check if the query is a SELECT statement or a modify command
         first_word = query.strip().split()[0].upper()
         is_select = first_word == 'SELECT'
-        has_error = False
         
         try:
             with self.connection() as conn:
                 if is_select:
-                    # For SELECT queries, return a DataFrame
                     df = pd.read_sql_query(query, conn)
-                    return has_error, f"Query executed successfully. {len(df)} rows returned.", df
+                    return False, f"Query executed successfully. {len(df)} rows returned.", df
                 else:
-                    # For other queries, execute and return status message
                     cursor = conn.cursor()
                     cursor.execute(query)
                     
                     if first_word in modify_commands:
-                        rows_affected = cursor.rowcount
-                        return has_error, f"Query executed successfully. Rows affected: {rows_affected}", None
-                    else:
-                        return has_error, "Query executed successfully.", None
+                        return False, f"Query executed successfully. Rows affected: {cursor.rowcount}", None
+                    return False, "Query executed successfully.", None
                     
         except Exception as e:
-            error_message = f"Error executing query: {str(e)}"
-            has_error = True
-            return has_error, error_message, None
-        
+            return True, f"Error executing query: {str(e)}", None
 
-    def bulk_insert_archive_data(self, archive_list):
+    def bulk_insert_archive_data(self, archive_list: List[Tuple]) -> int:
+        """
+        Insert multiple archive data records.
+
+        Args:
+            archive_list: List of tuples containing archive data records.
+
+        Returns:
+            int: Number of inserted records.
+        """
         if not archive_list:
             return 0
 
         with self.connection() as conn:
             cursor = conn.cursor()
-            
-            # Add import time
             now = int(datetime.datetime.now().timestamp())
             archive_list = [tuple(list(ele) + [now]) for ele in archive_list if ele is not None]
-            # Do the insert
+            
             cursor.executemany('''
                 INSERT OR REPLACE INTO archive_data
                 (network, station, location, channel, starttime, endtime, importtime)
@@ -356,37 +372,52 @@ class DatabaseManager:
             
             return cursor.rowcount
 
-    def bulk_insert_arrival_data(self, arrival_list):
+    def bulk_insert_arrival_data(self, arrival_list: List[Tuple]) -> int:
+        """
+        Insert multiple arrival data records.
+
+        Args:
+            arrival_list: List of tuples containing arrival data records.
+
+        Returns:
+            int: Number of inserted records.
+        """
         if not arrival_list:
             return 0
 
         with self.connection() as conn:
             cursor = conn.cursor()
-            
-            # Define the columns based on your table structure
             columns = ['event_id', 'e_mag', 'e_lat', 'e_lon', 'e_depth', 'e_time',
-                   's_netcode', 's_stacode', 's_lat', 's_lon', 's_elev', 's_start', 's_end',
-                   'dist_deg', 'dist_km', 'azimuth', 'p_arrival', 's_arrival', 'model',
-                   'importtime']
+                      's_netcode', 's_stacode', 's_lat', 's_lon', 's_elev', 's_start', 's_end',
+                      'dist_deg', 'dist_km', 'azimuth', 'p_arrival', 's_arrival', 'model',
+                      'importtime']
             
             placeholders = ', '.join(['?' for _ in columns])
-            
             query = f'''
                 INSERT OR REPLACE INTO arrival_data
                 ({', '.join(columns)})
                 VALUES ({placeholders})
             '''
             
-            # Add import time
             now = int(datetime.datetime.now().timestamp())
             arrival_list = [tuple(list(ele) + [now]) for ele in arrival_list]
-
-            # Do the insert
             cursor.executemany(query, arrival_list)
             
             return cursor.rowcount
 
-    def get_arrival_data(self, event_id, netcode, stacode):
+    def get_arrival_data(self, event_id: str, netcode: str, stacode: str) -> Optional[Dict[str, Any]]:
+        """
+        Retrieve complete arrival data for a specific event and station.
+
+        Args:
+            event_id: Unique identifier for the seismic event.
+            netcode: Network code for the station.
+            stacode: Station code.
+
+        Returns:
+            Optional[Dict[str, Any]]: Dictionary containing all arrival data fields for the
+                specified event and station, or None if no matching record is found.
+        """
         with self.connection() as conn:
             cursor = conn.cursor()
             cursor.execute('''
@@ -399,7 +430,17 @@ class DatabaseManager:
                 return dict(zip(columns, result))
         return None
 
-    def get_stations_for_event(self, event_id):
+    def get_stations_for_event(self, event_id: str) -> List[Dict[str, Any]]:
+        """
+        Retrieve all station data associated with a specific seismic event.
+
+        Args:
+            event_id: Unique identifier for the seismic event.
+
+        Returns:
+            List[Dict[str, Any]]: List of dictionaries containing arrival data for all
+                stations that recorded the event. Returns empty list if no stations found.
+        """
         with self.connection() as conn:
             cursor = conn.cursor()
             cursor.execute('''
@@ -412,7 +453,18 @@ class DatabaseManager:
                 return [dict(zip(columns, result)) for result in results]
         return []
 
-    def get_events_for_station(self, netcode, stacode):
+    def get_events_for_station(self, netcode: str, stacode: str) -> List[Dict[str, Any]]:
+        """
+        Retrieve all seismic events recorded by a specific station.
+
+        Args:
+            netcode: Network code for the station.
+            stacode: Station code.
+
+        Returns:
+            List[Dict[str, Any]]: List of dictionaries containing arrival data for all
+                events recorded by the station. Returns empty list if no events found.
+        """
         with self.connection() as conn:
             cursor = conn.cursor()
             cursor.execute('''
@@ -425,7 +477,20 @@ class DatabaseManager:
                 return [dict(zip(columns, result)) for result in results]
         return []
 
-    def fetch_arrivals(self, event_id, netcode, stacode):
+    # this function may be redundant now, only using fetch_arrivals_distances (?)
+    def fetch_arrivals(self, event_id: str, netcode: str, stacode: str) -> Optional[Tuple[float, float]]:
+        """
+        Retrieve P and S wave arrival times for a specific event and station.
+
+        Args:
+            event_id: Unique identifier for the seismic event.
+            netcode: Network code for the station.
+            stacode: Station code.
+
+        Returns:
+            Optional[Tuple[float, float]]: Tuple containing (p_arrival, s_arrival) times
+                as timestamps, or None if no matching record is found.
+        """
         with self.connection() as conn:
             cursor = conn.cursor()
             cursor.execute('''
@@ -438,8 +503,25 @@ class DatabaseManager:
                 return (result[0], result[1])
         return None
 
-    # expanded version of the above to include distances and azimth
-    def fetch_arrivals_distances(self, event_id, netcode, stacode):
+    def fetch_arrivals_distances(self, event_id: str, netcode: str, stacode: str) -> Optional[Tuple[float, float, float, float, float]]:
+        """
+        Retrieve arrival times and distance metrics for a specific event and station.
+
+        Args:
+            event_id: Unique identifier for the seismic event.
+            netcode: Network code for the station.
+            stacode: Station code.
+
+        Returns:
+            Optional[Tuple[float, float, float, float, float]]: Tuple containing
+                (p_arrival, s_arrival, dist_km, dist_deg, azimuth), where:
+                - p_arrival: P wave arrival time (timestamp)
+                - s_arrival: S wave arrival time (timestamp)
+                - dist_km: Distance in kilometers
+                - dist_deg: Distance in degrees
+                - azimuth: Azimuth angle from event to station
+                Returns None if no matching record is found.
+        """
         with self.connection() as conn:
             cursor = conn.cursor()
             cursor.execute('''
@@ -451,56 +533,3 @@ class DatabaseManager:
             if result:
                 return (result[0], result[1], result[2], result[3], result[4])
         return None
-
-
-
-###### Legacy functions below
-"""
-def setup_database(db_path):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS archive_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            network TEXT,
-            station TEXT,
-            location TEXT,
-            channel TEXT,
-            starttime TEXT,
-            endtime TEXT,
-            importtime REAL
-            )
-        ''')
-    cursor.execute('''
-        CREATE INDEX IF NOT EXISTS idx_archive_data 
-        ON archive_data (network, station, location, channel, starttime, endtime, importtime)
-        ''')
-    conn.commit()
-    return
-
-@contextlib.contextmanager
-def safe_db_connection(db_path, max_retries=3, initial_delay=1):
-    #Context manager for safe database connections with retry mechanism.
-    retry_count = 0
-    delay = initial_delay
-    while retry_count < max_retries:
-        try:
-            conn = sqlite3.connect(db_path, timeout=20)
-            yield conn
-            return
-        except sqlite3.OperationalError as e:
-            if "database is locked" in str(e):
-                retry_count += 1
-                if retry_count >= max_retries:
-                    print(f"Failed to connect to database after {max_retries} retries.")
-                    raise
-                print(f"Database is locked. Retrying in {delay} seconds...")
-                time.sleep(delay)
-                delay *= 2  # Exponential backoff
-                delay += random.uniform(0, 1)  # Add jitter
-            else:
-                raise
-        finally:
-            if 'conn' in locals():
-                conn.close()
-"""                

@@ -114,6 +114,13 @@ class CombinedBasedWorkflow:
                 selected_catalogs = self.event_components.settings.event.selected_catalogs
                 self.station_components.settings.station.date_config.start_time = self.event_components.settings.event.date_config.start_time
                 self.station_components.settings.station.date_config.end_time = self.event_components.settings.event.date_config.end_time
+
+                self.station_components.set_map_view(
+                    map_center=self.event_components.map_view_center,
+                    map_zoom=self.event_components.map_view_zoom
+                )
+                self.station_components.refresh_map(get_data=False, recreate_map=True)
+
                 if selected_catalogs is None or len(selected_catalogs) <= 0:
                     self.trigger_error("Please select an event to proceed to the next step.")
                     return False
@@ -123,6 +130,13 @@ class CombinedBasedWorkflow:
                 selected_invs = self.station_components.settings.station.selected_invs
                 self.event_components.settings.event.date_config.start_time = self.station_components.settings.station.date_config.start_time
                 self.event_components.settings.event.date_config.end_time = self.station_components.settings.station.date_config.end_time
+                
+                self.event_components.set_map_view(
+                    map_center=self.station_components.map_view_center,
+                    map_zoom=self.station_components.map_view_zoom
+                )
+                self.event_components.refresh_map(get_data=False, recreate_map=True)
+
                 if selected_invs is None or len(selected_invs) <= 0:
                     self.trigger_error("Please select a station to proceed to the next step.")
                     return False
@@ -154,6 +168,8 @@ class CombinedBasedWorkflow:
         return True
     
     def render_stage_1(self):
+        # Add CSS to prevent scrolling on headers..
+        st.markdown("<style>.stMarkdown{overflow:visible !important;}</style>", unsafe_allow_html=True)
         
         c1, c2, c3 = st.columns([1, 1, 1])
         title = "Events" if self.settings.selected_workflow == WorkflowType.EVENT_BASED else "Stations"
@@ -163,7 +179,7 @@ class CombinedBasedWorkflow:
                 self.previous_stage()
 
         with c2:
-            st.write(f"### Step 1: Search & Select {title}")
+            st.markdown(f"### Step 1: Search & Select {title}", unsafe_allow_html=False)
 
         with c3:
             if st.button("Next"):
@@ -188,12 +204,14 @@ class CombinedBasedWorkflow:
             self.station_components.render()
 
     def render_stage_2(self):
+        # Add CSS to prevent scrolling on headers..
+        st.markdown("<style>.stMarkdown{overflow:visible !important;}</style>", unsafe_allow_html=True)
 
         c1, c2, c3 = st.columns([1, 1, 1])
 
         if self.settings.selected_workflow == WorkflowType.CONTINUOUS:
             with c2:
-                st.write("### Step 2: Get Waveforms")
+                st.markdown("### Step 2: Get Waveforms", unsafe_allow_html=False)
                 
             with c1:
                 if st.button("Previous"):
@@ -216,7 +234,7 @@ class CombinedBasedWorkflow:
                     self.previous_stage()
 
             with c2:
-                st.write(f"### Step 2: Search & Select {title}")                
+                st.markdown(f"### Step 2: Search & Select {title}", unsafe_allow_html=False)
 
             with c3:
                 if st.button("Next"):
@@ -237,12 +255,15 @@ class CombinedBasedWorkflow:
             self.station_components.render()
         elif self.settings.selected_workflow == WorkflowType.STATION_BASED:
             self.event_components.render()
-                   
+    
     def render_stage_3(self):
+        # Add CSS to prevent scrolling on headers..
+        st.markdown("<style>.stMarkdown{overflow:visible !important;}</style>", unsafe_allow_html=True)
+
         c1, c2, c3 = st.columns([1, 1, 1])
         with c2:
-            st.write("### Step 3: Waveforms")
-        if self.settings.selected_workflow == WorkflowType.EVENT_BASED: 
+            st.markdown("### Step 3: Waveforms", unsafe_allow_html=False)
+        if self.settings.selected_workflow == WorkflowType.EVENT_BASED:
             with c1:
                 if st.button("Previous"):
                     selected_idx = self.station_components.get_selected_idx()

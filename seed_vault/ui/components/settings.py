@@ -11,15 +11,18 @@ from seed_vault.service.seismoloader import populate_database_from_sds
 
 import os
 import jinja2
+from copy import deepcopy
 
 
 class SettingsComponent:
     settings: SeismoLoaderSettings
+    old_settings: SeismoLoaderSettings
     is_new_cred_added = None
     df_clients = None
 
     def __init__(self, settings: SeismoLoaderSettings):
         self.settings  = settings
+        self.old_settings   = deepcopy(settings)
 
     
     def add_credential(self):
@@ -35,6 +38,14 @@ class SettingsComponent:
         # time.sleep(5)
         self.is_new_cred_added = None
         # st.rerun()
+
+
+    def refresh_filters(self):
+        changes = self.settings.has_changed(self.old_settings)
+        if changes.get('has_changed', False):
+            self.old_settings      = deepcopy(self.settings)
+            save_filter(self.settings)
+            st.rerun()
 
     
     def render_auth(self):
@@ -86,42 +97,57 @@ class SettingsComponent:
 
         
     def render_db(self):
-        c1, c2 = st.columns([1,1])
-        with c1:
-            self.settings.db_path = st.text_input("Database Path", value=self.settings.db_path, help="FULL path to your database, e.g. /archive/database.sqlite")
-            self.settings.sds_path = st.text_input("Local Seismic Data Archive Path in [SDS structure](https://www.seiscomp.de/seiscomp3/doc/applications/slarchive/SDS.html)",
-                                                   value=self.settings.sds_path, help="ROOT path of your archive. If you change this you may have to resync your database.")
+        try:
+            c1, c2 = st.columns([1,1])
+            with c1:
+                self.settings.db_path = st.text_input("Database Path", value=self.settings.db_path, help="FULL path to your database, e.g. /archive/database.sqlite")
+                self.settings.sds_path = st.text_input("Local Seismic Data Archive Path in [SDS structure](https://www.seiscomp.de/seiscomp3/doc/applications/slarchive/SDS.html)",
+                                                    value=self.settings.sds_path, help="ROOT path of your archive. If you change this you may have to resync your database.")
 
-        st.write("## Sync database with existing archive")
-        c1, c2, c3, c4 = st.columns([1,1,1,2])
-        with c1:
-            search_patterns = st.text_input("Search Patterns", value="??.*.*.???.?.????.???", help="To input multiple values, separate your entries with comma.").strip().split(",")
-        with c4:
-            c11, c22 = st.columns([1,1])
-            with c11:
-                selected_date_type = st.selectbox("Date selection", ["All", "Custom Time"], index=0)
-            with c22:
-                if selected_date_type == "All":
-                    newer_than=None
-                else:
-                    newer_than = st.date_input("Update Since")
-        with c2:
-            self.settings.processing.num_processes = int(st.text_input("Number of Processors", value=self.settings.processing.num_processes, help="Number of Processors >= 0. If set to zero, the app will use all available cpu to perform the operation."))
+            st.write("## Sync database with existing archive")
+            c1, c2, c3, c4 = st.columns([1,1,1,2])
+            with c1:
+                search_patterns = st.text_input("Search Patterns", value="??.*.*.???.?.????.???", help="To input multiple values, separate your entries with comma.").strip().split(",")
+            with c4:
+                c11, c22 = st.columns([1,1])
+                with c11:
+                    selected_date_type = st.selectbox("Date selection", ["All", "Custom Time"], index=0)
+                with c22:
+                    if selected_date_type == "All":
+                        newer_than=None
+                    else:
+                        newer_than = st.date_input("Update Since")
+            with c2:
+                self.settings.processing.num_processes = int(st.number_input(
+                    "Number of Processors", 
+                    value=self.settings.processing.num_processes, 
+                    min_value=0, 
+                    help="Number of Processors >= 0. If set to zero, the app will use all available cpu to perform the operation."
+                ))
 
-        with c3:
-            self.settings.processing.gap_tolerance = int(st.text_input("Gap Tolerance (s)", value=self.settings.processing.gap_tolerance))
+            with c3:
+                self.settings.processing.gap_tolerance = int(st.number_input(
+                    "Gap Tolerance (s)", 
+                    value=self.settings.processing.gap_tolerance, 
+                    min_value=0
+                ))
+                
 
-        if st.button("Sync Database", help="Synchronizes your SDS archive given the above parameters."):
-            self.reset_is_new_cred_added()
-            save_filter(self.settings)
-            populate_database_from_sds(
-                sds_path=self.settings.sds_path,
-                db_path=self.settings.db_path,
-                search_patterns=search_patterns,
-                newer_than=newer_than,
-                num_processes=self.settings.processing.num_processes,
-                gap_tolerance=self.settings.processing.gap_tolerance
-            )
+            if st.button("Sync Database", help="Synchronizes your SDS archive given the above parameters."):
+                self.reset_is_new_cred_added()
+                save_filter(self.settings)
+                populate_database_from_sds(
+                    sds_path=self.settings.sds_path,
+                    db_path=self.settings.db_path,
+                    search_patterns=search_patterns,
+                    newer_than=newer_than,
+                    num_processes=self.settings.processing.num_processes,
+                    gap_tolerance=self.settings.processing.gap_tolerance
+                )
+
+            self.refresh_filters()
+        except Exception as e:
+            st.error(str(e))
 
 
     def render_clients(self):
@@ -160,8 +186,6 @@ class SettingsComponent:
                         df_copy = deepcopy(self.df_clients)
                         df_copy = df_copy.rename(columns={"Client Name": 'client', "Url": 'url'})
                         self.settings.client_url_mapping.save(df_copy.to_dict('records'))
-                        # extra_clients = {item["Client Name"]: item["Url"] for item in self.df_clients.to_dict(orient='records')}
-                        # save_extra_client(extra_clients)
                         with c3:
                             st.text("")
                             st.success("Config is successfully saved.")

@@ -53,8 +53,8 @@ def test_get_stations(mock_settings, mock_client):
         "endtime": UTCDateTime(mock_settings.station.date_config.end_time),
         "minlatitude":  mock_settings.station.geo_constraint[0].coords.min_lat,
         "maxlatitude":  mock_settings.station.geo_constraint[0].coords.max_lat,
-        "minlongitude": mock_settings.station.geo_constraint[0].coords.min_lng,
-        "maxlongitude": mock_settings.station.geo_constraint[0].coords.max_lng,
+        "minlongitude": mock_settings.station.geo_constraint[0].coords.min_lon,
+        "maxlongitude": mock_settings.station.geo_constraint[0].coords.max_lon,
         "includerestricted": mock_settings.station.include_restricted,
         "level": mock_settings.station.level.value,
     }

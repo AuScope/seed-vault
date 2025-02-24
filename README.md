@@ -1,15 +1,18 @@
-# seed-vault
+# SEED-vault
 
 ![Example of Step 1](docs/screenshots/Step1.png)
 
-#### Seed Vault is a cross platform GUI utility which can search, view and download seismic FDSN data
+#### SEED Vault is a cross platform GUI utility which can search, view and download seismic data from FDSN servers
 
-*  Users can download data via earthquake search (station to event, or event to station)
-*  View and download bulk continuous data
-*  Search and save earthquake events and station metadata.
-*  Download restricted data
-*  Caches downloaded data in a local database to speed up future retrievals
-*  Local database editor
+*  Download & view EQ arrival data via a station-to-event OR an event-to-station search
+*  Quickly download and archive bulk continuous data, saving your progress along the way
+*  View and plot event arrivals
+*  A CLI scripting tool to automate common jobs
+*  Search, export, or import earthquake event catalogs and station metadata
+*  Download restricted/embargoed data by storing auth passwords in local config
+*  Add and use custom FDSN servers
+*  Saves all downloaded data as miniseed in a local SDS database to speed up future retrievals
+*  Local sqlite3 database editor
 *  Load and save search parameters and configuration
 
 Runs on:
@@ -28,38 +31,38 @@ Can run:
 * Python >= 3.10
 * ObsPy (>=1.4.1), Streamlit (>=1.39), Plotly (>-5.24), Pandas (>=2.2.2), Matplotlib (>=3.8.5)
 
-# Install via pip
+# Install via pip (easy way)
+```
 $ python3 pip install seed-vault
+```
 
-# Install from source
+# Install from source (if you insist!)
 
-## Step 1: Clone repository
+### Step 1: Clone repository
 
 ```bash
-git clone https://github.com/AuScope/seed-vault.git
-```
-or
-```bash
-git clone git@github.com:AuScope/seed-vault.git
+$ git clone https://github.com/AuScope/seed-vault.git
 ```
 
-## Step 2: Setup and run
+### Step 2: Setup and run
 
-The app requires python >=3.10. For a quick start follow these steps:
+Then can build via pip:
 
 ```
-git clone https://github.com/AuScope/seed-vault.git
-cd seed-vault
+$ python3 -m pip install ./seed-vault
 ```
 
+Or,
+```
 #### Linux/MacOS
-```
+cd seed-vault
 source setup.sh
 source run.sh
 ```
 #### Windows
 Open a powershell and run following commands:
 ```
+cd seed-vault
 .\setup-win.ps1
 .\run-win.ps1
 ```
@@ -72,24 +75,30 @@ Open a powershell and run following commands:
    sudo apt install python3.10-venv
    ``` 
 
-----
-
-# Development
-
 ## Project Folder structure
 ```
 seed-vault/
 │
 ├── seed_vault/      # Python package containing application code
+│   ├── docs/          # Documentation
 │   ├── models/        # Python modules for data models
+│   ├── scripts/       # Example CLI scripts
 │   ├── service/       # Services for logic and backend processing
+│   ├── tests/         # Test data and utilities
 │   ├── ui/            # UI components (Streamlit files)
 │   ├── utils/         # Utility functions and helpers
-│   ├── __init__.py    # 
-│   └── cli.py         # Command Line Interface
 │
-└── pyproject.toml     # Poetry configuration file for the whole project
+└── pyproject.toml     # Project configuration file
 ```
+----
+
+
+
+
+
+
+
+# Development
 
 ## Setting up with Poetry
 
@@ -128,7 +137,7 @@ poetry config virtualenvs.in-project true
 ```
 
 ## Install pyenv (Optional)
-This project uses python 3.12.*. If your base python is a different version (check via `python --version`), you may get errors when trying to install via poetry. Use pyenv to manage this.
+This project uses python 3.10.*. If your base python is a different version (check via `python --version`), you may get errors when trying to install via poetry. Use pyenv to manage this.
 
 **Linux**
 
@@ -246,3 +255,39 @@ To install from pypi-test:
 pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple seed-vault
 ```
 Note: include both `test` and `official` indexes.
+
+
+## Unit test
+
+The repository includes a number of unit tests. These tests only covers
+the main functions in `seed_vault.service.seismoloader` as these are the 
+core logics adopted in the app.
+
+### Run tests
+To run the test units:
+
+1. Running only mockup tests
+```
+poetry run pytest
+```
+
+2. Running tests with actual FDSN API calls
+```
+poetry run pytest --run-real-fdsn
+```
+
+3. Generate coverage report:
+
+ **to include the whole module:**
+```
+poetry run pytest --run-real-fdsn --cov=seed_vault --cov-report=html
+```
+**to only include `service/*` tests:**
+```
+poetry run pytest --run-real-fdsn --cov=seed_vault --cov-config=.coveragerc --cov-report=html
+```
+
+4. Generate coverage badge
+```
+poetry run coverage-badge -o coverage.svg
+```

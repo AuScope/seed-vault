@@ -1,5 +1,9 @@
+import streamlit as st
+from typing import List, Dict, Union
+from obspy.geodetics.base import degrees2kilometers
 import folium
 from folium.plugins import Draw, Fullscreen
+from folium import MacroElement
 import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
 import matplotlib.cm as cm
@@ -7,23 +11,14 @@ import matplotlib.colors as mcolors
 import time
 import numpy as np
 import pandas as pd
-
-from typing import List, Union
+import jinja2
 
 from seed_vault.models.common import RectangleArea, CircleArea 
 from seed_vault.enums.ui import Steps
 from seed_vault.utils.constants import AREA_COLOR
-from seed_vault.service.seismoloader import convert_degrees_to_radius_meter
-# from shapely.geometry import Point
-# from shapely.geometry.polygon import Polygon
-# import geopandas as gpd
-import streamlit as st
 from seed_vault.models.config import GeometryConstraint
-from folium.plugins import Draw
 
 
-from folium import MacroElement
-import jinja2
 
 DEFAULT_COLOR_MARKER = 'blue'
 
@@ -33,13 +28,14 @@ icon = folium.DivIcon(html="""
     </svg>
 """)
 
-def create_map(map_center=[-25.0000, 135.0000], zoom_start=2, map_id=None):
+def create_map(map_center=[0.0,0.0], zoom_start=2, map_id=None):
     """
     Create a base map with controls but without dynamic layers.
     """
     m = folium.Map(
         location=map_center,
         zoom_start=zoom_start,
+        min_zoom=2, # doesn't seem to work?
         id=map_id,
     )
 
@@ -61,8 +57,7 @@ def create_map(map_center=[-25.0000, 135.0000], zoom_start=2, map_id=None):
         bounds = [[-90, -180], [90, 180]]
     ).add_to(m)
     
-    m.location = [0, 0]
-
+    # m.location = [0, 0]
 
     add_draw_controls(m)
     add_fullscreen_control(m)
@@ -108,10 +103,10 @@ def add_area_overlays(areas):
         coords = area.coords
         if isinstance(coords, RectangleArea):
             feature_group.add_child(folium.Rectangle(
-                bounds=[[coords.min_lat, coords.min_lng], [coords.max_lat, coords.max_lng]],
+                bounds=[[coords.min_lat, coords.min_lon], [coords.max_lat, coords.max_lon]],
                 color=coords.color,
                 fill=True,
-                fill_opacity=0.5
+                fill_opacity=0.2
             ))
         elif isinstance(coords, CircleArea):
             add_circle_area(feature_group, coords)
@@ -122,28 +117,59 @@ def add_circle_area(feature_group, coords):
     """
     Add circle area (inner and outer) to the feature group.
     """
+    max_radius_m = degrees2kilometers(coords.max_radius)*1000
+
     if coords.min_radius == 0:
         feature_group.add_child(folium.Circle(
-            location=[coords.lat, coords.lng],
-            radius=convert_degrees_to_radius_meter(coords.max_radius),
+            location=[coords.lat, coords.lon],
+            radius=max_radius_m,
             color= AREA_COLOR,
             fill=True,
-            fill_opacity=0.5
+            fill_opacity=0.2
         ))
     else:
-        # Outer Circle
+        min_radius_m = degrees2kilometers(coords.min_radius)*1000
+
+        # Outer circle fill to max_radius
         feature_group.add_child(folium.Circle(
-            location=[coords.lat, coords.lng],
-            radius=convert_degrees_to_radius_meter(coords.max_radius),
+            location=[coords.lat, coords.lon],
+            radius=max_radius_m,
+            color='none',
+            fill=True,
+            fill_color=coords.color,
+            fill_opacity=0.2,
+            weight=0,
+            stroke=False
+        ))
+
+        # Add an unfilled circle to min_radius to mask inner area
+        # ...doesn't mask the original outer radius though (TODO?)
+        """
+        feature_group.add_child(folium.Circle(
+            location=[coords.lat, coords.lon],
+            radius=min_radius_m,
+            color='none',
+            fill=True,
+            fill_color='none',
+            fill_opacity=1,
+            weight=0,
+            stroke=False
+        ))
+        """
+
+        # Outer Circle border
+        feature_group.add_child(folium.Circle(
+            location=[coords.lat, coords.lon],
+            radius=max_radius_m,
             color=coords.color,
             fill=False,
-            dash_array='2, 4',
             weight=2,
         ))
-        # Inner Circle
+
+        # Inner Circle border
         feature_group.add_child(folium.Circle(
-            location=[coords.lat, coords.lng],
-            radius=convert_degrees_to_radius_meter(coords.min_radius),
+            location=[coords.lat, coords.lon],
+            radius=min_radius_m,
             color=coords.color,
             fill=False,
             dash_array='2, 4',
@@ -234,9 +260,11 @@ def add_data_points(df, cols_to_disp, step: Steps, selected_idx=[], col_color=No
         popup_content = create_popup(index, row, cols_to_disp, step)
         popup = folium.Popup(html=popup_content, max_width=2650, min_width=200)
 
+        tooltip_text = create_popup(index, row, cols_to_disp, step, truncate=True)
+
         # Add marker to the cluster
         latitude, longitude = row['latitude'], row['longitude']
-        add_marker_to_cluster(fg, latitude, longitude, color, edge_color, size, fill_opacity, popup, step)
+        add_marker_to_cluster(fg, latitude, longitude, color, edge_color, size, fill_opacity, popup, tooltip_text, step)
 
         # Store marker information
         # marker_key = (latitude, longitude)
@@ -251,36 +279,9 @@ def add_data_points(df, cols_to_disp, step: Steps, selected_idx=[], col_color=No
 
     return fg, marker_info, fig
 
-# def add_data_points(df, cols_to_disp, step: Steps, selected_idx=[], col_color=None, col_size = None):
 
-#     fg = folium.FeatureGroup(name="Marker "+ step)
 
-#     marker_info = {}
-
-#     for index, row in df.iterrows():
-#         color = DEFAULT_COLOR_MARKER if col_color is None else get_marker_color(row[col_color])
-
-#         edge_color = 'black' if index in selected_idx else color
-#         size = 7 if index in selected_idx else 5
-#         fill_opacity = 1.0 if index in selected_idx else 0.2
-
-#         popup_content = create_popup(index, row, cols_to_disp)
-#         popup = folium.Popup(html=popup_content, max_width=2650, min_width=200)
-
-#         latitude, longitude = row['latitude'], row['longitude']
-#         add_marker_to_cluster(fg, latitude, longitude, color, edge_color, size, fill_opacity, popup,step)
-
-#         # marker_key = (latitude, longitude)
-#         marker_key = index + 1
-#         if marker_key not in marker_info:
-#             marker_info[marker_key] = {"id": index + 1}
-
-#         for k, v in cols_to_disp.items():
-#             marker_info[marker_key][v] = row[k]
-
-#     return fg, marker_info
-
-def add_marker_to_cluster(fg, latitude, longitude, color, edge_color, size, fill_opacity, popup, step):
+def add_marker_to_cluster(fg, latitude, longitude, color, edge_color, size, fill_opacity, popup, tooltip_text, step):
     """
     Add a marker to a cluster with specific attributes.
     """
@@ -289,6 +290,7 @@ def add_marker_to_cluster(fg, latitude, longitude, color, edge_color, size, fill
                 location=[latitude, longitude],
                 radius=size,
                 popup=popup,
+                tooltip=tooltip_text,
                 color=edge_color,
                 fill=True,
                 fill_color=color,
@@ -302,6 +304,7 @@ def add_marker_to_cluster(fg, latitude, longitude, color, edge_color, size, fill
             rotation=-90,
             radius=size,
             popup=popup,
+            tooltip=tooltip_text,
             color=edge_color,
             fill=True,
             fill_color=color,
@@ -345,12 +348,6 @@ def clear_map_layers(map_object):
         except Exception as e:
             print(f"Error clearing map layers: {e}")     
 
-#def get_marker_size(magnitude):
-#    import math
-#    base_size = 2.0
-#    scaling_factor = 2.5
-#    size = base_size + scaling_factor * math.log(magnitude + 1)
-#    return min(13.0, max(base_size, size))
 
 def get_marker_size(magnitude):
     if magnitude < 2:
@@ -360,12 +357,12 @@ def get_marker_size(magnitude):
     elif magnitude < 4:
         return 1.5
     if magnitude <= 5:
-        return 2.0
+        return 2.0   
     elif magnitude >= 8:
         return 14.0
     else:
         x = (magnitude - 5) / 3
-        return 2 + 12 * x**2
+        return 2 + 12 * x**2.3
 
 
 def get_marker_color(magnitude):
@@ -375,9 +372,11 @@ def get_marker_color(magnitude):
         return 'yellow'
     elif 2.4 <= magnitude < 5:
         return 'orange'
-    elif 5 <= magnitude < 7:
+    elif 5 <= magnitude < 6:
+        return 'orangered'
+    elif 6 <= magnitude < 7:
         return 'red'
-    elif 7 <= magnitude < 8.5:
+    elif 7 <= magnitude < 8.0:
         return 'magenta'
     else:
         return 'purple'
@@ -392,12 +391,17 @@ def get_color_map(df, c, offset=0.0, cmap='viridis'):
     norm = Normalize(vmin=min_val + offset * min_val, vmax=max_val - offset)
 
     return norm, colormap
-    
 
-def create_popup(index, row, cols_to_disp, step: Steps = None):
+
+def truncate_text(text, max_length=47):
+    """Truncate text and add '...' if it exceeds max_length"""
+    return text if len(text) <= max_length else text[:max_length] + "..."
+
+
+def create_popup(index, row, cols_to_disp, step: Steps = None, truncate: bool = False):
     html_disp = ""
     if step == Steps.EVENT:
-        html_disp = f"<h4><b>{row['place']}</b></h4>"
+        html_disp = f"<h4><b>{truncate_text(row['place']) if truncate else row['place']}</b></h4>"
         html_disp += f"<h5>{row['magnitude']:.2f} {row['magnitude type']}</h5>"
         html_disp += f"<h5>{row['time']} (UTC)</h5>"
         html_disp += f"<h5>{row['latitude']:.2f} latitude, {row['longitude']:.2f} longitude, {row['depth (km)']:.2f} km</h5>"
@@ -405,14 +409,14 @@ def create_popup(index, row, cols_to_disp, step: Steps = None):
 
     if step == Steps.STATION:
         html_disp = f"<h4><b>{row['network']}.{row['station']}</b></h4>"
-        html_disp += f"<h5>{row['description']}</h5>"
+        html_disp += f"<h5>{truncate_text(row['description']) if truncate else row['description']}</h5>"
         html_disp += f"<h5>({row['start date (UTC)']} - {row['end date (UTC)']})</h5>"
-        html_disp += f"<h5>{row['channels']}</h5>"
+        html_disp += f"<h5>{truncate_text(row['channels']) if truncate else row['channels']}</h5>"
         html_disp += f"<h5>{row['latitude']:.2f} latitude, {row['longitude']:.2f} longitude, {row['elevation']:.2f} m</h5>"
         html_disp += f"<p style='color:black; font-size:2px; opacity:0;'>Station {index + 1}</p>"
 
     return f"""
-    <div style="max-width: 300px; word-wrap: break-word;">
+    <div style="max-width: 400px; word-wrap: break-word;">
         {html_disp}
     </div>
     """
@@ -468,12 +472,12 @@ class AddMapDraw(MacroElement):
         // Example of adding a rectangle
         {% for drawing in this.all_drawings %}
             {% if drawing.geo_type == 'bounding' %}
-                var bounds = [[{{drawing.coords.min_lat}}, {{drawing.coords.min_lng}}], [{{drawing.coords.max_lat}}, {{drawing.coords.max_lng}}]];
+                var bounds = [[{{drawing.coords.min_lat}}, {{drawing.coords.min_lon}}], [{{drawing.coords.max_lat}}, {{drawing.coords.max_lon}}]];
                 var rect = L.rectangle(bounds, {});
                 map.drawnItems.addLayer(rect);
             {% endif %}
             {% if drawing.geo_type == 'circle' %}
-                var circ = L.circle([{{drawing.coords.lat}}, {{drawing.coords.lng}}], {radius: {{drawing.coords.max_radius}}});
+                var circ = L.circle([{{drawing.coords.lat}}, {{drawing.coords.lon}}], {radius: {{drawing.coords.max_radius}}});
                 map.drawnItems.addLayer(circ);       
             {% endif %}                          
         {% endfor %}
@@ -481,43 +485,6 @@ class AddMapDraw(MacroElement):
         // More cases for other types like circles, polylines, etc., can be added here
         {% endmacro %}
         """)
-
-
-# class AddMapDraw(MacroElement):
-#     def __init__(self, all_drawings: List[GeometryConstraint]):
-#         super().__init__()
-#         self.all_drawings = all_drawings
-#         self._template = jinja2.Template("""
-#         {% macro script(this, kwargs) %}
-#         console.log("Adding drawings to the map.");  // Debugging console log
-#         var map = this;  // Reference to the current map object
-
-#         // Function to add a rectangle
-#         function addRectangle(bounds, color) {
-#             L.rectangle(bounds, {color: color, weight: 1, fillOpacity: 0.5}).addTo(map);
-#         }
-
-#         // Function to add a circle
-#         function addCircle(lat, lng, radius, color) {
-#             L.circle([lat, lng], {radius: radius, color: color, weight: 1, fillOpacity: 0.5}).addTo(map);
-#         }
-                                         
-#         console.log(this)
-
-#         // Loop over all drawings and add to map
-#         {% for constraint in this.all_drawings %}
-#             console.log({{constraint.coords.min_lat}})
-#             {% if constraint.geo_type == 'bounding' %}
-#                 addRectangle([[{{constraint.coords.min_lat}}, {{constraint.coords.min_lng}}], [{{constraint.coords.max_lat}}, {{constraint.coords.max_lng}}]], "{{constraint.coords.color}}");
-#             {% elif constraint.geo_type == 'circle' %}
-#                 addCircle({{constraint.coords.lat}}, {{constraint.coords.lng}}, {{constraint.coords.max_radius}}, "{{constraint.coords.color}}");
-#                 if ({{constraint.coords.min_radius}} > 0) {
-#                     addCircle({{constraint.coords.lat}}, {{constraint.coords.lng}}, {{constraint.coords.min_radius}}, "{{constraint.coords.color}}");
-#                 }
-#             {% endif %}
-#         {% endfor %}
-#         {% endmacro %}
-#         """)
 
 
 class DrawEventHandler(MacroElement):
@@ -560,8 +527,8 @@ def normalize_bounds(geometry_constraint: GeometryConstraint) -> List[GeometryCo
       it will return one or two GeometryConstraints.
     """
     rect_bounds = geometry_constraint.coords
-    lat_min, lon_min = rect_bounds.min_lat, rect_bounds.min_lng
-    lat_max, lon_max = rect_bounds.max_lat, rect_bounds.max_lng
+    lat_min, lon_min = rect_bounds.min_lat, rect_bounds.min_lon
+    lat_max, lon_max = rect_bounds.max_lat, rect_bounds.max_lon
     if lon_min >= -180 and lon_max <= 180:
         return [geometry_constraint]
     
@@ -570,8 +537,8 @@ def normalize_bounds(geometry_constraint: GeometryConstraint) -> List[GeometryCo
             coords=RectangleArea(
                 min_lat=lat_min,
                 max_lat=lat_max,
-                min_lng=lon_min,
-                max_lng=180
+                min_lon=lon_min,
+                max_lon=180
             )
         )
         
@@ -579,8 +546,8 @@ def normalize_bounds(geometry_constraint: GeometryConstraint) -> List[GeometryCo
             coords=RectangleArea(
                 min_lat=lat_min,
                 max_lat=lat_max,
-                min_lng=-180,
-                max_lng=lon_max - 360
+                min_lon=-180,
+                max_lon=lon_max - 360
             )
         )
         
@@ -592,8 +559,8 @@ def normalize_bounds(geometry_constraint: GeometryConstraint) -> List[GeometryCo
             coords=RectangleArea(
                 min_lat=lat_min,
                 max_lat=lat_max,
-                min_lng=lon_min + 360,  
-                max_lng=180
+                min_lon=lon_min + 360,  
+                max_lon=180
             )
         )
         
@@ -602,8 +569,8 @@ def normalize_bounds(geometry_constraint: GeometryConstraint) -> List[GeometryCo
             coords=RectangleArea(
                 min_lat=lat_min,
                 max_lat=lat_max,
-                min_lng=-180,
-                max_lng=lon_max
+                min_lon=-180,
+                max_lon=lon_max
             )
         )
         print(left_rectangle, main_rectangle)
@@ -615,8 +582,8 @@ def normalize_bounds(geometry_constraint: GeometryConstraint) -> List[GeometryCo
             coords=RectangleArea(
                 min_lat=lat_min,
                 max_lat=lat_max,
-                min_lng=lon_min + 360,
-                max_lng=lon_max + 360
+                min_lon=lon_min + 360,
+                max_lon=lon_max + 360
             )
         )
         return [normalized_rectangle]
@@ -627,8 +594,8 @@ def normalize_bounds(geometry_constraint: GeometryConstraint) -> List[GeometryCo
             coords=RectangleArea(
                 min_lat=lat_min,
                 max_lat=lat_max,
-                min_lng=lon_min - 360,
-                max_lng=lon_max - 360
+                min_lon=lon_min - 360,
+                max_lon=lon_max - 360
             )
         )
         return [normalized_rectangle]
@@ -646,29 +613,29 @@ def normalize_circle(geometry_constraint: GeometryConstraint) -> List[GeometryCo
       the longitude will be adjusted to bring it within the [-180, 180] range.
     """
     circle = geometry_constraint.coords
-    center_lat, center_lng, radius = circle.lat, circle.lng, circle.max_radius
+    center_lat, center_lon, radius = circle.lat, circle.lon, circle.max_radius
 
     # Case where the circle is within the main instance or partially overlaps it (no need to modify)
-    if -180 <= center_lng <= 180:
+    if -180 <= center_lon <= 180:
         return [geometry_constraint]
     
-    # Case where the circle is entirely in the left mirrored instance (center_lng < -180)
-    elif center_lng < -180:
+    # Case where the circle is entirely in the left mirrored instance (center_lon < -180)
+    elif center_lon < -180:
         normalized_circle = GeometryConstraint(
             coords=CircleArea(
                 lat=center_lat,
-                lng=center_lng + 360,  # Normalize center_lng to be within [-180, 180]
+                lon=center_lon + 360,  # Normalize center_lon to be within [-180, 180]
                 max_radius=radius
             )
         )
         return [normalized_circle]
 
-    # Case where the circle is entirely in the right mirrored instance (center_lng > 180)
-    elif center_lng > 180:
+    # Case where the circle is entirely in the right mirrored instance (center_lon > 180)
+    elif center_lon > 180:
         normalized_circle = GeometryConstraint(
             coords=CircleArea(
                 lat=center_lat,
-                lng=center_lng - 360,  # Normalize center_lng to be within [-180, 180]
+                lon=center_lon - 360,  # Normalize center_lon to be within [-180, 180]
                 max_radius=radius
             )
         )

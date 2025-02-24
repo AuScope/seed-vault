@@ -12,16 +12,16 @@ class RectangleArea(BaseModel):
     Attributes:
         min_lat (float): The minimum latitude of the rectangle.
         max_lat (float): The maximum latitude of the rectangle.
-        min_lng (float): The minimum longitude of the rectangle.
-        max_lng (float): The maximum longitude of the rectangle.
+        min_lon (float): The minimum longitude of the rectangle.
+        max_lon (float): The maximum longitude of the rectangle.
 
     Properties:
         color (str): Returns the predefined color associated with the area.
     """
     min_lat: float
     max_lat: float
-    min_lng: float
-    max_lng: float
+    min_lon: float
+    max_lon: float
 
     @property
     def color(self) -> str:
@@ -38,7 +38,7 @@ class CircleArea(BaseModel):
 
     Attributes:
         lat (float): The latitude of the circle's center.
-        lng (float): The longitude of the circle's center.
+        lon (float): The longitude of the circle's center.
         max_radius (float): The maximum radius of the circle.
         min_radius (float, optional): The minimum radius of the circle. Defaults to `0`.
 
@@ -46,7 +46,7 @@ class CircleArea(BaseModel):
         color (str): Returns the predefined color associated with the area.
     """
     lat   : float
-    lng   : float
+    lon   : float
     max_radius: float
     min_radius : float=0
     @property

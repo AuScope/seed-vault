@@ -1,11 +1,14 @@
+import io
+import os
+import re
 from typing import List
+from copy import deepcopy
 import streamlit as st
 from streamlit_folium import st_folium
 import pandas as pd
 from datetime import datetime, time
 from obspy.core.event import Catalog, read_events
 from obspy.core.inventory import Inventory, read_inventory
-from io import BytesIO
 
 
 from seed_vault.ui.components.map import create_map, add_area_overlays, add_data_points, clear_map_layers, clear_map_draw,add_map_draw
@@ -21,9 +24,6 @@ from seed_vault.enums.config import GeoConstraintType, Levels
 from seed_vault.enums.ui import Steps
 
 from seed_vault.service.utils import convert_to_datetime, check_client_services, get_time_interval
-import io
-import os
-import re
 
 
 class BaseComponentTexts:
@@ -44,7 +44,7 @@ class BaseComponentTexts:
             self.SELECT_DATA_TITLE = "Select Events from Map or Table"
             self.SELECT_MARKER_TITLE = "#### Select Events from map"
             self.SELECT_MARKER_MSG   = "Select an event from map and Add to Selection."
-            self.SELECT_DATA_TABLE_TITLE = "Select Events from table"
+            self.SELECT_DATA_TABLE_TITLE = "Select Events from Table  ⤵️  or from Map  ↗️"
             self.SELECT_DATA_TABLE_MSG = "Tick events from the table to view your selected events on the map."
 
             self.PREV_SELECT_NO  = "Total Number of Selected Events"
@@ -59,7 +59,7 @@ class BaseComponentTexts:
             self.SELECT_DATA_TITLE = "Select Stations from Map or Table"
             self.SELECT_MARKER_TITLE = "#### Select Stations from map"
             self.SELECT_MARKER_MSG   = "Select a station from map and Add to Selection."
-            self.SELECT_DATA_TABLE_TITLE = "Select Stations from table"
+            self.SELECT_DATA_TABLE_TITLE = "Select Stations from table  ⤵️  or from Map  ↗️"
             self.SELECT_DATA_TABLE_MSG = "Tick stations from the table to view your selected stations on the map."
 
             self.PREV_SELECT_NO  = "Total Number of Selected Stations"
@@ -68,6 +68,7 @@ class BaseComponentTexts:
 
 class BaseComponent:
     settings: SeismoLoaderSettings
+    old_settings: SeismoLoaderSettings
     step_type: Steps
     prev_step_type: Steps
 
@@ -87,6 +88,8 @@ class BaseComponent:
     map_fg_prev_selected_marker = None
     map_height                  = 500
     map_output                  = None
+    map_view_center             = {}
+    map_view_zoom               = 2
     marker_info                 = None
     clicked_marker_info         = None
     warning                     = None
@@ -110,8 +113,17 @@ class BaseComponent:
         else:
             return self.step_type
 
-    def __init__(self, settings: SeismoLoaderSettings, step_type: Steps, prev_step_type: Steps, stage: int):
+    def __init__(
+            self, 
+            settings: SeismoLoaderSettings, 
+            step_type: Steps, 
+            prev_step_type: Steps, 
+            stage: int, 
+            init_map_center = {}, 
+            init_map_zoom = 2
+        ):
         self.settings       = settings
+        self.old_settings   = deepcopy(settings)
         self.step_type      = step_type
         self.prev_step_type = prev_step_type
         self.stage          = stage
@@ -135,6 +147,10 @@ class BaseComponent:
 
         self.has_error = False
         self.error = ""
+        self.set_map_view(init_map_center, init_map_zoom)
+        self.map_view_center = init_map_center
+        self.map_view_zoom   = init_map_zoom
+
 
     def get_key_element(self, name):        
         return f"{name}-{self.step_type.value}-{self.stage}"
@@ -157,90 +173,25 @@ class BaseComponent:
     # ====================
     # FILTERS
     # ====================
-    def import_export(self):
-        def reset_import_setting_processed():
-            if uploaded_file is not None:
-                uploaded_file_info = f"{uploaded_file.name}-{uploaded_file.size}"               
-                if "uploaded_file_info" not in st.session_state or st.session_state.uploaded_file_info != uploaded_file_info:
-                    st.session_state['import_setting_processed'] = False
-                    st.session_state['uploaded_file_info'] = uploaded_file_info  
+    def refresh_filters(self):
+        """
+        Renders Export settings for all stages and Import settings only for stage 1.
 
-        # st.sidebar.markdown("### Import/Export Settings")
-        
-        with st.expander("Import & Export", expanded=False):
-            tab1, tab2 = st.tabs(["Settings", f"{self.TXT.STEP.title()}s"])
-            with tab1:
-                config_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../service/config.cfg')
-                config_file_path = os.path.abspath(config_file_path)
-                
-                st.markdown("#### ⬇️ Export Settings")
-
-                if os.path.exists(config_file_path):
-                    with open(config_file_path, "r") as file:
-                        file_data = file.read()
-
-                    st.download_button(
-                        label="Download file",
-                        data=file_data,  
-                        file_name="config.cfg",  
-                        mime="application/octet-stream",  
-                        help="Download the current settings.",
-                        use_container_width=True,
-                    )
-                else:
-                    st.caption("No config file available for download.")
-
-                st.markdown("#### 📂 Import Settings")
-                uploaded_file = st.file_uploader(
-                    "Import Settings",type=["cfg"], on_change=reset_import_setting_processed,
-                    help="Upload a config file (.cfg) to update settings." , label_visibility="collapsed"
-                )
-
-                if uploaded_file:
-                    if not st.session_state.get('import_setting_processed', False):
-                        file_like_object = io.BytesIO(uploaded_file.getvalue())
-                        text_file_object = io.TextIOWrapper(file_like_object, encoding='utf-8')
-
-                        settings = SeismoLoaderSettings.from_cfg_file(text_file_object)
-                        if(settings.status_handler.has_errors()):
-                            errors = settings.status_handler.generate_status_report("errors")                           
-                            st.error(f"{errors}\n\n**Please review the errors in the imported file. Resolve them before proceeding.**")
-
-                            if(settings.status_handler.has_warnings()):
-                                warning = settings.status_handler.generate_status_report("warnings")                           
-                                st.warning(warning)                            
-                            settings.status_handler.display()
-
-                        else:    
-                            self.clear_all_data()
-                            self.settings = settings
-                            self.settings.client_url_mapping.load()
-
-                            self.settings.event.geo_constraint = []
-                            self.settings.station.geo_constraint = []
-                            self.refresh_map(reset_areas=True, clear_draw=True)
-
-                            st.session_state['import_setting_processed'] = True   
-                            
-                            if(settings.status_handler.has_warnings()):
-                                warning = settings.status_handler.generate_status_report("warnings")                           
-                                st.warning(warning) 
-
-                            st.success("Settings imported successfully!")   
-            with tab2:
-                c2_export = self.render_export_import()
-
-            return c2_export
+        - Allows users to download the current configuration (`config.cfg`) at all stages.
+        - Shows the import settings section only when `stage == 1`.
+        """        
+        changes = self.settings.has_changed(self.old_settings)
+        if changes.get('has_changed', False):
+            self.old_settings      = deepcopy(self.settings)
+            save_filter(self.settings)
+            st.rerun()
 
     def event_filter(self):
+
         start_date, start_time = convert_to_datetime(self.settings.event.date_config.start_time)
         end_date, end_time     = convert_to_datetime(self.settings.event.date_config.end_time)
 
-        if 'initial_event_settings' not in st.session_state:
-            st.session_state['initial_event_settings'] = self.settings.event.dict()
-
         with st.sidebar:
-            self.render_map_right_menu()
             with st.expander("### Filters", expanded=True):
                 client_options = list(self.settings.client_url_mapping.get_clients())
                 self.settings.event.client = st.selectbox(
@@ -301,25 +252,10 @@ class BaseComponent:
                     step=1.0, key="event-pg-depth"
                 )
 
-                # Update button with disabled state based on service availability
-                if st.button(
-                    f"Update {self.TXT.STEP.title()}s",
-                    key=self.get_key_element(f"Update {self.TXT.STEP}s"),
-                    disabled=not is_service_available
-                ):
-                    self.refresh_map(reset_areas=False, clear_draw=False, rerun=False)
-                
-            c2_export = self.import_export()
+                self.render_map_buttons()
 
-        new_event_settings = self.settings.event.dict() 
-        if new_event_settings != st.session_state['initial_event_settings']:
-            save_filter(self.settings)
-            # self.refresh_map()
-            st.session_state['initial_event_settings'] = new_event_settings 
-        
-        save_filter(self.settings)
+        self.refresh_filters()
 
-        return c2_export
 
 
     def station_filter(self):
@@ -332,9 +268,7 @@ class BaseComponent:
             start_time = time(hour=0, minute=0, second=0)
             end_time   = time(hour=1, minute=0, second=0)
 
-        with st.sidebar:
-            self.render_map_right_menu()
-                
+        with st.sidebar:                
             with st.expander("### Filters", expanded=True):
                 client_options = list(self.settings.client_url_mapping.get_clients())
                 self.settings.station.client = st.selectbox(
@@ -408,23 +342,18 @@ class BaseComponent:
 
                 self.settings.station.level = Levels.CHANNEL
 
-                # Update button with disabled state based on service availability
-                if st.button(
-                    f"Update {self.TXT.STEP.title()}s",
-                    key=self.get_key_element(f"Update {self.TXT.STEP}s"),
-                    disabled=not is_service_available
-                ):
-                    self.refresh_map(reset_areas=False, clear_draw=False, rerun=False)
+                self.render_map_buttons()
 
-            c2_export = self.import_export()
-
-        save_filter(self.settings)
-
-        return c2_export
+        self.refresh_filters()
 
     # ====================
     # MAP
-    # ====================
+    # ====================   
+    def set_map_view(self, map_center, map_zoom):
+        self.map_view_center = map_center
+        self.map_view_zoom   = map_zoom
+
+
     def update_filter_geometry(self, df, geo_type: GeoConstraintType, geo_constraint: List[GeometryConstraint]):
         add_geo = []
         for _, row in df.iterrows():
@@ -442,17 +371,17 @@ class BaseComponent:
 
         self.set_geo_constraint(new_geo)
 
-    def is_valid_rectangle(self, min_lat, max_lat, min_lng, max_lng):
+    def is_valid_rectangle(self, min_lat, max_lat, min_lon, max_lon):
         """Check if min/max latitude and longitude values are valid."""
         return (-90 <= min_lat <= 90 and -90 <= max_lat <= 90 and
-                -180 <= min_lng <= 180 and -180 <= max_lng <= 180 and
-                min_lat <= max_lat and min_lng <= max_lng)
+                -180 <= min_lon <= 180 and -180 <= max_lon <= 180 and
+                min_lat <= max_lat and min_lon <= max_lon)
 
-    def is_valid_circle(self, lat, lng, max_radius, min_radius):
+    def is_valid_circle(self, lat, lon, max_radius, min_radius):
         """Check if circle data is valid."""
         return (
             -90 <= lat <= 90 and
-            -180 <= lng <= 180 and
+            -180 <= lon <= 180 and
             max_radius > 0 and
             min_radius >= 0 and
             min_radius <= max_radius
@@ -470,16 +399,16 @@ class BaseComponent:
             self.df_circ = st.data_editor(original_df_circ, key=f"circ_area", hide_index=True)
 
             # Validate column names before applying validation
-            if {"lat", "lng", "max_radius", "min_radius"}.issubset(self.df_circ.columns):
+            if {"lat", "lon", "max_radius", "min_radius"}.issubset(self.df_circ.columns):
                 invalid_entries = self.df_circ[
                     ~self.df_circ.apply(lambda row: self.is_valid_circle(
-                        row["lat"], row["lng"], row["max_radius"], row["min_radius"]
+                        row["lat"], row["lon"], row["max_radius"], row["min_radius"]
                     ), axis=1)
                 ]
 
                 if not invalid_entries.empty:
                     st.warning(
-                        "Invalid circle data detected. Ensure lat is between -90 and 90, lng is between -180 and 180, "
+                        "Invalid circle data detected. Ensure lat is between -90 and 90, lon is between -180 and 180, "
                         "max_radius is positive, and min_radius ≤ max_radius."
                     )
                     return  # Stop further processing if validation fails
@@ -505,15 +434,15 @@ class BaseComponent:
             self.df_rect = st.data_editor(original_df_rect, key=f"rect_area", hide_index=True)
 
             # Validate column names before applying validation
-            if {"min_lat", "max_lat", "min_lng", "max_lng"}.issubset(self.df_rect.columns):
+            if {"min_lat", "max_lat", "min_lon", "max_lon"}.issubset(self.df_rect.columns):
                 invalid_entries = self.df_rect[
                     ~self.df_rect.apply(lambda row: self.is_valid_rectangle(
-                        row["min_lat"], row["max_lat"], row["min_lng"], row["max_lng"]
+                        row["min_lat"], row["max_lat"], row["min_lon"], row["max_lon"]
                     ), axis=1)
                 ]
 
                 if not invalid_entries.empty:
-                    st.warning("Invalid rectangle coordinates detected. Ensure min_lat ≤ max_lat and min_lng ≤ max_lng, with values within valid ranges (-90 to 90 for lat, -180 to 180 for lng).")
+                    st.warning("Invalid rectangle coordinates detected. Ensure min_lat ≤ max_lat and min_lon ≤ max_lon, with values within valid ranges (-90 to 90 for lat, -180 to 180 for lon).")
                     return  
 
             else:
@@ -529,7 +458,6 @@ class BaseComponent:
 
 
     def update_selected_data(self):
-
         if self.df_data_edit is None or self.df_data_edit.empty:
             if 'is_selected' not in self.df_markers.columns:
                 self.df_markers['is_selected'] = False
@@ -547,6 +475,7 @@ class BaseComponent:
                             }
                         }
                     self.settings.event.selected_catalogs.append(event)
+
             return
         if self.step_type == Steps.STATION:
             self.settings.station.selected_invs = None
@@ -577,11 +506,22 @@ class BaseComponent:
         st.rerun()
 
 
-    def refresh_map(self, reset_areas = False, selected_idx = None, clear_draw = False, rerun = False, get_data = True, recreate_map = False):
+    def refresh_map(self, reset_areas = False, selected_idx = None, clear_draw = False, rerun = False, get_data = True, recreate_map = True):
         geo_constraint = self.get_geo_constraint()
 
         if recreate_map:
-            self.map_disp = create_map(map_id=self.map_id)
+            if self.map_output is not None and self.map_output.get("center"):
+                self.map_view_center = self.map_output.get("center", {})
+                self.map_view_zoom = self.map_output.get("zoom", 2)
+
+            self.map_disp = create_map(
+                map_id=self.map_id, 
+                zoom_start=self.map_view_zoom,
+                map_center=[
+                    self.map_view_center.get("lat", 0.0),
+                    self.map_view_center.get("lng", 175), # pacific ocean
+                ]
+            )
         
         if clear_draw:
             clear_map_draw(self.map_disp)
@@ -607,9 +547,7 @@ class BaseComponent:
                 self.map_fg_area= add_area_overlays(areas=geo_constraint)
             if get_data:
                 self.handle_get_data()
-        
-        # elif len(geo_constraint) > 0:
-        #     self.handle_get_data()
+
 
         if rerun:
             st.rerun()
@@ -698,14 +636,18 @@ class BaseComponent:
         self.map_fg_area= None
         self.df_markers = pd.DataFrame()
         self.all_current_drawings = []
-        
+
         if self.step_type == Steps.EVENT:
             self.catalogs=Catalog()
             self.settings.event.geo_constraint = []
+            self.settings.event.selected_catalogs=Catalog(events=None)    
+
         if self.step_type == Steps.STATION:
             self.inventories = Inventory()
             self.settings.station.geo_constraint = []
+            self.settings.station.selected_invs = None
 
+        # not sure if plotting these area tables is useful
         self.update_rectangle_areas()
         self.update_circle_areas()
 
@@ -740,7 +682,7 @@ class BaseComponent:
     def refresh_map_selection(self):
         selected_idx = self.get_selected_idx()
         self.update_selected_data()
-        self.refresh_map(reset_areas=False, selected_idx=selected_idx, rerun=True)
+        self.refresh_map(reset_areas=False, selected_idx=selected_idx, rerun=True, recreate_map=True)
 
 
     # ===================
@@ -805,7 +747,7 @@ class BaseComponent:
         with c1:
             min_radius_str = st.text_input("Minimum radius (degree)", value="0")
         with c2:
-            max_radius_str = st.text_input("Maximum radius (degree)", value="30")
+            max_radius_str = st.text_input("Maximum radius (degree)", value="90")
 
         try:
             min_radius = float(min_radius_str)
@@ -859,8 +801,8 @@ class BaseComponent:
 
         for geo in geo_constraints:
             if geo.geo_type == GeoConstraintType.CIRCLE:
-                lat, lng = geo.coords.lat, geo.coords.lng
-                matching_event = self.df_markers_prev[(self.df_markers_prev['latitude'] == lat) & (self.df_markers_prev['longitude'] == lng)]
+                lat, lon = geo.coords.lat, geo.coords.lon
+                matching_event = self.df_markers_prev[(self.df_markers_prev['latitude'] == lat) & (self.df_markers_prev['longitude'] == lon)]
 
                 if not matching_event.empty:
                     geo.coords.min_radius = min_radius_value
@@ -868,12 +810,12 @@ class BaseComponent:
             updated_constraints.append(geo)
 
         for _, row in self.df_markers_prev.iterrows():
-            lat, lng = row['latitude'], row['longitude']
+            lat, lon = row['latitude'], row['longitude']
             if not any(
-                geo.geo_type == GeoConstraintType.CIRCLE and geo.coords.lat == lat and geo.coords.lng == lng
+                geo.geo_type == GeoConstraintType.CIRCLE and geo.coords.lat == lat and geo.coords.lon == lon
                 for geo in updated_constraints
             ):
-                new_donut = CircleArea(lat=lat, lng=lng, min_radius=min_radius_value, max_radius=max_radius_value)
+                new_donut = CircleArea(lat=lat, lon=lon, min_radius=min_radius_value, max_radius=max_radius_value)
                 geo = GeometryConstraint(geo_type=GeoConstraintType.CIRCLE, coords=new_donut)
                 updated_constraints.append(geo)
 
@@ -882,7 +824,7 @@ class BaseComponent:
             if not (geo.geo_type == GeoConstraintType.CIRCLE and
                     self.df_markers_prev[
                         (self.df_markers_prev['latitude'] == geo.coords.lat) &
-                        (self.df_markers_prev['longitude'] == geo.coords.lng)
+                        (self.df_markers_prev['longitude'] == geo.coords.lon)
                     ].empty)
         ]
         self.set_geo_constraint(updated_constraints)
@@ -890,8 +832,39 @@ class BaseComponent:
     # ===================
     # FILES
     # ===================
+    def exp_imp_events_stations(self):
+        st.write(f"#### Export/Import {self.TXT.STEP.title()}s")
+
+        c11, c22 = st.columns([1,1])
+        with c11:
+            # @NOTE: Download Selected had to be with the table.
+            # if (len(self.catalogs.events) > 0 or len(self.inventories.get_contents().get('stations')) > 0):
+            st.download_button(
+                f"Download All", 
+                key=self.get_key_element(f"Download All {self.TXT.STEP.title()}s"),
+                data=self.export_xml_bytes(export_selected=False),
+                file_name = f"{self.TXT.STEP}s.xml",
+                mime="application/xml",
+                disabled=(len(self.catalogs.events) == 0 and (self.inventories is None or len(self.inventories.get_contents().get('stations')) == 0))
+            )
+
+        def reset_uploaded_file_processed():
+            st.session_state['uploaded_file_processed'] = False
+
+        uploaded_file = st.file_uploader(f"Import {self.TXT.STEP.title()}s from a File", on_change=lambda:  reset_uploaded_file_processed())
+        if uploaded_file and not st.session_state['uploaded_file_processed']:
+            self.clear_all_data()
+            self.refresh_map(reset_areas=True, clear_draw=True)
+            self.handle_get_data(is_import=True, uploaded_file=uploaded_file)
+            st.session_state['uploaded_file_processed'] = True
+
+        if self.has_error and "Import Error" in self.error:
+            st.error(self.error)
+
+        return c22
+    
     def export_xml_bytes(self, export_selected: bool = True):
-        with BytesIO() as f:
+        with io.BytesIO() as f:
             if not self.df_markers.empty and len(self.df_markers) > 0:
                 if export_selected:
                 # self.sync_df_markers_with_df_edit()
@@ -952,81 +925,128 @@ class BaseComponent:
     # RENDER
     # ===================
     def render_map_buttons(self):
-        c1, c2 = st.columns([1,1])
-        with c1:
-            if st.button(f"Global {self.TXT.STEP.title()}s", key=self.get_key_element(f"Global {self.TXT.STEP}s")):
-                self.clear_all_data()
-                self.refresh_map(reset_areas=True, clear_draw=True, rerun=True, get_data=True)
-        with c2:
+        cc1, cc2, cc3 = st.columns([1,1,1])
+        with cc1:
+            if st.button(
+                f"Load {self.TXT.STEP.title()}s", 
+                key=self.get_key_element(f"Load {self.TXT.STEP}s")
+            ):
+                self.refresh_map(reset_areas=False, clear_draw=False, rerun=False)
+                # self.clear_all_data()
+                # self.refresh_map(reset_areas=True, clear_draw=True, rerun=True, get_data=True)
+
+
+        with cc2:
             if st.button(self.TXT.CLEAR_ALL_MAP_DATA, key=self.get_key_element(self.TXT.CLEAR_ALL_MAP_DATA)):
                 self.clear_all_data()
                 self.refresh_map(reset_areas=True, clear_draw=True, rerun=True, get_data=False)
 
-        if st.button("Reload", help="Reloads the map"):
-            self.refresh_map(get_data=False, rerun=True, recreate_map=True)
-        st.info("Use **Reload** button if the map is collapsed or some layers are missing.")
-        st.info(f"Use **map tools** to search **{self.TXT.STEP}s** in confined areas.")
-
-    def render_export_import(self):
-        st.write(f"#### Export/Import {self.TXT.STEP.title()}s")
-
-        c11, c22 = st.columns([1,1])
-        with c11:
-            # @NOTE: Download Selected had to be with the table.
-            # if (len(self.catalogs.events) > 0 or len(self.inventories.get_contents().get('stations')) > 0):
-            st.download_button(
-                f"Download All", 
-                key=self.get_key_element(f"Download All {self.TXT.STEP.title()}s"),
-                data=self.export_xml_bytes(export_selected=False),
-                file_name = f"{self.TXT.STEP}s.xml",
-                mime="application/xml",
-                disabled=(len(self.catalogs.events) == 0 and (self.inventories is None or len(self.inventories.get_contents().get('stations')) == 0))
-            )
-
-        def reset_uploaded_file_processed():
-            st.session_state['uploaded_file_processed'] = False
-
-        uploaded_file = st.file_uploader(f"Import {self.TXT.STEP.title()}s from a File", on_change=lambda:  reset_uploaded_file_processed())
-        if uploaded_file and not st.session_state['uploaded_file_processed']:
-            self.clear_all_data()
-            self.refresh_map(reset_areas=True, clear_draw=True)
-            self.handle_get_data(is_import=True, uploaded_file=uploaded_file)
-            st.session_state['uploaded_file_processed'] = True
-
-        if self.has_error and "Import Error" in self.error:
-            st.error(self.error)
-
-        return c22
         
-    def render_actions_side_menu(self):        
-        st.write("### Actions")
-        # with st.expander(f"Actions", expanded = True):
-        tab1, tab2 = st.tabs(["Map", "Export/Import"])
-        with tab1:
-            self.render_map_buttons()
-        with tab2:
-            c2_export = self.render_export_import()
+        with cc3:
+            if st.button(
+                "Reload", 
+                # help="Use Reload button if the map is collapsed or some layers are missing.",
+                key=self.get_key_element(f"ReLoad {self.TXT.STEP}s")
+            ):
+                self.refresh_map(get_data=False, rerun=True, recreate_map=True)
 
-        return c2_export
+        
 
-    def render_map_right_menu(self):
-        def handle_layers():
-            self.render_map_buttons()
+    
+    def render_map_handles(self):
+        # not sure if plotting these area tables is useful
+        with st.expander("Shape tools - edit areas", expanded=True):
             self.update_rectangle_areas()
             self.update_circle_areas()
+        # self.render_map_buttons()
+        
 
-        with st.expander("Map", expanded=True):
-        # st.markdown(f"#### {self.TXT.GET_DATA_TITLE}")
-            if self.prev_step_type:
-                tab1, tab2 = st.tabs(["Data", f"Search Around {self.prev_step_type.title()}s"])
-                with tab1:
-                    handle_layers()
-                with tab2:
-                    self.display_prev_step_selection_table()
-            else:
-                handle_layers()       
+    def render_import_export(self):
+        def reset_import_setting_processed():
+            if uploaded_file is not None:
+                uploaded_file_info = f"{uploaded_file.name}-{uploaded_file.size}"               
+                if "uploaded_file_info" not in st.session_state or st.session_state.uploaded_file_info != uploaded_file_info:
+                    st.session_state['import_setting_processed'] = False
+                    st.session_state['uploaded_file_info'] = uploaded_file_info  
 
-        # return c2_export
+        # st.sidebar.markdown("### Import/Export Settings")
+        
+        with st.expander("Import & Export", expanded=True):
+            tab1, tab2 = st.tabs([f"{self.TXT.STEP.title()}s", "Settings"])
+            with tab2:
+                config_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../service/config.cfg')
+                config_file_path = os.path.abspath(config_file_path)
+                
+                st.markdown("#### ⬇️ Export Settings")
+
+                if os.path.exists(config_file_path):
+                    with open(config_file_path, "r") as file:
+                        file_data = file.read()
+
+                    st.download_button(
+                        label="Download file",
+                        data=file_data,  
+                        file_name="config.cfg",  
+                        mime="application/octet-stream",  
+                        help="Download the current settings.",
+                        use_container_width=True,
+                    )
+                else:
+                    st.caption("No config file available for download.")
+
+                # Import settings should only be displayed if stage == 1
+                if self.stage == 1:
+                    st.markdown("#### 📂 Import Settings")
+                    uploaded_file = st.file_uploader(
+                        "Import Settings",type=["cfg"], on_change=reset_import_setting_processed,
+                        help="Upload a config file (.cfg) to update settings." , label_visibility="collapsed"
+                    )
+
+                    if uploaded_file:
+                        if not st.session_state.get('import_setting_processed', False):
+                            file_like_object = io.BytesIO(uploaded_file.getvalue())
+                            text_file_object = io.TextIOWrapper(file_like_object, encoding='utf-8')
+
+                            settings = SeismoLoaderSettings.from_cfg_file(text_file_object)
+                            if(settings.status_handler.has_errors()):
+                                errors = settings.status_handler.generate_status_report("errors")                           
+                                st.error(f"{errors}\n\n**Please review the errors in the imported file. Resolve them before proceeding.**")
+
+                                if(settings.status_handler.has_warnings()):
+                                    warning = settings.status_handler.generate_status_report("warnings")                           
+                                    st.warning(warning)                            
+                                settings.status_handler.display()
+
+                            else:    
+                                settings.event.geo_constraint = []
+                                settings.station.geo_constraint = []           
+                                settings.event.selected_catalogs=Catalog(events=None)    
+                                settings.station.selected_invs = None
+                                
+                                self.clear_all_data()
+                                # self.settings = settings
+                                for key, value in vars(settings).items():
+                                    setattr(self.settings, key, value)
+                                self.df_markers_prev= pd.DataFrame()
+                                self.refresh_map(reset_areas=True, clear_draw=True)
+                                st.session_state['import_setting_processed'] = True   
+                                
+                                if(settings.status_handler.has_warnings()):
+                                    warning = settings.status_handler.generate_status_report("warnings")                           
+                                    st.warning(warning) 
+
+                                st.success("Settings imported successfully!")   
+            with tab1:
+                c2_export = self.exp_imp_events_stations()
+
+            return c2_export
+    
+        
+
+    def render_map_right_menu(self):
+        if self.prev_step_type:
+            with st.expander(f"Search Around {self.prev_step_type.title()}s", expanded=True):
+                self.display_prev_step_selection_table() 
 
     def render_map(self):
         if self.map_disp is not None:
@@ -1037,8 +1057,14 @@ class BaseComponent:
         # feature_groups = [fg for fg in [self.map_fg_area, self.map_fg_marker] if fg is not None]
         feature_groups = [fg for fg in [self.map_fg_area, self.map_fg_marker , self.map_fg_prev_selected_marker] if fg is not None]
         
-        if self.fig_color_bar and self.step_type == Steps.EVENT:
-            st.caption("ℹ️ Marker size is associated with Earthquake magnitude")
+
+        info_display = f"ℹ️ Use **shape tools** to search **{self.TXT.STEP}s** in confined areas   "
+        info_display += "\nℹ️ Use **Reload** button to refresh map if needed   "
+
+        if self.step_type == Steps.EVENT:
+           info_display += "\nℹ️ **Marker size** is associated with **earthquake magnitude**"
+
+        st.caption(info_display)
         
         c1, c2 = st.columns([18,1])
         with c1:
@@ -1062,6 +1088,8 @@ class BaseComponent:
         #                  window or tooltips. Here, we have embedded a line at the bottom of the
         #                  popup to be able to get the Event/Station Ids as well as the type of 
         #                  the marker, ie, event or station.
+
+        # st.write(self.map_output)
         if self.map_output and self.map_output.get('last_object_clicked') is not None:
             last_clicked = self.map_output['last_object_clicked_popup']
 
@@ -1081,129 +1109,230 @@ class BaseComponent:
 
     def render_marker_select(self):
         def handle_marker_select():
-            selected_data = self.get_selected_marker_info()
+            # selected_data = self.get_selected_marker_info()
 
             if 'is_selected' not in self.df_markers.columns:
                 self.df_markers['is_selected'] = False
-                
-            try:
-                if self.df_markers.loc[self.clicked_marker_info['id'] - 1, 'is_selected']:
-                    st.success(selected_data)
-                else:
-                    st.warning(selected_data)
 
+            try:
                 if self.clicked_marker_info['step'] == self.step_type:
-                    if st.button("Add to Selection", key=self.get_key_element("Add to Selection")):
+                    if not self.df_markers.loc[self.clicked_marker_info['id'] - 1, 'is_selected']:
                         self.sync_df_markers_with_df_edit()
                         self.df_markers.loc[self.clicked_marker_info['id'] - 1, 'is_selected'] = True
-                        self.refresh_map_selection()
-                        return
-            
-
-                if self.df_markers.loc[self.clicked_marker_info['id'] - 1, 'is_selected']:
-                    if st.button("Unselect", key=self.get_key_element("Unselect")):
-                        self.df_markers.loc[self.clicked_marker_info['id'] - 1, 'is_selected'] = False
-                        # map_component.clicked_marker_info = None
-                        # map_component.map_output["last_object_clicked"] = None
-                        self.refresh_map_selection()
-                        return
+                        self.clicked_marker_info = None
+                        self.refresh_map_selection()                                           
+                    # else:
+                    #     self.df_markers.loc[self.clicked_marker_info['id'] - 1, 'is_selected'] = False
+                    #     self.refresh_map_selection()     
+                        
 
             except KeyError:
                 print("Selected map marker not found")
+  
 
-        def map_tools_card():
-            if not self.df_markers.empty:
-                # st.markdown(self.TXT.SELECT_MARKER_TITLE)
-                st.info(self.TXT.SELECT_MARKER_MSG)
-                if self.clicked_marker_info:
-                    handle_marker_select()
-
-            else:                
-                st.warning("No data available for the selected settings.")
-                    
-        # if not self.df_markers.empty:
-        map_tools_card()
-            # create_card(None, False, map_tools_card)
+        if self.clicked_marker_info:
+            handle_marker_select()
 
 
     def render_data_table(self, c5_map):
         if self.df_markers.empty:
             st.warning("No data available for the selected settings.")
-        else:
-            # st.info(self.TXT.SELECT_DATA_TABLE_MSG)
-            cols = self.df_markers.columns
-            orig_cols   = [col for col in cols if col != 'is_selected']
-            ordered_col = ['is_selected'] + orig_cols
+            return            
 
-            config = {col: {'disabled': True} for col in orig_cols}
+        # Ensure `is_selected` column exists
+        if 'is_selected' not in self.df_markers.columns:
+            self.df_markers['is_selected'] = False
 
-            if 'is_selected' not in self.df_markers.columns:
-                self.df_markers['is_selected'] = False
-            config['is_selected']  = st.column_config.CheckboxColumn(
-                'Select'
-            )
-            
-            state_key = f'initial_df_markers_{self.stage}'
+        # Define ordered columns
+        cols = self.df_markers.columns
+        orig_cols = [col for col in cols if col != 'is_selected']
+        ordered_col = ['is_selected'] + orig_cols
 
-            # Store the initial state in the session if not already stored
-            if  state_key not in st.session_state:
-                st.session_state[state_key] = self.df_markers.copy()
+        # Define config
+        config = {col: {'disabled': True} for col in orig_cols}
+        config['is_selected'] = st.column_config.CheckboxColumn('Select')
 
-            def data_table_view():
-                c1, c2, c3, c4, c5, c6 = st.columns([1,1,1,1,1,1])
-                with c1:
-                    st.write(f"Total Number of {self.TXT.STEP.title()}s: {len(self.df_markers)}")
-                with c2:
-                    if st.button("Select All", key=self.get_key_element("Select All")):
-                        self.df_markers['is_selected'] = True
-                with c3:
-                    if st.button("Unselect All", key=self.get_key_element("Unselect All")):
-                        self.df_markers['is_selected'] = False
+        state_key = f'initial_df_markers_{self.stage}'
+
+        # Store the initial state in the session if not already stored
+        if  state_key not in st.session_state:
+            st.session_state[state_key] = self.df_markers.copy()
+
+        self.data_table_view(ordered_col, config, state_key)
 
 
-                self.df_data_edit = st.data_editor(self.df_markers, hide_index = True, column_config=config, column_order = ordered_col, key=self.get_key_element("Data Table"))           
-                
+        # Download button logic
+        is_disabled = 'is_selected' not in self.df_markers or self.df_markers['is_selected'].sum() == 0
 
-                if len(self.df_data_edit) != len(st.session_state[state_key]):
-                    has_changed = True
-                else:
-                    has_changed = not self.df_data_edit.equals(st.session_state[state_key])
-                    
-                    if has_changed:
-                        df_sorted_new = self.df_data_edit.sort_values(by=self.df_data_edit.columns.tolist()).reset_index(drop=True)
-                        df_sorted_old = st.session_state[state_key].sort_values(by=st.session_state[state_key].columns.tolist()).reset_index(drop=True)
-                        has_changed = not df_sorted_new.equals(df_sorted_old)
-
-                if has_changed:
-                    st.session_state[state_key] = self.df_data_edit.copy()  # Save the unsorted version to preserve user sorting
-                    self.sync_df_markers_with_df_edit()
-                    self.refresh_map_selection()
-
-            data_table_view()
-           
         with c5_map:
-            # if (not self.df_markers.empty and len(self.df_markers[self.df_markers['is_selected']]) > 0):
-            is_disabled = self.df_markers.empty
-            if not is_disabled:                
-                is_disabled = 'is_selected' not in self.df_markers.columns
-                if 'is_selected' in list(self.df_markers.columns):
-                    is_disabled = len(self.df_markers[self.df_markers['is_selected']]) == 0
-                else:
-                    is_disabled = True
-                    
-
             st.download_button(
-                f"Download Selected", 
+                f"Download Selected",
                 key=self.get_key_element(f"Download Selected {self.TXT.STEP.title()}s"),
                 data=self.export_xml_bytes(export_selected=True),
-                file_name = f"{self.TXT.STEP}s_selected.xml",
+                file_name=f"{self.TXT.STEP}s_selected.xml",
                 mime="application/xml",
                 disabled=is_disabled
             )
-        # create_card(self.TXT.SELECT_DATA_TABLE_TITLE, False, data_table_view)
 
+    def data_table_view(self, ordered_col, config, state_key):
+        """Displays the full data table, allowing selection."""
+
+        # Add custom CSS to ensure full width and remove scrollbars
+        st.markdown("""
+            <style>
+                .element-container {
+                    width: 100% !important;
+                }
+                .stDataFrame {
+                    width: 100% !important;
+                    text-align: center !important;                    
+                }
+                .data-editor-container {
+                    width: 100% !important;
+                }
+                [data-testid="stDataFrame"] {
+                    width: 100% !important;                 
+                }
+                div[data-testid="stDataFrame"] > div {
+                    width: 100% !important;                  
+                }
+                div[data-testid="stDataFrame"] > div > iframe {
+                    width: 100% !important;
+                    text-align: center !important;                    
+                    min-height: calc(100vh - 300px);  # Adjust this value as needed
+                }                   
+            </style>
+        """, unsafe_allow_html=True)  
+
+        c1, c2, c3 = st.columns([1,1,1])
+        with c1:
+            st.write(f"Total Number of {self.TXT.STEP.title()}s: {len(self.df_markers)}")
+                
+        with c2:
+            if st.button("Select All", key=self.get_key_element("Select All")):
+                self.df_markers['is_selected'] = True
+
+        with c3:
+            if st.button("Unselect All", key=self.get_key_element("Unselect All")):
+                self.df_markers['is_selected'] = False
+        
+        # it would be prettier to merge "magnitude_type" with magnitude here.. TODO
+
+        self.selected_items_view(state_key) 
+
+        # Set the height based on the number of rows (with a minimum and maximum)
+        num_rows = len(self.df_markers)
+        height = max(min(num_rows * 35 + 100, 800), 400)  # Adjust as needed
+
+        # Define desired column widths in pts
+        column_widths = {
+            "Select": 60,
+            "network": 60,
+            "station": 80,
+            "elevation": 80,
+            "longitude": 130,
+            "latitude": 130,
+            "start_date": 140,
+            "end_date": 140
+            }
+
+        for col in ordered_col:
+            
+            # Add width if this column should have a specific width
+            if col in column_widths:
+                config[col] = st.column_config.Column(
+                    col,
+                    width=column_widths[col]
+                )
+            else:
+                config[col] = st.column_config.Column(
+                    col,
+                )
+
+        self.df_data_edit = st.data_editor(
+            self.df_markers, 
+            hide_index = True, 
+            column_config=config, 
+            column_order = ordered_col, 
+            key=self.get_key_element("Data Table"),
+            height=height,
+            use_container_width=True
+        )
+        
+
+        if len(self.df_data_edit) != len(st.session_state[state_key]):
+            has_changed = True
+        else:
+            has_changed = not self.df_data_edit.equals(st.session_state[state_key])
+            
+            if has_changed:
+                df_sorted_new = self.df_data_edit.sort_values(by=self.df_data_edit.columns.tolist()).reset_index(drop=True)
+                df_sorted_old = st.session_state[state_key].sort_values(by=st.session_state[state_key].columns.tolist()).reset_index(drop=True)
+                has_changed = not df_sorted_new.equals(df_sorted_old)
+
+        if has_changed:
+            st.session_state[state_key] = self.df_data_edit.copy()  # Save the unsorted version to preserve user sorting
+            self.sync_df_markers_with_df_edit()
+            self.refresh_map_selection()
+
+    def selected_items_view(self, state_key):
+        """Displays selected items using an actual `st.multiselect`, controlled by table selection."""
+
+        df_selected = self.df_markers[self.df_markers['is_selected']].copy()
+
+        if df_selected.empty:
+            return
+
+        if self.step_type == Steps.EVENT:
+            preferred_column = "place"
+            unique_column = "magnitude"  # Extra column to make each entry unique
+
+        if self.step_type == Steps.STATION:
+            preferred_column = "network"
+            unique_column = "station"  # Extra column to make each entry unique
+
+        ## causing issue in STATION table which doesn't have "magnitude" (NEEDS REVIEW)
+        if preferred_column not in df_selected.columns or unique_column not in df_selected.columns:
+            st.warning(f"Column '{preferred_column}' or '{unique_column}' not found in the data!")
+            return
+
+        df_selected["display_label"] = df_selected[preferred_column] + " (" + df_selected[unique_column].astype(str) + ")"
+        
+        selected_items = df_selected["display_label"].tolist()
+
+        updated_selection = st.multiselect(
+            "Selected Items",
+            options=self.df_markers[self.df_markers['is_selected']].apply(lambda x: f"{x[preferred_column]} ({x[unique_column]})", axis=1).tolist(),
+            default=selected_items,
+            key="selected_items_list",
+            placeholder="Selected Items",
+            disabled=False
+        )
+
+        removed_items = set(selected_items) - set(updated_selection)
+
+        if removed_items:
+            for item in removed_items:
+                place_name, magnitude = item.rsplit(" (", 1)
+                magnitude = magnitude.rstrip(")")  # Remove closing bracket
+
+                item_index = self.df_markers[
+                    (self.df_markers[preferred_column] == place_name) & 
+                    (self.df_markers[unique_column].astype(str) == magnitude)
+                ].index.tolist()
+
+                if item_index:
+                    self.df_markers.at[item_index[0], 'is_selected'] = False  
+                    # self.sync_df_markers_with_df_edit()
+
+            st.session_state[state_key] = self.df_markers.copy()
+            self.refresh_map_selection()
 
     def render(self):
+
+        with st.sidebar:
+            self.render_map_handles()
+            self.render_map_right_menu()
 
         if self.has_error and "Import Error" not in self.error:
             c1_err, c2_err = st.columns([4,1])
@@ -1218,53 +1347,25 @@ class BaseComponent:
                     st.rerun()
 
         if self.step_type == Steps.EVENT:
-            c2_export = self.event_filter()
+            self.event_filter()
+        
 
         if self.step_type == Steps.STATION:
-            c2_export = self.station_filter()
+            self.station_filter()
 
+        with st.sidebar:
+            c2_export = self.render_import_export()
 
         self.get_prev_step_df()
 
         self.render_map()
 
-        # c1_top, c2_top = st.columns([2,1])
-
-        # with c2_top:
-        #     c2_export = self.render_map_right_menu()
-
-        # with c1_top:
-        #     self.render_map()
-
         if not self.df_markers.empty:
-            c1_bot, c2_bot = st.columns([1,3])
+            self.render_marker_select()
+            with st.expander(self.TXT.SELECT_DATA_TABLE_TITLE, expanded = not self.df_markers.empty):
+                self.render_data_table(c2_export)
 
-            with c1_bot:
-                with st.expander(self.TXT.SELECT_MARKER_TITLE, expanded = not self.df_markers.empty):
-                    self.render_marker_select()
-
-            with c2_bot:
-                with st.expander(self.TXT.SELECT_DATA_TABLE_TITLE, expanded = not self.df_markers.empty):
-                    self.render_data_table(c2_export)
-
-        
-        # if not self.df_markers.empty:
-        #     st.header(self.TXT.SELECT_DATA_TITLE)
-        #     tab1, tab2 = st.tabs(["📄 Table", "🌍 Map"])
-        #     with tab1:
-        #         st.write(self.TXT.SELECT_DATA_TABLE_MSG)
-        #         self.render_data_table()
-
-        #     with tab2:
-        #         st.write(self.TXT.SELECT_MARKER_MSG)
-        #         self.render_marker_select()
-
-            # c21, c22 = st.columns([2,1])            
-            # with c22:
-            #     self.render_marker_select()
-
-            # with c21:
-            #     self.render_data_table()
+    
 
 
 

@@ -1,0 +1,7 @@
+[run]
+omit =
+    seed_vault/enums/*
+    seed_vault/models/*
+    seed_vault/ui/*
+    seed_vault/utils/*
+

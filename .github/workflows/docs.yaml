@@ -3,7 +3,7 @@ name: Deploy Sphinx Docs
 on:
   push:
     branches:
-      - main # Change if using a different branch
+      - doc
 
 jobs:
   build:
