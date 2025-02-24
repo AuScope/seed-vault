@@ -4,22 +4,31 @@ from obspy import UTCDateTime
 import threading
 from seed_vault.enums.config import WorkflowType
 from seed_vault.models.config import SeismoLoaderSettings
-from seed_vault.service.seismoloader import run_continuous, run_event
+from seed_vault.service.seismoloader import run_event
 from obspy.clients.fdsn import Client
 from obspy.taup import TauPyModel
 from seed_vault.ui.components.display_log import ConsoleDisplay
 import streamlit as st
 import pandas as pd
-from obspy.geodetics import degrees2kilometers
-from obspy.geodetics.base import locations2degrees
 import numpy as np
 import matplotlib.pyplot as plt
 from seed_vault.ui.components.continuous_waveform import ContinuousComponents
 from seed_vault.service.utils import check_client_services
+from io import StringIO
+from contextlib import redirect_stdout, redirect_stderr
+from copy import deepcopy
+from seed_vault.ui.pages.helpers.common import save_filter
 import time
 
 
+query_thread = None
 stop_event = threading.Event()
+
+
+if "query_done" not in st.session_state:
+    st.session_state["query_done"] = False
+if "trigger_rerun" not in st.session_state:
+    st.session_state["trigger_rerun"] = False
 
 def get_tele_filter(tr):
     # get a generic teleseismic filter band
@@ -50,13 +59,44 @@ class WaveformFilterMenu:
     channel_filter: str
     available_channels: List[str]
     display_limit: int
+
     def __init__(self, settings: SeismoLoaderSettings):
         self.settings = settings
+        self.old_settings = deepcopy(settings)  # Track previous state
         self.network_filter = "All networks"
         self.station_filter = "All stations"
         self.channel_filter = "All channels"
         self.available_channels = ["All channels"]
         self.display_limit = 50
+        # Track previous filter state
+        self.old_filter_state = {
+            'network_filter': self.network_filter,
+            'station_filter': self.station_filter,
+            'channel_filter': self.channel_filter,
+            'display_limit': self.display_limit
+        }
+
+    def refresh_filters(self):
+        """Check for changes and trigger updates"""
+        current_state = {
+            'network_filter': self.network_filter,
+            'station_filter': self.station_filter,
+            'channel_filter': self.channel_filter,
+            'display_limit': self.display_limit
+        }
+        
+        # Check if filter state changed
+        if current_state != self.old_filter_state:
+            self.old_filter_state = current_state.copy()
+            st.rerun()
+
+        # Check if settings changed
+        changes = self.settings.has_changed(self.old_settings)
+        if changes.get('has_changed', False):
+            self.old_settings = deepcopy(self.settings)
+            save_filter(self.settings)
+            st.rerun()
+
     def update_available_channels(self, stream: Stream):
         if not stream:
             self.available_channels = ["All channels"]
@@ -73,29 +113,44 @@ class WaveformFilterMenu:
     
     def render(self, stream=None):
         st.sidebar.title("Waveform Controls")
+        
         # Step 1: Data Retrieval Settings
         with st.sidebar.expander("Step 1: Data Source", expanded=True):
             st.subheader("🔍 Time Window")
-            self.settings.event.before_p_sec = st.number_input(
+            
+            # Update time window settings with immediate refresh
+            before_p = st.number_input(
                 "Start (secs before P arrival):", 
                 value=self.settings.event.before_p_sec or 20,
-                help="Time window before P arrival"
+                help="Time window before P arrival",
+                key="before_p_input"
             )
-            self.settings.event.after_p_sec = st.number_input(
+            if before_p != self.settings.event.before_p_sec:
+                self.settings.event.before_p_sec = before_p
+                self.refresh_filters()
+
+            after_p = st.number_input(
                 "End (secs after P arrival):", 
                 value=self.settings.event.after_p_sec or 100,
-                help="Time window after P arrival"
+                help="Time window after P arrival",
+                key="after_p_input"
             )
-            
-            st.subheader("📡 Data Source")
+            if after_p != self.settings.event.after_p_sec:
+                self.settings.event.after_p_sec = after_p
+                self.refresh_filters()
+
+            # Client selection with immediate refresh
             client_options = list(self.settings.client_url_mapping.get_clients())
-            self.settings.waveform.client = st.selectbox(
+            selected_client = st.selectbox(
                 'Choose a client:', 
-                client_options, 
-                index=client_options.index(self.settings.waveform.client), 
-                key="event-pg-client-event"
+                client_options,
+                index=client_options.index(self.settings.waveform.client),
+                key="waveform_client_select"
             )
-            
+            if selected_client != self.settings.waveform.client:
+                self.settings.waveform.client = selected_client
+                self.refresh_filters()
+
             # Check services for selected client
             services = check_client_services(self.settings.waveform.client)
             if not services['dataselect']:
@@ -144,52 +199,60 @@ class WaveformFilterMenu:
                 else:
                     st.error("Invalid location format. Each location code should be 0-2 characters (e.g., 00,--,10,20)")
 
-        # Step 2: Display Filters (enabled after data retrieval)
-        with st.sidebar.expander("Step 2: Display Filters", expanded=True):
             if stream is not None:
-                self.update_available_channels(stream)
-                
-                st.subheader("🎯 Waveform Filters")
-                
-                # Network filter
                 networks = ["All networks"] + list(set([inv.code for inv in self.settings.station.selected_invs]))
-                self.network_filter = st.selectbox(
+                selected_network = st.selectbox(
                     "Network:",
                     networks,
                     index=networks.index(self.network_filter),
-                    help="Filter by network"
+                    help="Filter by network",
+                    key="network_filter_select"
                 )
-                
-                # Station filter
+                if selected_network != self.network_filter:
+                    self.network_filter = selected_network
+                    self.refresh_filters()
+
+                # Station filter with immediate refresh
                 stations = ["All stations"]
                 for inv in self.settings.station.selected_invs:
                     stations.extend([sta.code for sta in inv])
                 stations = list(dict.fromkeys(stations))  # Remove duplicates
                 stations.sort()
                 
-                self.station_filter = st.selectbox(
+                selected_station = st.selectbox(
                     "Station:",
                     stations,
                     index=stations.index(self.station_filter),
-                    help="Filter by station"
+                    help="Filter by station",
+                    key="station_filter_select"
                 )
-                
-                # Channel filter
+                if selected_station != self.station_filter:
+                    self.station_filter = selected_station
+                    self.refresh_filters()
+
+                # Channel filter with immediate refresh
                 self.channel_filter = st.selectbox(
                     "Channel:",
                     options=self.available_channels,
                     index=self.available_channels.index(self.channel_filter),
-                    help="Filter by channel"
+                    help="Filter by channel",
+                    key="channel_filter_select"
                 )
-                
+                if self.channel_filter != self.old_filter_state['channel_filter']:
+                    self.old_filter_state['channel_filter'] = self.channel_filter
+                    self.refresh_filters()
+
                 st.subheader("📊 Display Options")
-                self.display_limit = st.selectbox(
+                display_limit = st.selectbox(
                     "Waveforms per page:",
                     options=[10, 25, 50],
                     index=[10, 25, 50].index(self.display_limit),
                     key="waveform_display_limit",
                     help="Number of waveforms to show per page"
                 )
+                if display_limit != self.display_limit:
+                    self.display_limit = display_limit
+                    self.refresh_filters()
                 
                 # Add status information
                 if stream:
@@ -201,8 +264,7 @@ class WaveformFilterMenu:
                     self.station_filter = "All stations"
                     self.channel_filter = "All channels"
                     self.display_limit = 50
-            else:
-                st.info("Load data to enable display filters")
+                    self.refresh_filters()
 
 class WaveformDisplay:
     def __init__(self, settings: SeismoLoaderSettings, filter_menu: WaveformFilterMenu):
@@ -215,6 +277,8 @@ class WaveformDisplay:
             st.error(f"Error: {str(e)} Waveform client is set to {self.settings.waveform.client}, which seems does not exists. Please navigate to the settings page and use the Clients tab to add the client or fix the stored config.cfg file.")
         self.ttmodel = TauPyModel("iasp91")
         self.streams = [] 
+        self.console = ConsoleDisplay()  # Add console display
+
     def apply_filters(self, stream: Stream) -> Stream:
         """Filter stream based on user selection"""
         filtered_stream = Stream()
@@ -233,43 +297,32 @@ class WaveformDisplay:
 
     def fetch_data(self):
         """
-        Fetches waveform data in a background thread.
-
-        This function retrieves seismic waveform data asynchronously using the 
-        `run_event` function and updates the session state upon completion.
-
-        Updates:
-            - st.session_state["query_done"] (bool): Set to True when the task is complete.
-            - st.session_state["is_downloading"] (bool): Set to False when the task finishes.
-
-        Attributes:
-            self.streams (list): Stores the retrieved waveform data.
+        Fetches waveform data in a background thread with logging.
         """        
-        self.streams = run_event(self.settings, stop_event)
-        st.session_state["query_done"] = True
-        st.session_state["is_downloading"] = False
+        # Capture stdout/stderr for logging
+        with redirect_stdout(StringIO()) as stdout, redirect_stderr(StringIO()) as stderr:
+            try:
+                self.streams = run_event(self.settings, stop_event)
+                success = True
+            except Exception as e:
+                success = False
+                print(f"Error: {str(e)}")  # This will be captured in the output
+            
+            # Capture output for logs
+            output = stdout.getvalue() + stderr.getvalue()
+            if output:
+                self.console.accumulated_output = output.splitlines()
 
+        st.session_state.update({
+            "query_done": True,
+            "is_downloading": False,
+            "trigger_rerun": True
+        })
 
     def retrieve_waveforms(self):
         """
-        Initiates the process of retrieving waveform data in a separate thread.
-
-        This function starts a new background thread to fetch waveform data and enables
-        UI polling to monitor the progress.
-
-        Actions:
-            - Checks if required event and station selections are made.
-            - Clears the stop event to reset any previous cancellation.
-            - Starts a new thread to execute `fetch_data()`.
-            - Updates Streamlit session state to track the progress.
-
-        Updates:
-            - st.session_state["query_thread"] (Thread): Stores the reference to the running thread.
-            - st.session_state["is_downloading"] (bool): Set to True while downloading is in progress.
-            - st.session_state["query_done"] (bool): Set to False initially.
-            - st.session_state["polling_active"] (bool): Enables periodic UI updates.
-        """        
-        global stop_event
+        Initiates waveform retrieval in a background thread with cancellation support
+        """
         if not self.settings.event.selected_catalogs or not self.settings.station.selected_invs:
             st.warning("Please select events and stations before downloading waveforms.")
             return
@@ -278,13 +331,14 @@ class WaveformDisplay:
         st.session_state["query_thread"] = threading.Thread(target=self.fetch_data, daemon=True)
         st.session_state["query_thread"].start()
 
-
-        st.session_state["is_downloading"] = True
-        st.session_state["query_done"] = False
-        st.session_state["polling_active"] = True
+        st.session_state.update({
+            "is_downloading": True,
+            "query_done": False,
+            "polling_active": True
+        })
 
         st.rerun()
-                
+
     def _get_trace_color(self, tr) -> str:
         """Get color based on channel component"""
         # Extract last character of channel code
@@ -577,11 +631,13 @@ class WaveformDisplay:
                 # Add subtle grid
                 ax.grid(True, alpha=0.2)
                 
-                # Add subtle box around plot
-                ax.spines['top'].set_visible(False)
-                ax.spines['right'].set_visible(False)
-                ax.spines['left'].set_linewidth(0.5)
-                ax.spines['bottom'].set_linewidth(0.5)
+                # Update box styling to show all borders
+                for spine in ax.spines.values():
+                    spine.set_visible(True)
+                    spine.set_linewidth(0.5)
+
+                # Add padding to the plot
+                ax.margins(x=0.05)  # Increased padding to 5% on left and right
         
         # Adjust layout
         plt.subplots_adjust(left=0.1, right=0.9, top=0.97, bottom=0.1)
@@ -709,11 +765,13 @@ class WaveformDisplay:
                 # Add subtle grid
                 ax.grid(True, alpha=0.2)
 
-                # Add subtle box around plot
-                ax.spines['top'].set_visible(False)
-                ax.spines['right'].set_visible(False)
-                ax.spines['left'].set_linewidth(0.5)
-                ax.spines['bottom'].set_linewidth(0.5)
+                # Update box styling to show all borders
+                for spine in ax.spines.values():
+                    spine.set_visible(True)
+                    spine.set_linewidth(0.5)
+
+                # Add padding to the plot
+                ax.margins(x=0.05)  # Increased padding to 5% on left and right
 
         # Update title
         net, sta = station_code.split(".")
@@ -776,6 +834,7 @@ class WaveformDisplay:
                         num_pages
                     )
                     if fig:
+                        st.session_state.current_figure = fig
                         st.pyplot(fig)
                 else:
                     st.warning("No waveforms match the current filter criteria.")
@@ -824,6 +883,7 @@ class WaveformDisplay:
                     # Use plot_station_view
                     fig = self.plot_station_view(selected_station, station_stream, page, num_pages)
                     if fig:
+                        st.session_state.current_figure = fig
                         st.pyplot(fig)
                 else:
                     st.warning("No waveforms available for the selected station.")
@@ -833,121 +893,169 @@ class WaveformComponents:
     filter_menu: WaveformFilterMenu
     waveform_display: WaveformDisplay
     continuous_components: ContinuousComponents
+    console: ConsoleDisplay
     
     def __init__(self, settings: SeismoLoaderSettings):
         self.settings = settings
         self.filter_menu = WaveformFilterMenu(settings)
         self.waveform_display = WaveformDisplay(settings, self.filter_menu)
         self.continuous_components = ContinuousComponents(settings)
+        self.console = ConsoleDisplay()
         
+        # Pass console to WaveformDisplay
+        self.waveform_display.console = self.console
+        
+        # Initialize session state
+        required_states = {
+            "is_downloading": False,
+            "query_done": False,
+            "polling_active": False,
+            "query_thread": None,
+            "trigger_rerun": False
+        }
+        for key, val in required_states.items():
+            if key not in st.session_state:
+                st.session_state[key] = val
+
     def render_polling_ui(self):
         """
-        Handles UI updates while monitoring the status of the background thread.
-
-        This function continuously checks if the waveform retrieval thread has finished
-        and updates the UI accordingly. It also allows the user to cancel an ongoing task.
-
-        Actions:
-            - Displays a "Downloading..." message while data is being fetched.
-            - Provides a cancel button to stop the download process.
-            - Stops polling and updates session state when the task is complete.
-
-        Updates:
-            - st.session_state["is_downloading"] (bool): Set to False when task completes or is canceled.
-            - st.session_state["query_done"] (bool): Set to True when the task finishes.
-            - st.session_state["polling_active"] (bool): Disabled when polling is no longer needed.
-
-        Raises:
-            - Displays an error message if the thread encounters an exception.
-        """        
-        status_placeholder = st.empty()
-        button_placeholder = st.empty()
-
+        Handles UI updates while monitoring background thread status
+        """
         if st.session_state.get("is_downloading", False):
-            with status_placeholder.container():
-                st.warning("Downloading... Please wait.")
+            with st.spinner("Downloading waveforms... (this may take several minutes)"):
+                query_thread = st.session_state.get("query_thread")
+                if query_thread and not query_thread.is_alive():
+                    try:
+                        query_thread.join()
+                    except Exception as e:
+                        st.error(f"Error in background thread: {e}")
+                        # Add error to console output
+                        if not self.console.accumulated_output:
+                            self.console.accumulated_output = []
+                        self.console.accumulated_output.append(f"Error: {str(e)}")
 
-            with button_placeholder.container():
-                if st.button("Cancel Download", key="cancel_download"):
-                    stop_event.set()  # Signal cancellation
-                    st.warning("Cancelling query...")
-                    st.session_state["is_downloading"] = False
-                    st.session_state["query_done"] = True
-                    st.session_state["query_thread"] = None                    
-                    st.session_state["polling_active"] = False  # Stop polling
-                    st.rerun()  
+                    st.session_state.update({
+                        "is_downloading": False,
+                        "query_done": True,
+                        "query_thread": None,
+                        "polling_active": False
+                    })
+                    st.rerun()
 
-            query_thread = st.session_state.get("query_thread", None)
-            if query_thread and not query_thread.is_alive():
-                try:
-                    query_thread.join()  # Catch and handle exceptions
-                except Exception as e:
-                    st.error(f"Error in background thread: {e}")  
-
-                st.session_state["is_downloading"] = False
-                st.session_state["query_done"] = True
-                st.session_state["query_thread"] = None                
-                st.session_state["polling_active"] = False  # Stop polling
-                st.rerun()
-
-            if st.session_state.get("polling_active", False):
-                time.sleep(1)  # Wait for 1 second
-                st.rerun()
-
-        else:
-            status_placeholder.empty()
-            button_placeholder.empty()
-
+                if st.session_state.get("polling_active"):
+                    time.sleep(0.5)  # Brief pause between checks
+                    st.rerun()
 
     def render(self):
-        
-        if "query_done" not in st.session_state:
-            st.session_state["query_done"] = False
-        if "is_downloading" not in st.session_state:
-            st.session_state["is_downloading"] = False  
-        if "polling_active" not in st.session_state:
-            st.session_state["polling_active"] = False  
-        if "query_thread" not in st.session_state:
-            st.session_state["query_thread"] = None  
-
         if self.settings.selected_workflow == WorkflowType.CONTINUOUS:
             self.continuous_components.render()
-        else:
-            st.title("Waveform Analysis")
+            return
+
+        # Create tabs for Waveform and Log views
+        waveform_tab, log_tab = st.tabs(["📊 Waveform View", "📝 Log View"])
+        
+        # Always render filter menu (sidebar) first
+        current_stream = self.waveform_display.streams[0] if self.waveform_display.streams else None
+        self.filter_menu.render(current_stream)
+
+        # Handle content based on active tab
+        with waveform_tab:
+            self._render_waveform_view()
+        
+        with log_tab:
+            self._render_log_view()
+
+    def _render_waveform_view(self):
+        st.title("Waveform Analysis")
+
+        # Create three columns for the controls
+        col1, col2, col3 = st.columns(3)
+        
+        # Force Re-download toggle in first column
+        with col1:
             self.settings.waveform.force_redownload = st.toggle(
-                "Force Re-download",
-                value=self.settings.waveform.force_redownload,
+                "Force Re-download", 
+                value=self.settings.waveform.force_redownload, 
                 help="If turned off, the app will try to avoid "
-                    "downloading data that are already available locally. "
-                    "If flagged, it will redownload the data again."
+                "downloading data that are already available locally."
+                " If flagged, it will redownload the data again."
             )
 
-            col1, col2 = st.columns([2, 1])  # Layout for buttons
+        # Get Waveforms button in second column
+        with col2:
+            get_waveforms_button = st.button(
+                "Get Waveforms",
+                key="get_waveforms",
+                disabled=st.session_state.get("is_downloading", False),
+                use_container_width=True
+            )
 
-            with col1:
-                get_waveforms_button = st.button(
-                    "Get Waveforms",
-                    key="get_waveforms",
-                    disabled=st.session_state["is_downloading"]
+        # Cancel Download button in third column
+        with col3:
+            if st.button("Cancel Download", 
+                        key="cancel_download",
+                        disabled=not st.session_state.get("is_downloading", False),
+                        use_container_width=True):
+                stop_event.set()  # Signal cancellation
+                st.warning("Cancelling query...")
+                st.session_state.update({
+                    "is_downloading": False,
+                    "polling_active": False
+                })
+                st.rerun()
+
+        # Download status indicator
+        status_container = st.empty()
+        
+        # Show appropriate status message
+        if get_waveforms_button:
+            status_container.info("Starting waveform download...")
+            self.waveform_display.retrieve_waveforms()
+        elif st.session_state.get("is_downloading"):
+            # status_container.info("Downloading waveforms... (this may take several minutes)")
+            st.spinner("Downloading waveforms... (this may take several minutes)")
+            self.render_polling_ui()
+        elif st.session_state.get("query_done") and self.waveform_display.streams:
+            status_container.success(f"Successfully retrieved waveforms for {len(self.waveform_display.streams)} events.")
+        elif st.session_state.get("query_done"):
+            status_container.warning("No waveforms retrieved. Please check your selection criteria.")
+
+        # Display waveforms if they exist
+        if self.waveform_display.streams:
+            self.waveform_display.render()
+
+        # Add download button at the bottom of the sidebar
+        with st.sidebar:
+            st.markdown("---")
+            if st.session_state.get("current_figure") is not None:
+                import io
+                buf = io.BytesIO()
+                st.session_state.current_figure.savefig(buf, format='png', dpi=300, bbox_inches='tight')
+                buf.seek(0)
+                
+                st.download_button(
+                    label="Download PNG",
+                    data=buf,
+                    file_name="waveform_plot.png",
+                    mime="image/png",
+                    use_container_width=True
                 )
+            else:
+                st.button("Download PNG", disabled=True, use_container_width=True)
 
-            with col2:
-                if st.session_state["is_downloading"]:
-                    self.render_polling_ui()
-
-            # If "Get Waveforms" is clicked, start downloading
-            if get_waveforms_button:
-                self.waveform_display.retrieve_waveforms()  
-
-            # Render waveform display after query completes
-            if st.session_state["query_done"]:
-                current_stream = self.waveform_display.streams[0] if self.waveform_display.streams else None
-                self.filter_menu.render(current_stream)
-
-                if self.waveform_display.streams:
-                    self.waveform_display.render()
-
-
+    def _render_log_view(self):
+        st.title("Waveform Retrieval Logs")
+        self.console._init_terminal_style()  # Initialize terminal styling
+        
+        if self.console.accumulated_output:
+            log_text = (
+                '<div class="terminal" id="log-terminal">'
+                '<pre>{}</pre>'
+                '</div>'
+            ).format('\n'.join(self.console.accumulated_output))
+            st.markdown(log_text, unsafe_allow_html=True)
+        else:
+            st.info("No logs available yet. Perform a waveform download first.")
 class MissingDataDisplay:
     def __init__(self, streams: List[Stream], settings: SeismoLoaderSettings):
         self.streams = streams
@@ -1002,3 +1110,8 @@ class MissingDataDisplay:
                 use_container_width=True,
                 height=height
             )
+
+
+if st.session_state.get("trigger_rerun", False):
+    st.session_state["trigger_rerun"] = False  # Reset flag to prevent infinite loops
+    st.rerun()  # 🔹 Force UI update
