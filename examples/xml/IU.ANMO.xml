@@ -1,0 +1,2941 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<FDSNStationXML xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.2">
+  <Source>IRIS-DMC</Source>
+  <Sender>IRIS-DMC</Sender>
+  <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.1.52</Module>
+  <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?starttime=2015-01-01T00%3A00%3A00.000000&amp;network=IU&amp;station=ANMO&amp;level=channel</ModuleURI>
+  <Created>2025-02-05T08:51:06.752900Z</Created>
+  <Network code="IU" startDate="1988-01-01T00:00:00.000000Z" restrictedStatus="open">
+    <Description>Global Seismograph Network (GSN - IRIS/USGS) (GSN)</Description>
+    <Identifier type="DOI">10.7914/SN/IU
+   </Identifier>
+    <TotalNumberStations>128</TotalNumberStations>
+    <SelectedNumberStations>1</SelectedNumberStations>
+    <Station code="ANMO" startDate="2002-11-19T21:07:00.000000Z" restrictedStatus="open">
+      <Description>(GSN) IRIS/USGS (IU) and ANSS</Description>
+      <Latitude unit="DEGREES">34.94591</Latitude>
+      <Longitude unit="DEGREES">-106.4572</Longitude>
+      <Elevation>1820.0</Elevation>
+      <Site>
+        <Name>Albuquerque, New Mexico, USA</Name>
+      </Site>
+      <CreationDate>2002-11-19T21:07:00.000000Z</CreationDate>
+      <TotalNumberChannels>357</TotalNumberChannels>
+      <SelectedNumberChannels>152</SelectedNumberChannels>
+      <Channel code="BH1" startDate="2014-12-17T18:40:00.000000Z" endDate="2018-07-09T20:45:00.000000Z" restrictedStatus="open" locationCode="00">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1671.0</Elevation>
+        <Depth>145.0</Depth>
+        <Azimuth unit="DEGREES">17.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">20.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Geotech KS-54000 Borehole Seismometer</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>3392390000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="BH1" startDate="2018-07-09T20:45:00.000000Z" restrictedStatus="open" locationCode="00">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1632.7</Elevation>
+        <Depth>188.0</Depth>
+        <Azimuth unit="DEGREES">156.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">40.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-6A VBB Seismometer</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1984750000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="BH2" startDate="2014-12-17T18:40:00.000000Z" endDate="2018-07-09T20:45:00.000000Z" restrictedStatus="open" locationCode="00">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1671.0</Elevation>
+        <Depth>145.0</Depth>
+        <Azimuth unit="DEGREES">107.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">20.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Geotech KS-54000 Borehole Seismometer</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>3207840000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="BH2" startDate="2018-07-09T20:45:00.000000Z" restrictedStatus="open" locationCode="00">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1632.7</Elevation>
+        <Depth>188.0</Depth>
+        <Azimuth unit="DEGREES">246.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">40.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-6A VBB Seismometer</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1984750000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="BHZ" startDate="2014-12-17T18:40:00.000000Z" endDate="2018-07-09T20:45:00.000000Z" restrictedStatus="open" locationCode="00">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1671.0</Elevation>
+        <Depth>145.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">20.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Geotech KS-54000 Borehole Seismometer</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>3404130000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="BHZ" startDate="2018-07-09T20:45:00.000000Z" restrictedStatus="open" locationCode="00">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1632.7</Elevation>
+        <Depth>188.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">40.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-6A VBB Seismometer</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1984750000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="HH1" startDate="2018-07-09T20:45:00.000000Z" restrictedStatus="open" locationCode="00">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1632.7</Elevation>
+        <Depth>188.0</Depth>
+        <Azimuth unit="DEGREES">156.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>TRIGGERED</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-6A VBB Seismometer</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1984740000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="HH2" startDate="2018-07-09T20:45:00.000000Z" restrictedStatus="open" locationCode="00">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1632.7</Elevation>
+        <Depth>188.0</Depth>
+        <Azimuth unit="DEGREES">246.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>TRIGGERED</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-6A VBB Seismometer</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1984740000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="HHZ" startDate="2018-07-09T20:45:00.000000Z" restrictedStatus="open" locationCode="00">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1632.7</Elevation>
+        <Depth>188.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>TRIGGERED</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-6A VBB Seismometer</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1984740000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LH1" startDate="2014-12-17T18:40:00.000000Z" endDate="2018-07-09T20:45:00.000000Z" restrictedStatus="open" locationCode="00">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1671.0</Elevation>
+        <Depth>145.0</Depth>
+        <Azimuth unit="DEGREES">17.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Geotech KS-54000 Borehole Seismometer</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>3376310000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LH1" startDate="2018-07-09T20:45:00.000000Z" restrictedStatus="open" locationCode="00">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1632.7</Elevation>
+        <Depth>188.0</Depth>
+        <Azimuth unit="DEGREES">156.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-6A VBB Seismometer</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1975360000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LH2" startDate="2014-12-17T18:40:00.000000Z" endDate="2018-07-09T20:45:00.000000Z" restrictedStatus="open" locationCode="00">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1671.0</Elevation>
+        <Depth>145.0</Depth>
+        <Azimuth unit="DEGREES">107.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Geotech KS-54000 Borehole Seismometer</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>3192630000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LH2" startDate="2018-07-09T20:45:00.000000Z" restrictedStatus="open" locationCode="00">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1632.7</Elevation>
+        <Depth>188.0</Depth>
+        <Azimuth unit="DEGREES">246.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-6A VBB Seismometer</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1975360000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LHZ" startDate="2014-12-17T18:40:00.000000Z" endDate="2018-07-09T20:45:00.000000Z" restrictedStatus="open" locationCode="00">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1671.0</Elevation>
+        <Depth>145.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Geotech KS-54000 Borehole Seismometer</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>3388000000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LHZ" startDate="2018-07-09T20:45:00.000000Z" restrictedStatus="open" locationCode="00">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1632.7</Elevation>
+        <Depth>188.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-6A VBB Seismometer</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1975360000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="BH1" startDate="2014-08-12T00:00:00.000000Z" endDate="2016-11-29T22:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.5</Elevation>
+        <Depth>90.2</Depth>
+        <Azimuth unit="DEGREES">71.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">40.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>T120 post hole, quiet</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1974680000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="BH1" startDate="2016-11-29T22:00:00.000000Z" endDate="2018-09-27T17:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.5</Elevation>
+        <Depth>90.2</Depth>
+        <Azimuth unit="DEGREES">340.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">40.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>T120 post hole, quiet</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1974680000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="BH1" startDate="2018-09-27T17:00:00.000000Z" endDate="2019-04-30T20:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.7</Elevation>
+        <Depth>90.0</Depth>
+        <Azimuth unit="DEGREES">174.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">40.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Trillium 360</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1828720000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="BH1" startDate="2019-04-30T20:00:00.000000Z" endDate="2019-05-03T17:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.7</Elevation>
+        <Depth>90.0</Depth>
+        <Azimuth unit="DEGREES">106.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">40.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-5 360 second corner</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>2447800000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="BH1" startDate="2019-05-03T17:00:00.000000Z" endDate="2019-06-07T20:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.7</Elevation>
+        <Depth>90.0</Depth>
+        <Azimuth unit="DEGREES">233.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">40.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-5 360 second corner</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>2447800000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="BH1" startDate="2019-06-07T20:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1674.7</Elevation>
+        <Depth>146.0</Depth>
+        <Azimuth unit="DEGREES">247.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">40.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-5 360 second corner</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>2447800000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="BH2" startDate="2014-08-12T00:00:00.000000Z" endDate="2016-11-29T22:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.5</Elevation>
+        <Depth>90.2</Depth>
+        <Azimuth unit="DEGREES">161.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">40.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>T120 post hole, quiet</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1974680000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="BH2" startDate="2016-11-29T22:00:00.000000Z" endDate="2018-09-27T17:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.5</Elevation>
+        <Depth>90.2</Depth>
+        <Azimuth unit="DEGREES">70.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">40.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>T120 post hole, quiet</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1974680000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="BH2" startDate="2018-09-27T17:00:00.000000Z" endDate="2019-04-30T20:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.7</Elevation>
+        <Depth>90.0</Depth>
+        <Azimuth unit="DEGREES">264.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">40.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Trillium 360</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1828720000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="BH2" startDate="2019-04-30T20:00:00.000000Z" endDate="2019-05-03T17:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.7</Elevation>
+        <Depth>90.0</Depth>
+        <Azimuth unit="DEGREES">196.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">40.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-5 360 second corner</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>2447800000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="BH2" startDate="2019-05-03T17:00:00.000000Z" endDate="2019-06-07T20:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.7</Elevation>
+        <Depth>90.0</Depth>
+        <Azimuth unit="DEGREES">323.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">40.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-5 360 second corner</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>2447800000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="BH2" startDate="2019-06-07T20:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1674.7</Elevation>
+        <Depth>146.0</Depth>
+        <Azimuth unit="DEGREES">337.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">40.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-5 360 second corner</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>2447800000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="BHZ" startDate="2014-08-12T00:00:00.000000Z" endDate="2016-11-29T22:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.5</Elevation>
+        <Depth>90.2</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">40.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>T120 post hole, quiet</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1974680000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="BHZ" startDate="2016-11-29T22:00:00.000000Z" endDate="2018-09-27T17:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.5</Elevation>
+        <Depth>90.2</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">40.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>T120 post hole, quiet</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1974680000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="BHZ" startDate="2018-09-27T17:00:00.000000Z" endDate="2019-04-30T20:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.7</Elevation>
+        <Depth>90.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">40.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Trillium 360</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1828720000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="BHZ" startDate="2019-04-30T20:00:00.000000Z" endDate="2019-05-03T17:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.7</Elevation>
+        <Depth>90.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">40.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-5 360 second corner</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>2447800000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="BHZ" startDate="2019-05-03T17:00:00.000000Z" endDate="2019-06-07T20:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.7</Elevation>
+        <Depth>90.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">40.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-5 360 second corner</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>2447800000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="BHZ" startDate="2019-06-07T20:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1674.7</Elevation>
+        <Depth>146.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">40.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-5 360 second corner</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>2447800000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="HH1" startDate="2014-08-12T00:00:00.000000Z" endDate="2016-11-29T22:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.5</Elevation>
+        <Depth>90.2</Depth>
+        <Azimuth unit="DEGREES">71.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>TRIGGERED</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>T120 post hole, quiet</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1974680000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="HH1" startDate="2016-11-29T22:00:00.000000Z" endDate="2018-09-27T17:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.5</Elevation>
+        <Depth>90.2</Depth>
+        <Azimuth unit="DEGREES">340.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>TRIGGERED</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>T120 post hole, quiet</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1974680000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="HH1" startDate="2018-09-27T17:00:00.000000Z" endDate="2019-04-30T20:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.7</Elevation>
+        <Depth>90.0</Depth>
+        <Azimuth unit="DEGREES">174.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>TRIGGERED</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Trillium 360</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1828720000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="HH1" startDate="2019-04-30T20:00:00.000000Z" endDate="2019-05-03T17:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.7</Elevation>
+        <Depth>90.0</Depth>
+        <Azimuth unit="DEGREES">106.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>TRIGGERED</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-5 360 second corner</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>2447800000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="HH1" startDate="2019-05-03T17:00:00.000000Z" endDate="2019-06-07T20:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.7</Elevation>
+        <Depth>90.0</Depth>
+        <Azimuth unit="DEGREES">233.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>TRIGGERED</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-5 360 second corner</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>2447800000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="HH1" startDate="2019-06-07T20:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1674.7</Elevation>
+        <Depth>146.0</Depth>
+        <Azimuth unit="DEGREES">247.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>TRIGGERED</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-5 360 second corner</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>2447800000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="HH2" startDate="2014-08-12T00:00:00.000000Z" endDate="2016-11-29T22:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.5</Elevation>
+        <Depth>90.2</Depth>
+        <Azimuth unit="DEGREES">161.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>TRIGGERED</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>T120 post hole, quiet</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1974680000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="HH2" startDate="2016-11-29T22:00:00.000000Z" endDate="2018-09-27T17:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.5</Elevation>
+        <Depth>90.2</Depth>
+        <Azimuth unit="DEGREES">70.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>TRIGGERED</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>T120 post hole, quiet</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1974680000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="HH2" startDate="2018-09-27T17:00:00.000000Z" endDate="2019-04-30T20:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.7</Elevation>
+        <Depth>90.0</Depth>
+        <Azimuth unit="DEGREES">264.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>TRIGGERED</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Trillium 360</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1828720000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="HH2" startDate="2019-04-30T20:00:00.000000Z" endDate="2019-05-03T17:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.7</Elevation>
+        <Depth>90.0</Depth>
+        <Azimuth unit="DEGREES">196.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>TRIGGERED</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-5 360 second corner</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>2447800000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="HH2" startDate="2019-05-03T17:00:00.000000Z" endDate="2019-06-07T20:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.7</Elevation>
+        <Depth>90.0</Depth>
+        <Azimuth unit="DEGREES">323.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>TRIGGERED</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-5 360 second corner</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>2447800000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="HH2" startDate="2019-06-07T20:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1674.7</Elevation>
+        <Depth>146.0</Depth>
+        <Azimuth unit="DEGREES">337.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>TRIGGERED</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-5 360 second corner</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>2447800000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="HHZ" startDate="2014-08-12T00:00:00.000000Z" endDate="2016-11-29T22:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.5</Elevation>
+        <Depth>90.2</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>TRIGGERED</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>T120 post hole, quiet</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1974680000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="HHZ" startDate="2016-11-29T22:00:00.000000Z" endDate="2018-09-27T17:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.5</Elevation>
+        <Depth>90.2</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>TRIGGERED</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>T120 post hole, quiet</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1974680000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="HHZ" startDate="2018-09-27T17:00:00.000000Z" endDate="2019-04-30T20:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.7</Elevation>
+        <Depth>90.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>TRIGGERED</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Trillium 360</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1828720000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="HHZ" startDate="2019-04-30T20:00:00.000000Z" endDate="2019-05-03T17:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.7</Elevation>
+        <Depth>90.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>TRIGGERED</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-5 360 second corner</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>2447800000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="HHZ" startDate="2019-05-03T17:00:00.000000Z" endDate="2019-06-07T20:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.7</Elevation>
+        <Depth>90.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>TRIGGERED</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-5 360 second corner</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>2447800000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="HHZ" startDate="2019-06-07T20:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1674.7</Elevation>
+        <Depth>146.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>TRIGGERED</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-5 360 second corner</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>2447800000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LH1" startDate="2014-08-12T00:00:00.000000Z" endDate="2016-11-29T22:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.5</Elevation>
+        <Depth>90.2</Depth>
+        <Azimuth unit="DEGREES">71.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>T120 post hole, quiet</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1965340000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LH1" startDate="2016-11-29T22:00:00.000000Z" endDate="2018-09-27T17:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.5</Elevation>
+        <Depth>90.2</Depth>
+        <Azimuth unit="DEGREES">340.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>T120 post hole, quiet</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1965340000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LH1" startDate="2018-09-27T17:00:00.000000Z" endDate="2019-04-30T20:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.7</Elevation>
+        <Depth>90.0</Depth>
+        <Azimuth unit="DEGREES">174.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Trillium 360</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1820070000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LH1" startDate="2019-04-30T20:00:00.000000Z" endDate="2019-05-03T17:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.7</Elevation>
+        <Depth>90.0</Depth>
+        <Azimuth unit="DEGREES">106.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-5 360 second corner</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>2436220000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LH1" startDate="2019-05-03T17:00:00.000000Z" endDate="2019-06-07T20:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.7</Elevation>
+        <Depth>90.0</Depth>
+        <Azimuth unit="DEGREES">233.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-5 360 second corner</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>2436220000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LH1" startDate="2019-06-07T20:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1674.7</Elevation>
+        <Depth>146.0</Depth>
+        <Azimuth unit="DEGREES">247.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-5 360 second corner</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>2436220000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LH2" startDate="2014-08-12T00:00:00.000000Z" endDate="2016-11-29T22:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.5</Elevation>
+        <Depth>90.2</Depth>
+        <Azimuth unit="DEGREES">161.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>T120 post hole, quiet</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1965340000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LH2" startDate="2016-11-29T22:00:00.000000Z" endDate="2018-09-27T17:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.5</Elevation>
+        <Depth>90.2</Depth>
+        <Azimuth unit="DEGREES">70.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>T120 post hole, quiet</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1965340000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LH2" startDate="2018-09-27T17:00:00.000000Z" endDate="2019-04-30T20:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.7</Elevation>
+        <Depth>90.0</Depth>
+        <Azimuth unit="DEGREES">264.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Trillium 360</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1820070000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LH2" startDate="2019-04-30T20:00:00.000000Z" endDate="2019-05-03T17:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.7</Elevation>
+        <Depth>90.0</Depth>
+        <Azimuth unit="DEGREES">196.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-5 360 second corner</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>2436220000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LH2" startDate="2019-05-03T17:00:00.000000Z" endDate="2019-06-07T20:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.7</Elevation>
+        <Depth>90.0</Depth>
+        <Azimuth unit="DEGREES">323.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-5 360 second corner</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>2436220000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LH2" startDate="2019-06-07T20:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1674.7</Elevation>
+        <Depth>146.0</Depth>
+        <Azimuth unit="DEGREES">337.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-5 360 second corner</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>2436220000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LHZ" startDate="2014-08-12T00:00:00.000000Z" endDate="2016-11-29T22:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.5</Elevation>
+        <Depth>90.2</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>T120 post hole, quiet</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1965340000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LHZ" startDate="2016-11-29T22:00:00.000000Z" endDate="2018-09-27T17:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.5</Elevation>
+        <Depth>90.2</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>T120 post hole, quiet</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1965340000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LHZ" startDate="2018-09-27T17:00:00.000000Z" endDate="2019-04-30T20:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.7</Elevation>
+        <Depth>90.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Trillium 360</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>1820070000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LHZ" startDate="2019-04-30T20:00:00.000000Z" endDate="2019-05-03T17:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.7</Elevation>
+        <Depth>90.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-5 360 second corner</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>2436220000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LHZ" startDate="2019-05-03T17:00:00.000000Z" endDate="2019-06-07T20:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1730.7</Elevation>
+        <Depth>90.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-5 360 second corner</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>2436220000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LHZ" startDate="2019-06-07T20:00:00.000000Z" restrictedStatus="open" locationCode="10">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1674.7</Elevation>
+        <Depth>146.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Streckeisen STS-5 360 second corner</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>2436220000.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="HN1" startDate="2013-06-20T16:30:00.000000Z" endDate="2021-09-20T00:00:00.000000Z" restrictedStatus="open" locationCode="20">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>TRIGGERED</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Titan Accelerometer</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>213783.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s**2</Name>
+              <Description>Acceleration in Meters Per Second Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="HN1" startDate="2021-09-20T00:00:00.000000Z" endDate="2021-10-05T21:00:00.000000Z" restrictedStatus="open" locationCode="20">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>TRIGGERED</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Kinemetrics FBA ES-T EpiSensor Accelerometer</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>428476.0</Value>
+            <Frequency>1.0</Frequency>
+            <InputUnits>
+              <Name>m/s**2</Name>
+              <Description>Acceleration in Meters Per Second Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="HN1" startDate="2021-10-05T21:00:00.000000Z" restrictedStatus="open" locationCode="20">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>TRIGGERED</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Kinemetrics FBA ES-T EpiSensor Accelerometer</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>428476.0</Value>
+            <Frequency>1.0</Frequency>
+            <InputUnits>
+              <Name>m/s**2</Name>
+              <Description>Acceleration in Meters Per Second Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="HN2" startDate="2013-06-20T16:30:00.000000Z" endDate="2021-09-20T00:00:00.000000Z" restrictedStatus="open" locationCode="20">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>TRIGGERED</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Titan Accelerometer</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>213783.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s**2</Name>
+              <Description>Acceleration in Meters Per Second Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="HN2" startDate="2021-09-20T00:00:00.000000Z" endDate="2021-10-05T21:00:00.000000Z" restrictedStatus="open" locationCode="20">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">90.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>TRIGGERED</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Kinemetrics FBA ES-T EpiSensor Accelerometer</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>428476.0</Value>
+            <Frequency>1.0</Frequency>
+            <InputUnits>
+              <Name>m/s**2</Name>
+              <Description>Acceleration in Meters Per Second Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="HN2" startDate="2021-10-05T21:00:00.000000Z" restrictedStatus="open" locationCode="20">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">90.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>TRIGGERED</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Kinemetrics FBA ES-T EpiSensor Accelerometer</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>428476.0</Value>
+            <Frequency>1.0</Frequency>
+            <InputUnits>
+              <Name>m/s**2</Name>
+              <Description>Acceleration in Meters Per Second Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="HNZ" startDate="2013-06-20T16:30:00.000000Z" endDate="2021-09-20T00:00:00.000000Z" restrictedStatus="open" locationCode="20">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>TRIGGERED</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Titan Accelerometer</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>213783.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s**2</Name>
+              <Description>Acceleration in Meters Per Second Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="HNZ" startDate="2021-09-20T00:00:00.000000Z" endDate="2021-10-05T21:00:00.000000Z" restrictedStatus="open" locationCode="20">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>TRIGGERED</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Kinemetrics FBA ES-T EpiSensor Accelerometer</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>428476.0</Value>
+            <Frequency>1.0</Frequency>
+            <InputUnits>
+              <Name>m/s**2</Name>
+              <Description>Acceleration in Meters Per Second Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="HNZ" startDate="2021-10-05T21:00:00.000000Z" restrictedStatus="open" locationCode="20">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>TRIGGERED</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Kinemetrics FBA ES-T EpiSensor Accelerometer</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>428476.0</Value>
+            <Frequency>1.0</Frequency>
+            <InputUnits>
+              <Name>m/s**2</Name>
+              <Description>Acceleration in Meters Per Second Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LN1" startDate="2013-06-20T16:30:00.000000Z" endDate="2021-09-20T00:00:00.000000Z" restrictedStatus="open" locationCode="20">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Titan Accelerometer</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>212772.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s**2</Name>
+              <Description>Acceleration in Meters Per Second Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LN1" startDate="2021-09-20T00:00:00.000000Z" endDate="2021-10-05T21:00:00.000000Z" restrictedStatus="open" locationCode="20">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Kinemetrics FBA ES-T EpiSensor Accelerometer</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>425963.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s**2</Name>
+              <Description>Acceleration in Meters Per Second Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LN1" startDate="2021-10-05T21:00:00.000000Z" restrictedStatus="open" locationCode="20">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Kinemetrics FBA ES-T EpiSensor Accelerometer</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>425963.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s**2</Name>
+              <Description>Acceleration in Meters Per Second Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LN2" startDate="2013-06-20T16:30:00.000000Z" endDate="2021-09-20T00:00:00.000000Z" restrictedStatus="open" locationCode="20">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Titan Accelerometer</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>212772.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s**2</Name>
+              <Description>Acceleration in Meters Per Second Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LN2" startDate="2021-09-20T00:00:00.000000Z" endDate="2021-10-05T21:00:00.000000Z" restrictedStatus="open" locationCode="20">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">90.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Kinemetrics FBA ES-T EpiSensor Accelerometer</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>425963.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s**2</Name>
+              <Description>Acceleration in Meters Per Second Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LN2" startDate="2021-10-05T21:00:00.000000Z" restrictedStatus="open" locationCode="20">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">90.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Kinemetrics FBA ES-T EpiSensor Accelerometer</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>425963.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s**2</Name>
+              <Description>Acceleration in Meters Per Second Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LNZ" startDate="2013-06-20T16:30:00.000000Z" endDate="2021-09-20T00:00:00.000000Z" restrictedStatus="open" locationCode="20">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Titan Accelerometer</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>212772.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s**2</Name>
+              <Description>Acceleration in Meters Per Second Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LNZ" startDate="2021-09-20T00:00:00.000000Z" endDate="2021-10-05T21:00:00.000000Z" restrictedStatus="open" locationCode="20">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Kinemetrics FBA ES-T EpiSensor Accelerometer</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>425963.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s**2</Name>
+              <Description>Acceleration in Meters Per Second Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LNZ" startDate="2021-10-05T21:00:00.000000Z" restrictedStatus="open" locationCode="20">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Kinemetrics FBA ES-T EpiSensor Accelerometer</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>425963.0</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>m/s**2</Name>
+              <Description>Acceleration in Meters Per Second Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="BDF" startDate="2017-03-17T00:00:00.000000Z" restrictedStatus="open" locationCode="32">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate unit="SAMPLES/S">40.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Hyperion 3312 infrasound sensor</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>235485.0</Value>
+            <Frequency>1.0</Frequency>
+            <InputUnits>
+              <Name>Pa</Name>
+              <Description>Pressure in Pascals</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="HDF" startDate="2017-03-17T00:00:00.000000Z" restrictedStatus="open" locationCode="33">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Hyperion infrasound sensor</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>235485.0</Value>
+            <Frequency>1.0</Frequency>
+            <InputUnits>
+              <Name>Pa</Name>
+              <Description>Pressure in Pascals</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="HDF" startDate="2021-06-24T00:00:00.000000Z" restrictedStatus="open" locationCode="34">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Hyperion infrasound sensor</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>157.443</Value>
+            <Frequency>1.0</Frequency>
+            <InputUnits>
+              <Name>Pa</Name>
+              <Description>Pressure in Pascals</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="BF1" startDate="2024-12-05T14:14:00.000000Z" restrictedStatus="open" locationCode="40">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">90.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>HEALTH</Type>
+        <SampleRate unit="SAMPLES/S">10.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Bartington 3-Axis Fluxgate Sensor</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>41.943</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>nT</Name>
+              <Description>Magnetic Flux Density in nanoTeslas</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="BF2" startDate="2024-12-05T14:14:00.000000Z" restrictedStatus="open" locationCode="40">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>HEALTH</Type>
+        <SampleRate unit="SAMPLES/S">10.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Bartington 3-Axis Fluxgate Sensor</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>41.943</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>nT</Name>
+              <Description>Magnetic Flux Density in nanoTeslas</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="BFZ" startDate="2024-12-05T14:14:00.000000Z" restrictedStatus="open" locationCode="40">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">-90.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>HEALTH</Type>
+        <SampleRate unit="SAMPLES/S">10.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Bartington 3-Axis Fluxgate Sensor</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>41.943</Value>
+            <Frequency>0.02</Frequency>
+            <InputUnits>
+              <Name>nT</Name>
+              <Description>Magnetic Flux Density in nanoTeslas</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LIO" startDate="2012-03-26T00:00:00.000000Z" restrictedStatus="open" locationCode="50">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Vaisala Weather Transmitter</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>10.0</Value>
+            <Frequency>1.0</Frequency>
+            <InputUnits>
+              <Name>V</Name>
+              <Description>Volts</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LKO" startDate="2012-03-26T00:00:00.000000Z" restrictedStatus="open" locationCode="50">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Vaisala Weather Transmitter</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>10.0</Value>
+            <Frequency>1.0</Frequency>
+            <InputUnits>
+              <Name>V</Name>
+              <Description>Volts</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LRH" startDate="2012-03-26T00:00:00.000000Z" restrictedStatus="open" locationCode="50">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Vaisala Weather Transmitter</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>10.0</Value>
+            <Frequency>1.0</Frequency>
+            <InputUnits>
+              <Name>V</Name>
+              <Description>Volts</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LRI" startDate="2012-03-26T00:00:00.000000Z" restrictedStatus="open" locationCode="50">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Vaisala Weather Transmitter</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>10.0</Value>
+            <Frequency>1.0</Frequency>
+            <InputUnits>
+              <Name>V</Name>
+              <Description>Volts</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+      <Channel code="LWD" startDate="2012-03-26T00:00:00.000000Z" restrictedStatus="open" locationCode="50">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Vaisala Weather Transmitter</Description>
+        </Sensor>
+        <Response>
+          <InstrumentPolynomial>
+            <Description>None</Description>
+            <InputUnits>
+              <Name>degree</Name>
+              <Description>Degrees 0-360 (direction)</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>celsius</Name>
+              <Description>Degrees Centigrade</Description>
+            </OutputUnits>
+            <ApproximationType>MACLAURIN</ApproximationType>
+            <FrequencyLowerBound unit="HERTZ">0.0</FrequencyLowerBound>
+            <FrequencyUpperBound unit="HERTZ">0.5</FrequencyUpperBound>
+            <ApproximationLowerBound>1.0</ApproximationLowerBound>
+            <ApproximationUpperBound>1000.0</ApproximationUpperBound>
+            <MaximumError>0.0</MaximumError>
+            <Coefficient number="0">0.0</Coefficient>
+            <Coefficient number="1">1.0</Coefficient>
+          </InstrumentPolynomial>
+        </Response>
+      </Channel>
+      <Channel code="LWS" startDate="2012-03-26T00:00:00.000000Z" restrictedStatus="open" locationCode="50">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1820.7</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>WEATHER</Type>
+        <SampleRate unit="SAMPLES/S">1.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Vaisala Weather Transmitter</Description>
+        </Sensor>
+        <Response>
+          <InstrumentPolynomial>
+            <Description>None</Description>
+            <InputUnits>
+              <Name>m/s</Name>
+              <Description>Velocity in Meters Per Second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>celsius</Name>
+              <Description>Degrees Centigrade</Description>
+            </OutputUnits>
+            <ApproximationType>MACLAURIN</ApproximationType>
+            <FrequencyLowerBound unit="HERTZ">0.0</FrequencyLowerBound>
+            <FrequencyUpperBound unit="HERTZ">0.5</FrequencyUpperBound>
+            <ApproximationLowerBound>1.0</ApproximationLowerBound>
+            <ApproximationUpperBound>1000.0</ApproximationUpperBound>
+            <MaximumError>0.0</MaximumError>
+            <Coefficient number="0">0.0</Coefficient>
+            <Coefficient number="1">0.36</Coefficient>
+          </InstrumentPolynomial>
+        </Response>
+      </Channel>
+      <Channel code="HDF" startDate="2011-04-19T00:00:00.000000Z" endDate="2017-03-18T00:00:00.000000Z" restrictedStatus="open" locationCode="60">
+        <Latitude unit="DEGREES">34.94591</Latitude>
+        <Longitude unit="DEGREES">-106.4572</Longitude>
+        <Elevation>1816.0</Elevation>
+        <Depth>0.0</Depth>
+        <Azimuth unit="DEGREES">0.0</Azimuth>
+        <Dip unit="DEGREES">0.0</Dip>
+        <Type>CONTINUOUS</Type>
+        <Type>GEOPHYSICAL</Type>
+        <SampleRate unit="SAMPLES/S">100.0</SampleRate>
+        <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+        <Sensor>
+          <Description>Validyne Infrasound Sensor</Description>
+        </Sensor>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>24326900.0</Value>
+            <Frequency>1.0</Frequency>
+            <InputUnits>
+              <Name>kPa</Name>
+              <Description>Pressure in kilo-Pascals</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>counts</Name>
+              <Description>Digital Counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+        </Response>
+      </Channel>
+    </Station>
+  </Network>
+</FDSNStationXML>

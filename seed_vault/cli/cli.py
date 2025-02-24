@@ -5,32 +5,29 @@ from seed_vault.service.seismoloader import run_main, populate_database_from_sds
 dirname = os.path.dirname(__file__)
 par_dir = os.path.dirname(dirname)
 
-@click.group()
-def cli():
-    pass
-
-@cli.command(name="run-server", help="Runs the streamlit app server.")
-def run_app():
-    path_to_run = os.path.join(par_dir, "ui", "1_🌎_main_flows.py")
-    os.system(f"streamlit run {path_to_run}  --server.runOnSave=true")
-
-
-@cli.command(name="run-cli", help="Runs seed vault from command line (input config.cfg).")
-@click.option("-f", "--file", "file_path", type=click.Path(exists=True), required=True, help="Path to the config.cfg file.")
-def process_file(file_path):
-    click.echo(f"Processing file: {file_path}")
-    run_main(from_file=file_path)
+@click.group(invoke_without_command=True)
+@click.option("-f", "--file", "file_path", type=click.Path(exists=True), required=False, help="Path to the config.cfg file.")
+@click.pass_context
+def cli(ctx, file_path):
+    """Seed Vault CLI: A tool for seismic data processing."""
+    if ctx.invoked_subcommand is None:
+        if file_path:
+            click.echo(f"Processing file: {file_path}")
+            run_main(from_file=file_path)
+        else:
+            path_to_run = os.path.join(par_dir, "ui", "1_🌎_main_flows.py")
+            os.system(f"streamlit run {path_to_run} --server.runOnSave=true")
 
 
-@cli.command(name="sync-db", help="Syncs the db with the local SDS repository.")
+@click.command(name="sync-db", help="Syncs the database with the local SDS repository.")
 @click.argument("sds_path", type=click.Path(exists=True))
 @click.argument("db_path", type=click.Path())
-@click.option("-sp", "--search-patterns", default="??.*.*.???.?.????.???", help="Comma-separated list of search patterns to use.")
-@click.option("-nt", "--newer-than", default=None, help="Filter for files newer than a specific date.")
-@click.option("-c",  "--cpu", default=0, type=int, help="Number of processes to use, input 0 to maximize.")
+@click.option("-sp", "--search-patterns", default="??.*.*.???.?.????.???", help="Comma-separated list of search patterns.")
+@click.option("-nt", "--newer-than", type=click.DateTime(formats=["%Y-%m-%d"]), default=None, help="Filter for files newer than a specific date (YYYY-MM-DD).")
+@click.option("-c", "--cpu", default=0, type=int, help="Number of processes to use, input 0 to maximize.")
 @click.option("-g", "--gap-tolerance", default=60, type=int, help="Gap tolerance in seconds.")
 def populate_db(sds_path, db_path, search_patterns, newer_than, cpu, gap_tolerance):
-    """Populates the database from the given SDS path to the specified database path."""
+    """Populates the database from the SDS path into the specified database file."""
     search_patterns_list = search_patterns.strip().split(",")
 
     populate_database_from_sds(
@@ -42,6 +39,9 @@ def populate_db(sds_path, db_path, search_patterns, newer_than, cpu, gap_toleran
         gap_tolerance=gap_tolerance,
     )
 
+
+
+cli.add_command(populate_db, name="sync-db")
 
 
 if __name__ == "__main__":
