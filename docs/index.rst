@@ -75,7 +75,7 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-.. image:: "_static/images/AuScope Logo _ NCRIS.png"
+.. image:: _static/images/AuScope_NCRIS_Logo.png
   :width: 200
   :alt: AuScope and NCRIS logos
 
