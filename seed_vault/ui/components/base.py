@@ -1041,7 +1041,7 @@ class BaseComponent:
         
 
     def render_map_right_menu(self):
-        if self.prev_step_type:
+        if self.prev_step_type and len(self.df_markers_prev) < 6:
             with st.expander(f"Search Around {self.prev_step_type.title()}s", expanded=True):
                 self.display_prev_step_selection_table() 
 
