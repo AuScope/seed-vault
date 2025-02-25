@@ -1074,14 +1074,32 @@ class WaveformComponents:
         self.console._init_terminal_style()  # Initialize terminal styling
         
         if self.console.accumulated_output:
+            # Add the initial header line if it's not already there
+            if not any("Running run_event" in line for line in self.console.accumulated_output):
+                self.console.accumulated_output.insert(0, "Running run_event\n-----------------")
+            
+            escaped_content = escape('\n'.join(self.console.accumulated_output))
+            
             log_text = (
                 '<div class="terminal" id="log-terminal">'
-                '<pre>{}</pre>'
+                f'<pre style="margin: 0; white-space: pre; tab-size: 4;">{escaped_content}</pre>'
                 '</div>'
-            ).format('\n'.join(self.console.accumulated_output))
+                '<script>'
+                'if (window.terminal_scroll === undefined) {'
+                '    window.terminal_scroll = function() {'
+                '        var terminalDiv = document.getElementById("log-terminal");'
+                '        if (terminalDiv) {'
+                '            terminalDiv.scrollTop = terminalDiv.scrollHeight;'
+                '        }'
+                '    };'
+                '}'
+                'window.terminal_scroll();'
+                '</script>'
+            )
+            
             st.markdown(log_text, unsafe_allow_html=True)
         else:
-            st.info("No logs available yet. Perform a waveform download first.")
+            st.info("Perform a waveform download first :)")
 class MissingDataDisplay:
     def __init__(self, streams: List[Stream], missing_data: Dict[str, Union[List[str], str]], settings: SeismoLoaderSettings):
         self.streams = streams
