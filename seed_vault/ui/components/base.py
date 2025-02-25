@@ -941,7 +941,7 @@ class BaseComponent:
         
         with cc3:
             if st.button(
-                "Reload", 
+                "Reload Map", 
                 # help="Use Reload button if the map is collapsed or some layers are missing.",
                 key=self.get_key_element(f"ReLoad {self.TXT.STEP}s")
             ):
@@ -1221,9 +1221,6 @@ class BaseComponent:
 
         self.selected_items_view(state_key) 
 
-        # Set the height based on the number of rows (with a minimum and maximum)
-        num_rows = len(self.df_markers)
-        height = max(min(num_rows * 35 + 100, 800), 400)  # Adjust as needed
 
         # Define desired column widths in pts
         column_widths = {
@@ -1256,7 +1253,6 @@ class BaseComponent:
             column_config=config, 
             column_order = ordered_col, 
             key=self.get_key_element("Data Table"),
-            height=height,
             use_container_width=True
         )
         
