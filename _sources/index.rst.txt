@@ -10,45 +10,35 @@ Welcome to Seed Vault Documentation
   :width: 600
   :alt: Screenshot of Step 1 selecting events via world map
 
-A seismology GUI application that is
+**Seed Vault** is a seismology GUI application that is:
 
 * Open Source, built to service the FDSN community
-* Access every kind of seismic data
+* Able to access every kind of seismic data
 * Designed for expert and novice alike
 
 Features
 --------
 
-* Download & view EQ arrival data via a station-to-event OR an event-to-station search
+* Download & view earthquake arrival data via a *station-to-event* or an *event-to-station* search
 * Quickly download and archive bulk continuous data, saving your progress along the way
 * View and plot event arrivals
 * A CLI scripting tool to automate common jobs
-* Search, export, or import earthquake event catalogs and station metadata
+* Search, export or import earthquake event catalogs and station metadata
 * Download restricted/embargoed data by storing auth passwords in local config
-* Add and use custom FDSN servers
+* Add and connect to custom FDSN servers
 * Saves all downloaded data as miniseed in a local SDS database to speed up future retrievals
-* Local sqlite3 database editor
+* Local database editor
 * Load and save search parameters and configuration
-
+* Can run as a command line application or an unsecured local website
 
 Platforms
----------
+~~~~~~~~~
 
 Runs on:
 
   * Linux
   * Windows
   * MacOS
-
-
-Dual Access
------------
-
-Can run:
-
-  * As web service (local-only unsecured mode)
-  * From the command line (CLI)
-
 
 .. note::
 
