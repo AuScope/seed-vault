@@ -510,16 +510,13 @@ class BaseComponent:
         geo_constraint = self.get_geo_constraint()
 
         if recreate_map:
-            if self.map_output is not None and self.map_output.get("center"):
-                self.map_view_center = self.map_output.get("center", {})
-                self.map_view_zoom = self.map_output.get("zoom", 2)
-
+            
             self.map_disp = create_map(
                 map_id=self.map_id, 
                 zoom_start=self.map_view_zoom,
                 map_center=[
                     self.map_view_center.get("lat", 0.0),
-                    self.map_view_center.get("lng", 175), # pacific ocean
+                    self.map_view_center.get("lng", 0.0), # pacific ocean
                 ]
             )
         
@@ -1088,6 +1085,10 @@ class BaseComponent:
         #                  window or tooltips. Here, we have embedded a line at the bottom of the
         #                  popup to be able to get the Event/Station Ids as well as the type of 
         #                  the marker, ie, event or station.
+
+        if self.map_output is not None and self.map_output.get("center"):
+            self.map_view_center = self.map_output.get("center", {})
+            self.map_view_zoom = self.map_output.get("zoom", 2)
 
         # st.write(self.map_output)
         if self.map_output and self.map_output.get('last_object_clicked') is not None:
