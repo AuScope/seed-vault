@@ -52,7 +52,10 @@ Can run:
 
 .. note::
 
-   **This project is under active development.**
+   **This project is sponsored by AuScope: We provide research tools, data, analytics and support to
+   Australia’s geoscience community. https://www.auscope.org.au/**
+
+   **AuScope is an NCRIS-funded organisation**
 
 .. toctree::
    :maxdepth: 2
@@ -71,3 +74,8 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+.. image:: "_static/images/AuScope Logo _ NCRIS.png"
+  :width: 200
+  :alt: AuScope and NCRIS logos
+
