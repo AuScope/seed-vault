@@ -57,9 +57,14 @@ Can run:
 
    **AuScope is an NCRIS-funded organisation**
 
+   .. image:: _static/images/AuScope_NCRIS_Logo.png
+      :width: 400
+      :alt: AuScope and NCRIS logos
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+   :hidden:
 
    introduction
    usage
@@ -68,14 +73,10 @@ Can run:
    modules
    
 
-Indices and tables
-==================
+Indices
+=======
 
 * :ref:`genindex`
 * :ref:`modindex`
-* :ref:`search`
 
-.. image:: _static/images/AuScope_NCRIS_Logo.png
-  :width: 200
-  :alt: AuScope and NCRIS logos
 
