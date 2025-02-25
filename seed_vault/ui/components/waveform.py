@@ -279,22 +279,33 @@ class WaveformDisplay:
         except ValueError as e:
             st.error(f"Error: {str(e)} Waveform client is set to {self.settings.waveform.client}, which seems does not exists. Please navigate to the settings page and use the Clients tab to add the client or fix the stored config.cfg file.")
         self.ttmodel = TauPyModel("iasp91")
-        self.streams = [] 
+        self.streams = []
+        self.missing_data = {}
         self.console = ConsoleDisplay()  # Add console display
+        self.missing_data = {}
 
-    def apply_filters(self, stream: Stream) -> Stream:
+    def apply_filters(self, stream) -> Stream:
         """Filter stream based on user selection"""
         filtered_stream = Stream()
         
+        # Handle case where stream is a list of traces
+        if isinstance(stream, list):
+            stream = Stream(traces=stream)
+        
+        if not stream:
+            return filtered_stream
+        
         for tr in stream:
-            if (self.filter_menu.network_filter == "All networks" or 
-                tr.stats.network == self.filter_menu.network_filter) and \
-               (self.filter_menu.station_filter == "All stations" or 
-                tr.stats.station == self.filter_menu.station_filter) and \
-               (self.filter_menu.channel_filter == "All channels" or 
-                tr.stats.channel == self.filter_menu.channel_filter):
-                filtered_stream += tr
-                
+            try:
+                if (self.filter_menu.network_filter == "All networks" or 
+                    tr.stats.network == self.filter_menu.network_filter) and \
+                   (self.filter_menu.station_filter == "All stations" or 
+                    tr.stats.station == self.filter_menu.station_filter) and \
+                   (self.filter_menu.channel_filter == "All channels" or 
+                    tr.stats.channel == self.filter_menu.channel_filter):
+                    filtered_stream += tr
+            except AttributeError as e:
+                continue
         return filtered_stream
     
 
@@ -305,8 +316,13 @@ class WaveformDisplay:
         # Capture stdout/stderr for logging
         with redirect_stdout(StringIO()) as stdout, redirect_stderr(StringIO()) as stderr:
             try:
-                self.streams = run_event(self.settings, stop_event)
-                success = True
+                # Update to unpack the tuple returned by run_event
+                streams_and_missing = run_event(self.settings, stop_event)
+                if streams_and_missing:
+                    self.streams, self.missing_data = streams_and_missing
+                    success = True
+                else:
+                    success = False
             except Exception as e:
                 success = False
                 print(f"Error: {str(e)}")  # This will be captured in the output
@@ -476,7 +492,7 @@ class WaveformDisplay:
                         # Add trace label
                         label = f'{tr.stats.network}.{tr.stats.station}.{tr.stats.location or ""}.{tr.stats.channel}'
                         if hasattr(tr.stats, 'distance_km'):
-                            label += f' ({tr.stats.distance_km:.1f} km)'
+                            label += f' {tr.stats.distance_km:.1f} km'
                         if hasattr(tr.stats, 'filterband'):
                             event_info += f", {tr.stats.filterband[0]}-{tr.stats.filterband[1]}Hz"
                         ax.text(-self.settings.event.before_p_sec * 0.95, 
@@ -569,6 +585,7 @@ class WaveformDisplay:
         
         # Process each trace
         for i, tr in enumerate(current_stream):
+            print("DEBUG plotted trace:",tr)
             ax = axes[i]
 
             # Calculate and add an appropriate filter for plotting
@@ -607,7 +624,7 @@ class WaveformDisplay:
                 # Format station label with distance
                 station_info = f"{tr.stats.network}.{tr.stats.station}.{tr.stats.location or ''}.{tr.stats.channel}"
                 if hasattr(tr.stats, 'distance_km'):
-                    station_info += f" ({tr.stats.distance_km:.1f} km)"
+                    station_info += f" {tr.stats.distance_km:.1f} km"
                 if hasattr(tr.stats, 'filterband'):
                     station_info += f", {tr.stats.filterband[0]}-{tr.stats.filterband[1]}Hz"
                 
@@ -652,7 +669,7 @@ class WaveformDisplay:
         if not stream:
             return
         
-        # Sort traces by distance (can't do via starttime since it's all the same station)
+        # Sort traces by distance
         for tr in stream:
             if not hasattr(tr.stats, 'distance_km') or not tr.stats.distance_km:
                 tr.stats.distance_km = 99999
@@ -735,6 +752,8 @@ class WaveformDisplay:
                 # TODO: Add distance, magnitude, and region to station_info
                 if hasattr(tr.stats, 'distance_km'):
                     event_info.append(f"{tr.stats.distance_km:.1f} km")
+                if hasattr(tr.stats, 'event_time'):
+                    event_info.append(f"OT:{str(tr.stats.event_time)[0:19]}")                    
                 if hasattr(tr.stats, 'event_magnitude'):
                     event_info.append(f"M{tr.stats.event_magnitude:.1f}")
                 if hasattr(tr.stats, 'event_region'):
@@ -789,14 +808,6 @@ class WaveformDisplay:
             ["Single Event - Multiple Stations", "Single Station - Multiple Events"],
             key="view_selector_waveform"
         )
-        
-        # Create missing data display before checking streams
-        missing_data_display = MissingDataDisplay(
-            self.streams,
-            self.missing_data,
-            self.settings
-        )
-        missing_data_display.render()
         
         if not self.streams:
             st.info("No waveforms to display. Use the 'Get Waveforms' button to retrieve waveforms.")
@@ -892,7 +903,13 @@ class WaveformDisplay:
                         st.pyplot(fig)
                 else:
                     st.warning("No waveforms available for the selected station.")
-
+        # Create missing data display before checking streams
+        missing_data_display = MissingDataDisplay(
+            self.streams,
+            self.missing_data,
+            self.settings
+        )
+        missing_data_display.render()
 class WaveformComponents:
     settings: SeismoLoaderSettings
     filter_menu: WaveformFilterMenu
@@ -1057,14 +1074,32 @@ class WaveformComponents:
         self.console._init_terminal_style()  # Initialize terminal styling
         
         if self.console.accumulated_output:
+            # Add the initial header line if it's not already there
+            if not any("Running run_event" in line for line in self.console.accumulated_output):
+                self.console.accumulated_output.insert(0, "Running run_event\n-----------------")
+            
+            escaped_content = escape('\n'.join(self.console.accumulated_output))
+            
             log_text = (
                 '<div class="terminal" id="log-terminal">'
-                '<pre>{}</pre>'
+                f'<pre style="margin: 0; white-space: pre; tab-size: 4;">{escaped_content}</pre>'
                 '</div>'
-            ).format('\n'.join(self.console.accumulated_output))
+                '<script>'
+                'if (window.terminal_scroll === undefined) {'
+                '    window.terminal_scroll = function() {'
+                '        var terminalDiv = document.getElementById("log-terminal");'
+                '        if (terminalDiv) {'
+                '            terminalDiv.scrollTop = terminalDiv.scrollHeight;'
+                '        }'
+                '    };'
+                '}'
+                'window.terminal_scroll();'
+                '</script>'
+            )
+            
             st.markdown(log_text, unsafe_allow_html=True)
         else:
-            st.info("No logs available yet. Perform a waveform download first.")
+            st.info("Perform a waveform download first :)")
 class MissingDataDisplay:
     def __init__(self, streams: List[Stream], missing_data: Dict[str, Union[List[str], str]], settings: SeismoLoaderSettings):
         self.streams = streams
@@ -1081,7 +1116,7 @@ class MissingDataDisplay:
         
         # sort events by time? does this cause problems elsewhere? can we just sort selected_catalogs? do this elsewhere? REVIEW
         try:
-            catalog = self.settings.event.selected_catalogs #.copy() #need copy?
+            catalog = self.settings.event.selected_catalogs.copy() #need copy?
             catalog.events.sort(key=lambda x: getattr(x.origins[0], 'time', UTCDateTime(0)) if x.origins else UTCDateTime(0))
         except Exception as e:
             print("catalog sort problem",e)

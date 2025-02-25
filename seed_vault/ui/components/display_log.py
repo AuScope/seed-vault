@@ -16,11 +16,10 @@ class ConsoleDisplay:
         """Initialize terminal styling"""
         st.markdown("""
             <style>
+                /* Terminal container styling */
                 .terminal {
                     background-color: black;
                     color: #ffffff;
-                    font-family: 'Courier New', Courier, monospace;
-                    font-size: 12px !important;
                     padding: 10px;
                     border-radius: 5px;
                     height: 800px;
@@ -28,17 +27,30 @@ class ConsoleDisplay:
                     white-space: pre;
                     tab-size: 4;
                 }
-                .terminal pre {
+                
+                /* Terminal text styling */
+                .terminal pre,
+                .terminal code,
+                .terminal span,
+                .terminal div {
                     margin: 0;
                     white-space: pre-wrap;
                     word-wrap: break-word;
                     tab-size: 4;
                     font-family: 'Courier New', Courier, monospace !important;
-                    font-size: 12px !important;
+                    font-size: 14px !important;
+                    line-height: 1.4 !important;
                 }
+                
+                /* Ensure consistent scrolling behavior */
                 .stMarkdown {
                     overflow-y: auto;
                     max-height: 800px;
+                }
+                
+                /* Ensure consistent font size in all contexts */
+                .terminal * {
+                    font-size: 14px !important;
                 }
             </style>
         """, unsafe_allow_html=True)
