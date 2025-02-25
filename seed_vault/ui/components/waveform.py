@@ -814,24 +814,43 @@ class WaveformDisplay:
             return
 
         if view_type == "Single Event - Multiple Stations":
+            # Get only events that have corresponding streams
             events = self.settings.event.selected_catalogs
             if not events:
                 st.warning("No events available.")
                 return
             
+            # Create a mapping between events and their indices in the original catalog
+            events_with_data = []
+            event_indices = []
+            
+            for i, event in enumerate(events):
+                # Check if we have data for this event
+                if i < len(self.streams) and len(self.streams[i]) > 0:
+                    events_with_data.append(event)
+                    event_indices.append(i)
+            
+            if not events_with_data:
+                st.warning("No events with waveform data available.")
+                return
+            
             # it's possible an event doesn't have a magnitude TODO
             event_options = [
                 f"Event {i+1}: {event.origins[0].time} M{event.magnitudes[0].mag:.1f} {event.extra.get('region', {}).get('value', 'Unknown Region')}"
-                for i, event in enumerate(events)
+                for i, event in enumerate(events_with_data)
             ]
-            selected_event_idx = st.selectbox(
+            
+            selected_idx = st.selectbox(
                 "Select Event",
                 range(len(event_options)),
                 format_func=lambda x: event_options[x]
             )
             
-            if self.streams and len(self.streams) > selected_event_idx:
-                stream = self.streams[selected_event_idx]
+            # Map the selected index back to the original stream index
+            original_event_idx = event_indices[selected_idx]
+            
+            if self.streams and len(self.streams) > original_event_idx:
+                stream = self.streams[original_event_idx]
                 filtered_stream = self.apply_filters(stream)
                 
                 if len(filtered_stream) > 0:
@@ -844,7 +863,7 @@ class WaveformDisplay:
                     ) - 1
                     
                     fig = self.plot_event_view(
-                        events[selected_event_idx],
+                        events_with_data[selected_idx],  # Use the filtered event
                         filtered_stream,
                         page,
                         num_pages
