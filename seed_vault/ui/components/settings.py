@@ -168,7 +168,7 @@ class SettingsComponent:
     def reset_config(self):
         self.settings = reset_config()   
         save_filter(self.settings)
-        st.success("Config have been reset to default.")
+        st.success("Settings have been reset to default.")
 
     def render(self):
         c1, c2, c3 = st.columns([1,1, 2])
@@ -195,7 +195,7 @@ class SettingsComponent:
                             st.error(f"An error occured. Make sure there is no null value in the table.")
                             st.error(e)
             with button_col2:
-                st.button("Reset Config", on_click=self.reset_config)
+                st.button("Reset Settings", on_click=self.reset_config)
 
         tab1, tab2, tab3 = st.tabs(["Data", "Credentials", "Clients"])
         with tab1:
