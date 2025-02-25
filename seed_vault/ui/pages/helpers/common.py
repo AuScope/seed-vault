@@ -25,8 +25,10 @@ def empty_settings_geo_constraints(settings: SeismoLoaderSettings):
     """
     TODO: a function that reads the latest app settings
     """
-    settings.event.geo_constraint = []
-    settings.station.geo_constraint = []
+    if(settings.event):
+        settings.event.geo_constraint = []
+    if(settings.station):
+        settings.station.geo_constraint = []        
     return settings
 
 

@@ -157,16 +157,17 @@ class BaseComponent:
 
 
     def get_geo_constraint(self):
+        # if self.step_type == Steps.EVENT and self.settings.event is not None:
         if self.step_type == Steps.EVENT:
             return self.settings.event.geo_constraint
-        if self.step_type == Steps.STATION:
+        if self.step_type == Steps.STATION and self.settings.station is not None:
             return self.settings.station.geo_constraint
         return []
     
     def set_geo_constraint(self, geo_constraint: List[GeometryConstraint]):
-        if self.step_type == Steps.EVENT:
+        if self.step_type == Steps.EVENT and self.settings.event is not None:
             self.settings.event.geo_constraint = geo_constraint
-        if self.step_type == Steps.STATION:
+        if self.step_type == Steps.STATION and self.settings.station is not None:
             self.settings.station.geo_constraint = geo_constraint
 
 
@@ -1326,7 +1327,7 @@ class BaseComponent:
             self.refresh_map_selection()
 
     def render(self):
-
+        
         with st.sidebar:
             self.render_map_handles()
             self.render_map_right_menu()
@@ -1361,8 +1362,7 @@ class BaseComponent:
             self.render_marker_select()
             with st.expander(self.TXT.SELECT_DATA_TABLE_TITLE, expanded = not self.df_markers.empty):
                 self.render_data_table(c2_export)
-
-    
+  
 
 
 

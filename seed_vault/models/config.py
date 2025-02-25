@@ -435,7 +435,7 @@ class SeismoLoaderSettings(BaseModel):
     auths             : Optional        [List[AuthConfig]]    = []
     waveform          : WaveformConfig                        = None
     station           : StationConfig                         = None
-    event             : EventConfig                           = None
+    event             : Optional[EventConfig]                 = None
     predictions       : Dict            [str, PredictionData] = {}
     status_handler    : StatusHandler                         = StatusHandler()
 
@@ -540,7 +540,7 @@ class SeismoLoaderSettings(BaseModel):
         lst_auths = cls._parse_auth_section(config, status_handler)
         waveform = cls._parse_waveform_section(config, status_handler)
         station_config = cls._parse_station_section(config, status_handler)
-        event_config = cls._parse_event_section(config, status_handler)
+        event_config = cls._parse_event_section(config, status_handler, download_type)
 
         # status_handler.display()
 
@@ -822,7 +822,7 @@ class SeismoLoaderSettings(BaseModel):
         )
 
     @classmethod
-    def _parse_event_section(cls, config, status_handler):
+    def _parse_event_section(cls, config, status_handler, download_type):
         """
         Parse and validate the EVENT section of the configuration file.
 
@@ -838,7 +838,8 @@ class SeismoLoaderSettings(BaseModel):
 
         # Ensure the EVENT section exists
         if not config.has_section(event_section):
-            status_handler.add_error("input_parameters", f"The [{event_section}] section is missing in the configuration file.")
+            if download_type == DownloadType.EVENT:
+                status_handler.add_error("input_parameters", f"The [{event_section}] section is missing in the configuration file.")
             return None
 
         # Parse required parameters
@@ -1258,8 +1259,10 @@ class SeismoLoaderSettings(BaseModel):
                 'geo_constraint': self.station.geo_constraint if self.station else None,
                 'includerestricted': self.station.include_restricted if self.station else None,
                 'level': self.station.level.value if self.station and self.station.level else None,
-            },
-            'event': {
+            }
+        }
+        if self.event:
+            config_dict['event'] = {
                 'client': self.event.client if self.event and self.event.client else None,
                 'model': self.event.model if self.event and self.event.model else None,
                 'before_p_sec': self.event.before_p_sec if self.event and self.event.before_p_sec is not None else None,
@@ -1284,7 +1287,7 @@ class SeismoLoaderSettings(BaseModel):
                 'catalog': self.event.catalog if self.event and self.event.catalog else None,
                 'updatedafter': self.event.updatedafter if self.event and self.event.updatedafter else None,
             }
-        }
+        
         return config_dict
 
 
