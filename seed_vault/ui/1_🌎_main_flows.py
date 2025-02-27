@@ -11,10 +11,10 @@ st.markdown(
     """
     <style>
         section[data-testid="stSidebar"] {
-            width: 800px; # Set the width to your desired value
+            width: 450px !important;
         }
         section[data-testid="stMain"] {
-            width: 100% !important; # Set the width to your desired value
+            width: 100% !important;
             padding: 0;
         }
         iframe[data-testid="stCustomComponentV1"] {

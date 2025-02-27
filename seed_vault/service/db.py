@@ -6,37 +6,286 @@ including archive data and arrival data. It implements connection management, da
 querying, and database maintenance operations.
 """
 
+import os
 import sqlite3
 import contextlib
 import time
 import random
-import datetime
+from datetime import datetime
 from pathlib import Path
-from obspy import UTCDateTime
+from obspy import UTCDateTime,Stream
 import pandas as pd
 from typing import Union, List, Dict, Tuple, Optional, Any
 
-def to_timestamp(time_obj: Union[int, float, datetime.datetime, UTCDateTime]) -> float:
+from seed_vault.service.utils import to_timestamp
+
+def stream_to_db_element(st: Stream) -> Optional[Tuple[str, str, str, str, str, str]]:
     """
-    Convert various time objects to Unix timestamp.
+    Convert an ObsPy Stream object to a database element tuple.
+
+    Creates a database element from a stream, assuming all traces have the same
+    Network-Station-Location-Channel (NSLC) codes. This is typically faster than
+    reading from a file using miniseed_to_db_element.
 
     Args:
-        time_obj: Time object to convert. Can be int/float timestamp, datetime, or UTCDateTime.
+        st: ObsPy Stream object containing seismic traces.
 
     Returns:
-        float: Unix timestamp.
+        Optional[Tuple[str, str, str, str, str, str]]: A tuple containing:
+            - network: Network code
+            - station: Station code
+            - location: Location code
+            - channel: Channel code
+            - start_time: ISO format start time
+            - end_time: ISO format end time
+            Returns None if stream is empty.
+
+    Example:
+        >>> stream = obspy.read()
+        >>> element = stream_to_db_element(stream)
+        >>> if element:
+        ...     network, station, location, channel, start, end = element
+    """
+    if len(st) == 0:
+        print("Warning: Empty stream provided")
+        return None
+        
+    start_time = min(tr.stats.starttime for tr in st)
+    end_time = max(tr.stats.endtime for tr in st)
+        
+    return (st[0].stats.network, st[0].stats.station,
+            st[0].stats.location, st[0].stats.channel,
+            start_time.isoformat(), end_time.isoformat())
+
+def miniseed_to_db_element(file_path: str) -> Optional[Tuple[str, str, str, str, str, str]]:
+    """
+    Convert a miniseed file to a database element tuple.
+
+    Processes a miniseed file and extracts relevant metadata for database storage.
+    Expects files in the format: network.station.location.channel.*.year.julday
+
+    Args:
+        file_path: Path to the miniseed file.
+
+    Returns:
+        Optional[Tuple[str, str, str, str, str, str]]: A tuple containing:
+            - network: Network code
+            - station: Station code
+            - location: Location code
+            - channel: Channel code
+            - start_time: ISO format start time
+            - end_time: ISO format end time
+            Returns None if file is invalid or cannot be processed.
+
+    Example:
+        >>> element = miniseed_to_db_element("/path/to/IU.ANMO.00.BHZ.D.2020.001")
+        >>> if element:
+        ...     network, station, location, channel, start, end = element
+    """
+    if not os.path.isfile(file_path):
+        return None
+    try:
+        file = os.path.basename(file_path)
+        parts = file.split('.')
+        if len(parts) != 7:
+            return None  # Skip files that don't match expected format
+        
+        network, station, location, channel, _, year, dayfolder = parts
+        
+        # Read the file to get actual start and end times
+        st = Stream.read(file_path, headonly=True)
+        
+        if len(st) == 0:
+            print(f"Warning: No traces found in {file_path}")
+            return None
+        
+        start_time = min(tr.stats.starttime for tr in st)
+        end_time = max(tr.stats.endtime for tr in st)
+        
+        return (network, station, location, channel,
+                start_time.isoformat(), end_time.isoformat())
+    
+    except Exception as e:
+        print(f"Error processing file {file_path}: {str(e)}")
+        return None
+
+
+def populate_database_from_sds(sds_path, db_path,
+    search_patterns=["??.*.*.???.?.????.???"],
+    newer_than=None, num_processes=None, gap_tolerance = 60):
+
+    """
+    Scan an SDS archive directory and populate a database with data availability.
+
+    Recursively searches an SDS (Seismic Data Structure) archive for MiniSEED files,
+    extracts their metadata, and records data availability in a SQLite database.
+    Supports parallel processing and can optionally filter for recently modified files.
+
+    Args:
+        sds_path (str): Path to the root SDS archive directory
+        db_path (str): Path to the SQLite database file
+        search_patterns (list, optional): List of file patterns to match.
+            Defaults to ["??.*.*.???.?.????.???"] (standard SDS naming pattern).
+        newer_than (str or UTCDateTime, optional): Only process files modified after
+            this time. Defaults to None (process all files).
+        num_processes (int, optional): Number of parallel processes to use.
+            Defaults to None (use all available CPU cores).
+        gap_tolerance (int, optional): Maximum time gap in seconds between segments
+            that should be considered continuous. Defaults to 60.
+
+    Notes:
+        - Uses DatabaseManager class to handle database operations
+        - Attempts multiprocessing but falls back to single process if it fails
+            (common on OSX and Windows)
+        - Follows symbolic links when walking directory tree
+        - Files are processed using miniseed_to_db_element() function
+        - After insertion, continuous segments are joined based on gap_tolerance
+        - Progress is displayed using tqdm progress bars
+        - If newer_than is provided, it's converted to a Unix timestamp for comparison
 
     Raises:
-        ValueError: If the time object type is not supported.
+        RuntimeError: If bulk insertion into database fails
     """
-    if isinstance(time_obj, (int, float)):
-        return float(time_obj)
-    elif isinstance(time_obj, datetime.datetime):
-        return time_obj.timestamp()
-    elif isinstance(time_obj, UTCDateTime):
-        return time_obj.timestamp
+
+    db_manager = DatabaseManager(db_path)
+
+    # Set to possibly the maximum number of CPUs!
+    if num_processes is None or num_processes <= 0:
+        num_processes = multiprocessing.cpu_count()
+    
+    # Convert newer_than (means to filter only new files) to timestamp
+    if newer_than:
+        newer_than = to_timestamp(newer_than)
+
+    # Collect all file paths
+    file_paths = []
+
+    for root, dirs, files in os.walk(sds_path,followlinks=True):
+        for f in files:
+            if any(fnmatch.fnmatch(f, pattern) for pattern in search_patterns):
+                file_path = os.path.join(root,f)
+                if newer_than is None or os.path.getmtime(file_path) > newer_than:
+                    file_paths.append(os.path.join(root, f))
+    
+    total_files = len(file_paths)
+    print(f"Found {total_files} files to process.")
+    
+    # Process files with or without multiprocessing
+    # TODO (currently having issues with OSX and undoubtably windows is going to be a bigger problem)
+    if num_processes > 1:
+        try:
+            with multiprocessing.Pool(processes=num_processes) as pool:
+                to_insert_db = list(tqdm(pool.imap(miniseed_to_db_element, file_paths), \
+                    total=total_files, desc="Processing files"))
+        except Exception as e:
+            print(f"Multiprocessing failed: {str(e)}. Falling back to single-process execution.")
+            num_processes = 1
     else:
-        raise ValueError(f"Unsupported time type: {type(time_obj)}")
+        to_insert_db = []
+        for fp in tqdm(file_paths, desc="Scanning %s..." % sds_path):
+            to_insert_db.append(miniseed_to_db_element(fp))
+
+    # Update database
+    try:
+        num_inserted = db_manager.bulk_insert_archive_data(to_insert_db)
+    except Exception as e:
+        raise RuntimeError("Error with bulk_insert_archive_data") from e  
+
+    print(f"Processed {total_files} files, inserted {num_inserted} records into the database.")
+
+    db_manager.join_continuous_segments(gap_tolerance)
+
+def populate_database_from_files_dumb(cursor, file_paths=[]):
+    """
+    Simple version of database population from MiniSEED files without span merging.
+
+    A simplified "dumb" version that blindly replaces existing database entries
+    with identical network/station/location/channel codes, rather than checking for
+    and merging overlapping time spans.
+
+    Args:
+        cursor (sqlite3.Cursor): Database cursor for executing SQL commands
+        file_paths (list, optional): List of paths to MiniSeed files. Defaults to empty list.
+    """
+    now = int(datetime.now().timestamp())
+    for fp in file_paths:
+        result  = miniseed_to_db_element(fp)
+        if result:
+            result = result + (now,)
+            cursor.execute('''
+                INSERT OR REPLACE INTO archive_data
+                (network, station, location, channel, starttime, endtime, importtime)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', result)
+
+
+def populate_database_from_files(cursor, file_paths=[]):
+    """
+    Insert or update MiniSEED file metadata into an SQL database.
+
+    Takes a list of SDS archive file paths, extracts metadata, and updates a database
+    tracking data availability. If data spans overlap with existing database entries,
+    the spans are merged. Uses miniseed_to_db_element() to parse file metadata.
+
+    Args:
+        cursor (sqlite3.Cursor): Database cursor for executing SQL commands
+        file_paths (list, optional): List of paths to MiniSeed files. Defaults to empty list.
+
+    Notes:
+        - Database must have an 'archive_data' table with columns:
+            * network (text)
+            * station (text)
+            * location (text)
+            * channel (text)
+            * starttime (integer): Unix timestamp
+            * endtime (integer): Unix timestamp
+            * importtime (integer): Unix timestamp of database insertion
+        - Handles overlapping time spans by merging them into a single entry
+        - Sets importtime to current Unix timestamp
+        - Skips files that fail metadata extraction (when miniseed_to_db_element returns None)
+
+    Examples:
+        >>> import sqlite3
+        >>> conn = sqlite3.connect('archive.db')
+        >>> cursor = conn.cursor()
+        >>> files = ['/path/to/IU.ANMO.00.BHZ.mseed', '/path/to/IU.ANMO.00.BHN.mseed']
+        >>> populate_database_from_files(cursor, files)
+        >>> conn.commit()
+    """
+    now = int(datetime.now().timestamp())
+    for fp in file_paths:
+        result = miniseed_to_db_element(fp)
+        if result:
+            network, station, location, channel, start_timestamp, end_timestamp = result
+            
+            # First check for existing overlapping spans
+            cursor.execute('''
+                SELECT starttime, endtime FROM archive_data
+                WHERE network = ? AND station = ? AND location = ? AND channel = ?
+                AND NOT (endtime < ? OR starttime > ?)
+            ''', (network, station, location, channel, start_timestamp, end_timestamp))
+            
+            overlaps = cursor.fetchall()
+            if overlaps:
+                # Merge with existing spans
+                start_timestamp = min(start_timestamp, min(row[0] for row in overlaps))
+                end_timestamp = max(end_timestamp, max(row[1] for row in overlaps))
+                
+                # Delete overlapping spans
+                cursor.execute('''
+                    DELETE FROM archive_data
+                    WHERE network = ? AND station = ? AND location = ? AND channel = ?
+                    AND NOT (endtime < ? OR starttime > ?)
+                ''', (network, station, location, channel, start_timestamp, end_timestamp))
+            
+            # Insert the new or merged span
+            cursor.execute('''
+                INSERT INTO archive_data
+                (network, station, location, channel, starttime, endtime, importtime)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', (network, station, location, channel, start_timestamp, end_timestamp, now))
+
+ 
 
 class DatabaseManager:
     """
@@ -153,8 +402,8 @@ class DatabaseManager:
                 )
             ''')
 
-    def display_contents(self, table_name: str, start_time: Union[int, float, datetime.datetime, UTCDateTime] = 0,
-                        end_time: Union[int, float, datetime.datetime, UTCDateTime] = 4102444799, limit: int = 100):
+    def display_contents(self, table_name: str, start_time: Union[int, float, datetime, UTCDateTime] = 0,
+                        end_time: Union[int, float, datetime, UTCDateTime] = 4102444799, limit: int = 100):
         """
         Display contents of a specified table within a given time range.
 
@@ -218,8 +467,8 @@ class DatabaseManager:
             cursor.execute(f"ANALYZE {table_name}")
 
     def delete_elements(self, table_name: str, 
-                       start_time: Union[int, float, datetime.datetime, UTCDateTime] = 0,
-                       end_time: Union[int, float, datetime.datetime, UTCDateTime] = 4102444799) -> int:
+                       start_time: Union[int, float, datetime, UTCDateTime] = 0,
+                       end_time: Union[int, float, datetime, UTCDateTime] = 4102444799) -> int:
         """
         Delete elements from specified table within time range.
 
@@ -361,7 +610,7 @@ class DatabaseManager:
 
         with self.connection() as conn:
             cursor = conn.cursor()
-            now = int(datetime.datetime.now().timestamp())
+            now = int(datetime.now().timestamp())
             archive_list = [tuple(list(ele) + [now]) for ele in archive_list if ele is not None]
             
             cursor.executemany('''
@@ -399,7 +648,7 @@ class DatabaseManager:
                 VALUES ({placeholders})
             '''
             
-            now = int(datetime.datetime.now().timestamp())
+            now = int(datetime.now().timestamp())
             arrival_list = [tuple(list(ele) + [now]) for ele in arrival_list]
             cursor.executemany(query, arrival_list)
             

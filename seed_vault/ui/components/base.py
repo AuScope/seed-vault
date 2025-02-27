@@ -157,16 +157,17 @@ class BaseComponent:
 
 
     def get_geo_constraint(self):
+        # if self.step_type == Steps.EVENT and self.settings.event is not None:
         if self.step_type == Steps.EVENT:
             return self.settings.event.geo_constraint
-        if self.step_type == Steps.STATION:
+        if self.step_type == Steps.STATION and self.settings.station is not None:
             return self.settings.station.geo_constraint
         return []
     
     def set_geo_constraint(self, geo_constraint: List[GeometryConstraint]):
-        if self.step_type == Steps.EVENT:
+        if self.step_type == Steps.EVENT and self.settings.event is not None:
             self.settings.event.geo_constraint = geo_constraint
-        if self.step_type == Steps.STATION:
+        if self.step_type == Steps.STATION and self.settings.station is not None:
             self.settings.station.geo_constraint = geo_constraint
 
 
@@ -510,16 +511,13 @@ class BaseComponent:
         geo_constraint = self.get_geo_constraint()
 
         if recreate_map:
-            if self.map_output is not None and self.map_output.get("center"):
-                self.map_view_center = self.map_output.get("center", {})
-                self.map_view_zoom = self.map_output.get("zoom", 2)
-
+            
             self.map_disp = create_map(
                 map_id=self.map_id, 
                 zoom_start=self.map_view_zoom,
                 map_center=[
                     self.map_view_center.get("lat", 0.0),
-                    self.map_view_center.get("lng", 175), # pacific ocean
+                    self.map_view_center.get("lng", 0.0), # pacific ocean
                 ]
             )
         
@@ -593,7 +591,7 @@ class BaseComponent:
                 # self.inventories = get_station_data(self.settings.model_dump_json())
                 if is_import:
                     self.import_xml(uploaded_file)
-                else:                    
+                else:
                     self.inventories = get_station_data(self.settings)
                 if self.inventories:
                     self.df_markers = station_response_to_df(self.inventories)
@@ -944,7 +942,7 @@ class BaseComponent:
         
         with cc3:
             if st.button(
-                "Reload", 
+                "Reload Map", 
                 # help="Use Reload button if the map is collapsed or some layers are missing.",
                 key=self.get_key_element(f"ReLoad {self.TXT.STEP}s")
             ):
@@ -1044,7 +1042,7 @@ class BaseComponent:
         
 
     def render_map_right_menu(self):
-        if self.prev_step_type:
+        if self.prev_step_type and len(self.df_markers_prev) < 6:
             with st.expander(f"Search Around {self.prev_step_type.title()}s", expanded=True):
                 self.display_prev_step_selection_table() 
 
@@ -1088,6 +1086,10 @@ class BaseComponent:
         #                  window or tooltips. Here, we have embedded a line at the bottom of the
         #                  popup to be able to get the Event/Station Ids as well as the type of 
         #                  the marker, ie, event or station.
+
+        if self.map_output is not None and self.map_output.get("center"):
+            self.map_view_center = self.map_output.get("center", {})
+            self.map_view_zoom = self.map_output.get("zoom", 2)
 
         # st.write(self.map_output)
         if self.map_output and self.map_output.get('last_object_clicked') is not None:
@@ -1220,9 +1222,6 @@ class BaseComponent:
 
         self.selected_items_view(state_key) 
 
-        # Set the height based on the number of rows (with a minimum and maximum)
-        num_rows = len(self.df_markers)
-        height = max(min(num_rows * 35 + 100, 800), 400)  # Adjust as needed
 
         # Define desired column widths in pts
         column_widths = {
@@ -1255,7 +1254,6 @@ class BaseComponent:
             column_config=config, 
             column_order = ordered_col, 
             key=self.get_key_element("Data Table"),
-            height=height,
             use_container_width=True
         )
         
@@ -1329,7 +1327,7 @@ class BaseComponent:
             self.refresh_map_selection()
 
     def render(self):
-
+        
         with st.sidebar:
             self.render_map_handles()
             self.render_map_right_menu()
@@ -1364,8 +1362,7 @@ class BaseComponent:
             self.render_marker_select()
             with st.expander(self.TXT.SELECT_DATA_TABLE_TITLE, expanded = not self.df_markers.empty):
                 self.render_data_table(c2_export)
-
-    
+  
 
 
 
