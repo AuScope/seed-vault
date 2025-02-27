@@ -15,22 +15,24 @@ import matplotlib.pyplot as plt
 from html import escape
 from seed_vault.ui.components.continuous_waveform import ContinuousComponents
 from seed_vault.service.utils import check_client_services
-from io import StringIO
-from contextlib import redirect_stdout, redirect_stderr
 from copy import deepcopy
 from seed_vault.ui.pages.helpers.common import save_filter
 import time
-
+import sys
+import queue
 
 
 query_thread = None
 stop_event = threading.Event()
+log_queue = queue.Queue()
 
 
 if "query_done" not in st.session_state:
     st.session_state["query_done"] = False
 if "trigger_rerun" not in st.session_state:
     st.session_state["trigger_rerun"] = False
+if "log_entries" not in st.session_state:
+    st.session_state["log_entries"] = []
 
 def get_tele_filter(tr):
     # get a generic teleseismic filter band
@@ -312,25 +314,64 @@ class WaveformDisplay:
     def fetch_data(self):
         """
         Fetches waveform data in a background thread with logging.
-        """        
-        # Capture stdout/stderr for logging
-        with redirect_stdout(StringIO()) as stdout, redirect_stderr(StringIO()) as stderr:
-            try:
-                # Update to unpack the tuple returned by run_event
-                streams_and_missing = run_event(self.settings, stop_event)
-                if streams_and_missing:
-                    self.streams, self.missing_data = streams_and_missing
-                    success = True
-                else:
-                    success = False
-            except Exception as e:
-                success = False
-                print(f"Error: {str(e)}")  # This will be captured in the output
+        """
+        # Custom stdout/stderr handler that writes to both the original streams and our queue
+        class QueueLogger:
+            def __init__(self, original_stream, queue):
+                self.original_stream = original_stream
+                self.queue = queue
+                self.buffer = ""
             
-            # Capture output for logs
-            output = stdout.getvalue() + stderr.getvalue()
-            if output:
-                self.console.accumulated_output = output.splitlines()
+            def write(self, text):
+                self.original_stream.write(text)
+                self.buffer += text
+                if '\n' in text:
+                    lines = self.buffer.split('\n')
+                    for line in lines[:-1]:  # All complete lines
+                        if line:  # Skip empty lines
+                            self.queue.put(line)
+                    self.buffer = lines[-1]  # Keep any partial line
+                # Also handle case where no newline but we have content
+                elif text and len(self.buffer) > 80:  # Buffer getting long, flush it
+                    self.queue.put(self.buffer)
+                    self.buffer = ""
+            
+            def flush(self):
+                self.original_stream.flush()
+                if self.buffer:  # Flush any remaining content in buffer
+                    self.queue.put(self.buffer)
+                    self.buffer = ""
+        
+        # Set up queue loggers
+        original_stdout = sys.stdout
+        original_stderr = sys.stderr
+        sys.stdout = QueueLogger(original_stdout, log_queue)
+        sys.stderr = QueueLogger(original_stderr, log_queue)
+        
+        try:
+            # Print initial message to show logging is working
+            print("Starting waveform download process...")
+            
+            # Update to unpack the tuple returned by run_event
+            streams_and_missing = run_event(self.settings, stop_event)
+            if streams_and_missing:
+                self.streams, self.missing_data = streams_and_missing
+                success = True
+                print("Download completed successfully.")
+            else:
+                success = False
+                print("Download failed or was cancelled.")
+        except Exception as e:
+            success = False
+            print(f"Error: {str(e)}")  # This will be captured in the output
+        finally:
+            # Flush any remaining content
+            sys.stdout.flush()
+            sys.stderr.flush()
+            
+            # Restore original stdout/stderr
+            sys.stdout = original_stdout
+            sys.stderr = original_stderr
 
         st.session_state.update({
             "query_done": True,
@@ -924,6 +965,10 @@ class WaveformComponents:
         self.continuous_components = ContinuousComponents(settings)
         self.console = ConsoleDisplay()
         
+        # Initialize console with logs from session state if they exist
+        if "log_entries" in st.session_state and st.session_state["log_entries"]:
+            self.console.accumulated_output = st.session_state["log_entries"]
+        
         # Pass console to WaveformDisplay
         self.waveform_display.console = self.console
         
@@ -933,7 +978,8 @@ class WaveformComponents:
             "query_done": False,
             "polling_active": False,
             "query_thread": None,
-            "trigger_rerun": False
+            "trigger_rerun": False,
+            "log_entries": []
         }
         for key, val in required_states.items():
             if key not in st.session_state:
@@ -944,38 +990,66 @@ class WaveformComponents:
         Handles UI updates while monitoring background thread status
         """
         if st.session_state.get("is_downloading", False):
-            with st.spinner("Downloading waveforms... (this may take several minutes)"):
-                query_thread = st.session_state.get("query_thread")
-                if query_thread and not query_thread.is_alive():
-                    try:
-                        query_thread.join()
-                    except Exception as e:
-                        st.error(f"Error in background thread: {e}")
-                        # Add error to console output
-                        if not self.console.accumulated_output:
-                            self.console.accumulated_output = []
-                        self.console.accumulated_output.append(f"Error: {str(e)}")
+            query_thread = st.session_state.get("query_thread")
+            
+            # Process any new log entries from the queue
+            new_logs = False
+            while not log_queue.empty():
+                try:
+                    log_entry = log_queue.get_nowait()
+                    if not self.console.accumulated_output:
+                        self.console.accumulated_output = []
+                    self.console.accumulated_output.append(log_entry)
+                    new_logs = True
+                except queue.Empty:
+                    break
+            
+            # Save logs to session state if updated
+            if new_logs:
+                st.session_state["log_entries"] = self.console.accumulated_output
+                # Trigger rerun to update the UI with new logs
+                st.rerun()
+            
+            if query_thread and not query_thread.is_alive():
+                try:
+                    query_thread.join()
+                except Exception as e:
+                    st.error(f"Error in background thread: {e}")
+                    # Add error to console output
+                    if not self.console.accumulated_output:
+                        self.console.accumulated_output = []
+                    self.console.accumulated_output.append(f"Error: {str(e)}")
+                    st.session_state["log_entries"] = self.console.accumulated_output
 
-                    st.session_state.update({
-                        "is_downloading": False,
-                        "query_done": True,
-                        "query_thread": None,
-                        "polling_active": False
-                    })
-                    st.rerun()
+                st.session_state.update({
+                    "is_downloading": False,
+                    "query_done": True,
+                    "query_thread": None,
+                    "polling_active": False
+                })
+                st.rerun()
 
-                if st.session_state.get("polling_active"):
-                    time.sleep(0.5)  # Brief pause between checks
-                    st.rerun()
+            # Always trigger a rerun while polling is active to check for new logs
+            if st.session_state.get("polling_active"):
+                time.sleep(0.2)  # Shorter pause for more frequent updates
+                st.rerun()
 
     def render(self):
         if self.settings.selected_workflow == WorkflowType.CONTINUOUS:
             self.continuous_components.render()
             return
 
+        # Initialize tab selection in session state if not exists
+        if "active_tab" not in st.session_state:
+            st.session_state["active_tab"] = 0  # Default to waveform tab
+        
+        # Auto-switch to log tab during download if new logs are available
+        if st.session_state.get("is_downloading", False) and log_queue.qsize() > 0:
+            st.session_state["active_tab"] = 0  # Keep on waveform tab to show real-time logs
+        
         # Create tabs for Waveform and Log views
-        waveform_tab, log_tab = st.tabs(["📊 Waveform View", "📝 Log View"])
-
+        tab_names = ["📊 Waveform View", "📝 Log View"]
+        waveform_tab, log_tab = st.tabs(tab_names)
         
         # Always render filter menu (sidebar) first
         current_stream = self.waveform_display.streams[0] if self.waveform_display.streams else None
@@ -986,6 +1060,23 @@ class WaveformComponents:
             self._render_waveform_view()
         
         with log_tab:
+            # If we're switching to log tab and download is complete, 
+            # make sure all logs are transferred from queue to accumulated_output
+            if not st.session_state.get("is_downloading", False):
+                # Process any remaining logs in the queue
+                while not log_queue.empty():
+                    try:
+                        log_entry = log_queue.get_nowait()
+                        if not self.console.accumulated_output:
+                            self.console.accumulated_output = []
+                        self.console.accumulated_output.append(log_entry)
+                    except queue.Empty:
+                        break
+                
+                # Save to session state
+                if self.console.accumulated_output:
+                    st.session_state["log_entries"] = self.console.accumulated_output
+            
             self._render_log_view()
 
 
@@ -1038,6 +1129,54 @@ class WaveformComponents:
         elif st.session_state.get("is_downloading"):
             # status_container.info("Downloading waveforms... (this may take several minutes)")
             st.spinner("Downloading waveforms... (this may take several minutes)")
+            
+            # Display real-time logs in the waveform view during download
+            log_container = st.empty()
+            
+            # Process any new log entries from the queue
+            new_logs = False
+            while not log_queue.empty():
+                try:
+                    log_entry = log_queue.get_nowait()
+                    if not self.console.accumulated_output:
+                        self.console.accumulated_output = []
+                    self.console.accumulated_output.append(log_entry)
+                    new_logs = True
+                except queue.Empty:
+                    break
+            
+            # Save logs to session state if updated
+            if new_logs or self.console.accumulated_output:
+                st.session_state["log_entries"] = self.console.accumulated_output
+                
+                # Display logs in the waveform view
+                if self.console.accumulated_output:
+                    # Add the initial header line if it's not already there
+                    if not any("Running run_event" in line for line in self.console.accumulated_output):
+                        self.console.accumulated_output.insert(0, "Running run_event\n-----------------")
+                        st.session_state["log_entries"] = self.console.accumulated_output
+                    
+                    escaped_content = escape('\n'.join(self.console.accumulated_output))
+                    
+                    log_text = (
+                        '<div class="terminal" id="log-terminal" style="max-height: 400px;">'
+                        f'<pre style="margin: 0; white-space: pre; tab-size: 4;">{escaped_content}</pre>'
+                        '</div>'
+                        '<script>'
+                        'if (window.terminal_scroll === undefined) {'
+                        '    window.terminal_scroll = function() {'
+                        '        var terminalDiv = document.getElementById("log-terminal");'
+                        '        if (terminalDiv) {'
+                        '            terminalDiv.scrollTop = terminalDiv.scrollHeight;'
+                        '        }'
+                        '    };'
+                        '}'
+                        'window.terminal_scroll();'
+                        '</script>'
+                    )
+                    
+                    log_container.markdown(log_text, unsafe_allow_html=True)
+            
             self.render_polling_ui()
         elif st.session_state.get("query_done") and self.waveform_display.streams:
             status_container.success(f"Successfully retrieved waveforms for {len(self.waveform_display.streams)} events.")
@@ -1073,10 +1212,27 @@ class WaveformComponents:
         st.title("Waveform Retrieval Logs")
         self.console._init_terminal_style()  # Initialize terminal styling
         
+        # Process any pending log entries from the queue
+        logs_updated = False
+        while not log_queue.empty():
+            try:
+                log_entry = log_queue.get_nowait()
+                if not self.console.accumulated_output:
+                    self.console.accumulated_output = []
+                self.console.accumulated_output.append(log_entry)
+                logs_updated = True
+            except queue.Empty:
+                break
+        
+        # Save logs to session state if updated
+        if logs_updated:
+            st.session_state["log_entries"] = self.console.accumulated_output
+        
         if self.console.accumulated_output:
             # Add the initial header line if it's not already there
             if not any("Running run_event" in line for line in self.console.accumulated_output):
                 self.console.accumulated_output.insert(0, "Running run_event\n-----------------")
+                st.session_state["log_entries"] = self.console.accumulated_output
             
             escaped_content = escape('\n'.join(self.console.accumulated_output))
             
