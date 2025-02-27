@@ -8,6 +8,7 @@ from seed_vault.models.config import AuthConfig, SeismoLoaderSettings
 from seed_vault.ui.pages.helpers.common import save_filter, reset_config
 
 from seed_vault.service.seismoloader import populate_database_from_sds
+from seed_vault.utils.constants import DOC_BASE_URL
 
 import os
 import jinja2
@@ -171,7 +172,7 @@ class SettingsComponent:
         st.success("Settings have been reset to default.")
 
     def render(self):
-        c1, c2, c3 = st.columns([1,1, 2])
+        c1, c2, c3 = st.columns([1,1,1])
         with c1:
             st.write("# Settings")
         with c2:
@@ -196,6 +197,11 @@ class SettingsComponent:
                             st.error(e)
             with button_col2:
                 st.button("Reset Settings", on_click=self.reset_config)
+
+        with c3:
+            st.text("")
+            st.text("")
+            st.link_button("Help", f"{DOC_BASE_URL}/app_settings.html")
 
         tab1, tab2, tab3 = st.tabs(["Data", "Credentials", "Clients"])
         with tab1:
