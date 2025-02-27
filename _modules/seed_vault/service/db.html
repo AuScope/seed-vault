@@ -48,8 +48,16 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../app_run_from_config.html">Direct parameter input</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../app_db_explorer.html">Database Explorer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../app_settings.html">App Settings</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../app_settings.html#data">Data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../app_settings.html#credentials">Credentials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../app_settings.html#data">Data</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../app_settings.html#parameters">Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../app_settings.html#id1">Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../app_settings.html#credentials">Credentials</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../app_settings.html#adding-removing-credentials">Adding &amp; Removing Credentials</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../app_settings.html#id2">Parameters</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../../../app_settings.html#clients">Clients</a></li>
 </ul>
 </li>
@@ -107,40 +115,301 @@
 <span class="sd">querying, and database maintenance operations.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">sqlite3</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">contextlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">obspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">UTCDateTime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">obspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">UTCDateTime</span><span class="p">,</span><span class="n">Stream</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span>
 
-<div class="viewcode-block" id="to_timestamp">
-<a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.to_timestamp">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">to_timestamp</span><span class="p">(</span><span class="n">time_obj</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">,</span> <span class="n">UTCDateTime</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.service.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_timestamp</span>
+
+<div class="viewcode-block" id="stream_to_db_element">
+<a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.stream_to_db_element">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">stream_to_db_element</span><span class="p">(</span><span class="n">st</span><span class="p">:</span> <span class="n">Stream</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Convert various time objects to Unix timestamp.</span>
+<span class="sd">    Convert an ObsPy Stream object to a database element tuple.</span>
+
+<span class="sd">    Creates a database element from a stream, assuming all traces have the same</span>
+<span class="sd">    Network-Station-Location-Channel (NSLC) codes. This is typically faster than</span>
+<span class="sd">    reading from a file using miniseed_to_db_element.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        time_obj: Time object to convert. Can be int/float timestamp, datetime, or UTCDateTime.</span>
+<span class="sd">        st: ObsPy Stream object containing seismic traces.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        float: Unix timestamp.</span>
+<span class="sd">        Optional[Tuple[str, str, str, str, str, str]]: A tuple containing:</span>
+<span class="sd">            - network: Network code</span>
+<span class="sd">            - station: Station code</span>
+<span class="sd">            - location: Location code</span>
+<span class="sd">            - channel: Channel code</span>
+<span class="sd">            - start_time: ISO format start time</span>
+<span class="sd">            - end_time: ISO format end time</span>
+<span class="sd">            Returns None if stream is empty.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; stream = obspy.read()</span>
+<span class="sd">        &gt;&gt;&gt; element = stream_to_db_element(stream)</span>
+<span class="sd">        &gt;&gt;&gt; if element:</span>
+<span class="sd">        ...     network, station, location, channel, start, end = element</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">st</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning: Empty stream provided&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+        
+    <span class="n">start_time</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">starttime</span> <span class="k">for</span> <span class="n">tr</span> <span class="ow">in</span> <span class="n">st</span><span class="p">)</span>
+    <span class="n">end_time</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">endtime</span> <span class="k">for</span> <span class="n">tr</span> <span class="ow">in</span> <span class="n">st</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="p">(</span><span class="n">st</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">network</span><span class="p">,</span> <span class="n">st</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">station</span><span class="p">,</span>
+            <span class="n">st</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">location</span><span class="p">,</span> <span class="n">st</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">channel</span><span class="p">,</span>
+            <span class="n">start_time</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span> <span class="n">end_time</span><span class="o">.</span><span class="n">isoformat</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="miniseed_to_db_element">
+<a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.miniseed_to_db_element">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">miniseed_to_db_element</span><span class="p">(</span><span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert a miniseed file to a database element tuple.</span>
+
+<span class="sd">    Processes a miniseed file and extracts relevant metadata for database storage.</span>
+<span class="sd">    Expects files in the format: network.station.location.channel.*.year.julday</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        file_path: Path to the miniseed file.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Optional[Tuple[str, str, str, str, str, str]]: A tuple containing:</span>
+<span class="sd">            - network: Network code</span>
+<span class="sd">            - station: Station code</span>
+<span class="sd">            - location: Location code</span>
+<span class="sd">            - channel: Channel code</span>
+<span class="sd">            - start_time: ISO format start time</span>
+<span class="sd">            - end_time: ISO format end time</span>
+<span class="sd">            Returns None if file is invalid or cannot be processed.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; element = miniseed_to_db_element(&quot;/path/to/IU.ANMO.00.BHZ.D.2020.001&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; if element:</span>
+<span class="sd">        ...     network, station, location, channel, start, end = element</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">7</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>  <span class="c1"># Skip files that don&#39;t match expected format</span>
+        
+        <span class="n">network</span><span class="p">,</span> <span class="n">station</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">year</span><span class="p">,</span> <span class="n">dayfolder</span> <span class="o">=</span> <span class="n">parts</span>
+        
+        <span class="c1"># Read the file to get actual start and end times</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="n">Stream</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">headonly</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">st</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: No traces found in </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        
+        <span class="n">start_time</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">starttime</span> <span class="k">for</span> <span class="n">tr</span> <span class="ow">in</span> <span class="n">st</span><span class="p">)</span>
+        <span class="n">end_time</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">endtime</span> <span class="k">for</span> <span class="n">tr</span> <span class="ow">in</span> <span class="n">st</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="n">station</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span>
+                <span class="n">start_time</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span> <span class="n">end_time</span><span class="o">.</span><span class="n">isoformat</span><span class="p">())</span>
+    
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error processing file </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="populate_database_from_sds">
+<a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.populate_database_from_sds">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">populate_database_from_sds</span><span class="p">(</span><span class="n">sds_path</span><span class="p">,</span> <span class="n">db_path</span><span class="p">,</span>
+    <span class="n">search_patterns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;??.*.*.???.?.????.???&quot;</span><span class="p">],</span>
+    <span class="n">newer_than</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_processes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gap_tolerance</span> <span class="o">=</span> <span class="mi">60</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Scan an SDS archive directory and populate a database with data availability.</span>
+
+<span class="sd">    Recursively searches an SDS (Seismic Data Structure) archive for MiniSEED files,</span>
+<span class="sd">    extracts their metadata, and records data availability in a SQLite database.</span>
+<span class="sd">    Supports parallel processing and can optionally filter for recently modified files.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        sds_path (str): Path to the root SDS archive directory</span>
+<span class="sd">        db_path (str): Path to the SQLite database file</span>
+<span class="sd">        search_patterns (list, optional): List of file patterns to match.</span>
+<span class="sd">            Defaults to [&quot;??.*.*.???.?.????.???&quot;] (standard SDS naming pattern).</span>
+<span class="sd">        newer_than (str or UTCDateTime, optional): Only process files modified after</span>
+<span class="sd">            this time. Defaults to None (process all files).</span>
+<span class="sd">        num_processes (int, optional): Number of parallel processes to use.</span>
+<span class="sd">            Defaults to None (use all available CPU cores).</span>
+<span class="sd">        gap_tolerance (int, optional): Maximum time gap in seconds between segments</span>
+<span class="sd">            that should be considered continuous. Defaults to 60.</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        - Uses DatabaseManager class to handle database operations</span>
+<span class="sd">        - Attempts multiprocessing but falls back to single process if it fails</span>
+<span class="sd">            (common on OSX and Windows)</span>
+<span class="sd">        - Follows symbolic links when walking directory tree</span>
+<span class="sd">        - Files are processed using miniseed_to_db_element() function</span>
+<span class="sd">        - After insertion, continuous segments are joined based on gap_tolerance</span>
+<span class="sd">        - Progress is displayed using tqdm progress bars</span>
+<span class="sd">        - If newer_than is provided, it&#39;s converted to a Unix timestamp for comparison</span>
 
 <span class="sd">    Raises:</span>
-<span class="sd">        ValueError: If the time object type is not supported.</span>
+<span class="sd">        RuntimeError: If bulk insertion into database fails</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_obj</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
-        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">time_obj</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_obj</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">time_obj</span><span class="o">.</span><span class="n">timestamp</span><span class="p">()</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_obj</span><span class="p">,</span> <span class="n">UTCDateTime</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">time_obj</span><span class="o">.</span><span class="n">timestamp</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported time type: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">time_obj</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
+    <span class="n">db_manager</span> <span class="o">=</span> <span class="n">DatabaseManager</span><span class="p">(</span><span class="n">db_path</span><span class="p">)</span>
+
+    <span class="c1"># Set to possibly the maximum number of CPUs!</span>
+    <span class="k">if</span> <span class="n">num_processes</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">num_processes</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">num_processes</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
+    
+    <span class="c1"># Convert newer_than (means to filter only new files) to timestamp</span>
+    <span class="k">if</span> <span class="n">newer_than</span><span class="p">:</span>
+        <span class="n">newer_than</span> <span class="o">=</span> <span class="n">to_timestamp</span><span class="p">(</span><span class="n">newer_than</span><span class="p">)</span>
+
+    <span class="c1"># Collect all file paths</span>
+    <span class="n">file_paths</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">root</span><span class="p">,</span> <span class="n">dirs</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">sds_path</span><span class="p">,</span><span class="n">followlinks</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">fnmatch</span><span class="o">.</span><span class="n">fnmatch</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">pattern</span><span class="p">)</span> <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">search_patterns</span><span class="p">):</span>
+                <span class="n">file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="n">f</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">newer_than</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">newer_than</span><span class="p">:</span>
+                    <span class="n">file_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">f</span><span class="p">))</span>
+    
+    <span class="n">total_files</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">file_paths</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found </span><span class="si">{</span><span class="n">total_files</span><span class="si">}</span><span class="s2"> files to process.&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># Process files with or without multiprocessing</span>
+    <span class="c1"># TODO (currently having issues with OSX and undoubtably windows is going to be a bigger problem)</span>
+    <span class="k">if</span> <span class="n">num_processes</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="n">num_processes</span><span class="p">)</span> <span class="k">as</span> <span class="n">pool</span><span class="p">:</span>
+                <span class="n">to_insert_db</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">tqdm</span><span class="p">(</span><span class="n">pool</span><span class="o">.</span><span class="n">imap</span><span class="p">(</span><span class="n">miniseed_to_db_element</span><span class="p">,</span> <span class="n">file_paths</span><span class="p">),</span> \
+                    <span class="n">total</span><span class="o">=</span><span class="n">total_files</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Processing files&quot;</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Multiprocessing failed: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">. Falling back to single-process execution.&quot;</span><span class="p">)</span>
+            <span class="n">num_processes</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">to_insert_db</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">fp</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">file_paths</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Scanning </span><span class="si">%s</span><span class="s2">...&quot;</span> <span class="o">%</span> <span class="n">sds_path</span><span class="p">):</span>
+            <span class="n">to_insert_db</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">miniseed_to_db_element</span><span class="p">(</span><span class="n">fp</span><span class="p">))</span>
+
+    <span class="c1"># Update database</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">num_inserted</span> <span class="o">=</span> <span class="n">db_manager</span><span class="o">.</span><span class="n">bulk_insert_archive_data</span><span class="p">(</span><span class="n">to_insert_db</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Error with bulk_insert_archive_data&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>  
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processed </span><span class="si">{</span><span class="n">total_files</span><span class="si">}</span><span class="s2"> files, inserted </span><span class="si">{</span><span class="n">num_inserted</span><span class="si">}</span><span class="s2"> records into the database.&quot;</span><span class="p">)</span>
+
+    <span class="n">db_manager</span><span class="o">.</span><span class="n">join_continuous_segments</span><span class="p">(</span><span class="n">gap_tolerance</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="populate_database_from_files_dumb">
+<a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.populate_database_from_files_dumb">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">populate_database_from_files_dumb</span><span class="p">(</span><span class="n">cursor</span><span class="p">,</span> <span class="n">file_paths</span><span class="o">=</span><span class="p">[]):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Simple version of database population from MiniSEED files without span merging.</span>
+
+<span class="sd">    A simplified &quot;dumb&quot; version that blindly replaces existing database entries</span>
+<span class="sd">    with identical network/station/location/channel codes, rather than checking for</span>
+<span class="sd">    and merging overlapping time spans.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        cursor (sqlite3.Cursor): Database cursor for executing SQL commands</span>
+<span class="sd">        file_paths (list, optional): List of paths to MiniSeed files. Defaults to empty list.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">now</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">timestamp</span><span class="p">())</span>
+    <span class="k">for</span> <span class="n">fp</span> <span class="ow">in</span> <span class="n">file_paths</span><span class="p">:</span>
+        <span class="n">result</span>  <span class="o">=</span> <span class="n">miniseed_to_db_element</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">result</span> <span class="o">+</span> <span class="p">(</span><span class="n">now</span><span class="p">,)</span>
+            <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">                INSERT OR REPLACE INTO archive_data</span>
+<span class="s1">                (network, station, location, channel, starttime, endtime, importtime)</span>
+<span class="s1">                VALUES (?, ?, ?, ?, ?, ?, ?)</span>
+<span class="s1">            &#39;&#39;&#39;</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="populate_database_from_files">
+<a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.populate_database_from_files">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">populate_database_from_files</span><span class="p">(</span><span class="n">cursor</span><span class="p">,</span> <span class="n">file_paths</span><span class="o">=</span><span class="p">[]):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Insert or update MiniSEED file metadata into an SQL database.</span>
+
+<span class="sd">    Takes a list of SDS archive file paths, extracts metadata, and updates a database</span>
+<span class="sd">    tracking data availability. If data spans overlap with existing database entries,</span>
+<span class="sd">    the spans are merged. Uses miniseed_to_db_element() to parse file metadata.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        cursor (sqlite3.Cursor): Database cursor for executing SQL commands</span>
+<span class="sd">        file_paths (list, optional): List of paths to MiniSeed files. Defaults to empty list.</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        - Database must have an &#39;archive_data&#39; table with columns:</span>
+<span class="sd">            * network (text)</span>
+<span class="sd">            * station (text)</span>
+<span class="sd">            * location (text)</span>
+<span class="sd">            * channel (text)</span>
+<span class="sd">            * starttime (integer): Unix timestamp</span>
+<span class="sd">            * endtime (integer): Unix timestamp</span>
+<span class="sd">            * importtime (integer): Unix timestamp of database insertion</span>
+<span class="sd">        - Handles overlapping time spans by merging them into a single entry</span>
+<span class="sd">        - Sets importtime to current Unix timestamp</span>
+<span class="sd">        - Skips files that fail metadata extraction (when miniseed_to_db_element returns None)</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; import sqlite3</span>
+<span class="sd">        &gt;&gt;&gt; conn = sqlite3.connect(&#39;archive.db&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; cursor = conn.cursor()</span>
+<span class="sd">        &gt;&gt;&gt; files = [&#39;/path/to/IU.ANMO.00.BHZ.mseed&#39;, &#39;/path/to/IU.ANMO.00.BHN.mseed&#39;]</span>
+<span class="sd">        &gt;&gt;&gt; populate_database_from_files(cursor, files)</span>
+<span class="sd">        &gt;&gt;&gt; conn.commit()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">now</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">timestamp</span><span class="p">())</span>
+    <span class="k">for</span> <span class="n">fp</span> <span class="ow">in</span> <span class="n">file_paths</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">miniseed_to_db_element</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+            <span class="n">network</span><span class="p">,</span> <span class="n">station</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span> <span class="n">start_timestamp</span><span class="p">,</span> <span class="n">end_timestamp</span> <span class="o">=</span> <span class="n">result</span>
+            
+            <span class="c1"># First check for existing overlapping spans</span>
+            <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">                SELECT starttime, endtime FROM archive_data</span>
+<span class="s1">                WHERE network = ? AND station = ? AND location = ? AND channel = ?</span>
+<span class="s1">                AND NOT (endtime &lt; ? OR starttime &gt; ?)</span>
+<span class="s1">            &#39;&#39;&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="n">station</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span> <span class="n">start_timestamp</span><span class="p">,</span> <span class="n">end_timestamp</span><span class="p">))</span>
+            
+            <span class="n">overlaps</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">overlaps</span><span class="p">:</span>
+                <span class="c1"># Merge with existing spans</span>
+                <span class="n">start_timestamp</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">start_timestamp</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">overlaps</span><span class="p">))</span>
+                <span class="n">end_timestamp</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">end_timestamp</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">overlaps</span><span class="p">))</span>
+                
+                <span class="c1"># Delete overlapping spans</span>
+                <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">                    DELETE FROM archive_data</span>
+<span class="s1">                    WHERE network = ? AND station = ? AND location = ? AND channel = ?</span>
+<span class="s1">                    AND NOT (endtime &lt; ? OR starttime &gt; ?)</span>
+<span class="s1">                &#39;&#39;&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="n">station</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span> <span class="n">start_timestamp</span><span class="p">,</span> <span class="n">end_timestamp</span><span class="p">))</span>
+            
+            <span class="c1"># Insert the new or merged span</span>
+            <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">                INSERT INTO archive_data</span>
+<span class="s1">                (network, station, location, channel, starttime, endtime, importtime)</span>
+<span class="s1">                VALUES (?, ?, ?, ?, ?, ?, ?)</span>
+<span class="s1">            &#39;&#39;&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="n">station</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span> <span class="n">start_timestamp</span><span class="p">,</span> <span class="n">end_timestamp</span><span class="p">,</span> <span class="n">now</span><span class="p">))</span></div>
+
+
+ 
 
 <div class="viewcode-block" id="DatabaseManager">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.DatabaseManager">[docs]</a>
@@ -267,8 +536,8 @@
 
 <div class="viewcode-block" id="DatabaseManager.display_contents">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.DatabaseManager.display_contents">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">display_contents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">start_time</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">,</span> <span class="n">UTCDateTime</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
-                        <span class="n">end_time</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">,</span> <span class="n">UTCDateTime</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4102444799</span><span class="p">,</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">display_contents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">start_time</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">UTCDateTime</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+                        <span class="n">end_time</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">UTCDateTime</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4102444799</span><span class="p">,</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Display contents of a specified table within a given time range.</span>
 
@@ -344,8 +613,8 @@
 <div class="viewcode-block" id="DatabaseManager.delete_elements">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.DatabaseManager.delete_elements">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">delete_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> 
-                       <span class="n">start_time</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">,</span> <span class="n">UTCDateTime</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
-                       <span class="n">end_time</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">,</span> <span class="n">UTCDateTime</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4102444799</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+                       <span class="n">start_time</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">UTCDateTime</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+                       <span class="n">end_time</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">UTCDateTime</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4102444799</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Delete elements from specified table within time range.</span>
 
@@ -496,7 +765,7 @@
 
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
             <span class="n">cursor</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
-            <span class="n">now</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">timestamp</span><span class="p">())</span>
+            <span class="n">now</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">timestamp</span><span class="p">())</span>
             <span class="n">archive_list</span> <span class="o">=</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">ele</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="n">now</span><span class="p">])</span> <span class="k">for</span> <span class="n">ele</span> <span class="ow">in</span> <span class="n">archive_list</span> <span class="k">if</span> <span class="n">ele</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
             
             <span class="n">cursor</span><span class="o">.</span><span class="n">executemany</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
@@ -537,7 +806,7 @@
 <span class="s1">                VALUES (</span><span class="si">{</span><span class="n">placeholders</span><span class="si">}</span><span class="s1">)</span>
 <span class="s1">            &#39;&#39;&#39;</span>
             
-            <span class="n">now</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">timestamp</span><span class="p">())</span>
+            <span class="n">now</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">timestamp</span><span class="p">())</span>
             <span class="n">arrival_list</span> <span class="o">=</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">ele</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="n">now</span><span class="p">])</span> <span class="k">for</span> <span class="n">ele</span> <span class="ow">in</span> <span class="n">arrival_list</span><span class="p">]</span>
             <span class="n">cursor</span><span class="o">.</span><span class="n">executemany</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">arrival_list</span><span class="p">)</span>
             

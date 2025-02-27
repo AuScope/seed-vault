@@ -51,8 +51,16 @@
 <li class="toctree-l2"><a class="reference internal" href="app_run_from_config.html">Direct parameter input</a></li>
 <li class="toctree-l2"><a class="reference internal" href="app_db_explorer.html">Database Explorer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="app_settings.html">App Settings</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="app_settings.html#data">Data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="app_settings.html#credentials">Credentials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="app_settings.html#data">Data</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="app_settings.html#parameters">Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="app_settings.html#id1">Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="app_settings.html#credentials">Credentials</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="app_settings.html#adding-removing-credentials">Adding &amp; Removing Credentials</a></li>
+<li class="toctree-l4"><a class="reference internal" href="app_settings.html#id2">Parameters</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="app_settings.html#clients">Clients</a></li>
 </ul>
 </li>
@@ -1147,6 +1155,13 @@ enforce_padding: puts the content in columns to enforce artificial padding.</p>
 <span class="sig-name descname"><span class="pre">event_components</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#seed_vault.ui.components.base.BaseComponent" title="seed_vault.ui.components.base.BaseComponent"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseComponent</span></code></a></em><a class="headerlink" href="#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.event_components" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.handle_error">
+<span class="sig-name descname"><span class="pre">handle_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/workflows_combined.html#CombinedBasedWorkflow.handle_error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.handle_error" title="Link to this definition"></a></dt>
+<dd><p>Handles errors gracefully by displaying a helpful message and providing
+a link to reset the config the settings.</p>
+</dd></dl>
+
 <dl class="py attribute">
 <dt class="sig sig-object py" id="seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.has_error">
 <span class="sig-name descname"><span class="pre">has_error</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.has_error" title="Link to this definition"></a></dt>
@@ -1197,6 +1212,11 @@ changes. Also, probably, we do not need clean up on the filter settings
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.render_stage_3">
 <span class="sig-name descname"><span class="pre">render_stage_3</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/workflows_combined.html#CombinedBasedWorkflow.render_stage_3"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.render_stage_3" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.reset_config">
+<span class="sig-name descname"><span class="pre">reset_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/workflows_combined.html#CombinedBasedWorkflow.reset_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.reset_config" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">

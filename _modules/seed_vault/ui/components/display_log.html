@@ -48,8 +48,16 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../app_run_from_config.html">Direct parameter input</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../app_db_explorer.html">Database Explorer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../app_settings.html">App Settings</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#data">Data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#credentials">Credentials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#data">Data</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../app_settings.html#parameters">Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../app_settings.html#id1">Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#credentials">Credentials</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../app_settings.html#adding-removing-credentials">Adding &amp; Removing Credentials</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../app_settings.html#id2">Parameters</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#clients">Clients</a></li>
 </ul>
 </li>
@@ -119,11 +127,10 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize terminal styling&quot;&quot;&quot;</span>
         <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">            &lt;style&gt;</span>
+<span class="s2">                /* Terminal container styling */</span>
 <span class="s2">                .terminal {</span>
 <span class="s2">                    background-color: black;</span>
 <span class="s2">                    color: #ffffff;</span>
-<span class="s2">                    font-family: &#39;Courier New&#39;, Courier, monospace;</span>
-<span class="s2">                    font-size: 12px !important;</span>
 <span class="s2">                    padding: 10px;</span>
 <span class="s2">                    border-radius: 5px;</span>
 <span class="s2">                    height: 800px;</span>
@@ -131,17 +138,30 @@
 <span class="s2">                    white-space: pre;</span>
 <span class="s2">                    tab-size: 4;</span>
 <span class="s2">                }</span>
-<span class="s2">                .terminal pre {</span>
+<span class="s2">                </span>
+<span class="s2">                /* Terminal text styling */</span>
+<span class="s2">                .terminal pre,</span>
+<span class="s2">                .terminal code,</span>
+<span class="s2">                .terminal span,</span>
+<span class="s2">                .terminal div {</span>
 <span class="s2">                    margin: 0;</span>
 <span class="s2">                    white-space: pre-wrap;</span>
 <span class="s2">                    word-wrap: break-word;</span>
 <span class="s2">                    tab-size: 4;</span>
 <span class="s2">                    font-family: &#39;Courier New&#39;, Courier, monospace !important;</span>
-<span class="s2">                    font-size: 12px !important;</span>
+<span class="s2">                    font-size: 14px !important;</span>
+<span class="s2">                    line-height: 1.4 !important;</span>
 <span class="s2">                }</span>
+<span class="s2">                </span>
+<span class="s2">                /* Ensure consistent scrolling behavior */</span>
 <span class="s2">                .stMarkdown {</span>
 <span class="s2">                    overflow-y: auto;</span>
 <span class="s2">                    max-height: 800px;</span>
+<span class="s2">                }</span>
+<span class="s2">                </span>
+<span class="s2">                /* Ensure consistent font size in all contexts */</span>
+<span class="s2">                .terminal * {</span>
+<span class="s2">                    font-size: 14px !important;</span>
 <span class="s2">                }</span>
 <span class="s2">            &lt;/style&gt;</span>
 <span class="s2">        &quot;&quot;&quot;</span><span class="p">,</span> <span class="n">unsafe_allow_html</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>

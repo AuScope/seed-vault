@@ -48,8 +48,16 @@
 <li class="toctree-l2"><a class="reference internal" href="app_run_from_config.html">Direct parameter input</a></li>
 <li class="toctree-l2"><a class="reference internal" href="app_db_explorer.html">Database Explorer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="app_settings.html">App Settings</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="app_settings.html#data">Data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="app_settings.html#credentials">Credentials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="app_settings.html#data">Data</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="app_settings.html#parameters">Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="app_settings.html#id1">Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="app_settings.html#credentials">Credentials</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="app_settings.html#adding-removing-credentials">Adding &amp; Removing Credentials</a></li>
+<li class="toctree-l4"><a class="reference internal" href="app_settings.html#id2">Parameters</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="app_settings.html#clients">Clients</a></li>
 </ul>
 </li>
@@ -482,8 +490,12 @@
 </li>
       <li><a href="modules/seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.fig_color_bar">fig_color_bar (seed_vault.ui.components.base.BaseComponent attribute)</a>, <a href="seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.fig_color_bar">[1]</a>
 </li>
+      <li><a href="modules/seed_vault.service.html#seed_vault.service.utils.filter_catalog_by_geo_constraints">filter_catalog_by_geo_constraints() (in module seed_vault.service.utils)</a>, <a href="seed_vault.service.html#seed_vault.service.utils.filter_catalog_by_geo_constraints">[1]</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/seed_vault.service.html#seed_vault.service.utils.filter_inventory_by_geo_constraints">filter_inventory_by_geo_constraints() (in module seed_vault.service.utils)</a>, <a href="seed_vault.service.html#seed_vault.service.utils.filter_inventory_by_geo_constraints">[1]</a>
+</li>
       <li><a href="modules/seed_vault.ui.components.html#seed_vault.ui.components.waveform.WaveformComponents.filter_menu">filter_menu (seed_vault.ui.components.waveform.WaveformComponents attribute)</a>, <a href="seed_vault.ui.components.html#seed_vault.ui.components.waveform.WaveformComponents.filter_menu">[1]</a>
 </li>
       <li><a href="modules/seed_vault.models.html#seed_vault.models.config.WaveformConfig.force_redownload">force_redownload (seed_vault.models.config.WaveformConfig attribute)</a>, <a href="seed_vault.models.html#seed_vault.models.config.WaveformConfig.force_redownload">[1]</a>
@@ -562,7 +574,7 @@
 </li>
       <li><a href="modules/seed_vault.ui.components.html#seed_vault.ui.components.data_explorer.get_queries">get_queries() (in module seed_vault.ui.components.data_explorer)</a>, <a href="seed_vault.ui.components.html#seed_vault.ui.components.data_explorer.get_queries">[1]</a>
 </li>
-      <li><a href="modules/seed_vault.service.html#seed_vault.service.seismoloader.get_sds_filenames">get_sds_filenames() (in module seed_vault.service.seismoloader)</a>, <a href="seed_vault.service.html#seed_vault.service.seismoloader.get_sds_filenames">[1]</a>
+      <li><a href="modules/seed_vault.service.html#seed_vault.service.utils.get_sds_filenames">get_sds_filenames() (in module seed_vault.service.utils)</a>, <a href="seed_vault.service.html#seed_vault.service.utils.get_sds_filenames">[1]</a>
 </li>
       <li><a href="modules/seed_vault.ui.pages.helpers.html#seed_vault.ui.pages.helpers.common.get_selected_areas">get_selected_areas() (in module seed_vault.ui.pages.helpers.common)</a>, <a href="seed_vault.ui.pages.helpers.html#seed_vault.ui.pages.helpers.common.get_selected_areas">[1]</a>
 </li>
@@ -592,16 +604,18 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="modules/seed_vault.ui.pages.helpers.html#seed_vault.ui.pages.helpers.common.handle_circle">handle_circle() (in module seed_vault.ui.pages.helpers.common)</a>, <a href="seed_vault.ui.pages.helpers.html#seed_vault.ui.pages.helpers.common.handle_circle">[1]</a>
 </li>
+      <li><a href="modules/seed_vault.ui.components.html#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.handle_error">handle_error() (seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow method)</a>, <a href="seed_vault.ui.components.html#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.handle_error">[1]</a>
+</li>
       <li><a href="modules/seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.handle_get_data">handle_get_data() (seed_vault.ui.components.base.BaseComponent method)</a>, <a href="seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.handle_get_data">[1]</a>
 </li>
       <li><a href="modules/seed_vault.ui.pages.helpers.html#seed_vault.ui.pages.helpers.common.handle_polygon">handle_polygon() (in module seed_vault.ui.pages.helpers.common)</a>, <a href="seed_vault.ui.pages.helpers.html#seed_vault.ui.pages.helpers.common.handle_polygon">[1]</a>
 </li>
       <li><a href="modules/seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.handle_update_data_points">handle_update_data_points() (seed_vault.ui.components.base.BaseComponent method)</a>, <a href="seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.handle_update_data_points">[1]</a>
 </li>
-      <li><a href="modules/seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings.has_changed">has_changed() (seed_vault.models.config.SeismoLoaderSettings method)</a>, <a href="seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings.has_changed">[1]</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings.has_changed">has_changed() (seed_vault.models.config.SeismoLoaderSettings method)</a>, <a href="seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings.has_changed">[1]</a>
+</li>
       <li><a href="modules/seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.has_error">has_error (seed_vault.ui.components.base.BaseComponent attribute)</a>, <a href="seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.has_error">[1]</a>
 
       <ul>
@@ -756,7 +770,7 @@
         <li><a href="modules/seed_vault.models.html#id30">(seed_vault.models.config.EventConfig attribute)</a>, <a href="modules/seed_vault.models.html#seed_vault.models.config.EventConfig.min_radius">[1]</a>, <a href="seed_vault.models.html#id30">[2]</a>, <a href="seed_vault.models.html#seed_vault.models.config.EventConfig.min_radius">[3]</a>
 </li>
       </ul></li>
-      <li><a href="modules/seed_vault.service.html#seed_vault.service.seismoloader.miniseed_to_db_element">miniseed_to_db_element() (in module seed_vault.service.seismoloader)</a>, <a href="seed_vault.service.html#seed_vault.service.seismoloader.miniseed_to_db_element">[1]</a>
+      <li><a href="modules/seed_vault.service.html#seed_vault.service.db.miniseed_to_db_element">miniseed_to_db_element() (in module seed_vault.service.db)</a>, <a href="seed_vault.service.html#seed_vault.service.db.miniseed_to_db_element">[1]</a>
 </li>
       <li><a href="modules/seed_vault.ui.components.html#seed_vault.ui.components.waveform.MissingDataDisplay">MissingDataDisplay (class in seed_vault.ui.components.waveform)</a>, <a href="seed_vault.ui.components.html#seed_vault.ui.components.waveform.MissingDataDisplay">[1]</a>
 </li>
@@ -949,13 +963,13 @@
 </li>
       <li><a href="modules/seed_vault.enums.html#seed_vault.enums.common.GeometryType.POLYGON">POLYGON (seed_vault.enums.common.GeometryType attribute)</a>
 </li>
-      <li><a href="modules/seed_vault.service.html#seed_vault.service.seismoloader.populate_database_from_files">populate_database_from_files() (in module seed_vault.service.seismoloader)</a>, <a href="seed_vault.service.html#seed_vault.service.seismoloader.populate_database_from_files">[1]</a>
+      <li><a href="modules/seed_vault.service.html#seed_vault.service.db.populate_database_from_files">populate_database_from_files() (in module seed_vault.service.db)</a>, <a href="seed_vault.service.html#seed_vault.service.db.populate_database_from_files">[1]</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules/seed_vault.service.html#seed_vault.service.seismoloader.populate_database_from_files_dumb">populate_database_from_files_dumb() (in module seed_vault.service.seismoloader)</a>, <a href="seed_vault.service.html#seed_vault.service.seismoloader.populate_database_from_files_dumb">[1]</a>
+      <li><a href="modules/seed_vault.service.html#seed_vault.service.db.populate_database_from_files_dumb">populate_database_from_files_dumb() (in module seed_vault.service.db)</a>, <a href="seed_vault.service.html#seed_vault.service.db.populate_database_from_files_dumb">[1]</a>
 </li>
-      <li><a href="modules/seed_vault.service.html#seed_vault.service.seismoloader.populate_database_from_sds">populate_database_from_sds() (in module seed_vault.service.seismoloader)</a>, <a href="seed_vault.service.html#seed_vault.service.seismoloader.populate_database_from_sds">[1]</a>
+      <li><a href="modules/seed_vault.service.html#seed_vault.service.db.populate_database_from_sds">populate_database_from_sds() (in module seed_vault.service.db)</a>, <a href="seed_vault.service.html#seed_vault.service.db.populate_database_from_sds">[1]</a>
 </li>
       <li><a href="modules/seed_vault.models.html#seed_vault.models.config.PredictionData">PredictionData (class in seed_vault.models.config)</a>, <a href="seed_vault.models.html#seed_vault.models.config.PredictionData">[1]</a>
 </li>
@@ -1012,7 +1026,7 @@
       <li><a href="modules/seed_vault.service.html#seed_vault.service.events.remove_duplicate_events">remove_duplicate_events() (in module seed_vault.service.events)</a>, <a href="seed_vault.service.html#seed_vault.service.events.remove_duplicate_events">[1]</a>
 
       <ul>
-        <li><a href="modules/seed_vault.service.html#seed_vault.service.seismoloader.remove_duplicate_events">(in module seed_vault.service.seismoloader)</a>, <a href="seed_vault.service.html#seed_vault.service.seismoloader.remove_duplicate_events">[1]</a>
+        <li><a href="modules/seed_vault.service.html#seed_vault.service.utils.remove_duplicate_events">(in module seed_vault.service.utils)</a>, <a href="seed_vault.service.html#seed_vault.service.utils.remove_duplicate_events">[1]</a>
 </li>
       </ul></li>
       <li><a href="modules/seed_vault.service.html#seed_vault.service.stations.remove_duplicate_inventories">remove_duplicate_inventories() (in module seed_vault.service.stations)</a>, <a href="seed_vault.service.html#seed_vault.service.stations.remove_duplicate_inventories">[1]</a>
@@ -1049,10 +1063,10 @@
 </li>
       <li><a href="modules/seed_vault.ui.components.html#seed_vault.ui.components.settings.SettingsComponent.render_clients">render_clients() (seed_vault.ui.components.settings.SettingsComponent method)</a>, <a href="seed_vault.ui.components.html#seed_vault.ui.components.settings.SettingsComponent.render_clients">[1]</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="modules/seed_vault.ui.components.html#seed_vault.ui.components.run_from_config.RunFromConfigComponent.render_config">render_config() (seed_vault.ui.components.run_from_config.RunFromConfigComponent method)</a>, <a href="seed_vault.ui.components.html#seed_vault.ui.components.run_from_config.RunFromConfigComponent.render_config">[1]</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="modules/seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.render_data_table">render_data_table() (seed_vault.ui.components.base.BaseComponent method)</a>, <a href="seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.render_data_table">[1]</a>
 </li>
       <li><a href="modules/seed_vault.ui.components.html#seed_vault.ui.components.settings.SettingsComponent.render_db">render_db() (seed_vault.ui.components.settings.SettingsComponent method)</a>, <a href="seed_vault.ui.components.html#seed_vault.ui.components.settings.SettingsComponent.render_db">[1]</a>
@@ -1091,6 +1105,8 @@
 
       <ul>
         <li><a href="modules/seed_vault.ui.components.html#seed_vault.ui.components.settings.SettingsComponent.reset_config">(seed_vault.ui.components.settings.SettingsComponent method)</a>, <a href="seed_vault.ui.components.html#seed_vault.ui.components.settings.SettingsComponent.reset_config">[1]</a>
+</li>
+        <li><a href="modules/seed_vault.ui.components.html#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.reset_config">(seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow method)</a>, <a href="seed_vault.ui.components.html#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.reset_config">[1]</a>
 </li>
       </ul></li>
       <li><a href="modules/seed_vault.ui.components.html#seed_vault.ui.components.settings.SettingsComponent.reset_is_new_cred_added">reset_is_new_cred_added() (seed_vault.ui.components.settings.SettingsComponent method)</a>, <a href="seed_vault.ui.components.html#seed_vault.ui.components.settings.SettingsComponent.reset_is_new_cred_added">[1]</a>
@@ -1495,7 +1511,7 @@
 </li>
       <li><a href="modules/seed_vault.service.html#seed_vault.service.waveform.stream_to_dataframe">stream_to_dataframe() (in module seed_vault.service.waveform)</a>, <a href="seed_vault.service.html#seed_vault.service.waveform.stream_to_dataframe">[1]</a>
 </li>
-      <li><a href="modules/seed_vault.service.html#seed_vault.service.seismoloader.stream_to_db_element">stream_to_db_element() (in module seed_vault.service.seismoloader)</a>, <a href="seed_vault.service.html#seed_vault.service.seismoloader.stream_to_db_element">[1]</a>
+      <li><a href="modules/seed_vault.service.html#seed_vault.service.db.stream_to_db_element">stream_to_db_element() (in module seed_vault.service.db)</a>, <a href="seed_vault.service.html#seed_vault.service.db.stream_to_db_element">[1]</a>
 </li>
       <li><a href="modules/seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.sync_df_markers_with_df_edit">sync_df_markers_with_df_edit() (seed_vault.ui.components.base.BaseComponent method)</a>, <a href="seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.sync_df_markers_with_df_edit">[1]</a>
 </li>
@@ -1511,12 +1527,8 @@
 </li>
       <li><a href="modules/seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings.to_pickle">to_pickle() (seed_vault.models.config.SeismoLoaderSettings method)</a>, <a href="seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings.to_pickle">[1]</a>
 </li>
-      <li><a href="modules/seed_vault.service.html#seed_vault.service.db.to_timestamp">to_timestamp() (in module seed_vault.service.db)</a>, <a href="seed_vault.service.html#seed_vault.service.db.to_timestamp">[1]</a>
-
-      <ul>
-        <li><a href="modules/seed_vault.service.html#seed_vault.service.seismoloader.to_timestamp">(in module seed_vault.service.seismoloader)</a>, <a href="seed_vault.service.html#seed_vault.service.seismoloader.to_timestamp">[1]</a>
+      <li><a href="modules/seed_vault.service.html#seed_vault.service.utils.to_timestamp">to_timestamp() (in module seed_vault.service.utils)</a>, <a href="seed_vault.service.html#seed_vault.service.utils.to_timestamp">[1]</a>
 </li>
-      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="modules/seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.trigger_error">trigger_error() (seed_vault.ui.components.base.BaseComponent method)</a>, <a href="seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.trigger_error">[1]</a>

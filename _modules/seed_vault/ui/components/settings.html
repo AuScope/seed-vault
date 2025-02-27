@@ -48,8 +48,16 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../app_run_from_config.html">Direct parameter input</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../app_db_explorer.html">Database Explorer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../app_settings.html">App Settings</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#data">Data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#credentials">Credentials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#data">Data</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../app_settings.html#parameters">Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../app_settings.html#id1">Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#credentials">Credentials</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../app_settings.html#adding-removing-credentials">Adding &amp; Removing Credentials</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../app_settings.html#id2">Parameters</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#clients">Clients</a></li>
 </ul>
 </li>
@@ -291,7 +299,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">reset_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">reset_config</span><span class="p">()</span>   
         <span class="n">save_filter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
-        <span class="n">st</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s2">&quot;Config have been reset to default.&quot;</span><span class="p">)</span></div>
+        <span class="n">st</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s2">&quot;Settings have been reset to default.&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="SettingsComponent.render">
@@ -321,7 +329,7 @@
                             <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;An error occured. Make sure there is no null value in the table.&quot;</span><span class="p">)</span>
                             <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
             <span class="k">with</span> <span class="n">button_col2</span><span class="p">:</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;Reset Config&quot;</span><span class="p">,</span> <span class="n">on_click</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reset_config</span><span class="p">)</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;Reset Settings&quot;</span><span class="p">,</span> <span class="n">on_click</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reset_config</span><span class="p">)</span>
 
         <span class="n">tab1</span><span class="p">,</span> <span class="n">tab2</span><span class="p">,</span> <span class="n">tab3</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">tabs</span><span class="p">([</span><span class="s2">&quot;Data&quot;</span><span class="p">,</span> <span class="s2">&quot;Credentials&quot;</span><span class="p">,</span> <span class="s2">&quot;Clients&quot;</span><span class="p">])</span>
         <span class="k">with</span> <span class="n">tab1</span><span class="p">:</span>

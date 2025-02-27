@@ -48,8 +48,16 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../../app_run_from_config.html">Direct parameter input</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../../app_db_explorer.html">Database Explorer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../../app_settings.html">App Settings</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../../../app_settings.html#data">Data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../../app_settings.html#credentials">Credentials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../app_settings.html#data">Data</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../app_settings.html#parameters">Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../app_settings.html#id1">Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../app_settings.html#credentials">Credentials</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../app_settings.html#adding-removing-credentials">Adding &amp; Removing Credentials</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../app_settings.html#id2">Parameters</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../../app_settings.html#clients">Clients</a></li>
 </ul>
 </li>
@@ -128,8 +136,10 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    TODO: a function that reads the latest app settings</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">geo_constraint</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">geo_constraint</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="p">):</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">geo_constraint</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="p">):</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">geo_constraint</span> <span class="o">=</span> <span class="p">[]</span>        
     <span class="k">return</span> <span class="n">settings</span></div>
 
 

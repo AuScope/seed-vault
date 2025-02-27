@@ -48,8 +48,16 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../app_run_from_config.html">Direct parameter input</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../app_db_explorer.html">Database Explorer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../app_settings.html">App Settings</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#data">Data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#credentials">Credentials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#data">Data</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../app_settings.html#parameters">Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../app_settings.html#id1">Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#credentials">Credentials</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../app_settings.html#adding-removing-credentials">Adding &amp; Removing Credentials</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../app_settings.html#id2">Parameters</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#clients">Clients</a></li>
 </ul>
 </li>
@@ -397,24 +405,35 @@
         <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2"> Waveform client is set to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">waveform</span><span class="o">.</span><span class="n">client</span><span class="si">}</span><span class="s2">, which seems does not exists. Please navigate to the settings page and use the Clients tab to add the client or fix the stored config.cfg file.&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ttmodel</span> <span class="o">=</span> <span class="n">TauPyModel</span><span class="p">(</span><span class="s2">&quot;iasp91&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">streams</span> <span class="o">=</span> <span class="p">[]</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">streams</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">missing_data</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">console</span> <span class="o">=</span> <span class="n">ConsoleDisplay</span><span class="p">()</span>  <span class="c1"># Add console display</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">missing_data</span> <span class="o">=</span> <span class="p">{}</span>
 
 <div class="viewcode-block" id="WaveformDisplay.apply_filters">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.waveform.WaveformDisplay.apply_filters">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">apply_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">:</span> <span class="n">Stream</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Stream</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Stream</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Filter stream based on user selection&quot;&quot;&quot;</span>
         <span class="n">filtered_stream</span> <span class="o">=</span> <span class="n">Stream</span><span class="p">()</span>
         
+        <span class="c1"># Handle case where stream is a list of traces</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">stream</span> <span class="o">=</span> <span class="n">Stream</span><span class="p">(</span><span class="n">traces</span><span class="o">=</span><span class="n">stream</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">stream</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">filtered_stream</span>
+        
         <span class="k">for</span> <span class="n">tr</span> <span class="ow">in</span> <span class="n">stream</span><span class="p">:</span>
-            <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_menu</span><span class="o">.</span><span class="n">network_filter</span> <span class="o">==</span> <span class="s2">&quot;All networks&quot;</span> <span class="ow">or</span> 
-                <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">network</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_menu</span><span class="o">.</span><span class="n">network_filter</span><span class="p">)</span> <span class="ow">and</span> \
-               <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_menu</span><span class="o">.</span><span class="n">station_filter</span> <span class="o">==</span> <span class="s2">&quot;All stations&quot;</span> <span class="ow">or</span> 
-                <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">station</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_menu</span><span class="o">.</span><span class="n">station_filter</span><span class="p">)</span> <span class="ow">and</span> \
-               <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_menu</span><span class="o">.</span><span class="n">channel_filter</span> <span class="o">==</span> <span class="s2">&quot;All channels&quot;</span> <span class="ow">or</span> 
-                <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">channel</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_menu</span><span class="o">.</span><span class="n">channel_filter</span><span class="p">):</span>
-                <span class="n">filtered_stream</span> <span class="o">+=</span> <span class="n">tr</span>
-                
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_menu</span><span class="o">.</span><span class="n">network_filter</span> <span class="o">==</span> <span class="s2">&quot;All networks&quot;</span> <span class="ow">or</span> 
+                    <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">network</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_menu</span><span class="o">.</span><span class="n">network_filter</span><span class="p">)</span> <span class="ow">and</span> \
+                   <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_menu</span><span class="o">.</span><span class="n">station_filter</span> <span class="o">==</span> <span class="s2">&quot;All stations&quot;</span> <span class="ow">or</span> 
+                    <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">station</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_menu</span><span class="o">.</span><span class="n">station_filter</span><span class="p">)</span> <span class="ow">and</span> \
+                   <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_menu</span><span class="o">.</span><span class="n">channel_filter</span> <span class="o">==</span> <span class="s2">&quot;All channels&quot;</span> <span class="ow">or</span> 
+                    <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">channel</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_menu</span><span class="o">.</span><span class="n">channel_filter</span><span class="p">):</span>
+                    <span class="n">filtered_stream</span> <span class="o">+=</span> <span class="n">tr</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">continue</span>
         <span class="k">return</span> <span class="n">filtered_stream</span></div>
 
     
@@ -428,8 +447,13 @@
         <span class="c1"># Capture stdout/stderr for logging</span>
         <span class="k">with</span> <span class="n">redirect_stdout</span><span class="p">(</span><span class="n">StringIO</span><span class="p">())</span> <span class="k">as</span> <span class="n">stdout</span><span class="p">,</span> <span class="n">redirect_stderr</span><span class="p">(</span><span class="n">StringIO</span><span class="p">())</span> <span class="k">as</span> <span class="n">stderr</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">streams</span> <span class="o">=</span> <span class="n">run_event</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span> <span class="n">stop_event</span><span class="p">)</span>
-                <span class="n">success</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="c1"># Update to unpack the tuple returned by run_event</span>
+                <span class="n">streams_and_missing</span> <span class="o">=</span> <span class="n">run_event</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span> <span class="n">stop_event</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">streams_and_missing</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">streams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_data</span> <span class="o">=</span> <span class="n">streams_and_missing</span>
+                    <span class="n">success</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># This will be captured in the output</span>
@@ -603,7 +627,7 @@
                         <span class="c1"># Add trace label</span>
                         <span class="n">label</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">network</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">station</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">location</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">channel</span><span class="si">}</span><span class="s1">&#39;</span>
                         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="p">,</span> <span class="s1">&#39;distance_km&#39;</span><span class="p">):</span>
-                            <span class="n">label</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39; (</span><span class="si">{</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">distance_km</span><span class="si">:</span><span class="s1">.1f</span><span class="si">}</span><span class="s1"> km)&#39;</span>
+                            <span class="n">label</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39; </span><span class="si">{</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">distance_km</span><span class="si">:</span><span class="s1">.1f</span><span class="si">}</span><span class="s1"> km&#39;</span>
                         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="p">,</span> <span class="s1">&#39;filterband&#39;</span><span class="p">):</span>
                             <span class="n">event_info</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;, </span><span class="si">{</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">filterband</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">filterband</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">Hz&quot;</span>
                         <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">before_p_sec</span> <span class="o">*</span> <span class="mf">0.95</span><span class="p">,</span> 
@@ -698,6 +722,7 @@
         
         <span class="c1"># Process each trace</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">tr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">current_stream</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;DEBUG plotted trace:&quot;</span><span class="p">,</span><span class="n">tr</span><span class="p">)</span>
             <span class="n">ax</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
 
             <span class="c1"># Calculate and add an appropriate filter for plotting</span>
@@ -736,7 +761,7 @@
                 <span class="c1"># Format station label with distance</span>
                 <span class="n">station_info</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">network</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">station</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">location</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">channel</span><span class="si">}</span><span class="s2">&quot;</span>
                 <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="p">,</span> <span class="s1">&#39;distance_km&#39;</span><span class="p">):</span>
-                    <span class="n">station_info</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; (</span><span class="si">{</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">distance_km</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> km)&quot;</span>
+                    <span class="n">station_info</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">distance_km</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> km&quot;</span>
                 <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="p">,</span> <span class="s1">&#39;filterband&#39;</span><span class="p">):</span>
                     <span class="n">station_info</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;, </span><span class="si">{</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">filterband</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">filterband</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">Hz&quot;</span>
                 
@@ -784,7 +809,7 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">stream</span><span class="p">:</span>
             <span class="k">return</span>
         
-        <span class="c1"># Sort traces by distance (can&#39;t do via starttime since it&#39;s all the same station)</span>
+        <span class="c1"># Sort traces by distance</span>
         <span class="k">for</span> <span class="n">tr</span> <span class="ow">in</span> <span class="n">stream</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="p">,</span> <span class="s1">&#39;distance_km&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">distance_km</span><span class="p">:</span>
                 <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">distance_km</span> <span class="o">=</span> <span class="mi">99999</span>
@@ -867,6 +892,8 @@
                 <span class="c1"># TODO: Add distance, magnitude, and region to station_info</span>
                 <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="p">,</span> <span class="s1">&#39;distance_km&#39;</span><span class="p">):</span>
                     <span class="n">event_info</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">distance_km</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> km&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="p">,</span> <span class="s1">&#39;event_time&#39;</span><span class="p">):</span>
+                    <span class="n">event_info</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;OT:</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">event_time</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="mi">19</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>                    
                 <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="p">,</span> <span class="s1">&#39;event_magnitude&#39;</span><span class="p">):</span>
                     <span class="n">event_info</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;M</span><span class="si">{</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">event_magnitude</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="p">,</span> <span class="s1">&#39;event_region&#39;</span><span class="p">):</span>
@@ -924,14 +951,6 @@
             <span class="p">[</span><span class="s2">&quot;Single Event - Multiple Stations&quot;</span><span class="p">,</span> <span class="s2">&quot;Single Station - Multiple Events&quot;</span><span class="p">],</span>
             <span class="n">key</span><span class="o">=</span><span class="s2">&quot;view_selector_waveform&quot;</span>
         <span class="p">)</span>
-        
-        <span class="c1"># Create missing data display before checking streams</span>
-        <span class="n">missing_data_display</span> <span class="o">=</span> <span class="n">MissingDataDisplay</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">streams</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">missing_data</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span>
-        <span class="p">)</span>
-        <span class="n">missing_data_display</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
         
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">streams</span><span class="p">:</span>
             <span class="n">st</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;No waveforms to display. Use the &#39;Get Waveforms&#39; button to retrieve waveforms.&quot;</span><span class="p">)</span>
@@ -1026,9 +1045,15 @@
                         <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">current_figure</span> <span class="o">=</span> <span class="n">fig</span>
                         <span class="n">st</span><span class="o">.</span><span class="n">pyplot</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No waveforms available for the selected station.&quot;</span><span class="p">)</span></div>
+                    <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No waveforms available for the selected station.&quot;</span><span class="p">)</span>
+        <span class="c1"># Create missing data display before checking streams</span>
+        <span class="n">missing_data_display</span> <span class="o">=</span> <span class="n">MissingDataDisplay</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">streams</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">missing_data</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span>
+        <span class="p">)</span>
+        <span class="n">missing_data_display</span><span class="o">.</span><span class="n">render</span><span class="p">()</span></div>
 </div>
-
 
 <div class="viewcode-block" id="WaveformComponents">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.waveform.WaveformComponents">[docs]</a>
@@ -1202,14 +1227,32 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">_init_terminal_style</span><span class="p">()</span>  <span class="c1"># Initialize terminal styling</span>
         
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">accumulated_output</span><span class="p">:</span>
+            <span class="c1"># Add the initial header line if it&#39;s not already there</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="s2">&quot;Running run_event&quot;</span> <span class="ow">in</span> <span class="n">line</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">accumulated_output</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">accumulated_output</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Running run_event</span><span class="se">\n</span><span class="s2">-----------------&quot;</span><span class="p">)</span>
+            
+            <span class="n">escaped_content</span> <span class="o">=</span> <span class="n">escape</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">accumulated_output</span><span class="p">))</span>
+            
             <span class="n">log_text</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="s1">&#39;&lt;div class=&quot;terminal&quot; id=&quot;log-terminal&quot;&gt;&#39;</span>
-                <span class="s1">&#39;&lt;pre&gt;</span><span class="si">{}</span><span class="s1">&lt;/pre&gt;&#39;</span>
+                <span class="sa">f</span><span class="s1">&#39;&lt;pre style=&quot;margin: 0; white-space: pre; tab-size: 4;&quot;&gt;</span><span class="si">{</span><span class="n">escaped_content</span><span class="si">}</span><span class="s1">&lt;/pre&gt;&#39;</span>
                 <span class="s1">&#39;&lt;/div&gt;&#39;</span>
-            <span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">accumulated_output</span><span class="p">))</span>
+                <span class="s1">&#39;&lt;script&gt;&#39;</span>
+                <span class="s1">&#39;if (window.terminal_scroll === undefined) {&#39;</span>
+                <span class="s1">&#39;    window.terminal_scroll = function() {&#39;</span>
+                <span class="s1">&#39;        var terminalDiv = document.getElementById(&quot;log-terminal&quot;);&#39;</span>
+                <span class="s1">&#39;        if (terminalDiv) {&#39;</span>
+                <span class="s1">&#39;            terminalDiv.scrollTop = terminalDiv.scrollHeight;&#39;</span>
+                <span class="s1">&#39;        }&#39;</span>
+                <span class="s1">&#39;    };&#39;</span>
+                <span class="s1">&#39;}&#39;</span>
+                <span class="s1">&#39;window.terminal_scroll();&#39;</span>
+                <span class="s1">&#39;&lt;/script&gt;&#39;</span>
+            <span class="p">)</span>
+            
             <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="n">log_text</span><span class="p">,</span> <span class="n">unsafe_allow_html</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;No logs available yet. Perform a waveform download first.&quot;</span><span class="p">)</span></div>
+            <span class="n">st</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Perform a waveform download first :)&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="MissingDataDisplay">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.waveform.MissingDataDisplay">[docs]</a>
@@ -1229,7 +1272,7 @@
         
         <span class="c1"># sort events by time? does this cause problems elsewhere? can we just sort selected_catalogs? do this elsewhere? REVIEW</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">catalog</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">selected_catalogs</span> <span class="c1">#.copy() #need copy?</span>
+            <span class="n">catalog</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">selected_catalogs</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="c1">#need copy?</span>
             <span class="n">catalog</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">origins</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="n">UTCDateTime</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">origins</span> <span class="k">else</span> <span class="n">UTCDateTime</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;catalog sort problem&quot;</span><span class="p">,</span><span class="n">e</span><span class="p">)</span>

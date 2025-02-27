@@ -48,8 +48,16 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../app_run_from_config.html">Direct parameter input</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../app_db_explorer.html">Database Explorer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../app_settings.html">App Settings</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#data">Data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#credentials">Credentials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#data">Data</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../app_settings.html#parameters">Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../app_settings.html#id1">Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#credentials">Credentials</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../app_settings.html#adding-removing-credentials">Adding &amp; Removing Credentials</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../app_settings.html#id2">Parameters</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#clients">Clients</a></li>
 </ul>
 </li>
@@ -268,9 +276,10 @@
 <div class="viewcode-block" id="BaseComponent.get_geo_constraint">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.get_geo_constraint">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_geo_constraint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># if self.step_type == Steps.EVENT and self.settings.event is not None:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">EVENT</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">geo_constraint</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">STATION</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">STATION</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">geo_constraint</span>
         <span class="k">return</span> <span class="p">[]</span></div>
 
@@ -278,9 +287,9 @@
 <div class="viewcode-block" id="BaseComponent.set_geo_constraint">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.set_geo_constraint">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">set_geo_constraint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">geo_constraint</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">GeometryConstraint</span><span class="p">]):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">EVENT</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">EVENT</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">geo_constraint</span> <span class="o">=</span> <span class="n">geo_constraint</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">STATION</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">STATION</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">geo_constraint</span> <span class="o">=</span> <span class="n">geo_constraint</span></div>
 
 
@@ -663,16 +672,13 @@
         <span class="n">geo_constraint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_geo_constraint</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">recreate_map</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">map_output</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">map_output</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;center&quot;</span><span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">map_view_center</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">map_output</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="p">{})</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">map_view_zoom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">map_output</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;zoom&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-
+            
             <span class="bp">self</span><span class="o">.</span><span class="n">map_disp</span> <span class="o">=</span> <span class="n">create_map</span><span class="p">(</span>
                 <span class="n">map_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">map_id</span><span class="p">,</span> 
                 <span class="n">zoom_start</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">map_view_zoom</span><span class="p">,</span>
                 <span class="n">map_center</span><span class="o">=</span><span class="p">[</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">map_view_center</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">map_view_center</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;lng&quot;</span><span class="p">,</span> <span class="mi">175</span><span class="p">),</span> <span class="c1"># pacific ocean</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">map_view_center</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;lng&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="c1"># pacific ocean</span>
                 <span class="p">]</span>
             <span class="p">)</span>
         
@@ -752,7 +758,7 @@
                 <span class="c1"># self.inventories = get_station_data(self.settings.model_dump_json())</span>
                 <span class="k">if</span> <span class="n">is_import</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">import_xml</span><span class="p">(</span><span class="n">uploaded_file</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>                    
+                <span class="k">else</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">inventories</span> <span class="o">=</span> <span class="n">get_station_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inventories</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span> <span class="o">=</span> <span class="n">station_response_to_df</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inventories</span><span class="p">)</span>
@@ -1151,7 +1157,7 @@
         
         <span class="k">with</span> <span class="n">cc3</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span>
-                <span class="s2">&quot;Reload&quot;</span><span class="p">,</span> 
+                <span class="s2">&quot;Reload Map&quot;</span><span class="p">,</span> 
                 <span class="c1"># help=&quot;Use Reload button if the map is collapsed or some layers are missing.&quot;,</span>
                 <span class="n">key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_key_element</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ReLoad </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
             <span class="p">):</span>
@@ -1260,7 +1266,7 @@
 <div class="viewcode-block" id="BaseComponent.render_map_right_menu">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.render_map_right_menu">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">render_map_right_menu</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prev_step_type</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prev_step_type</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_markers_prev</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">6</span><span class="p">:</span>
             <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Search Around </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prev_step_type</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">,</span> <span class="n">expanded</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">display_prev_step_selection_table</span><span class="p">()</span> </div>
 
@@ -1307,6 +1313,10 @@
         <span class="c1">#                  window or tooltips. Here, we have embedded a line at the bottom of the</span>
         <span class="c1">#                  popup to be able to get the Event/Station Ids as well as the type of </span>
         <span class="c1">#                  the marker, ie, event or station.</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">map_output</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">map_output</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;center&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">map_view_center</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">map_output</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">map_view_zoom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">map_output</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;zoom&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
 
         <span class="c1"># st.write(self.map_output)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">map_output</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">map_output</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;last_object_clicked&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -1448,9 +1458,6 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">selected_items_view</span><span class="p">(</span><span class="n">state_key</span><span class="p">)</span> 
 
-        <span class="c1"># Set the height based on the number of rows (with a minimum and maximum)</span>
-        <span class="n">num_rows</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="p">)</span>
-        <span class="n">height</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">num_rows</span> <span class="o">*</span> <span class="mi">35</span> <span class="o">+</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">800</span><span class="p">),</span> <span class="mi">400</span><span class="p">)</span>  <span class="c1"># Adjust as needed</span>
 
         <span class="c1"># Define desired column widths in pts</span>
         <span class="n">column_widths</span> <span class="o">=</span> <span class="p">{</span>
@@ -1483,7 +1490,6 @@
             <span class="n">column_config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> 
             <span class="n">column_order</span> <span class="o">=</span> <span class="n">ordered_col</span><span class="p">,</span> 
             <span class="n">key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_key_element</span><span class="p">(</span><span class="s2">&quot;Data Table&quot;</span><span class="p">),</span>
-            <span class="n">height</span><span class="o">=</span><span class="n">height</span><span class="p">,</span>
             <span class="n">use_container_width</span><span class="o">=</span><span class="kc">True</span>
         <span class="p">)</span>
         
@@ -1563,7 +1569,7 @@
 <div class="viewcode-block" id="BaseComponent.render">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.render">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-
+        
         <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">render_map_handles</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">render_map_right_menu</span><span class="p">()</span>
@@ -1600,8 +1606,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">render_data_table</span><span class="p">(</span><span class="n">c2_export</span><span class="p">)</span></div>
 </div>
 
-
-    
+  
 
 
 

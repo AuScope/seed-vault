@@ -51,8 +51,16 @@
 <li class="toctree-l2"><a class="reference internal" href="app_run_from_config.html">Direct parameter input</a></li>
 <li class="toctree-l2"><a class="reference internal" href="app_db_explorer.html">Database Explorer</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">App Settings</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#data">Data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#credentials">Credentials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#data">Data</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#parameters">Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id1">Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#credentials">Credentials</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#adding-removing-credentials">Adding &amp; Removing Credentials</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id2">Parameters</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#clients">Clients</a></li>
 </ul>
 </li>
@@ -104,27 +112,108 @@
              
   <section id="app-settings">
 <h1>App Settings<a class="headerlink" href="#app-settings" title="Link to this heading"></a></h1>
-<p>This is the page where a number of settings can be configured by user.</p>
-<figure class="align-default" id="id1">
+<p>The <strong>App Settings</strong> page allows users to configure various application settings.</p>
+<figure class="align-default" id="id3">
 <img alt="settings image" src="_images/settings_1.png" />
 <figcaption>
-<p><span class="caption-text">Settings page.</span><a class="headerlink" href="#id1" title="Link to this image"></a></p>
+<p><span class="caption-text">Settings page.</span><a class="headerlink" href="#id3" title="Link to this image"></a></p>
 </figcaption>
 </figure>
-<p>Above figure shows a snapshot of the settings page. As seen, there are three main tabs:</p>
+<p>The figure above provides an overview of the settings page, which consists of three main tabs:</p>
 <ul class="simple">
-<li><p>Data</p></li>
-<li><p>Credentials</p></li>
-<li><p>Clients</p></li>
+<li><p><strong>Data</strong></p></li>
+<li><p><strong>Credentials</strong></p></li>
+<li><p><strong>Clients</strong></p></li>
 </ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Changes made to the settings are <strong>not automatically saved</strong>. Make sure to click the <strong>Save Config</strong> button to apply your modifications.</p>
+</div>
 <section id="data">
 <h2>Data<a class="headerlink" href="#data" title="Link to this heading"></a></h2>
+<p>The <strong>Data</strong> tab manages storage settings, which include:</p>
+<ol class="arabic simple">
+<li><p><strong>Archiving Database</strong> – Tracks downloaded data and stores metadata about queries.</p></li>
+<li><p><strong>Seismic Data Storage</strong> – Defines the local storage path for seismic time series.</p></li>
+</ol>
+<p>The archiving database prevents unnecessary re-downloads by maintaining a record of previously acquired data.</p>
+<section id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h3>
+<p><strong>Database Path:</strong> The database storage path. If the path does not start with <code class="docutils literal notranslate"><span class="pre">/</span></code>, it is considered <strong>relative</strong> to the <code class="docutils literal notranslate"><span class="pre">seed-vault</span></code> installation directory.</p>
+<p>To specify a parent directory, use <code class="docutils literal notranslate"><span class="pre">../</span></code>. For example:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">../data/database.sqlite</span></code> stores the database in the parent directory of <code class="docutils literal notranslate"><span class="pre">seed-vault</span></code>.</p></li>
+</ul>
+<p>For stability, it is <strong>recommended to use an absolute path</strong>.</p>
+<p><strong>Data Archive Path:</strong> Defines where seismic data is stored. Similar to the <strong>Database Path</strong>, an absolute path is recommended.</p>
+<section id="moving-data-to-another-location">
+<h4>Moving Data to Another Location<a class="headerlink" href="#moving-data-to-another-location" title="Link to this heading"></a></h4>
+<p>If you need to move your data to a new location, follow these steps:</p>
+<ol class="arabic simple">
+<li><p>Move your <strong>seismic data</strong> to the new location.</p></li>
+<li><p>Move your <strong>database</strong> to the new location.</p></li>
+<li><p>In the <strong>Settings</strong> page, update the <em>Database Path</em> and <em>Data Archive Path</em> with the new locations.</p></li>
+<li><p>Click <strong>Save Config</strong> to apply the changes.</p></li>
+</ol>
+</section>
+<section id="syncing-database-with-existing-archive">
+<h4>Syncing Database with Existing Archive<a class="headerlink" href="#syncing-database-with-existing-archive" title="Link to this heading"></a></h4>
+<p>This section allows users to populate the <strong>archiving database</strong> from existing local seismic data. If you already have seismic files, syncing ensures they are indexed in the database, preventing unnecessary re-downloads.</p>
+</section>
+</section>
+<section id="id1">
+<h3>Parameters<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Search Patterns</strong> – File patterns to match. Defaults to <code class="docutils literal notranslate"><span class="pre">[&quot;??.*.*.???.?.????.???&quot;]</span></code> (standard SDS naming pattern).</p></li>
+<li><p><strong>Number of Processors</strong> – Number of parallel processes used for syncing.</p></li>
+<li><p><strong>Gap Tolerance</strong> – Maximum time gap (in seconds) between segments considered continuous. Defaults to <strong>60s</strong>.</p></li>
+<li><p><strong>Date Selection</strong> – Defines the starting date for adding traces to the database.</p></li>
+</ul>
+</section>
 </section>
 <section id="credentials">
 <h2>Credentials<a class="headerlink" href="#credentials" title="Link to this heading"></a></h2>
+<figure class="align-default" id="id4">
+<img alt="credentials image" src="_images/settings_2.png" />
+<figcaption>
+<p><span class="caption-text">Credentials tab.</span><a class="headerlink" href="#id4" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p>The <strong>Credentials</strong> tab allows users to store authentication details required for accessing restricted datasets. <strong>All credentials are stored locally on your machine.</strong></p>
+<section id="adding-removing-credentials">
+<h3>Adding &amp; Removing Credentials<a class="headerlink" href="#adding-removing-credentials" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Click <strong>Add Credential Set</strong> to add a new credential.</p></li>
+<li><p>Click <strong>Delete</strong> to remove an existing credential.</p></li>
+</ul>
+</section>
+<section id="id2">
+<h3>Parameters<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>N.S.L.C Code</strong> – Represents the <cite>&lt;network&gt;.&lt;station&gt;.&lt;location&gt;.&lt;channel&gt;</cite> code. The level of access determines how much of the code needs to be specified:
+- <strong>Network-level access</strong> → Enter only the <strong>network</strong> code.
+- <strong>Station-level access</strong> → Enter the <strong>network</strong> and <strong>station</strong> codes.</p></li>
+<li><p><strong>Username</strong> – Your authentication username.</p></li>
+<li><p><strong>Password</strong> – Your authentication password.</p></li>
+</ul>
+<p>After making changes, click <strong>Save Config</strong> to apply them.</p>
+</section>
 </section>
 <section id="clients">
 <h2>Clients<a class="headerlink" href="#clients" title="Link to this heading"></a></h2>
+<figure class="align-default" id="id5">
+<img alt="clients image" src="_images/settings_3.png" />
+<figcaption>
+<p><span class="caption-text">Clients tab.</span><a class="headerlink" href="#id5" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p>The <strong>Clients</strong> tab allows users to add custom clients that are <strong>not included</strong> in ObsPy’s default client list.</p>
+<p>For more details on existing clients, see the official ObsPy documentation: <a class="reference external" href="https://docs.obspy.org/packages/obspy.clients.fdsn.html">ObsPy FDSN Clients</a>.</p>
+<ul class="simple">
+<li><p>Use the <strong>Extra Clients</strong> section to add new clients by specifying a <strong>name</strong> and <strong>URL</strong>.</p></li>
+<li><p>To delete an extra client, tick the box next to it and click <strong>Delete</strong>.</p></li>
+</ul>
+<p>On the <strong>right side of the page</strong>, you will find a list of currently available clients.</p>
 </section>
 </section>
 

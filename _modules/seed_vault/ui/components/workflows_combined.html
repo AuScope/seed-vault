@@ -48,8 +48,16 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../app_run_from_config.html">Direct parameter input</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../app_db_explorer.html">Database Explorer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../app_settings.html">App Settings</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#data">Data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#credentials">Credentials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#data">Data</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../app_settings.html#parameters">Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../app_settings.html#id1">Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#credentials">Credentials</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../app_settings.html#adding-removing-credentials">Adding &amp; Removing Credentials</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../app_settings.html#id2">Parameters</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../app_settings.html#clients">Clients</a></li>
 </ul>
 </li>
@@ -99,7 +107,8 @@
            <div itemprop="articleBody">
              
   <h1>Source code for seed_vault.ui.components.workflows_combined</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.ui.components.waveform</span><span class="w"> </span><span class="kn">import</span> <span class="n">WaveformComponents</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.ui.components.waveform</span><span class="w"> </span><span class="kn">import</span> <span class="n">WaveformComponents</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">streamlit</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">st</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">plotly.express</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">px</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
@@ -108,7 +117,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.models.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">SeismoLoaderSettings</span><span class="p">,</span> <span class="n">DownloadType</span><span class="p">,</span> <span class="n">WorkflowType</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.ui.components.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseComponent</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.ui.pages.helpers.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_app_settings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.ui.pages.helpers.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_app_settings</span><span class="p">,</span> <span class="n">save_filter</span><span class="p">,</span> <span class="n">reset_config</span>
 
 <span class="n">download_options</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">title</span><span class="p">()</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">DownloadType</span><span class="p">]</span>
 
@@ -128,11 +137,15 @@
     <span class="n">err_message</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">get_app_settings</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">event_components</span> <span class="o">=</span> <span class="n">BaseComponent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span> <span class="n">step_type</span><span class="o">=</span><span class="n">Steps</span><span class="o">.</span><span class="n">EVENT</span><span class="p">,</span> <span class="n">prev_step_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stage</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>    
-        <span class="bp">self</span><span class="o">.</span><span class="n">station_components</span> <span class="o">=</span> <span class="n">BaseComponent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span> <span class="n">step_type</span><span class="o">=</span><span class="n">Steps</span><span class="o">.</span><span class="n">STATION</span><span class="p">,</span> <span class="n">prev_step_type</span><span class="o">=</span><span class="n">Steps</span><span class="o">.</span><span class="n">EVENT</span><span class="p">,</span> <span class="n">stage</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>    
-        <span class="bp">self</span><span class="o">.</span><span class="n">waveform_components</span> <span class="o">=</span> <span class="n">WaveformComponents</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
-
+        <span class="k">try</span><span class="p">:</span>       
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">get_app_settings</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">event_components</span> <span class="o">=</span> <span class="n">BaseComponent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span> <span class="n">step_type</span><span class="o">=</span><span class="n">Steps</span><span class="o">.</span><span class="n">EVENT</span><span class="p">,</span> <span class="n">prev_step_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stage</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>    
+            <span class="bp">self</span><span class="o">.</span><span class="n">station_components</span> <span class="o">=</span> <span class="n">BaseComponent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span> <span class="n">step_type</span><span class="o">=</span><span class="n">Steps</span><span class="o">.</span><span class="n">STATION</span><span class="p">,</span> <span class="n">prev_step_type</span><span class="o">=</span><span class="n">Steps</span><span class="o">.</span><span class="n">EVENT</span><span class="p">,</span> <span class="n">stage</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>    
+            <span class="bp">self</span><span class="o">.</span><span class="n">waveform_components</span> <span class="o">=</span> <span class="n">WaveformComponents</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">handle_error</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="s2">&quot;It looks like some required settings are missing.&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">handle_error</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="s2">&quot;An unexpected error occurred during initialization.&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="CombinedBasedWorkflow.next_stage">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.next_stage">[docs]</a>
@@ -155,12 +168,17 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        See description in render_stage_0.</span>
 <span class="sd">        &quot;&quot;&quot;</span>      
-        
-        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">get_app_settings</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">err_message</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">has_error</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">try</span><span class="p">:</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">get_app_settings</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">err_message</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">has_error</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">selected_flow_type</span> <span class="o">=</span> <span class="n">selected_flow_type</span>
 
-        <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">selected_flow_type</span> <span class="o">=</span> <span class="n">selected_flow_type</span></div>
+        <span class="k">except</span> <span class="ne">AttributeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">handle_error</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="s2">&quot;Settings initialization failed due to missing values.&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">handle_error</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="s2">&quot;An unexpected error occurred while initializing settings.&quot;</span><span class="p">)</span></div>
 
 
 
@@ -176,41 +194,51 @@
 <span class="sd">        (we actually may need to keep the filters as is).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span>
-        <span class="k">with</span> <span class="n">c1</span><span class="p">:</span>
-            <span class="n">selected_flow_type</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
-                <span class="s2">&quot;Select the Seismic Data Request Flow&quot;</span><span class="p">,</span> 
-                <span class="n">workflow_options_list</span><span class="p">,</span> 
-                <span class="n">index</span><span class="o">=</span><span class="n">workflow_options_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">selected_workflow</span><span class="o">.</span><span class="n">value</span><span class="p">),</span> 
-                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;combined-pg-download-type&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">init_settings</span><span class="p">(</span><span class="n">selected_flow_type</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">selected_flow_type</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">selected_workflow</span> <span class="o">=</span> <span class="n">workflow_options</span><span class="p">[</span><span class="n">selected_flow_type</span><span class="p">]</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">c1</span><span class="p">:</span>
+                <span class="n">workflow_options_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">workflow_options</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>            
+                <span class="c1"># if self.settings.event is None:</span>
+                <span class="c1">#     workflow_options_list= [WorkflowType.CONTINUOUS.value]</span>
+                <span class="n">default_index</span> <span class="o">=</span> <span class="mi">0</span>  
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">selected_workflow</span><span class="o">.</span><span class="n">value</span> <span class="ow">in</span> <span class="n">workflow_options_list</span><span class="p">:</span>
+                    <span class="n">default_index</span> <span class="o">=</span> <span class="n">workflow_options_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">selected_workflow</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
 
-        <span class="k">with</span> <span class="n">c2</span><span class="p">:</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;Start&quot;</span><span class="p">):</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">selected_flow_type</span> <span class="o">=</span> <span class="n">selected_flow_type</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">set_download_type_from_workflow</span><span class="p">()</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">selected_workflow</span> <span class="o">==</span> <span class="n">WorkflowType</span><span class="o">.</span><span class="n">EVENT_BASED</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">event_components</span> <span class="o">=</span> <span class="n">BaseComponent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span> <span class="n">step_type</span><span class="o">=</span><span class="n">Steps</span><span class="o">.</span><span class="n">EVENT</span><span class="p">,</span> <span class="n">prev_step_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stage</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>    
-                    <span class="bp">self</span><span class="o">.</span><span class="n">station_components</span> <span class="o">=</span> <span class="n">BaseComponent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span> <span class="n">step_type</span><span class="o">=</span><span class="n">Steps</span><span class="o">.</span><span class="n">STATION</span><span class="p">,</span> <span class="n">prev_step_type</span><span class="o">=</span><span class="n">Steps</span><span class="o">.</span><span class="n">EVENT</span><span class="p">,</span> <span class="n">stage</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>    
-                    <span class="bp">self</span><span class="o">.</span><span class="n">waveform_components</span> <span class="o">=</span> <span class="n">WaveformComponents</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+                <span class="n">selected_flow_type</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
+                    <span class="s2">&quot;Select the Seismic Data Request Flow&quot;</span><span class="p">,</span> 
+                    <span class="n">workflow_options_list</span><span class="p">,</span> 
+                    <span class="n">index</span><span class="o">=</span><span class="n">default_index</span><span class="p">,</span> 
+                    <span class="n">key</span><span class="o">=</span><span class="s2">&quot;combined-pg-download-type&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">init_settings</span><span class="p">(</span><span class="n">selected_flow_type</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">selected_flow_type</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">selected_workflow</span> <span class="o">=</span> <span class="n">workflow_options</span><span class="p">[</span><span class="n">selected_flow_type</span><span class="p">]</span>
 
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">selected_workflow</span> <span class="o">==</span> <span class="n">WorkflowType</span><span class="o">.</span><span class="n">STATION_BASED</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">station_components</span> <span class="o">=</span> <span class="n">BaseComponent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span> <span class="n">step_type</span><span class="o">=</span><span class="n">Steps</span><span class="o">.</span><span class="n">STATION</span><span class="p">,</span> <span class="n">prev_step_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stage</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>   
-                    <span class="bp">self</span><span class="o">.</span><span class="n">event_components</span> <span class="o">=</span> <span class="n">BaseComponent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span> <span class="n">step_type</span><span class="o">=</span><span class="n">Steps</span><span class="o">.</span><span class="n">EVENT</span><span class="p">,</span> <span class="n">prev_step_type</span><span class="o">=</span><span class="n">Steps</span><span class="o">.</span><span class="n">STATION</span><span class="p">,</span> <span class="n">stage</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>  
-                    <span class="bp">self</span><span class="o">.</span><span class="n">waveform_components</span> <span class="o">=</span> <span class="n">WaveformComponents</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">c2</span><span class="p">:</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;Start&quot;</span><span class="p">):</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">selected_flow_type</span> <span class="o">=</span> <span class="n">selected_flow_type</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">set_download_type_from_workflow</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">selected_workflow</span> <span class="o">==</span> <span class="n">WorkflowType</span><span class="o">.</span><span class="n">EVENT_BASED</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">event_components</span> <span class="o">=</span> <span class="n">BaseComponent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span> <span class="n">step_type</span><span class="o">=</span><span class="n">Steps</span><span class="o">.</span><span class="n">EVENT</span><span class="p">,</span> <span class="n">prev_step_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stage</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>    
+                        <span class="bp">self</span><span class="o">.</span><span class="n">station_components</span> <span class="o">=</span> <span class="n">BaseComponent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span> <span class="n">step_type</span><span class="o">=</span><span class="n">Steps</span><span class="o">.</span><span class="n">STATION</span><span class="p">,</span> <span class="n">prev_step_type</span><span class="o">=</span><span class="n">Steps</span><span class="o">.</span><span class="n">EVENT</span><span class="p">,</span> <span class="n">stage</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>    
+                        <span class="bp">self</span><span class="o">.</span><span class="n">waveform_components</span> <span class="o">=</span> <span class="n">WaveformComponents</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
 
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">selected_workflow</span> <span class="o">==</span> <span class="n">WorkflowType</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">station_components</span> <span class="o">=</span> <span class="n">BaseComponent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span> <span class="n">step_type</span><span class="o">=</span><span class="n">Steps</span><span class="o">.</span><span class="n">STATION</span><span class="p">,</span> <span class="n">prev_step_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stage</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">waveform_components</span> <span class="o">=</span> <span class="n">WaveformComponents</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">selected_workflow</span> <span class="o">==</span> <span class="n">WorkflowType</span><span class="o">.</span><span class="n">STATION_BASED</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">station_components</span> <span class="o">=</span> <span class="n">BaseComponent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span> <span class="n">step_type</span><span class="o">=</span><span class="n">Steps</span><span class="o">.</span><span class="n">STATION</span><span class="p">,</span> <span class="n">prev_step_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stage</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>   
+                        <span class="bp">self</span><span class="o">.</span><span class="n">event_components</span> <span class="o">=</span> <span class="n">BaseComponent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span> <span class="n">step_type</span><span class="o">=</span><span class="n">Steps</span><span class="o">.</span><span class="n">EVENT</span><span class="p">,</span> <span class="n">prev_step_type</span><span class="o">=</span><span class="n">Steps</span><span class="o">.</span><span class="n">STATION</span><span class="p">,</span> <span class="n">stage</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>  
+                        <span class="bp">self</span><span class="o">.</span><span class="n">waveform_components</span> <span class="o">=</span> <span class="n">WaveformComponents</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
 
-                <span class="bp">self</span><span class="o">.</span><span class="n">next_stage</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">selected_workflow</span> <span class="o">==</span> <span class="n">WorkflowType</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">station_components</span> <span class="o">=</span> <span class="n">BaseComponent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span> <span class="n">step_type</span><span class="o">=</span><span class="n">Steps</span><span class="o">.</span><span class="n">STATION</span><span class="p">,</span> <span class="n">prev_step_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stage</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">waveform_components</span> <span class="o">=</span> <span class="n">WaveformComponents</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">next_stage</span><span class="p">()</span>
 
-        <span class="n">st</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">selected_workflow</span><span class="o">.</span><span class="n">description</span><span class="p">)</span></div>
-
-
+            <span class="n">st</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">selected_workflow</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">handle_error</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="s2">&quot;It looks like some required values might be missing from your configuration file.&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">handle_error</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="s2">&quot;An unexpected error occurred while rendering Stage 0.&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="CombinedBasedWorkflow.trigger_error">
@@ -248,14 +276,16 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">station_components</span><span class="o">.</span><span class="n">sync_df_markers_with_df_edit</span><span class="p">()</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">station_components</span><span class="o">.</span><span class="n">update_selected_data</span><span class="p">()</span>
                 <span class="n">selected_invs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">station_components</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">selected_invs</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">event_components</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">station_components</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">event_components</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">station_components</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span>
-                
-                <span class="bp">self</span><span class="o">.</span><span class="n">event_components</span><span class="o">.</span><span class="n">set_map_view</span><span class="p">(</span>
-                    <span class="n">map_center</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">station_components</span><span class="o">.</span><span class="n">map_view_center</span><span class="p">,</span>
-                    <span class="n">map_zoom</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">station_components</span><span class="o">.</span><span class="n">map_view_zoom</span>
-                <span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">event_components</span><span class="o">.</span><span class="n">refresh_map</span><span class="p">(</span><span class="n">get_data</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">recreate_map</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+                <span class="k">if</span><span class="p">(</span><span class="n">workflow_type</span> <span class="o">==</span> <span class="n">WorkflowType</span><span class="o">.</span><span class="n">STATION_BASED</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">event_components</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">station_components</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">event_components</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">station_components</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span>
+                    
+                    <span class="bp">self</span><span class="o">.</span><span class="n">event_components</span><span class="o">.</span><span class="n">set_map_view</span><span class="p">(</span>
+                        <span class="n">map_center</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">station_components</span><span class="o">.</span><span class="n">map_view_center</span><span class="p">,</span>
+                        <span class="n">map_zoom</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">station_components</span><span class="o">.</span><span class="n">map_view_zoom</span>
+                    <span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">event_components</span><span class="o">.</span><span class="n">refresh_map</span><span class="p">(</span><span class="n">get_data</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">recreate_map</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
                 <span class="k">if</span> <span class="n">selected_invs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">selected_invs</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">trigger_error</span><span class="p">(</span><span class="s2">&quot;Please select a station to proceed to the next step.&quot;</span><span class="p">)</span>
@@ -415,20 +445,87 @@
 <div class="viewcode-block" id="CombinedBasedWorkflow.render">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.render">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stage</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">render_stage_0</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+        
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stage</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">render_stage_0</span><span class="p">()</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stage</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">render_stage_1</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stage</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">render_stage_1</span><span class="p">()</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stage</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">render_stage_2</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stage</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">render_stage_2</span><span class="p">()</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stage</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">render_stage_3</span><span class="p">()</span></div>
-</div>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stage</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">render_stage_3</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">handle_error</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="s2">&quot;A configuration issue occurred while rendering the app.&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">handle_error</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="s2">&quot;An unexpected error occurred while rendering.&quot;</span><span class="p">)</span></div>
 
             
+
+<div class="viewcode-block" id="CombinedBasedWorkflow.reset_config">
+<a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.reset_config">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">reset_config</span><span class="p">()</span>   
+        <span class="n">save_filter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s2">&quot;Settings have been reset to default.&quot;</span><span class="p">)</span></div>
+
+
+
+
+<div class="viewcode-block" id="CombinedBasedWorkflow.handle_error">
+<a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.handle_error">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">handle_error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handles errors gracefully by displaying a helpful message and providing</span>
+<span class="sd">        a link to reset the config the settings.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;⚠️ </span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Would you like to reset your settings?&quot;</span><span class="p">)</span>      
+        <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;Reset Settings&quot;</span><span class="p">,</span> <span class="n">on_click</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reset_config</span><span class="p">)</span>
+
+        <span class="c1"># If want to redirect the user to setting page</span>
+        <span class="c1"># settings_url = &quot;/settings&quot;</span>
+        <span class="c1"># st.markdown(f&#39;&#39;&#39;</span>
+        <span class="c1">#     &lt;style&gt;</span>
+        <span class="c1">#         .custom-button {{</span>
+        <span class="c1">#             display: inline-flex;</span>
+        <span class="c1">#             align-items: center;</span>
+        <span class="c1">#             justify-content: center;</span>
+        <span class="c1">#             font-weight: 400;</span>
+        <span class="c1">#             padding: 0.25rem 0.75rem;</span>
+        <span class="c1">#             border-radius: 0.5rem;</span>
+        <span class="c1">#             min-height: 2.5rem;</span>
+        <span class="c1">#             margin: 0px;</span>
+        <span class="c1">#             margin-bottom: 15px;</span>
+        <span class="c1">#             line-height: 1.6;</span>
+        <span class="c1">#             text-transform: none;</span>
+        <span class="c1">#             font-size: inherit;</span>
+        <span class="c1">#             font-family: inherit;</span>
+        <span class="c1">#             width: auto;</span>
+        <span class="c1">#             cursor: pointer;</span>
+        <span class="c1">#             user-select: none;</span>
+        <span class="c1">#             background-color: rgb(255, 75, 75); </span>
+        <span class="c1">#             color: rgb(255, 255, 255); </span>
+        <span class="c1">#             border: 1px solid rgb(255, 75, 75);</span>
+        <span class="c1">#             transition: background-color 0.3s, transform 0.2s;</span>
+        <span class="c1">#         }}</span>
+        <span class="c1">#         .custom-button:hover {{</span>
+        <span class="c1">#             background-color: rgb(220, 50, 50);</span>
+        <span class="c1">#             transform: scale(1.05);</span>
+        <span class="c1">#         }}</span>
+        <span class="c1">#     &lt;/style&gt;</span>
+        <span class="c1">#     &lt;a href=&quot;{settings_url}&quot; target=&quot;_self&quot;&gt;</span>
+        <span class="c1">#         &lt;button class=&quot;custom-button&quot;&gt;Go to Settings Page&lt;/button&gt;</span>
+        <span class="c1">#     &lt;/a&gt;</span>
+        <span class="c1">#     &#39;&#39;&#39;,</span>
+        <span class="c1">#     unsafe_allow_html=True</span>
+        <span class="c1"># )</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>  </div>
+</div>
+
 </pre></div>
 
            </div>
