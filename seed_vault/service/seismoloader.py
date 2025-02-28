@@ -10,11 +10,9 @@ import time
 import fnmatch
 import sqlite3
 from datetime import datetime,timedelta,timezone
-import multiprocessing
 import configparser
 import pandas as pd
 import numpy as np
-from tqdm import tqdm
 import threading
 import random
 from typing import Any, Dict, List, Tuple, Optional, Union
@@ -23,7 +21,8 @@ from collections import defaultdict
 
 #import obspy
 from obspy import UTCDateTime
-from obspy.core.stream import read,Stream
+from obspy.core.stream import Stream
+from obspy.core.stream import read as streamread
 from obspy.core.inventory import read_inventory,Inventory
 from obspy.core.event import read_events,Event,Catalog
 
@@ -37,7 +36,7 @@ from seed_vault.models.config import SeismoLoaderSettings, SeismoQuery
 from seed_vault.enums.config import DownloadType, GeoConstraintType
 from seed_vault.service.utils import is_in_enum,get_sds_filenames,to_timestamp,\
     filter_inventory_by_geo_constraints,filter_catalog_by_geo_constraints
-from seed_vault.service.db import DatabaseManager,stream_to_db_element,miniseed_to_db_element,\
+from seed_vault.service.db import DatabaseManager,stream_to_db_elements,miniseed_to_db_elements,\
     populate_database_from_sds,populate_database_from_files,populate_database_from_files_dumb
 from seed_vault.service.waveform import get_local_waveform, stream_to_dataframe
 
@@ -793,7 +792,7 @@ def prune_requests(
                      start_time.isoformat(), end_time.isoformat()))
                 
                 existing_data = cursor.fetchall()
-            
+
             if not existing_data and not existing_filenames:
                 # Keep entire request if no existing data found
                 pruned_requests.append(req)
@@ -951,7 +950,7 @@ def archive_request(
         
         if os.path.exists(full_path):
             try:
-                existing_st = read(full_path)
+                existing_st = streamread(full_path)
                 existing_st += day_stream
                 existing_st.merge(method=-1, fill_value=None)
                 existing_st._cleanup(misalignment_threshold=0.25)
@@ -971,14 +970,14 @@ def archive_request(
             try:
                 # Try STEIM2 compression first
                 existing_st.write(full_path, format="MSEED", encoding='STEIM2')
-                to_insert_db.append(stream_to_db_element(existing_st))
+                to_insert_db.extend(stream_to_db_elements(existing_st))
             except Exception as e:
                 if "Wrong dtype" in str(e):
                     # Fall back to uncompressed format
                     print("Data type not compatible with STEIM2, attempting uncompressed format...")
                     try:
                         existing_st.write(full_path, format="MSEED")
-                        to_insert_db.append(stream_to_db_element(existing_st))
+                        to_insert_db.extend(stream_to_db_elements(existing_st))
                     except Exception as e:
                         print(f"Failed to write uncompressed MSEED to {full_path}:\n {e}")
                 else:
@@ -1494,8 +1493,9 @@ def run_continuous(settings: SeismoLoaderSettings):
         pruned_requests= prune_requests(requests, db_manager, settings.sds_path)
 
     # Break if nothing to do
-    if len(pruned_requests) < 1:
-        return
+    if not pruned_requests:
+        print(f"          ... already archived!")
+        return True
 
     # Combine these into fewer (but larger) requests
     combined_requests = combine_requests(pruned_requests)
@@ -1596,10 +1596,12 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
     event_streams = []
     all_missing = {}
     for i, eq in enumerate(settings.event.selected_catalogs):
-        print(f"\nProcessing event {i+1}/{len(settings.event.selected_catalogs)}  \
-            |  OT: {str(eq.origins[0].time)[0:16]} \
-            LAT: {eq.origins[0].latitude:.2f} \
-            LON: {eq.origins[0].longitude:.2f}")
+        print(
+            f"\nProcessing event {i+1}/{len(settings.event.selected_catalogs)}  |  "
+            f"OT: {str(eq.origins[0].time)[0:16]} "
+            f"LAT: {eq.origins[0].latitude:.2f} "
+            f"LON: {eq.origins[0].longitude:.2f}"
+        )
         
         # Check for cancellation
         if stop_event and stop_event.is_set():
@@ -1627,9 +1629,9 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
         else:
             pruned_requests = prune_requests(requests, db_manager, settings.sds_path)
         
-        if stop_event and stop_event.is_set():
-            print("Run cancelled!")
-            return None
+        # need a better way to check this. will return also if all stations skipped
+        if not pruned_requests:
+            print(f"    no requests")
 
         # Download new data if needed
         if pruned_requests:
@@ -1698,7 +1700,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
                     
                     if arrivals:
                         for tr in st:
-                            tr.stats.event_id = str(eq.resource_id)
+                            tr.stats.resource_id = eq.resource_id.id
                             tr.stats.p_arrival = arrivals[0]
                             tr.stats.s_arrival = arrivals[1]
                             tr.stats.distance_km = arrivals[2]
@@ -1711,7 +1713,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
                 continue
 
         # Now attempt to keep track of what data was missing. Note that this is not catching out-of-bounds data, for better or worse (probably better)
-        missing = get_missing_from_request(str(eq.resource_id),requests,event_stream)
+        missing = get_missing_from_request(eq.resource_id.id,requests,event_stream)
         #print("DEBUG missing: ", missing)
         #print("DEBUG stream: ", event_stream)
         #print("DEBUG requests: ", requests)
@@ -1719,7 +1721,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
         all_missing.update(missing)
 
         if len(event_stream) > 0:
-            event_streams.append(event_stream)
+            event_streams.extend(event_stream) #oops this was .append!
 
 
     # Final database cleanup

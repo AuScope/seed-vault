@@ -563,8 +563,8 @@ class WaveformDisplay:
 
                         ax.plot(times, tr.data, '-', color=self._get_trace_color(tr), linewidth=0.8)
                         ax.text(0, ax.get_ylim()[1], 
-                               f'{tr.stats.network}.{tr.stats.station}.{tr.stats.location or ""}.{tr.stats.channel} {tr.stats.filterband[0]}-{tr.stats.filterband[1]}Hz',
-                               fontsize=8)
+                               f'{tr.stats.network}.{tr.stats.station}.{tr.stats.location or ""}.{tr.stats.channel} {tr.stats.event_region} {tr.stats.filterband[0]}-{tr.stats.filterband[1]}Hz',
+                               fontsize=8) #adding event_region here temporarily to help debug
                 
                 # Remove unnecessary ticks
                 ax.set_yticks([])
@@ -723,10 +723,10 @@ class WaveformDisplay:
         
         # Add event metadata to traces if not already present
         for tr in current_stream:
-            if hasattr(tr.stats, 'event_id'):
+            if hasattr(tr.stats, 'resource_id'):
                 # Find corresponding event in selected catalogs
                 for event in self.settings.event.selected_catalogs:
-                    if str(event.resource_id) == tr.stats.event_id:
+                    if str(event.resource_id) == tr.stats.resource_id:
                         tr.stats.event_magnitude = event.magnitudes[0].mag
                         tr.stats.event_time = event.origins[0].time
                         # Add location from event extra parameters
@@ -859,21 +859,34 @@ class WaveformDisplay:
             if not events:
                 st.warning("No events available.")
                 return
-            
-            # it's possible an event doesn't have a magnitude TODO
+
+            # a list of event resource ids
+            existing_event_resource_ids = [eq.resource_id for eq in events]
+
+            # a list of EQ resource_ids to confirm what data actually exists
+            existing_data_resource_ids = list(set([tr.stats.resource_id for tr in self.streams])) #are these a collection of streams? what?
+
+            # build the pulldown of events which have associated data. if magnitude doesn't exist set to 0.99
             event_options = [
-                f"Event {i+1}: {event.origins[0].time} M{event.magnitudes[0].mag:.1f} {event.extra.get('region', {}).get('value', 'Unknown Region')}"
+                f"Event {i+1}: {event.origins[0].time} "
+                f"M{event.magnitudes[0].mag if hasattr(event, 'magnitudes') and event.magnitudes else 0.99:.1f} "
+                f"{event.extra.get('region', {}).get('value', 'Unknown Region')}"
                 for i, event in enumerate(events)
+                if hasattr(event, 'resource_id') and event.resource_id in existing_data_resource_ids
             ]
+
             selected_event_idx = st.selectbox(
                 "Select Event",
                 range(len(event_options)),
                 format_func=lambda x: event_options[x]
             )
             
-            if self.streams and len(self.streams) > selected_event_idx:
-                stream = self.streams[selected_event_idx]
-                filtered_stream = self.apply_filters(stream)
+            if self.streams:
+
+                selected_event = events[selected_event_idx]
+                event_stream = Stream([tr for tr in self.streams if tr.stats.resource_id == selected_event.resource_id])
+
+                filtered_stream = self.apply_filters(event_stream)
                 
                 if len(filtered_stream) > 0:
                     # Calculate pagination
@@ -951,6 +964,7 @@ class WaveformDisplay:
             self.settings
         )
         missing_data_display.render()
+
 class WaveformComponents:
     settings: SeismoLoaderSettings
     filter_menu: WaveformFilterMenu
@@ -1278,15 +1292,15 @@ class MissingDataDisplay:
             print("catalog sort problem",e)
 
         for event in catalog:
-            event_id = str(event.resource_id)
+            resource_id = str(event.resource_id)
 
             # Create a string for NSLCs which should have been downloaded (e.g. within search radius) but weren't for some reason
             try:
-                if event_id not in self.missing_data.keys():
+                if resource_id not in self.missing_data.keys():
                     continue
 
                 results = []
-                for station_key, value in self.missing_data[event_id].items():
+                for station_key, value in self.missing_data[resource_id].items():
                     if value == "ALL":
                         results.append(f"{station_key}.*")  # Indicate all channels missing
                     elif value == '':
@@ -1295,7 +1309,7 @@ class MissingDataDisplay:
                         if value:  # If list not empty
                             results.extend(value)  # Add all missing channels
                 if results:
-                    missing_data_str = ' '.join(results)
+                    missing_data_str = ','.join(results)
                 else:
                     missing_data_str = None
 
@@ -1310,7 +1324,7 @@ class MissingDataDisplay:
 
                 # Event completely missing
                 missing_events.append({
-                    'Event ID': event_id,
+                    'EQ Resource ID': resource_id,
                     'Event': event_str,
                     'Missing Data': missing_data_str
                 })
