@@ -617,6 +617,10 @@ def combine_requests(
         >>> print(combined)
         [("IU", "ANMO,COLA", "00", "BHZ", "2020-01-01", "2020-01-02")]
     """
+
+    if not requests:
+        return []
+
     # Group requests by network and time range
     groups = defaultdict(list)
     for net, sta, loc, chan, t0, t1 in requests:
@@ -750,10 +754,13 @@ def prune_requests(
 
     Example:
         >>> requests = [("IU", "ANMO", "00", "BHZ", "2020-01-01", "2020-01-02")]
-        >>> pruned = prune_requests(requests, db_manager, "/data/seismic")
+        >>> pruned = prune_requests(requests, db_manager, "/data/SDS")
     """
     pruned_requests = []
-    
+    if not requests:
+        return pruned_requests
+
+
     with db_manager.connection() as conn:
         cursor = conn.cursor()
         
@@ -779,8 +786,9 @@ def prune_requests(
             
             existing_data = cursor.fetchall()
 
-            # Update database if files exist but aren't recorded
-            if existing_filenames and len(existing_data) < len(existing_filenames):
+
+            # Update database if files exist but aren't recorded (probably continuous) OR there are multiple items in one file (probably events)
+            if existing_filenames and ( len(existing_data) < len(existing_filenames) or len(existing_data) > len(existing_filenames)):
                 populate_database_from_files(cursor, file_paths=existing_filenames)
                 
                 cursor.execute('''
@@ -822,7 +830,9 @@ def prune_requests(
                     ))
 
     # Sort by start time, network, station
-    pruned_requests.sort(key=lambda x: (x[4], x[0], x[1]))
+    if pruned_requests:
+        pruned_requests.sort(key=lambda x: (x[4], x[0], x[1]))
+
     return pruned_requests
 
 
@@ -1593,14 +1603,18 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
         print(f"Falling back to IASP91 model: {str(e)}")
         ttmodel = TauPyModel('IASP91')
 
-    event_streams = []
+    all_event_traces = []
     all_missing = {}
     for i, eq in enumerate(settings.event.selected_catalogs):
+        try:
+            event_region = eq.event_descriptions[0].text
+        except:
+            event_region = ""
         print(
-            f"\nProcessing event {i+1}/{len(settings.event.selected_catalogs)}  |  "
-            f"OT: {str(eq.origins[0].time)[0:16]} "
-            f"LAT: {eq.origins[0].latitude:.2f} "
-            f"LON: {eq.origins[0].longitude:.2f}"
+            f"\nProcessing event {i+1}/{len(settings.event.selected_catalogs)} | "
+            f"{event_region} | "
+            f"{str(eq.origins[0].time)[0:16]} "
+            f"({eq.origins[0].latitude:.2f},{eq.origins[0].longitude:.2f})"
         )
         
         # Check for cancellation
@@ -1620,22 +1634,34 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
 
         # Update arrival database
         if new_arrivals:
-            db_manager.bulk_insert_arrival_data(new_arrivals)
+            try:
+                db_manager.bulk_insert_arrival_data(new_arrivals)
+            except Exception as e:
+                print(f"Issue with run_event > bulk_insert_arrival_data:\n",{e})
 
         # Process data requests
         if settings.waveform.force_redownload:
             print("Forcing re-download as requested...")
             pruned_requests = requests
         else:
-            pruned_requests = prune_requests(requests, db_manager, settings.sds_path)
+            try:
+                pruned_requests = prune_requests(requests, db_manager, settings.sds_path)
+            except Exception as e:
+                print(f"Issue with run_event > prune_requests:\n",{e})
         
-        # need a better way to check this. will return also if all stations skipped
-        if not pruned_requests:
-            print(f"    no requests")
+        if len(requests) > 0 and not pruned_requests:
+            print(f"    Data already in archive") #TODO add similar to continuous
 
         # Download new data if needed
         if pruned_requests:
-            combined_requests = combine_requests(pruned_requests)
+            try:
+                combined_requests = combine_requests(pruned_requests)
+            except Exception as e:
+                print(f"Issue with run_event > combine_requests:\n",{e})
+
+            if not combined_requests:
+                print("DEBUG combined requests is empty? here was pruned_requests",pruned_requests)
+                continue
             
             # Setup authenticated clients
             waveform_clients = {'open': waveform_client}
@@ -1706,6 +1732,9 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
                             tr.stats.distance_km = arrivals[2]
                             tr.stats.distance_deg = arrivals[3]
                             tr.stats.azimuth = arrivals[4]
+                            tr.stats.event_magnitude = eq.magnitudes[0].mag if hasattr(eq, 'magnitudes') and eq.magnitudes else 0.99
+                            tr.stats.event_region = event_region
+                            tr.stats.event_time = eq.origins[0].time
                     
                     event_stream += st
             except Exception as e:
@@ -1721,7 +1750,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
         all_missing.update(missing)
 
         if len(event_stream) > 0:
-            event_streams.extend(event_stream) #oops this was .append!
+            all_event_traces.extend(event_stream) #oops this was .append!
 
 
     # Final database cleanup
@@ -1731,7 +1760,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
     except Exception as e:
         print(f"! Error with join_continuous_segments: {str(e)}")
 
-    return event_streams, all_missing
+    return all_event_traces, all_missing
 
 
 def run_main(
@@ -1776,13 +1805,13 @@ def run_main(
     # Process continuous data
     if download_type == DownloadType.CONTINUOUS:
         settings.station.selected_invs = get_stations(settings)
-        run_continuous(settings)
+        run_continuous(settings) # this doesn't return anything
 
     # Process event-based data
     if download_type == DownloadType.EVENT:
         settings.event.selected_catalogs = get_events(settings)
         settings.station.selected_invs = get_stations(settings)
-        run_event(settings)
+        event_traces, missing = run_event(settings) # this returns a stream containing all the downloaded traces, and a dictionary of what's missing
 
     ## Final database cleanup
     #print(" ~~ Cleaning up database ~~")

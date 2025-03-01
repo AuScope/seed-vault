@@ -155,12 +155,12 @@ def miniseed_to_db_elements(file_path: str) -> Optional[Tuple[str, str, str, str
         ...     network, station, location, channel, start, end = element
     """
     if not os.path.isfile(file_path):
-        return None
+        return []
     try:
         file = os.path.basename(file_path)
         parts = file.split('.')
         if len(parts) != 7:
-            return None  # Skip files that don't match expected format
+            return []  # Skip files that don't match expected format
         
         network, station, location, channel, _, year, dayfolder = parts
         
@@ -173,7 +173,7 @@ def miniseed_to_db_elements(file_path: str) -> Optional[Tuple[str, str, str, str
     
     except Exception as e:
         print(f"Error processing file {file_path}: {str(e)}")
-        return None
+        return []
 
 
 def populate_database_from_sds(sds_path, db_path,
