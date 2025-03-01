@@ -27,13 +27,13 @@ from seed_vault.service.seismoloader import get_events
 
 
 def remove_duplicate_events(events):
-    unique_event_ids = set()
+    unique_resource_ids = set()
     unique_events = Catalog()
 
     for event in events:
-        event_id = event.resource_id.id
-        if event_id not in unique_event_ids:
-            unique_event_ids.add(event_id)
+        resource_id = event.resource_id.id #the .id makes it a string
+        if resource_id not in unique_resource_ids:
+            unique_resource_ids.add(resource_id)
             unique_events.append(event)
 
     return unique_events
