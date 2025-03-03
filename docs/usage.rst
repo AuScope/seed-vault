@@ -64,8 +64,8 @@ Open a powershell and run following commands:
    sudo apt update
    sudo apt install python3.10-venv
 
-Starting
---------
+Starting the Application
+------------------------
 
 There are two ways to start the application:
 
@@ -86,5 +86,73 @@ Run as Python Library
 
 .. code-block:: sh
 
-    seed-vault
+   seed-vault
+
+Getting to the Opening Page
+---------------------------
+
+You'll get a message like this:
+
+.. code-block:: sh
+
+   Collecting usage statistics. To deactivate, set browser.gatherUsageStats to false.
+
+
+   You can now view your Streamlit app in your browser.
+
+   Local URL: http://localhost:8501
+   Network URL: http://222.111.001.002:8501
+   External URL: http://222.111.001.002:8501
+
+Enter a URL into your brower, and you should see the opening page:
+
+.. image:: _static/images/startup-page.png
+
+From here you can select from three options:
+
+1. "Event based"
+2. "Station based"
+3. "Continuous Data"
+
+
+Event Based
+^^^^^^^^^^^
+
+**"Step 1: Search & Select Events" Page**
+
+1. Hit the "Load Events" button
+2. Select events from the map or directly in the table
+3. Hit the "Next" button
+
+**"Step 2: Search & Select Stations" Page**
+
+1. Hit the "Load Stations" button
+2. Select stations from the map or direcltly in thr table
+3. Hit the "Next" button
+
+**"Step 3: Waveforms" Page**
+
+1. Click on the "Get Waveforms" button
+
+Station Based
+^^^^^^^^^^^^^
+
+**"Step 1: Search & Select Stations" Page**
+
+1. Hit the "Load Events" button
+2. Select events from the map or directly in the table
+3. Hit the "Next" button
+
+**"Step 2: Search & Select Events" Page**
+
+1. Hit the "Load Stations" button
+2. Select stations from the map or direcltly in thr table
+3. Hit the "Next" button
+
+**"Step 3: Waveforms" Page**
+
+1. Click on the "Get Waveforms" button
+
+Continous Downloads
+^^^^^^^^^^^^^^^^^^^
 
