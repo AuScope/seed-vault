@@ -199,6 +199,7 @@ def add_data_points(df, cols_to_disp, step: Steps, selected_idx=[], col_color=No
             fig.subplots_adjust(bottom=0.5)
             colorbar = fig.colorbar(cm.ScalarMappable(norm=norm, cmap=colormap), cax=ax, orientation='vertical')
             colorbar.set_label(f'Color range for {col_color}', fontsize=16)
+            colorbar.ax.invert_yaxis() # put the deep colors at the bottom
             colorbar.ax.tick_params(labelsize=14)
 
         else:
@@ -357,20 +358,20 @@ def get_marker_size(magnitude):
     elif magnitude < 4:
         return 1.5
     if magnitude <= 5:
-        return 2.0   
+        return 2.0
     elif magnitude >= 8:
-        return 14.0
+        return 18.0
     else:
         x = (magnitude - 5) / 3
-        return 2 + 12 * x**2.3
+        return 2 + 16 * x**2
 
 
 def get_marker_color(magnitude):
     if magnitude < 1.8:
         return 'silver'
-    elif 1.8 <= magnitude < 2.4:
+    elif 1.8 <= magnitude < 2.5:
         return 'yellow'
-    elif 2.4 <= magnitude < 5:
+    elif 2.5 <= magnitude < 5:
         return 'orange'
     elif 5 <= magnitude < 6:
         return 'orangered'
