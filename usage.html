@@ -55,9 +55,15 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#starting">Starting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#starting-the-application">Starting the Application</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#run-from-script">Run from script</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#run-as-python-library">Run as Python Library</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#getting-to-the-opening-page">Getting to the Opening Page</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#event-based">Event Based</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#station-based">Station Based</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#continous-downloads">Continous Downloads</a></li>
 </ul>
 </li>
 </ul>
@@ -175,8 +181,8 @@ sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> <
 </section>
 </section>
 </section>
-<section id="starting">
-<h2>Starting<a class="headerlink" href="#starting" title="Link to this heading"></a></h2>
+<section id="starting-the-application">
+<h2>Starting the Application<a class="headerlink" href="#starting-the-application" title="Link to this heading"></a></h2>
 <p>There are two ways to start the application:</p>
 <ol class="arabic simple">
 <li><p>Run from script</p></li>
@@ -193,6 +199,69 @@ sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> <
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>seed-vault
 </pre></div>
 </div>
+</section>
+</section>
+<section id="getting-to-the-opening-page">
+<h2>Getting to the Opening Page<a class="headerlink" href="#getting-to-the-opening-page" title="Link to this heading"></a></h2>
+<p>You’ll get a message like this:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>Collecting<span class="w"> </span>usage<span class="w"> </span>statistics.<span class="w"> </span>To<span class="w"> </span>deactivate,<span class="w"> </span><span class="nb">set</span><span class="w"> </span>browser.gatherUsageStats<span class="w"> </span>to<span class="w"> </span>false.
+
+
+You<span class="w"> </span>can<span class="w"> </span>now<span class="w"> </span>view<span class="w"> </span>your<span class="w"> </span>Streamlit<span class="w"> </span>app<span class="w"> </span><span class="k">in</span><span class="w"> </span>your<span class="w"> </span>browser.
+
+Local<span class="w"> </span>URL:<span class="w"> </span>http://localhost:8501
+Network<span class="w"> </span>URL:<span class="w"> </span>http://222.111.001.002:8501
+External<span class="w"> </span>URL:<span class="w"> </span>http://222.111.001.002:8501
+</pre></div>
+</div>
+<p>Enter a URL into your brower, and you should see the opening page:</p>
+<img alt="_images/startup-page.png" src="_images/startup-page.png" />
+<p>From here you can select from three options:</p>
+<ol class="arabic simple">
+<li><p>“Event based”</p></li>
+<li><p>“Station based”</p></li>
+<li><p>“Continuous Data”</p></li>
+</ol>
+<section id="event-based">
+<h3>Event Based<a class="headerlink" href="#event-based" title="Link to this heading"></a></h3>
+<p><strong>“Step 1: Search &amp; Select Events” Page</strong></p>
+<ol class="arabic simple">
+<li><p>Hit the “Load Events” button</p></li>
+<li><p>Select events from the map or directly in the table</p></li>
+<li><p>Hit the “Next” button</p></li>
+</ol>
+<p><strong>“Step 2: Search &amp; Select Stations” Page</strong></p>
+<ol class="arabic simple">
+<li><p>Hit the “Load Stations” button</p></li>
+<li><p>Select stations from the map or direcltly in thr table</p></li>
+<li><p>Hit the “Next” button</p></li>
+</ol>
+<p><strong>“Step 3: Waveforms” Page</strong></p>
+<ol class="arabic simple">
+<li><p>Click on the “Get Waveforms” button</p></li>
+</ol>
+</section>
+<section id="station-based">
+<h3>Station Based<a class="headerlink" href="#station-based" title="Link to this heading"></a></h3>
+<p><strong>“Step 1: Search &amp; Select Stations” Page</strong></p>
+<ol class="arabic simple">
+<li><p>Hit the “Load Events” button</p></li>
+<li><p>Select events from the map or directly in the table</p></li>
+<li><p>Hit the “Next” button</p></li>
+</ol>
+<p><strong>“Step 2: Search &amp; Select Events” Page</strong></p>
+<ol class="arabic simple">
+<li><p>Hit the “Load Stations” button</p></li>
+<li><p>Select stations from the map or direcltly in thr table</p></li>
+<li><p>Hit the “Next” button</p></li>
+</ol>
+<p><strong>“Step 3: Waveforms” Page</strong></p>
+<ol class="arabic simple">
+<li><p>Click on the “Get Waveforms” button</p></li>
+</ol>
+</section>
+<section id="continous-downloads">
+<h3>Continous Downloads<a class="headerlink" href="#continous-downloads" title="Link to this heading"></a></h3>
 </section>
 </section>
 </section>
