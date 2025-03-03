@@ -45,7 +45,23 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#install-via-pip-easy-way">Install via pip (easy way)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#install-from-source-if-you-insist">Install from source (if you insist!)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#step-1-clone-repository">Step 1: Clone repository</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#step-2-setup-and-run">Step 2: Setup and run</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#starting">Starting</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#run-from-script">Run from script</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#run-as-python-library">Run as Python Library</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="app.html">Seed Vault App</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="app_main_flows.html">Main Flows</a></li>
 <li class="toctree-l2"><a class="reference internal" href="app_run_from_config.html">Direct parameter input</a></li>
@@ -111,10 +127,74 @@
              
   <section id="getting-started">
 <h1>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading"></a></h1>
-<p>To start the application:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>seed-vault<span class="w"> </span>run-server
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h2>
+<section id="install-via-pip-easy-way">
+<h3>Install via pip (easy way)<a class="headerlink" href="#install-via-pip-easy-way" title="Link to this heading"></a></h3>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>seed-vault
 </pre></div>
 </div>
+</section>
+<section id="install-from-source-if-you-insist">
+<h3>Install from source (if you insist!)<a class="headerlink" href="#install-from-source-if-you-insist" title="Link to this heading"></a></h3>
+<section id="step-1-clone-repository">
+<h4>Step 1: Clone repository<a class="headerlink" href="#step-1-clone-repository" title="Link to this heading"></a></h4>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/AuScope/seed-vault.git
+</pre></div>
+</div>
+</section>
+<section id="step-2-setup-and-run">
+<h4>Step 2: Setup and run<a class="headerlink" href="#step-2-setup-and-run" title="Link to this heading"></a></h4>
+<p>Then can build via pip:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>./seed-vault
+</pre></div>
+</div>
+<p>Or,</p>
+<p><strong>Linux/MacOS</strong></p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>seed-vault
+<span class="nb">source</span><span class="w"> </span>setup.sh
+<span class="nb">source</span><span class="w"> </span>run.sh
+</pre></div>
+</div>
+<p><strong>Windows</strong></p>
+<p>Open a powershell and run following commands:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>seed-vault
+.<span class="se">\s</span>etup-win.ps1
+.<span class="se">\r</span>un-win.ps1
+</pre></div>
+</div>
+<p><strong>NOTES:</strong></p>
+<ol class="arabic simple">
+<li><p>For Win OS, you would need to convert the shell scripts to PowerShell. Or simply follow the steps in the shell scripts to set up the app.</p></li>
+<li><p>Requires python3 venv software package e.g. For python v10 on Ubuntu you may need to:</p></li>
+</ol>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt<span class="w"> </span>update
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>python3.10-venv
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+<section id="starting">
+<h2>Starting<a class="headerlink" href="#starting" title="Link to this heading"></a></h2>
+<p>There are two ways to start the application:</p>
+<ol class="arabic simple">
+<li><p>Run from script</p></li>
+<li><p>Run as Python library</p></li>
+</ol>
+<section id="run-from-script">
+<h3>Run from script<a class="headerlink" href="#run-from-script" title="Link to this heading"></a></h3>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">source</span><span class="w"> </span>run.sh
+</pre></div>
+</div>
+</section>
+<section id="run-as-python-library">
+<h3>Run as Python Library<a class="headerlink" href="#run-as-python-library" title="Link to this heading"></a></h3>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>seed-vault
+</pre></div>
+</div>
+</section>
+</section>
 </section>
 
 
