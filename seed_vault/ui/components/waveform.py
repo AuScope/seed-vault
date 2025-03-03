@@ -281,10 +281,9 @@ class WaveformDisplay:
         except ValueError as e:
             st.error(f"Error: {str(e)} Waveform client is set to {self.settings.waveform.client}, which seems does not exists. Please navigate to the settings page and use the Clients tab to add the client or fix the stored config.cfg file.")
         self.ttmodel = TauPyModel("iasp91")
-        self.streams = []
+        self.stream = []
         self.missing_data = {}
         self.console = ConsoleDisplay()  # Add console display
-        self.missing_data = {}
 
     def apply_filters(self, stream) -> Stream:
         """Filter stream based on user selection"""
@@ -315,7 +314,7 @@ class WaveformDisplay:
         """
         Fetches waveform data in a background thread with logging.
         """
-        # Custom stdout/stderr handler that writes to both the original streams and our queue
+        # Custom stdout/stderr handler that writes to both the original traces and our queue
         class QueueLogger:
             def __init__(self, original_stream, queue):
                 self.original_stream = original_stream
@@ -353,9 +352,9 @@ class WaveformDisplay:
             print("Starting waveform download process...")
             
             # Update to unpack the tuple returned by run_event
-            streams_and_missing = run_event(self.settings, stop_event)
-            if streams_and_missing:
-                self.streams, self.missing_data = streams_and_missing
+            stream_and_missing = run_event(self.settings, stop_event)
+            if stream_and_missing:
+                self.stream, self.missing_data = stream_and_missing
                 success = True
                 print("Download completed successfully.")
             else:
@@ -418,8 +417,10 @@ class WaveformDisplay:
         else:
             return 'gray'
 
+    #this function isn't in use anywhere??
+    """
     def _plot_stream_with_colors(self, stream: Stream, size=(800, 600), view_type=None):
-        """Plot stream with proper time windows and P markers"""
+        #Plot stream with proper time windows and P markers
         if not stream:
             return None
 
@@ -534,8 +535,12 @@ class WaveformDisplay:
                         label = f'{tr.stats.network}.{tr.stats.station}.{tr.stats.location or ""}.{tr.stats.channel}'
                         if hasattr(tr.stats, 'distance_km'):
                             label += f' {tr.stats.distance_km:.1f} km'
+                        if hasattr(tr.stats, 'event_magnitude'):
+                            label += f", M{tr.stats.event_magnitude:.1f}"
+                        if hasattr(tr.stats, 'event_region'):
+                            label += f", {tr.stats.event_region}"                           
                         if hasattr(tr.stats, 'filterband'):
-                            event_info += f", {tr.stats.filterband[0]}-{tr.stats.filterband[1]}Hz"
+                            label += f", {tr.stats.filterband[0]}-{tr.stats.filterband[1]}Hz"
                         ax.text(-self.settings.event.before_p_sec * 0.95, 
                                ax.get_ylim()[1],
                                label,
@@ -551,6 +556,7 @@ class WaveformDisplay:
                             ax.xaxis.set_major_formatter(plt.FuncFormatter(format_time))
                             plt.setp(ax.xaxis.get_majorticklabels(), rotation=20)
                     else:
+                        print("DEBUG: no p arrival for plot??", tr.stats)
                         # If no P arrival, plot raw data
                         times = np.arange(len(tr.data)) * tr.stats.delta
 
@@ -563,8 +569,8 @@ class WaveformDisplay:
 
                         ax.plot(times, tr.data, '-', color=self._get_trace_color(tr), linewidth=0.8)
                         ax.text(0, ax.get_ylim()[1], 
-                               f'{tr.stats.network}.{tr.stats.station}.{tr.stats.location or ""}.{tr.stats.channel} {tr.stats.filterband[0]}-{tr.stats.filterband[1]}Hz',
-                               fontsize=8)
+                               f'{tr.stats.network}.{tr.stats.station}.{tr.stats.location or ""}.{tr.stats.channel} {tr.stats.event_region} {tr.stats.filterband[0]}-{tr.stats.filterband[1]}Hz',
+                               fontsize=8) #adding event_region here temporarily to help debug
                 
                 # Remove unnecessary ticks
                 ax.set_yticks([])
@@ -584,6 +590,7 @@ class WaveformDisplay:
         except Exception as e:
             st.error(f"Error in plotting: {str(e)}")
             return None
+    """
 
     def _calculate_figure_dimensions(self, num_traces: int) -> tuple:
         """Calculate figure dimensions based on number of traces"""
@@ -626,7 +633,7 @@ class WaveformDisplay:
         
         # Process each trace
         for i, tr in enumerate(current_stream):
-            print("DEBUG plotted trace:",tr)
+            #print("DEBUG plotted trace:",tr)
             ax = axes[i]
 
             # Calculate and add an appropriate filter for plotting
@@ -648,8 +655,7 @@ class WaveformDisplay:
                 if tr_windowed.stats.sampling_rate/2 > filter_min and filter_min<filter_max:
                     tr_windowed.detrend()
                     tr_windowed.taper(.005)
-                    tr_windowed.filter('bandpass',freqmin=filter_min,freqmax=filter_max,
-                    zerophase=True)
+                    tr_windowed.filter('bandpass',freqmin=filter_min,freqmax=filter_max,zerophase=True)
                 
                 # Calculate times relative to P arrival
                 times = np.arange(tr_windowed.stats.npts) * tr_windowed.stats.delta
@@ -666,6 +672,11 @@ class WaveformDisplay:
                 station_info = f"{tr.stats.network}.{tr.stats.station}.{tr.stats.location or ''}.{tr.stats.channel}"
                 if hasattr(tr.stats, 'distance_km'):
                     station_info += f" {tr.stats.distance_km:.1f} km"
+                #adding event mag and region temporarily for debugging
+                if hasattr(tr.stats, 'event_magnitude'):
+                    station_info += f", M{tr.stats.event_magnitude:.1f}"
+                if hasattr(tr.stats, 'event_region'):
+                    station_info += f", {tr.stats.event_region}"                    
                 if hasattr(tr.stats, 'filterband'):
                     station_info += f", {tr.stats.filterband[0]}-{tr.stats.filterband[1]}Hz"
                 
@@ -714,25 +725,13 @@ class WaveformDisplay:
         for tr in stream:
             if not hasattr(tr.stats, 'distance_km') or not tr.stats.distance_km:
                 tr.stats.distance_km = 99999
-        stream = Stream(sorted(stream, key=lambda tr: tr.stats.distance_km))
+
+        stream = Stream(sorted(stream, key=lambda tr: tr.stats.distance_km)) #TODO users may prefer to sort by OT
         
         # Get current page's traces
         start_idx = page * self.filter_menu.display_limit
         end_idx = start_idx + self.filter_menu.display_limit
         current_stream = Stream(traces=stream.traces[start_idx:end_idx])
-        
-        # Add event metadata to traces if not already present
-        for tr in current_stream:
-            if hasattr(tr.stats, 'event_id'):
-                # Find corresponding event in selected catalogs
-                for event in self.settings.event.selected_catalogs:
-                    if str(event.resource_id) == tr.stats.event_id:
-                        tr.stats.event_magnitude = event.magnitudes[0].mag
-                        tr.stats.event_time = event.origins[0].time
-                        # Add location from event extra parameters
-                        if hasattr(event, 'extra') and 'region' in event.extra:
-                            tr.stats.event_region = event.extra['region']['value']
-                        break
         
         # Calculate standardized dimensions
         width, height = self._calculate_figure_dimensions(len(current_stream))
@@ -773,8 +772,7 @@ class WaveformDisplay:
                 if tr_windowed.stats.sampling_rate/2 > filter_min and filter_min<filter_max:
                     tr_windowed.detrend()
                     tr_windowed.taper(.005)
-                    tr_windowed.filter('bandpass',freqmin=filter_min,freqmax=filter_max,
-                        zerophase=True)                
+                    tr_windowed.filter('bandpass',freqmin=filter_min,freqmax=filter_max,zerophase=True)                
 
                 # Calculate times relative to P arrival
                 times = np.arange(tr_windowed.stats.npts) * tr_windowed.stats.delta
@@ -850,7 +848,7 @@ class WaveformDisplay:
             key="view_selector_waveform"
         )
         
-        if not self.streams:
+        if not self.stream:
             st.info("No waveforms to display. Use the 'Get Waveforms' button to retrieve waveforms.")
             return
 
@@ -859,59 +857,74 @@ class WaveformDisplay:
             if not events:
                 st.warning("No events available.")
                 return
-            
-            # it's possible an event doesn't have a magnitude TODO
+
+            # a list of event resource ids
+            existing_event_resource_ids = [eq.resource_id for eq in events]
+
+            # a list of EQ resource_ids to confirm what data actually exists
+            existing_data_resource_ids = list(set([tr.stats.resource_id for tr in self.stream]))
+
+            # map the events.. hanging onto the original indexes so users can keep track of what's happening
+            valid_events_with_indices = [(i, event) for i, event in enumerate(events)
+                            if hasattr(event, 'resource_id') and event.resource_id in existing_data_resource_ids]        
+
             event_options = [
-                f"Event {i+1}: {event.origins[0].time} M{event.magnitudes[0].mag:.1f} {event.extra.get('region', {}).get('value', 'Unknown Region')}"
-                for i, event in enumerate(events)
+                f"Event {orig_idx+1}: {event.origins[0].time} "
+                f"M{event.magnitudes[0].mag if hasattr(event, 'magnitudes') and event.magnitudes else 0.99:.1f} "
+                f"{event.extra.get('region', {}).get('value', 'Unknown Region')}"
+                for orig_idx, event in valid_events_with_indices
             ]
+
+            valid_events = [event for _, event in valid_events_with_indices]
+
             selected_event_idx = st.selectbox(
                 "Select Event",
                 range(len(event_options)),
                 format_func=lambda x: event_options[x]
             )
-            
-            if self.streams and len(self.streams) > selected_event_idx:
-                stream = self.streams[selected_event_idx]
-                filtered_stream = self.apply_filters(stream)
+
+            selected_event = valid_events[selected_event_idx]    
+            event_stream = Stream([tr for tr in self.stream if tr.stats.resource_id == selected_event.resource_id.id])
+            filtered_stream = self.apply_filters(event_stream)
+
+            if filtered_stream:
+
+                # Calculate pagination
+                num_pages = (len(filtered_stream) - 1) // self.filter_menu.display_limit + 1
+                page = st.sidebar.selectbox(
+                    "Page Navigation", 
+                    range(1, num_pages + 1),
+                    key="event_view_pagination"
+                ) - 1
                 
-                if len(filtered_stream) > 0:
-                    # Calculate pagination
-                    num_pages = (len(filtered_stream) - 1) // self.filter_menu.display_limit + 1
-                    page = st.sidebar.selectbox(
-                        "Page Navigation", 
-                        range(1, num_pages + 1),
-                        key="event_view_pagination"
-                    ) - 1
-                    
-                    fig = self.plot_event_view(
-                        events[selected_event_idx],
-                        filtered_stream,
-                        page,
-                        num_pages
-                    )
-                    if fig:
-                        st.session_state.current_figure = fig
-                        st.pyplot(fig)
-                else:
-                    st.warning("No waveforms match the current filter criteria.")
+                fig = self.plot_event_view(
+                    selected_event,
+                    filtered_stream,
+                    page,
+                    num_pages
+                )
+                if fig:
+                    st.session_state.current_figure = fig
+                    st.pyplot(fig)
+            else:
+                st.warning("No waveforms match the current filter criteria.")
         
         else:  # Single Station - Multiple Events view
-            if not self.streams:
-                st.warning("No streams available.")
+            if not self.stream:
+                st.warning("No traces available.")
                 return
             
-            # Get unique stations from all streams
-            stations = set()
-            for stream in self.streams:
-                filtered_stream = self.apply_filters(stream)
-                for tr in filtered_stream:
-                    stations.add(f"{tr.stats.network}.{tr.stats.station}")
+            # Get unique stations from all traces
+
+            filtered_stream = self.apply_filters(self.stream)
+            stations = set([f"{tr.stats.network}.{tr.stats.station}" for tr in filtered_stream])
+
             
             if not stations:
                 st.warning("No stations match the current filter criteria.")
                 return
             
+            # may have to check if there exists data for said station (TODO)
             station_options = sorted(list(stations))
             selected_station = st.selectbox(
                 "Select Station",
@@ -920,13 +933,9 @@ class WaveformDisplay:
             
             if selected_station:
                 net, sta = selected_station.split(".")
-                # Collect all traces for selected station
-                station_stream = Stream()
-                for stream in self.streams:
-                    filtered_stream = self.apply_filters(stream)
-                    for tr in filtered_stream:
-                        if tr.stats.network == net and tr.stats.station == sta:
-                            station_stream += tr
+
+                # select for pertinent station
+                station_stream = filtered_stream.select(network=net,station=sta)
                 
                 if station_stream:
                     # Calculate pagination
@@ -938,19 +947,24 @@ class WaveformDisplay:
                     ) - 1
                     
                     # Use plot_station_view
-                    fig = self.plot_station_view(selected_station, station_stream, page, num_pages)
+                    try:
+                        fig = self.plot_station_view(selected_station, station_stream, page, num_pages)
+                    except Exception as e:
+                        print(f"waveform.plot_station_view issue:\n {e}")
+
                     if fig:
                         st.session_state.current_figure = fig
                         st.pyplot(fig)
                 else:
                     st.warning("No waveforms available for the selected station.")
-        # Create missing data display before checking streams
+        # Create missing data display before checking stream
         missing_data_display = MissingDataDisplay(
-            self.streams,
+            self.stream,
             self.missing_data,
             self.settings
         )
         missing_data_display.render()
+
 class WaveformComponents:
     settings: SeismoLoaderSettings
     filter_menu: WaveformFilterMenu
@@ -1052,7 +1066,7 @@ class WaveformComponents:
         waveform_tab, log_tab = st.tabs(tab_names)
         
         # Always render filter menu (sidebar) first
-        current_stream = self.waveform_display.streams[0] if self.waveform_display.streams else None
+        current_stream = self.waveform_display.stream[0] if self.waveform_display.stream else None
         self.filter_menu.render(current_stream)
 
         # Handle content based on active tab
@@ -1178,13 +1192,13 @@ class WaveformComponents:
                     log_container.markdown(log_text, unsafe_allow_html=True)
             
             self.render_polling_ui()
-        elif st.session_state.get("query_done") and self.waveform_display.streams:
-            status_container.success(f"Successfully retrieved waveforms for {len(self.waveform_display.streams)} events.")
+        elif st.session_state.get("query_done") and self.waveform_display.stream:
+            status_container.success(f"Successfully retrieved waveforms for {len(self.waveform_display.stream)} channels.")
         elif st.session_state.get("query_done"):
             status_container.warning("No waveforms retrieved. Please check your selection criteria.")
 
         # Display waveforms if they exist
-        if self.waveform_display.streams:
+        if self.waveform_display.stream:
             self.waveform_display.render()
 
         # Add download button at the bottom of the sidebar
@@ -1256,9 +1270,10 @@ class WaveformComponents:
             st.markdown(log_text, unsafe_allow_html=True)
         else:
             st.info("Perform a waveform download first :)")
+
 class MissingDataDisplay:
-    def __init__(self, streams: List[Stream], missing_data: Dict[str, Union[List[str], str]], settings: SeismoLoaderSettings):
-        self.streams = streams
+    def __init__(self, stream: List[Stream], missing_data: Dict[str, Union[List[str], str]], settings: SeismoLoaderSettings):
+        self.stream = stream #is this needed? i think we can drop it TODO
         self.missing_data = missing_data
         self.settings = settings
     
@@ -1270,7 +1285,7 @@ class MissingDataDisplay:
         """Identify events with no data and their missing channels"""
         missing_events = []
         
-        # sort events by time? does this cause problems elsewhere? can we just sort selected_catalogs? do this elsewhere? REVIEW
+        # sort events by time
         try:
             catalog = self.settings.event.selected_catalogs.copy() #need copy?
             catalog.events.sort(key=lambda x: getattr(x.origins[0], 'time', UTCDateTime(0)) if x.origins else UTCDateTime(0))
@@ -1278,15 +1293,15 @@ class MissingDataDisplay:
             print("catalog sort problem",e)
 
         for event in catalog:
-            event_id = str(event.resource_id)
+            resource_id = str(event.resource_id)
 
-            # Create a string for NSLCs which should have been downloaded (e.g. within search radius) but weren't for some reason
+            # Create a string for NSLCs which should have been downloaded (e.g. within search radius) but weren't (e.g. missing on server)
             try:
-                if event_id not in self.missing_data.keys():
+                if resource_id not in self.missing_data.keys():
                     continue
 
                 results = []
-                for station_key, value in self.missing_data[event_id].items():
+                for station_key, value in self.missing_data[resource_id].items():
                     if value == "ALL":
                         results.append(f"{station_key}.*")  # Indicate all channels missing
                     elif value == '':
@@ -1295,7 +1310,7 @@ class MissingDataDisplay:
                         if value:  # If list not empty
                             results.extend(value)  # Add all missing channels
                 if results:
-                    missing_data_str = ' '.join(results)
+                    missing_data_str = ','.join(results)
                 else:
                     missing_data_str = None
 
@@ -1310,7 +1325,7 @@ class MissingDataDisplay:
 
                 # Event completely missing
                 missing_events.append({
-                    'Event ID': event_id,
+                    'EQ Resource ID': resource_id,
                     'Event': event_str,
                     'Missing Data': missing_data_str
                 })
