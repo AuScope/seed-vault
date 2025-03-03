@@ -1426,7 +1426,7 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
 
 
 
-def run_continuous(settings: SeismoLoaderSettings):
+def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event = None):
     """
     Retrieves continuous seismic data over long time intervals for a set of stations
     defined by the `inv` parameter. The function manages multiple steps including
@@ -1442,8 +1442,8 @@ def run_continuous(settings: SeismoLoaderSettings):
       authentication details, and database paths necessary for data retrieval and storage.
       This should include the start and end times for data collection, database path,
       and SDS archive path among other configurations.
-    - inv (Inventory): An object representing the network/station/channel inventory
-      to be used for data requests. This is usually prepared prior to calling this function.
+    - stop_event (threading.Event): Optional event flag for canceling the operation mid-execution.
+      If provided and set, the function will terminate gracefully at the next safe point.
 
     Workflow:
     1. Initialize clients for waveform data retrieval.
@@ -1479,23 +1479,43 @@ def run_continuous(settings: SeismoLoaderSettings):
         print("Starttime greater than than endtime!")
         return
 
+    # Check for cancellation before collecting requests
+    # This allows early termination before any network operations begin
+    if stop_event and stop_event.is_set():
+        print("Run cancelled!")
+        return None
+
     # Collect requests
     requests = collect_requests(settings.station.selected_invs, 
         starttime, endtime, days_per_request=settings.waveform.days_per_request,
         cha_pref=settings.waveform.channel_pref,loc_pref=settings.waveform.location_pref)
 
+    # Check for cancellation after request collection
+    # This allows termination after potentially time-consuming request generation
+    # but before database operations begin
+    if stop_event and stop_event.is_set():
+        print("Run cancelled!")
+        return None
+
     # Remove any for data we already have (requires updated db)
     # If force_redownload is flagged, then ignore request pruning
     if settings.waveform.force_redownload:
         print("Forcing re-download as requested...")
-        pruned_requests = request
+        pruned_requests = requests
     else:
         # no message needed for default behaviour
-        pruned_requests= prune_requests(requests, db_manager, settings.sds_path)
+        pruned_requests = prune_requests(requests, db_manager, settings.sds_path)
 
     # Break if nothing to do
     if len(pruned_requests) < 1:
         return
+
+    # Check for cancellation after request pruning
+    # This allows termination after database operations but before
+    # network operations and data downloads begin
+    if stop_event and stop_event.is_set():
+        print("Run cancelled!")
+        return None
 
     # Combine these into fewer (but larger) requests
     combined_requests = combine_requests(pruned_requests)
@@ -1519,6 +1539,13 @@ def run_continuous(settings: SeismoLoaderSettings):
 
     # Archive to disk and updated database
     for request in combined_requests:
+        # Check for cancellation before each individual request
+        # This allows termination between network requests, preventing
+        # unnecessary data downloads if the user cancels mid-process
+        if stop_event and stop_event.is_set():
+            print("Run cancelled!")
+            return None
+            
         print("Requesting: ", request)
         time.sleep(0.05) # to help ctrl-C out if needed
         try:
@@ -1734,7 +1761,8 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
 
 def run_main(
     settings: Optional[SeismoLoaderSettings] = None,
-    from_file: Optional[str] = None
+    from_file: Optional[str] = None,
+    stop_event: threading.Event = None
     ) -> None:
     """Main entry point for seismic data retrieval and processing.
 
@@ -1746,6 +1774,11 @@ def run_main(
             If None, settings must be provided via from_file.
         from_file: Path to configuration file to load settings from.
             Only used if settings is None.
+        stop_event: Optional event flag for canceling the operation mid-execution.
+            If provided and set, the function will terminate gracefully at the next safe point.
+
+    Returns:
+        The result from run_continuous or run_event, or None if cancelled.
 
     Example:
         >>> # Using settings object
@@ -1771,17 +1804,21 @@ def run_main(
     if not is_in_enum(download_type, DownloadType):
         download_type = DownloadType.CONTINUOUS
 
+    # Check for cancellation before starting any data processing
+    # This allows early termination before any resource-intensive operations begin
+    if stop_event and stop_event.is_set():
+        print("Run cancelled!")
+        return None
+
     # Process continuous data
     if download_type == DownloadType.CONTINUOUS:
         settings.station.selected_invs = get_stations(settings)
-        run_continuous(settings)
+        return run_continuous(settings, stop_event)
 
     # Process event-based data
     if download_type == DownloadType.EVENT:
         settings.event.selected_catalogs = get_events(settings)
         settings.station.selected_invs = get_stations(settings)
-        run_event(settings)
+        return run_event(settings, stop_event)
 
-    ## Final database cleanup
-    #print(" ~~ Cleaning up database ~~")
-    #db_manager.join_continuous_segments(settings.processing.gap_tolerance)
+    return None
