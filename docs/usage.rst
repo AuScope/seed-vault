@@ -1,11 +1,12 @@
+===============
 Getting Started
 ===============
 
 Installation
-------------
+============
 
 Install via pip (easy way)
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------
 
 .. code-block:: sh
 
@@ -13,10 +14,10 @@ Install via pip (easy way)
 
 
 Install from source (if you insist!)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------------
 
 Step 1: Clone repository
-""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: sh
 
@@ -24,7 +25,7 @@ Step 1: Clone repository
 
 
 Step 2: Setup and run
-"""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^
 
 Then can build via pip:
 
@@ -65,7 +66,7 @@ Open a powershell and run following commands:
    sudo apt install python3.10-venv
 
 Starting the Application
-------------------------
+========================
 
 There are two ways to start the application:
 
@@ -74,7 +75,7 @@ There are two ways to start the application:
 
 
 Run from script
-^^^^^^^^^^^^^^^
+---------------
 
 .. code-block:: sh
 
@@ -82,14 +83,14 @@ Run from script
 
 
 Run as Python Library
-^^^^^^^^^^^^^^^^^^^^^
+---------------------
 
 .. code-block:: sh
 
    seed-vault
 
 Getting to the Opening Page
----------------------------
+===========================
 
 You'll get a message like this:
 
@@ -108,51 +109,91 @@ Enter a URL into your brower, and you should see the opening page:
 
 .. image:: _static/images/startup-page.png
 
-From here you can select from three options:
+From here you can select one of three options, then hit the "Start" button:
 
-1. "Event based"
-2. "Station based"
-3. "Continuous Data"
+* A. Event based
+* B. Station based
+* C. Continuous Data
 
 
-Event Based
-^^^^^^^^^^^
+i. Event Based Workflow
+=======================
 
-**"Step 1: Search & Select Events" Page**
 
-1. Hit the "Load Events" button
-2. Select events from the map or directly in the table
-3. Hit the "Next" button
+"Step 1: Search & Select Events" Page
+-------------------------------------
 
-**"Step 2: Search & Select Stations" Page**
+.. image:: _static/images/step1-select-events.png
 
-1. Hit the "Load Stations" button
-2. Select stations from the map or direcltly in thr table
-3. Hit the "Next" button
+1. Hit the "Load Events" button (circled in green)
+2. Select events from the map and/or directly in the table 
+3. Hit the "Next" button (circled in orange)
 
-**"Step 3: Waveforms" Page**
+"Step 2: Search & Select Stations" Page
+---------------------------------------
 
-1. Click on the "Get Waveforms" button
+.. image:: _static/images/step2-select-stations.png
 
-Station Based
-^^^^^^^^^^^^^
+1. Hit the "Load Stations" button (circled in orange)
+2. Select stations from the map and/or directly in the table
+3. Hit the "Next" button (circled in green)
 
-**"Step 1: Search & Select Stations" Page**
+"Step 3: Waveforms" Page
+------------------------
 
-1. Hit the "Load Events" button
-2. Select events from the map or directly in the table
-3. Hit the "Next" button
+.. image:: _static/images/waveform-analysis.png
 
-**"Step 2: Search & Select Events" Page**
+1. Click on the "Get Waveforms" button (circled in pink)
 
-1. Hit the "Load Stations" button
-2. Select stations from the map or direcltly in thr table
-3. Hit the "Next" button
 
-**"Step 3: Waveforms" Page**
 
-1. Click on the "Get Waveforms" button
+ii. Station Based
+=================
 
-Continous Downloads
-^^^^^^^^^^^^^^^^^^^
+"Step 1: Search & Select Stations" Page
+---------------------------------------
+
+.. image:: _static/images/step1-select-stations.png
+
+1. Hit the "Load Stations" button (circled in yellow)
+2. Select stations from the map and/or directly in the table
+3. Hit the "Next" button (circled in pink)
+
+"Step 2: Search & Select Events" Page
+-------------------------------------
+
+.. image:: _static/images/step2-select-events.png
+
+1. Hit the "Load Events" button (circled in purple)
+2. Select events from the map and/or directly in the table
+3. Hit the "Next" button (circled in green)
+
+"Step 3: Waveforms" Page
+------------------------
+
+.. image:: _static/images/waveform-analysis.png
+
+1. Click on the "Get Waveforms" button (circled in pink)
+
+
+
+iii. Continuous Downloads
+=========================
+
+"Step 1: Search & Select Stations" Page
+---------------------------------------
+
+.. image:: _static/images/step1-select-stations.png
+
+1. Hit the "Load Stations" button (circled in yellow)
+2. Select stations from the map or directly in the table
+3. Hit the "Next" button (circled in pink)
+
+"Step 2: Get Waveforms" Page
+----------------------------
+
+.. image:: _static/images/continuous-waveform.png
+
+Hit the "Download Waveforms" button, wait for download to complete
+
 
