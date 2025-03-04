@@ -1180,31 +1180,33 @@ class BaseComponent:
         """Displays the full data table, allowing selection."""
 
         # Add custom CSS to ensure full width and remove scrollbars
-        st.markdown("""
-            <style>
-                .element-container {
-                    width: 100% !important;
-                }
-                .stDataFrame {
-                    width: 100% !important;
-                    text-align: center !important;                    
-                }
-                .data-editor-container {
-                    width: 100% !important;
-                }
-                [data-testid="stDataFrame"] {
-                    width: 100% !important;                 
-                }
-                div[data-testid="stDataFrame"] > div {
-                    width: 100% !important;                  
-                }
-                div[data-testid="stDataFrame"] > div > iframe {
-                    width: 100% !important;
-                    text-align: center !important;                    
-                    min-height: calc(100vh - 300px);  # Adjust this value as needed
-                }                   
-            </style>
-        """, unsafe_allow_html=True)  
+        # st.markdown("""
+        #     <style>
+        #         .element-container {
+        #             width: 100% !important;
+        #         }
+        #         .stDataFrame {
+        #             width: 100% !important;
+        #             height: 100% !important;
+        #             text-align: center !important;                    
+        #         }
+        #         .data-editor-container {
+        #             width: 100% !important;
+        #         }
+        #         [data-testid="stDataFrame"] {
+        #             width: 100% !important;    
+        #             height: 100% !important;             
+        #         }
+        #         div[data-testid="stDataFrame"] > div {
+        #             width: 100% !important;                  
+        #         }
+        #         div[data-testid="stDataFrame"] > div > iframe {
+        #             width: 100% !important;
+        #             text-align: center !important;   
+        #             height: 100% !important;
+        #         }                   
+        #     </style>
+        # """, unsafe_allow_html=True)  
 
         c1, c2, c3 = st.columns([1,1,1])
         with c1:
@@ -1248,13 +1250,16 @@ class BaseComponent:
                     col,
                 )
 
+        height = (len(self.df_markers) + 1) * 35 + 2
+
         self.df_data_edit = st.data_editor(
             self.df_markers, 
             hide_index = True, 
             column_config=config, 
             column_order = ordered_col, 
             key=self.get_key_element("Data Table"),
-            use_container_width=True
+            use_container_width=True,
+            height=height
         )
         
 
