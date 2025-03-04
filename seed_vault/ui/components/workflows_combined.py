@@ -71,7 +71,7 @@ class CombinedBasedWorkflow:
         changes. Also, probably, we do not need clean up on the filter settings 
         (we actually may need to keep the filters as is).
         """
-        c1, c2 = st.columns([1,2])
+        c1, c2 = st.columns([2,1])
         
         try:
             with c1:
