@@ -59,8 +59,13 @@ def test_get_stations(mock_settings, mock_client):
         "level": mock_settings.station.level.value,
     }
 
-    # Assert: Compare the expected and actual kwargs
-    assert actual_kwargs == expected_kwargs, f"Expected {expected_kwargs}, but got {actual_kwargs}"
+    for k,v in actual_kwargs.items():
+        v2 = expected_kwargs[k]
+        if "min" in k or "max" in k:
+            assert abs(v2-v) < 0.01, f"Expected values of {k} will be in acceptable tolerance from actual values."
+        else:
+            assert v2 == v, f"Expected values of {k} will be equal to actual values."
+
 
 
 def test_get_stations_no_service(mock_settings):

@@ -128,7 +128,7 @@ class BaseComponent:
         self.prev_step_type = prev_step_type
         self.stage          = stage
         self.map_id         = f"map_{step_type.value}_{prev_step_type.value}_{stage}" if prev_step_type else f"map_{step_type.value}_no_prev_{stage}"   # str(uuid.uuid4())
-        self.map_disp       = create_map(map_id=self.map_id)
+        # self.map_disp       = create_map(map_id=f"init_{self.map_id}")
         self.TXT            = BaseComponentTexts(step_type)
 
         self.all_feature_drawings = self.get_geo_constraint()
@@ -680,7 +680,7 @@ class BaseComponent:
     def refresh_map_selection(self):
         selected_idx = self.get_selected_idx()
         self.update_selected_data()
-        self.refresh_map(reset_areas=False, selected_idx=selected_idx, rerun=True, recreate_map=True)
+        self.refresh_map(reset_areas=False, selected_idx=selected_idx, rerun=True, recreate_map=False)
 
 
     # ===================
@@ -786,8 +786,8 @@ class BaseComponent:
                 self.prev_marker = self.df_markers_prev.copy()
 
 
-            self.refresh_map(reset_areas=False, clear_draw=True)
-            st.rerun()
+            self.refresh_map(reset_areas=False, clear_draw=True, rerun=True)
+            # st.rerun()
 
     def update_area_around_prev_step_selections(self, min_radius, max_radius):
         min_radius_value = float(min_radius) # * 1000
@@ -946,7 +946,7 @@ class BaseComponent:
                 # help="Use Reload button if the map is collapsed or some layers are missing.",
                 key=self.get_key_element(f"ReLoad {self.TXT.STEP}s")
             ):
-                self.refresh_map(get_data=False, rerun=True, recreate_map=True)
+                self.refresh_map(get_data=False, clear_draw=True, rerun=True, recreate_map=True)
 
         
 
@@ -1047,7 +1047,10 @@ class BaseComponent:
                 self.display_prev_step_selection_table() 
 
     def render_map(self):
-        if self.map_disp is not None:
+
+        if self.map_disp is None:
+            self.map_disp = create_map(map_id=f"init_{self.map_id}")
+        else:
             clear_map_layers(self.map_disp)
         
         self.display_prev_step_selection_marker()
@@ -1068,7 +1071,7 @@ class BaseComponent:
         with c1:
             self.map_output = st_folium(
                 self.map_disp, 
-                key=f"map_{self.map_id}",
+                # key=f"map_{self.map_id}",
                 feature_group_to_add=feature_groups, 
                 use_container_width=True, 
                 # height=self.map_height
@@ -1177,36 +1180,7 @@ class BaseComponent:
             )
 
     def data_table_view(self, ordered_col, config, state_key):
-        """Displays the full data table, allowing selection."""
-
-        # Add custom CSS to ensure full width and remove scrollbars
-        # st.markdown("""
-        #     <style>
-        #         .element-container {
-        #             width: 100% !important;
-        #         }
-        #         .stDataFrame {
-        #             width: 100% !important;
-        #             height: 100% !important;
-        #             text-align: center !important;                    
-        #         }
-        #         .data-editor-container {
-        #             width: 100% !important;
-        #         }
-        #         [data-testid="stDataFrame"] {
-        #             width: 100% !important;    
-        #             height: 100% !important;             
-        #         }
-        #         div[data-testid="stDataFrame"] > div {
-        #             width: 100% !important;                  
-        #         }
-        #         div[data-testid="stDataFrame"] > div > iframe {
-        #             width: 100% !important;
-        #             text-align: center !important;   
-        #             height: 100% !important;
-        #         }                   
-        #     </style>
-        # """, unsafe_allow_html=True)  
+        """Displays the full data table, allowing selection."""  
 
         c1, c2, c3 = st.columns([1,1,1])
         with c1:
@@ -1219,6 +1193,8 @@ class BaseComponent:
         with c3:
             if st.button("Unselect All", key=self.get_key_element("Unselect All")):
                 self.df_markers['is_selected'] = False
+                self.clicked_marker_info = None
+                
         
         # it would be prettier to merge "magnitude_type" with magnitude here.. TODO
 
