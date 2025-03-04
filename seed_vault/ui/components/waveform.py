@@ -119,6 +119,14 @@ class WaveformFilterMenu:
 
         # Step 1: Data Retrieval Settings
         with st.sidebar.expander("Step 1: Data Source", expanded=True):
+            st.subheader("🔍 Filter Events Around Individual Stations")
+            cc1, cc2 = st.columns([1, 1])
+
+            with cc1:
+                self.settings.event.min_radius = st.number_input("Minimum radius (degree)", value=self.settings.event.min_radius)
+            with cc2:
+                self.settings.event.max_radius = st.number_input("Maximum radius (degree)", value=self.settings.event.max_radius)
+
             st.subheader("🔍 Time Window")
             
             # Update time window settings with immediate refresh

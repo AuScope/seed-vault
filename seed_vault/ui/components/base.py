@@ -743,13 +743,13 @@ class BaseComponent:
         c1, c2 = st.columns([1, 1])
 
         with c1:
-            min_radius_str = st.text_input("Minimum radius (degree)", value="0")
+            self.settings.event.min_radius = st.number_input("Minimum radius (degree)", value=self.settings.event.min_radius)
         with c2:
-            max_radius_str = st.text_input("Maximum radius (degree)", value="90")
+            self.settings.event.max_radius = st.number_input("Maximum radius (degree)", value=self.settings.event.max_radius)
 
         try:
-            min_radius = float(min_radius_str)
-            max_radius = float(max_radius_str)
+            min_radius = float(self.settings.event.min_radius)
+            max_radius = float(self.settings.event.max_radius)
         except ValueError:
             st.error("Please enter valid numeric values for the radius.")
             return
