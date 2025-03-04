@@ -1632,7 +1632,19 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
 
     all_event_traces = []
     all_missing = {}
+    event_stream = Stream()
     for i, eq in enumerate(settings.event.selected_catalogs):
+
+        if stop_event and stop_event.is_set():
+            print("\nCancelling run_event!")
+            try:
+                print("\n~~ Cleaning up database ~~")
+                db_manager.join_continuous_segments(settings.processing.gap_tolerance)
+            except Exception as e:
+                print(f"! Error with join_continuous_segments: {str(e)}")
+
+            return all_event_traces, all_missing
+
         try:
             event_region = eq.event_descriptions[0].text
         except:
@@ -1643,11 +1655,6 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
             f"{str(eq.origins[0].time)[0:16]} "
             f"({eq.origins[0].latitude:.2f},{eq.origins[0].longitude:.2f})"
         )
-        
-        # Check for cancellation
-        if stop_event and stop_event.is_set():
-            print("Run cancelled!")
-            return None
 
         # Collect requests for this event
         try:
@@ -1710,9 +1717,16 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
 
             # Process requests
             for request in combined_requests:
+
                 if stop_event and stop_event.is_set():
-                    print("Run cancelled!")
-                    return None
+                    print("\nCancelling run_event!")
+                    try:
+                        print("\n~~ Cleaning up database ~~")
+                        db_manager.join_continuous_segments(settings.processing.gap_tolerance)
+                    except Exception as e:
+                        print(f"! Error with join_continuous_segments: {str(e)}")
+
+                    return all_event_traces, all_missing
                 
                 print(f"Requesting: {request}")
                 try:
@@ -1724,49 +1738,34 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
                     )
                 except Exception as e:
                     print(f"Error archiving request {request}:\n {str(e)}")
-
-        # Read all data for this event
-        event_stream = Stream()
-        for req in requests:
-            query = SeismoQuery(
-                network=req[0],
-                station=req[1],
-                location=req[2],
-                channel=req[3],
-                starttime=req[4],
-                endtime=req[5]
-            )
-            
-            if stop_event and stop_event.is_set():
-                print("Run cancelled!")
-                return None
-            
-            try:
-                st = get_local_waveform(query, settings)
-                if st:
-                    # Add event metadata to traces
-                    arrivals = db_manager.fetch_arrivals_distances(
-                        str(eq.preferred_origin_id),
-                        query.network,
-                        query.station
-                    )
-                    
-                    if arrivals:
-                        for tr in st:
-                            tr.stats.resource_id = eq.resource_id.id
-                            tr.stats.p_arrival = arrivals[0]
-                            tr.stats.s_arrival = arrivals[1]
-                            tr.stats.distance_km = arrivals[2]
-                            tr.stats.distance_deg = arrivals[3]
-                            tr.stats.azimuth = arrivals[4]
-                            tr.stats.event_magnitude = eq.magnitudes[0].mag if hasattr(eq, 'magnitudes') and eq.magnitudes else 0.99
-                            tr.stats.event_region = event_region
-                            tr.stats.event_time = eq.origins[0].time
-                    
-                    event_stream += st
-            except Exception as e:
-                print(f"Error reading data for {query.network}.{query.station}:\n {str(e)}")
-                continue
+                    continue
+                
+                try:
+                    st = get_local_waveform(request, settings)
+                    if st:
+                        # Add event metadata to traces
+                        arrivals = db_manager.fetch_arrivals_distances(
+                            eq.preferred_origin_id.id,
+                            request[0].upper(), #network
+                            request[1].upper() #station
+                            )
+                        
+                        if arrivals:
+                            for tr in st:
+                                tr.stats.resource_id = eq.resource_id.id
+                                tr.stats.p_arrival = arrivals[0]
+                                tr.stats.s_arrival = arrivals[1]
+                                tr.stats.distance_km = arrivals[2]
+                                tr.stats.distance_deg = arrivals[3]
+                                tr.stats.azimuth = arrivals[4]
+                                tr.stats.event_magnitude = eq.magnitudes[0].mag if hasattr(eq, 'magnitudes') and eq.magnitudes else 0.99
+                                tr.stats.event_region = event_region
+                                tr.stats.event_time = eq.origins[0].time
+                        
+                        event_stream += st
+                except Exception as e:
+                    print(f"Error reading data for {request[0].upper()}.{request[1].upper()}:\n {str(e)}")
+                    continue
 
         # Now attempt to keep track of what data was missing. Note that this is not catching out-of-bounds data, for better or worse (probably better)
         missing = get_missing_from_request(eq.resource_id.id,requests,event_stream)
@@ -1774,10 +1773,11 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
         #print("DEBUG stream: ", event_stream)
         #print("DEBUG requests: ", requests)
 
-        all_missing.update(missing)
+        if missing:
+            all_missing.update(missing)
 
-        if len(event_stream) > 0:
-            all_event_traces.extend(event_stream) #oops this was .append!
+        if event_stream:
+            all_event_traces.extend(event_stream)
 
 
     # Final database cleanup
