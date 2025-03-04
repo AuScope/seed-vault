@@ -1203,7 +1203,7 @@ class WaveformComponents:
         elif st.session_state.get("query_done") and self.waveform_display.stream:
             status_container.success(f"Successfully retrieved waveforms for {len(self.waveform_display.stream)} channels.")
         elif st.session_state.get("query_done"):
-            status_container.warning("No waveforms retrieved. Please check your selection criteria.")
+            status_container.warning("No waveforms retrieved. Please check your selection criteria and log view.")
 
         # Display waveforms if they exist
         if self.waveform_display.stream:
