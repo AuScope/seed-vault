@@ -372,12 +372,12 @@ class PredictionData(BaseModel):
     P-wave and S-wave arrival times.
 
     Attributes:
-        event_id (str): The unique identifier for the seismic event.
+        resource_id (str): The unique identifier for the seismic event.
         station_id (str): The identifier of the seismic station where arrivals are recorded.
         p_arrival (datetime): The predicted arrival time of the primary (P) wave.
         s_arrival (datetime): The predicted arrival time of the secondary (S) wave.
     """
-    event_id: str
+    resource_id: str
     station_id: str
     p_arrival: datetime
     s_arrival: datetime
@@ -413,10 +413,10 @@ class SeismoLoaderSettings(BaseModel):
         from_cfg_file(cls, cfg_source: Union[str, IO]) -> "SeismoLoaderSettings":
             Loads and initializes a `SeismoLoaderSettings` instance from a configuration file.
 
-        add_prediction(event_id: str, station_id: str, p_arrival: datetime, s_arrival: datetime):
+        add_prediction(resource_id: str, station_id: str, p_arrival: datetime, s_arrival: datetime):
             Adds a predicted P-wave and S-wave arrival time for a given event and station.
 
-        get_prediction(event_id: str, station_id: str) -> Optional[PredictionData]:
+        get_prediction(resource_id: str, station_id: str) -> Optional[PredictionData]:
             Retrieves the predicted arrival time for a given event and station.
 
         to_pickle(pickle_path: str) -> None:
@@ -703,7 +703,7 @@ class SeismoLoaderSettings(BaseModel):
             config=config,
             section=station_section,
             key='network',
-            default="_GSN",
+            default="IU",
             status_handler =status_handler,
             error_message=f"'network' is missing in the [{station_section}] section. Please specify a network.",
             warning_message=f"'network' is empty in the [{station_section}] section. Defaulting to '_GSN'."
@@ -1291,36 +1291,36 @@ class SeismoLoaderSettings(BaseModel):
         return config_dict
 
 
-    def add_prediction(self, event_id: str, station_id: str, p_arrival: datetime, s_arrival: datetime):
+    def add_prediction(self, resource_id: str, station_id: str, p_arrival: datetime, s_arrival: datetime):
         """
         Adds a predicted P-wave and S-wave arrival time for a given event and station.
 
         Args:
-            event_id (str): The unique identifier of the seismic event.
+            resource_id (str): The unique identifier of the seismic event.
             station_id (str): The identifier of the seismic station.
             p_arrival (datetime): The predicted arrival time of the P-wave.
             s_arrival (datetime): The predicted arrival time of the S-wave.
         """
-        key = f"{event_id}|{station_id}"
+        key = f"{resource_id}|{station_id}"
         self.predictions[key] = PredictionData(
-            event_id=event_id,
+            resource_id=resource_id,
             station_id=station_id,
             p_arrival=p_arrival,
             s_arrival=s_arrival
         )
 
-    def get_prediction(self, event_id: str, station_id: str) -> Optional[PredictionData]:
+    def get_prediction(self, resource_id: str, station_id: str) -> Optional[PredictionData]:
         """
         Retrieves the predicted arrival time for a given event and station.
 
         Args:
-            event_id (str): The unique identifier of the seismic event.
+            resource_id (str): The unique identifier of the seismic event.
             station_id (str): The identifier of the seismic station.
 
         Returns:
             Optional[PredictionData]: The predicted arrival time data, or `None` if not found.
         """
-        key = f"{event_id}|{station_id}"
+        key = f"{resource_id}|{station_id}"
         return self.predictions.get(key)
     class Config:
         arbitrary_types_allowed = True       

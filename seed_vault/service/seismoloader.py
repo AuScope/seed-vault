@@ -10,11 +10,9 @@ import time
 import fnmatch
 import sqlite3
 from datetime import datetime,timedelta,timezone
-import multiprocessing
 import configparser
 import pandas as pd
 import numpy as np
-from tqdm import tqdm
 import threading
 import random
 from typing import Any, Dict, List, Tuple, Optional, Union
@@ -23,7 +21,8 @@ from collections import defaultdict
 
 #import obspy
 from obspy import UTCDateTime
-from obspy.core.stream import read,Stream
+from obspy.core.stream import Stream
+from obspy.core.stream import read as streamread
 from obspy.core.inventory import read_inventory,Inventory
 from obspy.core.event import read_events,Event,Catalog
 
@@ -37,7 +36,7 @@ from seed_vault.models.config import SeismoLoaderSettings, SeismoQuery
 from seed_vault.enums.config import DownloadType, GeoConstraintType
 from seed_vault.service.utils import is_in_enum,get_sds_filenames,to_timestamp,\
     filter_inventory_by_geo_constraints,filter_catalog_by_geo_constraints
-from seed_vault.service.db import DatabaseManager,stream_to_db_element,miniseed_to_db_element,\
+from seed_vault.service.db import DatabaseManager,stream_to_db_elements,miniseed_to_db_elements,\
     populate_database_from_sds,populate_database_from_files,populate_database_from_files_dumb
 from seed_vault.service.waveform import get_local_waveform, stream_to_dataframe
 
@@ -618,6 +617,10 @@ def combine_requests(
         >>> print(combined)
         [("IU", "ANMO,COLA", "00", "BHZ", "2020-01-01", "2020-01-02")]
     """
+
+    if not requests:
+        return []
+
     # Group requests by network and time range
     groups = defaultdict(list)
     for net, sta, loc, chan, t0, t1 in requests:
@@ -751,10 +754,13 @@ def prune_requests(
 
     Example:
         >>> requests = [("IU", "ANMO", "00", "BHZ", "2020-01-01", "2020-01-02")]
-        >>> pruned = prune_requests(requests, db_manager, "/data/seismic")
+        >>> pruned = prune_requests(requests, db_manager, "/data/SDS")
     """
     pruned_requests = []
-    
+    if not requests:
+        return pruned_requests
+
+
     with db_manager.connection() as conn:
         cursor = conn.cursor()
         
@@ -780,8 +786,9 @@ def prune_requests(
             
             existing_data = cursor.fetchall()
 
-            # Update database if files exist but aren't recorded
-            if existing_filenames and len(existing_data) < len(existing_filenames):
+
+            # Update database if files exist but aren't recorded (probably continuous) OR there are multiple items in one file (probably events)
+            if existing_filenames and ( len(existing_data) < len(existing_filenames) or len(existing_data) > len(existing_filenames)):
                 populate_database_from_files(cursor, file_paths=existing_filenames)
                 
                 cursor.execute('''
@@ -793,7 +800,7 @@ def prune_requests(
                      start_time.isoformat(), end_time.isoformat()))
                 
                 existing_data = cursor.fetchall()
-            
+
             if not existing_data and not existing_filenames:
                 # Keep entire request if no existing data found
                 pruned_requests.append(req)
@@ -823,7 +830,9 @@ def prune_requests(
                     ))
 
     # Sort by start time, network, station
-    pruned_requests.sort(key=lambda x: (x[4], x[0], x[1]))
+    if pruned_requests:
+        pruned_requests.sort(key=lambda x: (x[4], x[0], x[1]))
+
     return pruned_requests
 
 
@@ -951,7 +960,7 @@ def archive_request(
         
         if os.path.exists(full_path):
             try:
-                existing_st = read(full_path)
+                existing_st = streamread(full_path)
                 existing_st += day_stream
                 existing_st.merge(method=-1, fill_value=None)
                 existing_st._cleanup(misalignment_threshold=0.25)
@@ -971,14 +980,14 @@ def archive_request(
             try:
                 # Try STEIM2 compression first
                 existing_st.write(full_path, format="MSEED", encoding='STEIM2')
-                to_insert_db.append(stream_to_db_element(existing_st))
+                to_insert_db.extend(stream_to_db_elements(existing_st))
             except Exception as e:
                 if "Wrong dtype" in str(e):
                     # Fall back to uncompressed format
                     print("Data type not compatible with STEIM2, attempting uncompressed format...")
                     try:
                         existing_st.write(full_path, format="MSEED")
-                        to_insert_db.append(stream_to_db_element(existing_st))
+                        to_insert_db.extend(stream_to_db_elements(existing_st))
                     except Exception as e:
                         print(f"Failed to write uncompressed MSEED to {full_path}:\n {e}")
                 else:
@@ -1494,8 +1503,9 @@ def run_continuous(settings: SeismoLoaderSettings):
         pruned_requests= prune_requests(requests, db_manager, settings.sds_path)
 
     # Break if nothing to do
-    if len(pruned_requests) < 1:
-        return
+    if not pruned_requests:
+        print(f"          ... already archived!")
+        return True
 
     # Combine these into fewer (but larger) requests
     combined_requests = combine_requests(pruned_requests)
@@ -1593,13 +1603,19 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
         print(f"Falling back to IASP91 model: {str(e)}")
         ttmodel = TauPyModel('IASP91')
 
-    event_streams = []
+    all_event_traces = []
     all_missing = {}
     for i, eq in enumerate(settings.event.selected_catalogs):
-        print(f"\nProcessing event {i+1}/{len(settings.event.selected_catalogs)}  \
-            |  OT: {str(eq.origins[0].time)[0:16]} \
-            LAT: {eq.origins[0].latitude:.2f} \
-            LON: {eq.origins[0].longitude:.2f}")
+        try:
+            event_region = eq.event_descriptions[0].text
+        except:
+            event_region = ""
+        print(
+            f"\nProcessing event {i+1}/{len(settings.event.selected_catalogs)} | "
+            f"{event_region} | "
+            f"{str(eq.origins[0].time)[0:16]} "
+            f"({eq.origins[0].latitude:.2f},{eq.origins[0].longitude:.2f})"
+        )
         
         # Check for cancellation
         if stop_event and stop_event.is_set():
@@ -1618,22 +1634,34 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
 
         # Update arrival database
         if new_arrivals:
-            db_manager.bulk_insert_arrival_data(new_arrivals)
+            try:
+                db_manager.bulk_insert_arrival_data(new_arrivals)
+            except Exception as e:
+                print(f"Issue with run_event > bulk_insert_arrival_data:\n",{e})
 
         # Process data requests
         if settings.waveform.force_redownload:
             print("Forcing re-download as requested...")
             pruned_requests = requests
         else:
-            pruned_requests = prune_requests(requests, db_manager, settings.sds_path)
+            try:
+                pruned_requests = prune_requests(requests, db_manager, settings.sds_path)
+            except Exception as e:
+                print(f"Issue with run_event > prune_requests:\n",{e})
         
-        if stop_event and stop_event.is_set():
-            print("Run cancelled!")
-            return None
+        if len(requests) > 0 and not pruned_requests:
+            print(f"    Data already in archive") #TODO add similar to continuous
 
         # Download new data if needed
         if pruned_requests:
-            combined_requests = combine_requests(pruned_requests)
+            try:
+                combined_requests = combine_requests(pruned_requests)
+            except Exception as e:
+                print(f"Issue with run_event > combine_requests:\n",{e})
+
+            if not combined_requests:
+                print("DEBUG combined requests is empty? here was pruned_requests",pruned_requests)
+                continue
             
             # Setup authenticated clients
             waveform_clients = {'open': waveform_client}
@@ -1698,12 +1726,15 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
                     
                     if arrivals:
                         for tr in st:
-                            tr.stats.event_id = str(eq.resource_id)
+                            tr.stats.resource_id = eq.resource_id.id
                             tr.stats.p_arrival = arrivals[0]
                             tr.stats.s_arrival = arrivals[1]
                             tr.stats.distance_km = arrivals[2]
                             tr.stats.distance_deg = arrivals[3]
                             tr.stats.azimuth = arrivals[4]
+                            tr.stats.event_magnitude = eq.magnitudes[0].mag if hasattr(eq, 'magnitudes') and eq.magnitudes else 0.99
+                            tr.stats.event_region = event_region
+                            tr.stats.event_time = eq.origins[0].time
                     
                     event_stream += st
             except Exception as e:
@@ -1711,7 +1742,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
                 continue
 
         # Now attempt to keep track of what data was missing. Note that this is not catching out-of-bounds data, for better or worse (probably better)
-        missing = get_missing_from_request(str(eq.resource_id),requests,event_stream)
+        missing = get_missing_from_request(eq.resource_id.id,requests,event_stream)
         #print("DEBUG missing: ", missing)
         #print("DEBUG stream: ", event_stream)
         #print("DEBUG requests: ", requests)
@@ -1719,7 +1750,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
         all_missing.update(missing)
 
         if len(event_stream) > 0:
-            event_streams.append(event_stream)
+            all_event_traces.extend(event_stream) #oops this was .append!
 
 
     # Final database cleanup
@@ -1729,7 +1760,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
     except Exception as e:
         print(f"! Error with join_continuous_segments: {str(e)}")
 
-    return event_streams, all_missing
+    return all_event_traces, all_missing
 
 
 def run_main(
@@ -1774,13 +1805,13 @@ def run_main(
     # Process continuous data
     if download_type == DownloadType.CONTINUOUS:
         settings.station.selected_invs = get_stations(settings)
-        run_continuous(settings)
+        run_continuous(settings) # this doesn't return anything
 
     # Process event-based data
     if download_type == DownloadType.EVENT:
         settings.event.selected_catalogs = get_events(settings)
         settings.station.selected_invs = get_stations(settings)
-        run_event(settings)
+        event_traces, missing = run_event(settings) # this returns a stream containing all the downloaded traces, and a dictionary of what's missing
 
     ## Final database cleanup
     #print(" ~~ Cleaning up database ~~")
