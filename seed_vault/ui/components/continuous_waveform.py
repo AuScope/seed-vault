@@ -41,14 +41,14 @@ class ContinuousFilterMenu:
         if current_time_state != self.old_time_state:
             self.old_time_state = current_time_state.copy()
             save_filter(self.settings)
-            # st.rerun()
+            st.rerun()
 
         # Check if settings changed
         changes = self.settings.has_changed(self.old_settings)
         if changes.get('has_changed', False):
             self.old_settings = deepcopy(self.settings)
             save_filter(self.settings)
-            # st.rerun()
+            st.rerun()
         
     def render(self):
         st.sidebar.title("Continuous Waveform Information")
