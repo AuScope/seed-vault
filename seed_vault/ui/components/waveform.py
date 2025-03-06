@@ -1,5 +1,5 @@
 from typing import List, Dict, Union
-from obspy import Stream
+from obspy import Stream, Trace
 from obspy import UTCDateTime
 import threading
 from seed_vault.enums.config import WorkflowType
@@ -107,9 +107,38 @@ class WaveformFilterMenu:
             return
             
         channels = set()
-        for tr in stream:
-            channels.add(tr.stats.channel)
-        self.available_channels = ["All channels"] + sorted(list(channels))
+        
+        # Handle different types of stream objects
+        if isinstance(stream, Stream):
+            # Case 1: ObsPy Stream object
+            for tr in stream:
+                if hasattr(tr.stats, 'channel'):
+                    channels.add(tr.stats.channel)
+        elif isinstance(stream, list):
+            # Case 2: List of traces or Stream objects
+            for item in stream:
+                if isinstance(item, Trace):
+                    # Individual trace
+                    if hasattr(item.stats, 'channel'):
+                        channels.add(item.stats.channel)
+                elif isinstance(item, Stream):
+                    # Stream object in a list
+                    for tr in item:
+                        if hasattr(tr.stats, 'channel'):
+                            channels.add(tr.stats.channel)
+                else:
+                    # Try to handle as a generic object with stats.channel
+                    try:
+                        if hasattr(item, 'stats') and hasattr(item.stats, 'channel'):
+                            channels.add(item.stats.channel)
+                    except:
+                        pass
+        
+        # If we found any channels, update the available_channels list
+        if channels:
+            self.available_channels = ["All channels"] + sorted(list(channels))
+        else:
+            self.available_channels = ["All channels"]
         
         # Reset channel filter if current selection is invalid
         if self.channel_filter not in self.available_channels:
@@ -356,10 +385,7 @@ class WaveformDisplay:
         sys.stderr = QueueLogger(original_stderr, log_queue)
         
         try:
-            # Print initial message to show logging is working
             print("Starting waveform download process...")
-            
-            # Update to unpack the tuple returned by run_event
             stream_and_missing = run_event(self.settings, stop_event)
             if stream_and_missing:
                 self.stream, self.missing_data = stream_and_missing
@@ -370,7 +396,7 @@ class WaveformDisplay:
                 print("Download failed or was cancelled.")
         except Exception as e:
             success = False
-            print(f"Error: {str(e)}")  # This will be captured in the output
+            print(f"Error: {str(e)}") 
         finally:
             # Flush any remaining content
             sys.stdout.flush()
@@ -1073,8 +1099,16 @@ class WaveformComponents:
         tab_names = ["📊 Waveform View", "📝 Log View"]
         waveform_tab, log_tab = st.tabs(tab_names)
         
+        # Get the current stream and update available channels before rendering filter menu
+        current_stream = None
+        if self.waveform_display.stream:
+            # The stream can be either a list of traces or a Stream object
+            # We need to pass the actual stream data to update_available_channels
+            current_stream = self.waveform_display.stream
+            # Update available channels with the current stream
+            self.filter_menu.update_available_channels(current_stream)
+        
         # Always render filter menu (sidebar) first
-        current_stream = self.waveform_display.stream[0] if self.waveform_display.stream else None
         self.filter_menu.render(current_stream)
 
         # Handle content based on active tab
