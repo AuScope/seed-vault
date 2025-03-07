@@ -1,5 +1,5 @@
 from typing import List, Dict, Union
-from obspy import Stream
+from obspy import Stream, Trace
 from obspy import UTCDateTime
 import threading
 from seed_vault.enums.config import WorkflowType
@@ -107,9 +107,40 @@ class WaveformFilterMenu:
             return
             
         channels = set()
-        for tr in stream:
-            channels.add(tr.stats.channel)
-        self.available_channels = ["All channels"] + sorted(list(channels))
+        
+        # Handle different types of stream objects
+        if isinstance(stream, Stream):
+            # Case 1: ObsPy Stream object
+            for tr in stream:
+                if hasattr(tr.stats, 'channel'):
+                    channels.add(tr.stats.channel)
+        elif isinstance(stream, list):
+            # Case 2: List of traces or Stream objects
+            for item in stream:
+                if isinstance(item, Trace):
+                    # Individual trace
+                    if hasattr(item.stats, 'channel'):
+                        channels.add(item.stats.channel)
+                elif isinstance(item, Stream):
+                    # Stream object in a list
+                    for tr in item:
+                        if hasattr(tr.stats, 'channel'):
+                            channels.add(tr.stats.channel)
+                else:
+                    # Try to handle as a generic object with stats.channel
+                    try:
+                        if hasattr(item, 'stats') and hasattr(item.stats, 'channel'):
+                            channels.add(item.stats.channel)
+                    except:
+                        pass
+        
+        # If we found any channels, update the available_channels list
+        # Ensure "All channels" is always at the top by separating it from the sorted list
+        if channels:
+            sorted_channels = sorted(list(channels))
+            self.available_channels = ["All channels"] + sorted_channels
+        else:
+            self.available_channels = ["All channels"]
         
         # Reset channel filter if current selection is invalid
         if self.channel_filter not in self.available_channels:
@@ -213,7 +244,11 @@ class WaveformFilterMenu:
                     st.error("Invalid location format. Each location code should be 0-2 characters (e.g., 00,--,10,20)")
 
             if stream is not None:
-                networks = ["All networks"] + list(set([inv.code for inv in self.settings.station.selected_invs]))
+                # Get network codes and sort them, ensuring "All networks" is at the top
+                network_codes = list(set([inv.code for inv in self.settings.station.selected_invs]))
+                network_codes.sort()  # Sort alphabetically
+                networks = ["All networks"] + network_codes  # Ensure "All networks" is at the top
+                
                 selected_network = st.selectbox(
                     "Network:",
                     networks,
@@ -226,11 +261,13 @@ class WaveformFilterMenu:
                     self.refresh_filters()
 
                 # Station filter with immediate refresh
-                stations = ["All stations"]
+                # Get station codes and sort them, ensuring "All stations" is at the top
+                station_codes = []
                 for inv in self.settings.station.selected_invs:
-                    stations.extend([sta.code for sta in inv])
-                stations = list(dict.fromkeys(stations))  # Remove duplicates
-                stations.sort()
+                    station_codes.extend([sta.code for sta in inv])
+                station_codes = list(dict.fromkeys(station_codes))  # Remove duplicates
+                station_codes.sort()  # Sort alphabetically
+                stations = ["All stations"] + station_codes  # Ensure "All stations" is at the top
                 
                 selected_station = st.selectbox(
                     "Station:",
@@ -356,10 +393,7 @@ class WaveformDisplay:
         sys.stderr = QueueLogger(original_stderr, log_queue)
         
         try:
-            # Print initial message to show logging is working
             print("Starting waveform download process...")
-            
-            # Update to unpack the tuple returned by run_event
             stream_and_missing = run_event(self.settings, stop_event)
             if stream_and_missing:
                 self.stream, self.missing_data = stream_and_missing
@@ -370,7 +404,7 @@ class WaveformDisplay:
                 print("Download failed or was cancelled.")
         except Exception as e:
             success = False
-            print(f"Error: {str(e)}")  # This will be captured in the output
+            print(f"Error: {str(e)}") 
         finally:
             # Flush any remaining content
             sys.stdout.flush()
@@ -425,180 +459,6 @@ class WaveformDisplay:
         else:
             return 'gray'
 
-    #this function isn't in use anywhere??
-    """
-    def _plot_stream_with_colors(self, stream: Stream, size=(800, 600), view_type=None):
-        #Plot stream with proper time windows and P markers
-        if not stream:
-            return None
-
-        try:
-            # Create figure with subplots
-            num_traces = len(stream)
-            fig, axes = plt.subplots(num_traces, 1, figsize=(size[0]/100, size[1]/100), sharex=True)
-            if num_traces == 1:
-                axes = [axes]
-
-            # Sort stream by distance
-            stream.traces.sort(key=lambda x: x.stats.starttime)
-            
-            # Process each trace
-            for i, tr in enumerate(stream):
-                ax = axes[i]
-
-                # Calculate and add an appropriate filter for plotting              
-                filter_min,filter_max = get_tele_filter(tr)
-                if filter_min < filter_max:
-                    tr.stats.filterband = (filter_min,filter_max)
-
-                if view_type == "station":
-                    if hasattr(tr.stats, 'p_arrival') and hasattr(tr.stats, 'event_time'):
-                        p_time = UTCDateTime(tr.stats.p_arrival)
-                        before_p = self.settings.event.before_p_sec
-                        after_p = self.settings.event.after_p_sec
-                        
-                        # Trim trace to desired window around P
-                        window_start = p_time - before_p
-                        window_end = p_time + after_p
-                        tr_windowed = tr.slice(window_start, window_end)
-
-                        # Pre-process and apply a bandpass filter
-                        if tr_windowed.stats.sampling_rate/2 > filter_min and filter_min<filter_max:
-                            tr_windowed.detrend()
-                            tr_windowed.taper(.005)
-                            tr_windowed.filter('bandpass',freqmin=filter_min,freqmax=filter_max,
-                                zerophase=True)
-                        
-                        # Calculate times relative to P arrival
-                        times = np.arange(tr_windowed.stats.npts) * tr_windowed.stats.delta
-                        relative_times = times - before_p  # This makes P arrival at t=0
-                        
-                        # Plot the trace
-                        ax.plot(relative_times, tr_windowed.data, '-', 
-                               color=self._get_trace_color(tr), linewidth=0.8)
-                        
-                        # Add P arrival line (now at x=0)
-                        ax.axvline(x=0, color='red', linewidth=1, linestyle='-')
-                        
-                        # Format trace label
-                        station_label = f"{tr.stats.network}.{tr.stats.station}.{tr.stats.location or ''}.{tr.stats.channel}"
-                        event_info = ""
-                        if hasattr(tr.stats, 'distance_km'):
-                            event_info += f"{tr.stats.distance_km:.1f} km"
-                        if hasattr(tr.stats, 'event_magnitude'):
-                            event_info += f", M{tr.stats.event_magnitude:.1f}"
-                        if hasattr(tr.stats, 'event_region'):
-                            event_info += f", {tr.stats.event_region}"
-                        if hasattr(tr.stats, 'filterband'):
-                            event_info += f", {tr.stats.filterband[0]}-{tr.stats.filterband[1]}Hz"
-                        
-                        # Position label inside plot in upper left
-                        label = f"{station_label} - {event_info}"
-                        ax.text(0.02, 0.95, label, 
-                               transform=ax.transAxes,
-                               verticalalignment='top',
-                               fontsize=8)
-                        
-                        # Set consistent x-axis limits
-                        ax.set_xlim(-before_p, after_p)
-                        
-                else:
-                    # Original plotting logic for other views
-                    # Get P arrival time
-                    p_time = UTCDateTime(tr.stats.p_arrival) if hasattr(tr.stats, 'p_arrival') else None
-                    
-                    if p_time:
-                        # Calculate window boundaries
-                        start_time = p_time - self.settings.event.before_p_sec
-                        end_time = p_time + self.settings.event.after_p_sec
-                        
-                        # Ensure trace is trimmed to window
-                        tr.trim(start_time, end_time, pad=True, fill_value=0)
-
-                        # Pre-process and apply a bandpass filter
-                        if tr_windowed.stats.sampling_rate/2 > filter_min and filter_min<filter_max:
-                            tr.detrend()
-                            tr.taper(.005)
-                            tr.filter('bandpass',freqmin=filter_min,freqmax=filter_max,
-                                zerophase=True)
-                        
-                        # Create time vector matching data length
-                        times = np.linspace(-self.settings.event.before_p_sec, 
-                                          self.settings.event.after_p_sec,
-                                          len(tr.data))
-                        
-                        # Plot waveform
-                        ax.plot(times, tr.data, '-', color=self._get_trace_color(tr), linewidth=0.8)
-                        
-                        # Add P marker at t=0
-                        ax.axvline(x=0, color='red', linewidth=1, linestyle='-')
-                        ax.text(0, ax.get_ylim()[1], 'P', color='red', fontsize=8,
-                               verticalalignment='bottom')
-                        
-                        # Format axis
-                        ax.set_xlim(-self.settings.event.before_p_sec, 
-                                   self.settings.event.after_p_sec)
-                        
-                        # Add trace label
-                        label = f'{tr.stats.network}.{tr.stats.station}.{tr.stats.location or ""}.{tr.stats.channel}'
-                        if hasattr(tr.stats, 'distance_km'):
-                            label += f' {tr.stats.distance_km:.1f} km'
-                        if hasattr(tr.stats, 'event_magnitude'):
-                            label += f", M{tr.stats.event_magnitude:.1f}"
-                        if hasattr(tr.stats, 'event_region'):
-                            label += f", {tr.stats.event_region}"                           
-                        if hasattr(tr.stats, 'filterband'):
-                            label += f", {tr.stats.filterband[0]}-{tr.stats.filterband[1]}Hz"
-                        ax.text(-self.settings.event.before_p_sec * 0.95, 
-                               ax.get_ylim()[1],
-                               label,
-                               fontsize=8)
-                        
-                        # Format time axis
-                        if i == num_traces - 1:  # Only for bottom subplot
-                            ax.set_xlabel('Time relative to P (seconds)')
-                            # Add actual time labels
-                            def format_time(x, p):
-                                t = p_time + x
-                                return t.strftime('%H:%M:%S')
-                            ax.xaxis.set_major_formatter(plt.FuncFormatter(format_time))
-                            plt.setp(ax.xaxis.get_majorticklabels(), rotation=20)
-                    else:
-                        print("DEBUG: no p arrival for plot??", tr.stats)
-                        # If no P arrival, plot raw data
-                        times = np.arange(len(tr.data)) * tr.stats.delta
-
-                        # Pre-process and apply a bandpass filter
-                        if tr_windowed.stats.sampling_rate/2 > filter_min and filter_min<filter_max:
-                            tr.detrend()
-                            tr.taper(.005)
-                            tr.filter('bandpass',freqmin=filter_min,freqmax=filter_max,
-                                zerophase=True)
-
-                        ax.plot(times, tr.data, '-', color=self._get_trace_color(tr), linewidth=0.8)
-                        ax.text(0, ax.get_ylim()[1], 
-                               f'{tr.stats.network}.{tr.stats.station}.{tr.stats.location or ""}.{tr.stats.channel} {tr.stats.event_region} {tr.stats.filterband[0]}-{tr.stats.filterband[1]}Hz',
-                               fontsize=8) #adding event_region here temporarily to help debug
-                
-                # Remove unnecessary ticks
-                ax.set_yticks([])
-                if i < num_traces - 1:
-                    ax.set_xticklabels([])
-            
-            # Format time axis for station view
-            if view_type == "station":
-                ax.set_xlabel('Time relative to origin (seconds)')
-                ax.xaxis.set_major_formatter(plt.ScalarFormatter())
-                ax.xaxis.set_major_locator(plt.MultipleLocator(20))
-                ax.xaxis.set_major_formatter(lambda x, pos: f'{x:.0f}')
-            
-            plt.tight_layout()
-            return fig
-            
-        except Exception as e:
-            st.error(f"Error in plotting: {str(e)}")
-            return None
-    """
 
     def _calculate_figure_dimensions(self, num_traces: int) -> tuple:
         """Calculate figure dimensions based on number of traces"""
@@ -1073,8 +933,16 @@ class WaveformComponents:
         tab_names = ["📊 Waveform View", "📝 Log View"]
         waveform_tab, log_tab = st.tabs(tab_names)
         
+        # Get the current stream and update available channels before rendering filter menu
+        current_stream = None
+        if self.waveform_display.stream:
+            # The stream can be either a list of traces or a Stream object
+            # We need to pass the actual stream data to update_available_channels
+            current_stream = self.waveform_display.stream
+            # Update available channels with the current stream
+            self.filter_menu.update_available_channels(current_stream)
+        
         # Always render filter menu (sidebar) first
-        current_stream = self.waveform_display.stream[0] if self.waveform_display.stream else None
         self.filter_menu.render(current_stream)
 
         # Handle content based on active tab
