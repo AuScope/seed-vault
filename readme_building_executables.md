@@ -46,7 +46,7 @@ Create a file called `run_app.py` with the following content:
 from streamlit.web import cli
 
 if __name__ == '__main__':
-    cli._main_run_clExplicit('seed_vault/ui/main.py', is_hello=False)
+    cli._main_run_clExplicit('seed_vault/ui/1_🌎_main_flows.py', is_hello=False)
 ```
 
 #### Modify Streamlit's CLI
@@ -148,52 +148,293 @@ Copy-Item -Path "seed_vault" -Destination "dist\seed_vault" -Recurse
 ### Linux Spec File
 For Linux, the `datas` and `hiddenimports` sections in the `.spec` file should look like this:
 ```python
-datas = datas + [
+from PyInstaller.utils.hooks import collect_all, collect_data_files, collect_dynamic_libs, copy_metadata, collect_submodules
+import os
+import pkg_resources  
+
+datas = []
+binaries = []
+hiddenimports = []
+
+for package in ['streamlit', 'folium', 'obspy', 'streamlit-folium']:
+    tmp_ret = collect_all(package)
+    datas += tmp_ret[0]
+    binaries += tmp_ret[1]
+    hiddenimports += tmp_ret[2]
+
+datas += collect_data_files('obspy', subdir='imaging/data')
+datas += collect_data_files('obspy', subdir='taup/data')
+
+binaries += collect_dynamic_libs('obspy')
+
+obspy_release_version_path = os.path.join(os.getcwd(), ".venv", "lib", "python3.12", "site-packages", "obspy", "RELEASE-VERSION")
+datas.append((obspy_release_version_path, "obspy/"))
+
+for dist in pkg_resources.working_set:
+    datas += copy_metadata(dist.project_name)
+
+hiddenimports += collect_submodules('requests')  
+datas += collect_data_files('requests')          
+
+hiddenimports += collect_submodules('streamlit_ace')
+datas += collect_data_files('streamlit_ace')
+
+# Collect required package files
+datas += collect_data_files('matplotlib')  
+datas += collect_data_files('scipy')       
+datas += collect_data_files('numpy')       
+
+datas += [
     (".venv/lib/python3.12/site-packages/altair/vegalite/v5/schema/vega-lite-schema.json", "./altair/vegalite/v5/schema/"),
     (".venv/lib/python3.12/site-packages/streamlit/static", "./streamlit/static"),
     (".venv/lib/python3.12/site-packages/streamlit/runtime", "./streamlit/runtime"),
     (".venv/lib/python3.12/site-packages/streamlit_folium", "streamlit_folium"),
-    ('.venv/lib/python3.12/site-packages/obspy/RELEASE-VERSION', 'obspy/'),
-    ("seed_vault", "seed_vault"), 
-    ("data", "data"), 
+    ("seed_vault", "seed_vault"),
+    ("data", "data"),
     (".streamlit/config.toml", ".streamlit/config.toml"),
 ]
 
-hiddenimports = hiddenimports + ['tqdm', 'streamlit-folium', 'pandas', 'requests', 'click', 'tabulate', 'numpy', 'matplotlib', 'pydantic']
+hiddenimports += [
+    'numpy', 'scipy', 'lxml', 'sqlalchemy', 'setuptools', 'requests', 'urllib3', 'packaging',
+    'matplotlib', 'matplotlib.pyplot', 'matplotlib.backends.backend_agg',
+    'obspy.core', 'obspy.clients', 'obspy.io', 'obspy.taup',
+    'obspy.signal', 'obspy.imaging', 'tqdm', 'streamlit-folium', 
+    'pydantic', 'jupyter', 'seaborn', 'plotly',
+    'pandas', 'click', 'tabulate', 'streamlit-extras', 'streamlit-ace', 'decorator'
+]
+
+
+a = Analysis(
+    ['run_app.py'],
+    pathex=[],
+    binaries=binaries,
+    datas=datas,
+    hiddenimports=hiddenimports,
+    hookspath=['./hooks'],
+    hooksconfig={},
+    runtime_hooks=[],
+    excludes=[],
+    noarchive=False,
+    optimize=0,
+)
+pyz = PYZ(a.pure)
+
+exe = EXE(
+    pyz,
+    a.scripts,
+    a.binaries,
+    a.datas,
+    [],
+    name='seed-vault',
+    debug=False,
+    bootloader_ignore_signals=False,
+    strip=False,
+    upx=True,
+    upx_exclude=[],
+    runtime_tmpdir=None,
+    console=True,
+    disable_windowed_traceback=False,
+    argv_emulation=False,
+    target_arch=None,
+    codesign_identity=None,
+    entitlements_file=None,
+)
 ```
 
 ### Windows Spec File
 For Windows, adjust the paths to Windows-style:
 ```python
-datas = datas + [
-    (".venv\Lib\site-packages\altair\vegalite\v5\schema\vega-lite-schema.json", "./altair/vegalite/v5/schema/"),
-    (".venv\Lib\site-packages\streamlit\static", "./streamlit/static"),
-    (".venv\Lib\site-packages\streamlit\runtime", "./streamlit/runtime"),
-    (".venv\Lib\site-packages\streamlit_folium", "streamlit_folium"),
-    ('.venv\Lib\site-packages\obspy\RELEASE-VERSION', 'obspy/'),
-    ("seed_vault", "seed_vault"), 
-    ("data", "data"), 
-    (".streamlit\config.toml", ".streamlit/config.toml"),
+from PyInstaller.utils.hooks import collect_all, collect_data_files, collect_dynamic_libs, copy_metadata, collect_submodules
+import os
+import pkg_resources  
+
+datas = []
+binaries = []
+hiddenimports = []
+
+for package in ['streamlit', 'folium', 'obspy', 'streamlit-folium']:
+    tmp_ret = collect_all(package)
+    datas += tmp_ret[0]
+    binaries += tmp_ret[1]
+    hiddenimports += tmp_ret[2]
+
+datas += collect_data_files('obspy', subdir='imaging/data')
+datas += collect_data_files('obspy', subdir='taup/data')
+
+binaries += collect_dynamic_libs('obspy')
+
+obspy_release_version_path = os.path.join(os.getcwd(), ".venv", "Lib", "site-packages", "obspy", "RELEASE-VERSION")
+datas.append((obspy_release_version_path, "obspy/"))
+
+
+for dist in pkg_resources.working_set:
+    datas += copy_metadata(dist.project_name)
+
+hiddenimports += collect_submodules('requests')  
+datas += collect_data_files('requests')         
+
+hiddenimports += collect_submodules('streamlit_ace')  
+datas += collect_data_files('streamlit_ace')  
+
+datas += collect_data_files('matplotlib')  
+datas += collect_data_files('scipy')       
+datas += collect_data_files('numpy')       
+datas += [
+    (".venv\\Lib\\site-packages\\altair\\vegalite\\v5\\schema\\vega-lite-schema.json", "./altair/vegalite/v5/schema/"),
+    (".venv\\Lib\\site-packages\\streamlit\\static", "./streamlit/static"),
+    (".venv\\Lib\\site-packages\\streamlit\\runtime", "./streamlit/runtime"),
+    (".venv\\Lib\\site-packages\\streamlit_folium", "streamlit_folium"),
+    ("seed_vault", "seed_vault"),
+    ("data", "data"),
+    (".streamlit\\config.toml", ".streamlit/config.toml"),
 ]
 
-hiddenimports = hiddenimports + ['tqdm', 'streamlit-folium', 'pandas', 'requests', 'click', 'tabulate', 'numpy', 'matplotlib', 'pydantic']
+hiddenimports += [
+    'numpy', 'scipy', 'lxml', 'sqlalchemy', 'setuptools' ,'requests', 'urllib3', 'packaging',
+    'matplotlib', 'obspy.core', 'obspy.clients', 'obspy.io', 'obspy.taup',
+    'obspy.signal', 'obspy.imaging', 'tqdm', 'streamlit-folium', 
+    'pydantic', 'jupyter', 'seaborn', 'plotly',
+    'pandas', 'click', 'tabulate', 'streamlit-extras', 'streamlit-ace', 'decorator'
+]
+
+a = Analysis(
+    ['run_app.py'],
+    pathex=[],
+    binaries=binaries,
+    datas=datas,
+    hiddenimports=hiddenimports,
+    hookspath=[],  
+    hooksconfig={},
+    runtime_hooks=[],
+    excludes=[],
+    noarchive=False,
+    optimize=0,
+)
+
+pyz = PYZ(a.pure)
+
+exe = EXE(
+    pyz,
+    a.scripts,
+    a.binaries,
+    a.datas,
+    [],
+    name='seed-vault',
+    debug=False,
+    bootloader_ignore_signals=False,
+    strip=False,
+    upx=True,
+    upx_exclude=[],
+    runtime_tmpdir=None,
+    console=True,
+    disable_windowed_traceback=False,
+    argv_emulation=False,
+    target_arch=None,
+    codesign_identity=None,
+    entitlements_file=None,
+)
+
 ```
 
 ### macOS Spec File
 For macOS, use the same style as Linux, with paths similar to Linux paths:
 ```python
-datas = datas + [
+# -*- mode: python ; coding: utf-8 -*-
+from PyInstaller.utils.hooks import collect_all, collect_data_files, collect_dynamic_libs, copy_metadata, collect_submodules
+import os
+import pkg_resources  
+
+datas = []
+binaries = []
+hiddenimports = []
+
+for package in ['streamlit', 'folium', 'obspy', 'streamlit-folium']:
+    tmp_ret = collect_all(package)
+    datas += tmp_ret[0]
+    binaries += tmp_ret[1]
+    hiddenimports += tmp_ret[2]
+
+datas += collect_data_files('obspy', subdir='imaging/data')
+datas += collect_data_files('obspy', subdir='taup/data')
+
+binaries += collect_dynamic_libs('obspy')
+
+obspy_release_version_path = os.path.join(os.getcwd(), ".venv", "lib", "python3.12", "site-packages", "obspy", "RELEASE-VERSION")
+datas.append((obspy_release_version_path, "obspy/"))
+
+for dist in pkg_resources.working_set:
+    datas += copy_metadata(dist.project_name)
+
+hiddenimports += collect_submodules('requests')  
+datas += collect_data_files('requests')          
+
+hiddenimports += collect_submodules('streamlit_ace')
+datas += collect_data_files('streamlit_ace')
+
+# Collect required package files
+datas += collect_data_files('matplotlib')  
+datas += collect_data_files('scipy')       
+datas += collect_data_files('numpy')       
+
+# Additional required data files (macOS paths)
+datas += [
     (".venv/lib/python3.12/site-packages/altair/vegalite/v5/schema/vega-lite-schema.json", "./altair/vegalite/v5/schema/"),
     (".venv/lib/python3.12/site-packages/streamlit/static", "./streamlit/static"),
     (".venv/lib/python3.12/site-packages/streamlit/runtime", "./streamlit/runtime"),
     (".venv/lib/python3.12/site-packages/streamlit_folium", "streamlit_folium"),
-    ('.venv/lib/python3.12/site-packages/obspy/RELEASE-VERSION', 'obspy/'),
-    ("seed_vault", "seed_vault"), 
-    ("data", "data"), 
+    ("seed_vault", "seed_vault"),
+    ("data", "data"),
     (".streamlit/config.toml", ".streamlit/config.toml"),
 ]
 
-hiddenimports = hiddenimports + ['tqdm', 'streamlit-folium', 'pandas', 'requests', 'click', 'tabulate', 'numpy', 'matplotlib', 'pydantic']
+# Hidden imports (to prevent missing dependencies)
+hiddenimports += [
+    'numpy', 'scipy', 'lxml', 'sqlalchemy', 'setuptools', 'requests', 'urllib3', 'packaging',
+    'matplotlib', 'matplotlib.pyplot', 'matplotlib.backends.backend_agg',
+    'obspy.core', 'obspy.clients', 'obspy.io', 'obspy.taup',
+    'obspy.signal', 'obspy.imaging', 'tqdm', 'streamlit-folium', 
+    'pydantic', 'jupyter', 'seaborn', 'plotly',
+    'pandas', 'click', 'tabulate', 'streamlit-extras', 'streamlit-ace', 'decorator'
+]
+
+# PyInstaller analysis
+a = Analysis(
+    ['run_app.py'],
+    pathex=[os.getcwd()],  
+    binaries=binaries,
+    datas=datas,
+    hiddenimports=hiddenimports,
+    hookspath=[], 
+    hooksconfig={},
+    runtime_hooks=[],
+    excludes=[],
+    noarchive=False,
+    optimize=0,
+)
+
+pyz = PYZ(a.pure)
+
+exe = EXE(
+    pyz,
+    a.scripts,
+    a.binaries,
+    a.datas,
+    [],
+    name='seed-vault',
+    debug=False,
+    bootloader_ignore_signals=False,
+    strip=False,
+    upx=True,
+    upx_exclude=[],
+    runtime_tmpdir=None,
+    console=True,
+    disable_windowed_traceback=False,
+    argv_emulation=False,
+    target_arch="x86_64",  # Ensure compatibility with macOS (modify for Apple Silicon if needed)
+    codesign_identity=None,
+    entitlements_file=None,
+)
+
 ```
 
 ---
@@ -202,7 +443,7 @@ hiddenimports = hiddenimports + ['tqdm', 'streamlit-folium', 'pandas', 'requests
 
 Finally, to build the executable on any platform, run:
 ```bash
-pyinstaller run_app.spec --clean
+pyinstaller seed-vault.spec --clean
 ```
 
 ---
