@@ -88,6 +88,7 @@ class BaseComponent:
     map_fg_prev_selected_marker = None
     map_height                  = 500
     map_output                  = None
+    selected_marker_map_idx     = None
     map_view_center             = {}
     map_view_zoom               = 2
     marker_info                 = None
@@ -677,10 +678,10 @@ class BaseComponent:
 
         self.df_markers['is_selected'] = self.df_data_edit['is_selected']
     
-    def refresh_map_selection(self):
+    def refresh_map_selection(self, recreate=False):
         selected_idx = self.get_selected_idx()
         self.update_selected_data()
-        self.refresh_map(reset_areas=False, selected_idx=selected_idx, rerun=True, recreate_map=False)
+        self.refresh_map(reset_areas=False, selected_idx=selected_idx, rerun=True, recreate_map=recreate)
 
 
     # ===================
@@ -1071,7 +1072,7 @@ class BaseComponent:
         with c1:
             self.map_output = st_folium(
                 self.map_disp, 
-                # key=f"map_{self.map_id}",
+                key=f"map_{self.map_id}",
                 feature_group_to_add=feature_groups, 
                 use_container_width=True, 
                 # height=self.map_height
@@ -1103,7 +1104,9 @@ class BaseComponent:
                 step = idx_info[0].lower()
                 idx  = int(idx_info[1])
                 if step == self.step_type:
-                    self.clicked_marker_info = self.marker_info[idx]
+                    if self.selected_marker_map_idx is None or idx != self.selected_marker_map_idx:
+                        self.selected_marker_map_idx = idx
+                        self.clicked_marker_info = self.marker_info[self.selected_marker_map_idx]
                 
             else:
                 self.clicked_marker_info = None
@@ -1263,49 +1266,66 @@ class BaseComponent:
             return
 
         if self.step_type == Steps.EVENT:
-            preferred_column = "place"
-            unique_column = "magnitude"  # Extra column to make each entry unique
+            unique_columns = ["place", "magnitude", "magnitude type"]
 
-        if self.step_type == Steps.STATION:
-            preferred_column = "network"
-            unique_column = "station"  # Extra column to make each entry unique
+        elif self.step_type == Steps.STATION:
+            unique_columns = ["network", "station"]
 
-        ## causing issue in STATION table which doesn't have "magnitude" (NEEDS REVIEW)
-        if preferred_column not in df_selected.columns or unique_column not in df_selected.columns:
-            st.warning(f"Column '{preferred_column}' or '{unique_column}' not found in the data!")
+        # Ensure all unique_columns exist in the dataframe
+        missing_columns = [col for col in unique_columns if col not in df_selected.columns]
+        if missing_columns:
+            st.warning(f"Missing columns in data: {', '.join(missing_columns)}")
             return
 
-        df_selected["display_label"] = df_selected[preferred_column] + " (" + df_selected[unique_column].astype(str) + ")"
+
+        df_selected["display_label"] = df_selected[unique_columns].astype(str).agg(" | ".join, axis=1)
         
         selected_items = df_selected["display_label"].tolist()
 
         updated_selection = st.multiselect(
             "Selected Items",
-            options=self.df_markers[self.df_markers['is_selected']].apply(lambda x: f"{x[preferred_column]} ({x[unique_column]})", axis=1).tolist(),
+            options=selected_items,
             default=selected_items,
             key="selected_items_list",
             placeholder="Selected Items",
             disabled=False
         )
 
+        # Determine which items were removed
         removed_items = set(selected_items) - set(updated_selection)
 
         if removed_items:
             for item in removed_items:
-                place_name, magnitude = item.rsplit(" (", 1)
-                magnitude = magnitude.rstrip(")")  # Remove closing bracket
+                values = item.split(" | ")  # Extract the separated values
 
-                item_index = self.df_markers[
-                    (self.df_markers[preferred_column] == place_name) & 
-                    (self.df_markers[unique_column].astype(str) == magnitude)
-                ].index.tolist()
+                # Construct a mask for filtering rows based on extracted values
+                mask = (self.df_markers[unique_columns[0]].astype(str) == values[0])
+                for col, val in zip(unique_columns[1:], values[1:]):  # Loop over remaining columns
+                    mask &= (self.df_markers[col].astype(str) == val)
 
-                if item_index:
-                    self.df_markers.at[item_index[0], 'is_selected'] = False  
-                    # self.sync_df_markers_with_df_edit()
+                # Update `is_selected` to False for matching rows
+                self.df_markers.loc[mask, 'is_selected'] = False
+
 
             st.session_state[state_key] = self.df_markers.copy()
-            self.refresh_map_selection()
+            self.refresh_map_selection(recreate=False)
+
+        # if removed_items:
+        #     for item in removed_items:
+        #         place_name, magnitude = item.rsplit(" (", 1)
+        #         magnitude = magnitude.rstrip(")")  # Remove closing bracket
+
+        #         item_index = self.df_markers[
+        #             (self.df_markers[preferred_column] == place_name) & 
+        #             (self.df_markers[unique_column].astype(str) == magnitude)
+        #         ].index.tolist()
+
+        #         if item_index:
+        #             self.df_markers.at[item_index[0], 'is_selected'] = False  
+        #             # self.sync_df_markers_with_df_edit()
+
+        #     st.session_state[state_key] = self.df_markers.copy()
+        #     self.refresh_map_selection(recreate=False)
 
     def render(self):
         
