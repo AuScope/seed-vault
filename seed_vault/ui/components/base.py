@@ -13,7 +13,7 @@ import time
 
 
 from seed_vault.ui.components.map import create_map, add_area_overlays, add_data_points, clear_map_layers, clear_map_draw,add_map_draw
-from seed_vault.ui.pages.helpers.common import get_selected_areas, save_filter
+from seed_vault.ui.app_pages.helpers.common import get_selected_areas, save_filter
 
 from seed_vault.service.events import get_event_data, event_response_to_df
 from seed_vault.service.stations import get_station_data, station_response_to_df

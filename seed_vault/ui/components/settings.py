@@ -5,7 +5,7 @@ import time
 from copy import deepcopy
 from seed_vault.enums.common import ClientType
 from seed_vault.models.config import AuthConfig, SeismoLoaderSettings
-from seed_vault.ui.pages.helpers.common import save_filter, reset_config
+from seed_vault.ui.app_pages.helpers.common import save_filter, reset_config
 
 from seed_vault.service.seismoloader import populate_database_from_sds
 from seed_vault.utils.constants import DOC_BASE_URL

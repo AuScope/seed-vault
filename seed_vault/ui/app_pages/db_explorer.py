@@ -9,7 +9,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-from seed_vault.ui.pages.helpers.common import get_app_settings
+from seed_vault.ui.app_pages.helpers.common import get_app_settings
 from seed_vault.ui.components.data_explorer import DataExplorerComponent
 
 settings = get_app_settings()

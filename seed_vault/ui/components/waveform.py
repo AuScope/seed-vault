@@ -16,7 +16,7 @@ from html import escape
 from seed_vault.ui.components.continuous_waveform import ContinuousComponents
 from seed_vault.service.utils import check_client_services
 from copy import deepcopy
-from seed_vault.ui.pages.helpers.common import save_filter
+from seed_vault.ui.app_pages.helpers.common import save_filter
 import time
 import sys
 import queue

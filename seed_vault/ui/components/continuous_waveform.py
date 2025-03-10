@@ -13,7 +13,7 @@ from seed_vault.models.config import SeismoLoaderSettings
 from seed_vault.service.seismoloader import run_continuous
 from seed_vault.ui.components.display_log import ConsoleDisplay
 from seed_vault.service.utils import convert_to_datetime, get_time_interval
-from seed_vault.ui.pages.helpers.common import save_filter
+from seed_vault.ui.app_pages.helpers.common import save_filter
 
 # Create a global stop event for cancellation
 stop_event = threading.Event()
