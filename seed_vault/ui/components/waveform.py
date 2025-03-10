@@ -156,12 +156,16 @@ class WaveformFilterMenu:
             cc1, cc2 = st.columns([1, 1])
 
             with cc1:
-                min_radius = st.number_input("Minimum radius (degree)", value=self.settings.event.min_radius)
+                min_radius = st.number_input("Minimum radius (degree)",
+                    value=self.settings.event.min_radius or 0.0, 
+                    step=0.5, min_value=0.0, max_value=180.0)
                 if min_radius != self.settings.event.min_radius:
                     self.settings.event.min_radius = min_radius
                     self.refresh_filters()
             with cc2:
-                max_radius = st.number_input("Maximum radius (degree)", value=self.settings.event.max_radius)
+                max_radius = st.number_input("Maximum radius (degree)",
+                    value=self.settings.event.max_radius or 90.0,
+                    step=0.5, min_value=0.0, max_value=180.0)
                 if max_radius != self.settings.event.max_radius:
                     self.settings.event.max_radius = max_radius
                     self.refresh_filters()
@@ -172,6 +176,7 @@ class WaveformFilterMenu:
             before_p = st.number_input(
                 "Start (secs before P arrival):", 
                 value=self.settings.event.before_p_sec or 20,
+                step = 5,
                 help="Time window before P arrival",
                 key="before_p_input"
             )
@@ -182,6 +187,7 @@ class WaveformFilterMenu:
             after_p = st.number_input(
                 "End (secs after P arrival):", 
                 value=self.settings.event.after_p_sec or 100,
+                step = 5,
                 help="Time window after P arrival",
                 key="after_p_input"
             )
@@ -371,11 +377,21 @@ class WaveformDisplay:
                 self.original_stream = original_stream
                 self.queue = queue
                 self.buffer = ""
-            
+
             def write(self, text):
                 self.original_stream.write(text)
                 self.buffer += text
-                if '\n' in text:
+                
+                # Only flush when buffer gets large enough
+                if len(self.buffer) > 80:  # Buffer getting too large, flush it
+                    self.queue.put(self.buffer)
+                    self.buffer = ""
+
+            """
+            def write(self, text):
+                self.original_stream.write(text)
+                self.buffer += text
+                if '\n' in text:  ### this may be bad
                     lines = self.buffer.split('\n')
                     for line in lines[:-1]:  # All complete lines
                         if line:  # Skip empty lines
@@ -385,7 +401,9 @@ class WaveformDisplay:
                 elif text and len(self.buffer) > 80:  # Buffer getting long, flush it
                     self.queue.put(self.buffer)
                     self.buffer = ""
+            """
             
+
             def flush(self):
                 self.original_stream.flush()
                 if self.buffer:  # Flush any remaining content in buffer
@@ -405,6 +423,8 @@ class WaveformDisplay:
                 self.stream, self.missing_data = stream_and_missing
                 success = True
                 print("Download completed successfully.")
+                # If stopped via the cancel button, reset it continue to plotting as normal
+                stop_event.clear()
             else:
                 success = False
                 print("Download failed or was cancelled.")
@@ -415,6 +435,9 @@ class WaveformDisplay:
             # Flush any remaining content
             sys.stdout.flush()
             sys.stderr.flush()
+
+            # Ensure stop event is cleared
+            stop_event.clear()
             
             # Restore original stdout/stderr
             sys.stdout = original_stdout
@@ -1008,11 +1031,11 @@ class WaveformComponents:
                         disabled=not st.session_state.get("is_downloading", False),
                         use_container_width=True):
                 stop_event.set()  # Signal cancellation
-                st.warning("Cancelling query...")
-                st.session_state.update({
-                    "is_downloading": False,
-                    "polling_active": False
-                })
+                st.warning("Cancel requested but finishing current request...")
+                #st.session_state.update({
+                #    "is_downloading": False,
+                #    "polling_active": False
+                #})
                 st.rerun()
 
         # Download status indicator
@@ -1052,10 +1075,12 @@ class WaveformComponents:
                         self.console.accumulated_output.insert(0, "Running run_event\n-----------------")
                         st.session_state["log_entries"] = self.console.accumulated_output
                     
-                    escaped_content = escape('\n'.join(self.console.accumulated_output))
-                    
+                    raw_content = "".join(self.console.accumulated_output)
+                    escaped_content = escape(raw_content)
+
+
                     log_text = (
-                        '<div class="terminal" id="log-terminal" style="max-height: 400px;">'
+                        '<div class="terminal" id="log-terminal" style="max-height: 500px;">'
                         f'<pre style="margin: 0; white-space: pre; tab-size: 4;">{escaped_content}</pre>'
                         '</div>'
                         '<script>'
@@ -1130,8 +1155,9 @@ class WaveformComponents:
                 self.console.accumulated_output.insert(0, "Running run_event\n-----------------")
                 st.session_state["log_entries"] = self.console.accumulated_output
             
-            escaped_content = escape('\n'.join(self.console.accumulated_output))
-            
+            raw_content = "".join(self.console.accumulated_output)
+            escaped_content = escape(raw_content)
+
             log_text = (
                 '<div class="terminal" id="log-terminal">'
                 f'<pre style="margin: 0; white-space: pre; tab-size: 4;">{escaped_content}</pre>'
