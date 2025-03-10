@@ -9,6 +9,7 @@ import pandas as pd
 from datetime import datetime, time
 from obspy.core.event import Catalog, read_events
 from obspy.core.inventory import Inventory, read_inventory
+import time
 
 
 from seed_vault.ui.components.map import create_map, add_area_overlays, add_data_points, clear_map_layers, clear_map_draw,add_map_draw
@@ -101,6 +102,8 @@ class BaseComponent:
     col_size                    = None
     fig_color_bar               = None
     df_markers_prev             = pd.DataFrame()
+    
+    delay_selection            = 0
 
     cols_to_exclude             = ['detail', 'is_selected']
 
@@ -678,10 +681,10 @@ class BaseComponent:
 
         self.df_markers['is_selected'] = self.df_data_edit['is_selected']
     
-    def refresh_map_selection(self, recreate=False):
+    def refresh_map_selection(self, rerun=True, recreate=False):
         selected_idx = self.get_selected_idx()
         self.update_selected_data()
-        self.refresh_map(reset_areas=False, selected_idx=selected_idx, rerun=True, recreate_map=recreate)
+        self.refresh_map(reset_areas=False, selected_idx=selected_idx, rerun=rerun, recreate_map=recreate)
 
 
     # ===================
@@ -931,8 +934,6 @@ class BaseComponent:
                 key=self.get_key_element(f"Load {self.TXT.STEP}s")
             ):
                 self.refresh_map(reset_areas=False, clear_draw=False, rerun=False)
-                # self.clear_all_data()
-                # self.refresh_map(reset_areas=True, clear_draw=True, rerun=True, get_data=True)
 
 
         with cc2:
@@ -1066,7 +1067,7 @@ class BaseComponent:
         if self.step_type == Steps.EVENT:
            info_display += "\nℹ️ **Marker size** is associated with **earthquake magnitude**"
 
-        st.caption(info_display)
+        st.caption(info_display)            
         
         c1, c2 = st.columns([18,1])
         with c1:
@@ -1182,6 +1183,11 @@ class BaseComponent:
                 disabled=is_disabled
             )
 
+
+    def on_change_df_table(self):
+        self.delay_selection = 1
+    
+    
     def data_table_view(self, ordered_col, config, state_key):
         """Displays the full data table, allowing selection."""  
 
@@ -1238,7 +1244,8 @@ class BaseComponent:
             column_order = ordered_col, 
             key=self.get_key_element("Data Table"),
             use_container_width=True,
-            height=height
+            height=height,
+            on_change=self.on_change_df_table
         )
         
 
@@ -1247,15 +1254,12 @@ class BaseComponent:
         else:
             has_changed = not self.df_data_edit.equals(st.session_state[state_key])
             
-            if has_changed:
-                df_sorted_new = self.df_data_edit.sort_values(by=self.df_data_edit.columns.tolist()).reset_index(drop=True)
-                df_sorted_old = st.session_state[state_key].sort_values(by=st.session_state[state_key].columns.tolist()).reset_index(drop=True)
-                has_changed = not df_sorted_new.equals(df_sorted_old)
-
         if has_changed:
+            time.sleep(self.delay_selection)
             st.session_state[state_key] = self.df_data_edit.copy()  # Save the unsorted version to preserve user sorting
             self.sync_df_markers_with_df_edit()
             self.refresh_map_selection()
+            self.delay_selection = 0
 
     def selected_items_view(self, state_key):
         """Displays selected items using an actual `st.multiselect`, controlled by table selection."""
