@@ -156,9 +156,15 @@ class WaveformFilterMenu:
             cc1, cc2 = st.columns([1, 1])
 
             with cc1:
-                self.settings.event.min_radius = st.number_input("Minimum radius (degree)", value=self.settings.event.min_radius)
+                min_radius = st.number_input("Minimum radius (degree)", value=self.settings.event.min_radius)
+                if min_radius != self.settings.event.min_radius:
+                    self.settings.event.min_radius = min_radius
+                    self.refresh_filters()
             with cc2:
-                self.settings.event.max_radius = st.number_input("Maximum radius (degree)", value=self.settings.event.max_radius)
+                max_radius = st.number_input("Maximum radius (degree)", value=self.settings.event.max_radius)
+                if max_radius != self.settings.event.max_radius:
+                    self.settings.event.max_radius = max_radius
+                    self.refresh_filters()
 
             st.subheader("🔍 Time Window")
             
