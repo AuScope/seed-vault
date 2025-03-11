@@ -25,7 +25,7 @@ DataSelect Web Service
 
 `AusPass DataSelect URL Builder <http://www.auspass.edu.au/fdsnws/dataselect/1/builder>`_ can be used to search for WAVEFORM DATA
 
-`FDSN Specification <https://www.fdsn.org/webservices/fdsnws-dataselect-1.1.pdf>`_
+`FDSN DataSelect Specification <https://www.fdsn.org/webservices/fdsnws-dataselect-1.1.pdf>`_
 
 `FDSN DataSelect issue and suggestion tracking <https://github.com/FDSN/fdsnws-dataselect>`_
 
