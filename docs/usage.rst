@@ -64,8 +64,7 @@ Open a powershell and run following commands:
 
 **NOTES:**
 
-1. For Win OS, you would need to convert the shell scripts to PowerShell. Or simply follow the steps in the shell scripts to set up the app.
-2. Requires python3 venv software package e.g. For python v10 on Ubuntu you may need to:
+1. May require python3 venv software package e.g. For python v10 on Ubuntu you may need to:
 
 .. code-block:: sh
 
@@ -74,23 +73,6 @@ Open a powershell and run following commands:
 
 Starting the Application
 ========================
-
-There are two ways to start the application:
-
-1. Run from script
-2. Run as Python library
-
-
-Run from script
----------------
-
-.. code-block:: sh
-
-   source run.sh
-
-
-Run as Python Library
----------------------
 
 .. code-block:: sh
 
