@@ -2,6 +2,13 @@
 Getting Started
 ===============
 
+Requirements
+============
+
+* At least 8 GB RAM
+
+* Python >= v3.10
+
 Installation
 ============
 
