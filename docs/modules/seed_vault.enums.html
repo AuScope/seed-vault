@@ -1,0 +1,365 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>seed_vault.enums package &mdash; Seed Vault 0.1.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=92734c54"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Seed Vault
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../app.html">Seed Vault App</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../app_main_flows.html">Main Flows</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../workflow_comparison.html">Workflow Comparison</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../workflow_comparison.html#choosing-the-right-workflow">Choosing the Right Workflow</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../flows/events_based.html">Events Based</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../flows/events_based.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../flows/events_based.html#workflow-steps">Workflow Steps</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../flows/events_based.html#step-1-search-select-events">Step 1: Search &amp; Select Events</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../flows/events_based.html#step-2-select-stations">Step 2: Select Stations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../flows/events_based.html#step-3-download-analyze-waveforms">Step 3: Download &amp; Analyze Waveforms</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../flows/events_based.html#key-features">Key Features</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../flows/station_based.html">Station Based</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../flows/station_based.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../flows/station_based.html#workflow-steps">Workflow Steps</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../flows/station_based.html#step-1-search-select-stations">Step 1: Search &amp; Select Stations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../flows/station_based.html#step-2-select-events">Step 2: Select Events</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../flows/station_based.html#step-3-download-analyze-waveforms">Step 3: Download &amp; Analyze Waveforms</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../flows/station_based.html#key-features">Key Features</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../flows/continuous_based.html">Continuous Based</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../flows/continuous_based.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../flows/continuous_based.html#workflow-steps">Workflow Steps</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../flows/continuous_based.html#step-1-search-select-stations">Step 1: Search &amp; Select Stations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../flows/continuous_based.html#step-2-download-continuous-data">Step 2: Download Continuous Data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../flows/continuous_based.html#key-features">Key Features</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../flows/run_from_parameters.html">Run from Parameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../flows/run_from_parameters.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../flows/run_from_parameters.html#workflow-steps">Workflow Steps</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../flows/run_from_parameters.html#step-1-load-and-execute-configuration">Step 1: Load and Execute Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../flows/run_from_parameters.html#key-features">Key Features</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../app_main_flows.html#workflow-components">Workflow Components</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../app_run_from_config.html">Direct parameter input</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../app_db_explorer.html">Database Explorer</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../app_db_explorer.html#execute-sql-tab">Execute SQL Tab</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../app_db_explorer.html#query-history-tab">Query History Tab</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../app_db_explorer.html#db-schema-tab">DB Schema Tab</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../app_db_explorer.html#example-queries-tab">Example Queries Tab</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../app_settings.html">App Settings</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../app_settings.html#data">Data</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../app_settings.html#parameters">Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../app_settings.html#id1">Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../app_settings.html#credentials">Credentials</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../app_settings.html#adding-removing-credentials">Adding &amp; Removing Credentials</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../app_settings.html#id2">Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../app_settings.html#clients">Clients</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html">CLI commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../seed_vault.html">seed_vault package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../seed_vault.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../seed_vault.cli.html">seed_vault.cli package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../seed_vault.enums.html">seed_vault.enums package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../seed_vault.models.html">seed_vault.models package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../seed_vault.service.html">seed_vault.service package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../seed_vault.ui.html">seed_vault.ui package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../seed_vault.utils.html">seed_vault.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../seed_vault.html#module-seed_vault">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../fdsn_resources.html">FDSN Resources</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../fdsn_resources.html#station-web-service">Station Web Service</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../fdsn_resources.html#event-web-service">Event Web Service</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../fdsn_resources.html#dataselect-web-service">DataSelect Web Service</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../fdsn_resources.html#general-fdsn-web-services">General FDSN Web Services</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Seed Vault</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">seed_vault.enums package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/docs/modules/seed_vault.enums.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="seed-vault-enums-package">
+<h1>seed_vault.enums package<a class="headerlink" href="#seed-vault-enums-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-seed_vault.enums.common">
+<span id="seed-vault-enums-common-module"></span><h2>seed_vault.enums.common module<a class="headerlink" href="#module-seed_vault.enums.common" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.enums.common.ClientType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.enums.common.</span></span><span class="sig-name descname"><span class="pre">ClientType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seed_vault/enums/common.html#ClientType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.enums.common.ClientType" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>The class <cite>ClientType</cite> defines an enumeration with three options: <cite>ALL</cite>, <cite>ORIGINAL</cite>, and <cite>EXTRA</cite>.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.enums.common.ClientType.ALL">
+<span class="sig-name descname"><span class="pre">ALL</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ALL'</span></em><a class="headerlink" href="#seed_vault.enums.common.ClientType.ALL" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.enums.common.ClientType.EXTRA">
+<span class="sig-name descname"><span class="pre">EXTRA</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'EXTRA'</span></em><a class="headerlink" href="#seed_vault.enums.common.ClientType.EXTRA" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.enums.common.ClientType.ORIGINAL">
+<span class="sig-name descname"><span class="pre">ORIGINAL</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ORIGINAL'</span></em><a class="headerlink" href="#seed_vault.enums.common.ClientType.ORIGINAL" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.enums.common.DescribedEnum">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.enums.common.</span></span><span class="sig-name descname"><span class="pre">DescribedEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seed_vault/enums/common.html#DescribedEnum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.enums.common.DescribedEnum" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>An enumeration.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.enums.common.GeometryType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.enums.common.</span></span><span class="sig-name descname"><span class="pre">GeometryType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seed_vault/enums/common.html#GeometryType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.enums.common.GeometryType" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>The class <cite>GeometryType</cite> defines an enumeration with two members, <cite>POLYGON</cite> and <cite>POINT</cite>,
+representing different types of geometric shapes.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.enums.common.GeometryType.POINT">
+<span class="sig-name descname"><span class="pre">POINT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Point'</span></em><a class="headerlink" href="#seed_vault.enums.common.GeometryType.POINT" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.enums.common.GeometryType.POLYGON">
+<span class="sig-name descname"><span class="pre">POLYGON</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Polygon'</span></em><a class="headerlink" href="#seed_vault.enums.common.GeometryType.POLYGON" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-seed_vault.enums.config">
+<span id="seed-vault-enums-config-module"></span><h2>seed_vault.enums.config module<a class="headerlink" href="#module-seed_vault.enums.config" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.enums.config.DownloadType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.enums.config.</span></span><span class="sig-name descname"><span class="pre">DownloadType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seed_vault/enums/config.html#DownloadType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.enums.config.DownloadType" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>The class <cite>DownloadType</cite> defines an enumeration with two members, <cite>EVENT</cite> and <cite>CONTINUOUS</cite>, each
+associated with a specific string value.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.enums.config.DownloadType.CONTINUOUS">
+<span class="sig-name descname"><span class="pre">CONTINUOUS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'continuous'</span></em><a class="headerlink" href="#seed_vault.enums.config.DownloadType.CONTINUOUS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.enums.config.DownloadType.EVENT">
+<span class="sig-name descname"><span class="pre">EVENT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'event'</span></em><a class="headerlink" href="#seed_vault.enums.config.DownloadType.EVENT" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.enums.config.GeoConstraintType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.enums.config.</span></span><span class="sig-name descname"><span class="pre">GeoConstraintType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seed_vault/enums/config.html#GeoConstraintType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.enums.config.GeoConstraintType" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>The class <cite>GeoConstraintType</cite> defines an enumeration of geographic constraint types with values for
+bounding, circle, and neither.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.enums.config.GeoConstraintType.BOUNDING">
+<span class="sig-name descname"><span class="pre">BOUNDING</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'bounding'</span></em><a class="headerlink" href="#seed_vault.enums.config.GeoConstraintType.BOUNDING" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.enums.config.GeoConstraintType.CIRCLE">
+<span class="sig-name descname"><span class="pre">CIRCLE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'circle'</span></em><a class="headerlink" href="#seed_vault.enums.config.GeoConstraintType.CIRCLE" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.enums.config.GeoConstraintType.NONE">
+<span class="sig-name descname"><span class="pre">NONE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'neither'</span></em><a class="headerlink" href="#seed_vault.enums.config.GeoConstraintType.NONE" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.enums.config.Levels">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.enums.config.</span></span><span class="sig-name descname"><span class="pre">Levels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seed_vault/enums/config.html#Levels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.enums.config.Levels" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>The class <cite>Levels</cite> is a Python enumeration with two members, <cite>CHANNEL</cite> and <cite>STATION</cite>, each
+associated with a string value.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.enums.config.Levels.CHANNEL">
+<span class="sig-name descname"><span class="pre">CHANNEL</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'channel'</span></em><a class="headerlink" href="#seed_vault.enums.config.Levels.CHANNEL" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.enums.config.Levels.STATION">
+<span class="sig-name descname"><span class="pre">STATION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'station'</span></em><a class="headerlink" href="#seed_vault.enums.config.Levels.STATION" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.enums.config.WorkflowType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.enums.config.</span></span><span class="sig-name descname"><span class="pre">WorkflowType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seed_vault/enums/config.html#WorkflowType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.enums.config.WorkflowType" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="../../seed_vault.enums.html#seed_vault.enums.common.DescribedEnum" title="seed_vault.enums.common.DescribedEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">DescribedEnum</span></code></a></p>
+<p>The class <cite>WorkflowType</cite> defines an enumeration with three options, each representing a different
+type of workflow with a description and explanation.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.enums.config.WorkflowType.CONTINUOUS">
+<span class="sig-name descname"><span class="pre">CONTINUOUS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Requesting</span> <span class="pre">Continuous</span> <span class="pre">Data'</span></em><a class="headerlink" href="#seed_vault.enums.config.WorkflowType.CONTINUOUS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.enums.config.WorkflowType.EVENT_BASED">
+<span class="sig-name descname"><span class="pre">EVENT_BASED</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Event</span> <span class="pre">Based</span> <span class="pre">-</span> <span class="pre">Starting</span> <span class="pre">from</span> <span class="pre">Selecting</span> <span class="pre">Events'</span></em><a class="headerlink" href="#seed_vault.enums.config.WorkflowType.EVENT_BASED" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.enums.config.WorkflowType.STATION_BASED">
+<span class="sig-name descname"><span class="pre">STATION_BASED</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Station</span> <span class="pre">Based</span> <span class="pre">-</span> <span class="pre">Starting</span> <span class="pre">from</span> <span class="pre">Selecting</span> <span class="pre">Stations'</span></em><a class="headerlink" href="#seed_vault.enums.config.WorkflowType.STATION_BASED" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-seed_vault.enums.ui">
+<span id="seed-vault-enums-ui-module"></span><h2>seed_vault.enums.ui module<a class="headerlink" href="#module-seed_vault.enums.ui" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="seed_vault.enums.ui.Steps">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.enums.ui.</span></span><span class="sig-name descname"><span class="pre">Steps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/seed_vault/enums/ui.html#Steps"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.enums.ui.Steps" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>The class <cite>Steps</cite> is an enumeration in Python representing different steps with corresponding string
+values.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.enums.ui.Steps.EVENT">
+<span class="sig-name descname"><span class="pre">EVENT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'event'</span></em><a class="headerlink" href="#seed_vault.enums.ui.Steps.EVENT" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.enums.ui.Steps.NONE">
+<span class="sig-name descname"><span class="pre">NONE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'none'</span></em><a class="headerlink" href="#seed_vault.enums.ui.Steps.NONE" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.enums.ui.Steps.STATION">
+<span class="sig-name descname"><span class="pre">STATION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'station'</span></em><a class="headerlink" href="#seed_vault.enums.ui.Steps.STATION" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.enums.ui.Steps.WAVE">
+<span class="sig-name descname"><span class="pre">WAVE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'wave'</span></em><a class="headerlink" href="#seed_vault.enums.ui.Steps.WAVE" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-seed_vault.enums">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-seed_vault.enums" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, CSIRO.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

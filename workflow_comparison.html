@@ -1,0 +1,310 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Workflow Comparison &mdash; Seed Vault 0.1.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=92734c54"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Events Based" href="flows/events_based.html" />
+    <link rel="prev" title="Main Flows" href="app_main_flows.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Seed Vault
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="app.html">Seed Vault App</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="app_main_flows.html">Main Flows</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Workflow Comparison</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#choosing-the-right-workflow">Choosing the Right Workflow</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="flows/events_based.html">Events Based</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="flows/events_based.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/events_based.html#workflow-steps">Workflow Steps</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/events_based.html#step-1-search-select-events">Step 1: Search &amp; Select Events</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/events_based.html#step-2-select-stations">Step 2: Select Stations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/events_based.html#step-3-download-analyze-waveforms">Step 3: Download &amp; Analyze Waveforms</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/events_based.html#key-features">Key Features</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="flows/station_based.html">Station Based</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="flows/station_based.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/station_based.html#workflow-steps">Workflow Steps</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/station_based.html#step-1-search-select-stations">Step 1: Search &amp; Select Stations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/station_based.html#step-2-select-events">Step 2: Select Events</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/station_based.html#step-3-download-analyze-waveforms">Step 3: Download &amp; Analyze Waveforms</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/station_based.html#key-features">Key Features</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="flows/continuous_based.html">Continuous Based</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="flows/continuous_based.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/continuous_based.html#workflow-steps">Workflow Steps</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/continuous_based.html#step-1-search-select-stations">Step 1: Search &amp; Select Stations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/continuous_based.html#step-2-download-continuous-data">Step 2: Download Continuous Data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/continuous_based.html#key-features">Key Features</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="flows/run_from_parameters.html">Run from Parameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="flows/run_from_parameters.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/run_from_parameters.html#workflow-steps">Workflow Steps</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/run_from_parameters.html#step-1-load-and-execute-configuration">Step 1: Load and Execute Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/run_from_parameters.html#key-features">Key Features</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="app_main_flows.html#workflow-components">Workflow Components</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="app_run_from_config.html">Direct parameter input</a></li>
+<li class="toctree-l2"><a class="reference internal" href="app_db_explorer.html">Database Explorer</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="app_db_explorer.html#execute-sql-tab">Execute SQL Tab</a></li>
+<li class="toctree-l3"><a class="reference internal" href="app_db_explorer.html#query-history-tab">Query History Tab</a></li>
+<li class="toctree-l3"><a class="reference internal" href="app_db_explorer.html#db-schema-tab">DB Schema Tab</a></li>
+<li class="toctree-l3"><a class="reference internal" href="app_db_explorer.html#example-queries-tab">Example Queries Tab</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="app_settings.html">App Settings</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="app_settings.html#data">Data</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="app_settings.html#parameters">Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="app_settings.html#id1">Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="app_settings.html#credentials">Credentials</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="app_settings.html#adding-removing-credentials">Adding &amp; Removing Credentials</a></li>
+<li class="toctree-l4"><a class="reference internal" href="app_settings.html#id2">Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="app_settings.html#clients">Clients</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">CLI commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="seed_vault.html">seed_vault package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="seed_vault.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="seed_vault.cli.html">seed_vault.cli package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seed_vault.enums.html">seed_vault.enums package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seed_vault.models.html">seed_vault.models package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seed_vault.service.html">seed_vault.service package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seed_vault.ui.html">seed_vault.ui package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seed_vault.utils.html">seed_vault.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="seed_vault.html#module-seed_vault">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="fdsn_resources.html">FDSN Resources</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fdsn_resources.html#station-web-service">Station Web Service</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fdsn_resources.html#event-web-service">Event Web Service</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fdsn_resources.html#dataselect-web-service">DataSelect Web Service</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fdsn_resources.html#general-fdsn-web-services">General FDSN Web Services</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Seed Vault</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="app.html">Seed Vault App</a></li>
+          <li class="breadcrumb-item"><a href="app_main_flows.html">Main Flows</a></li>
+      <li class="breadcrumb-item active">Workflow Comparison</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/workflow_comparison.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="workflow-comparison">
+<h1>Workflow Comparison<a class="headerlink" href="#workflow-comparison" title="Link to this heading"></a></h1>
+<p>SEED-vault offers four main workflows for accessing seismic data. This guide will help you choose the most appropriate workflow for your needs.</p>
+<table class="docutils align-default" id="id1">
+<caption><span class="caption-text">Workflow Comparison</span><a class="headerlink" href="#id1" title="Link to this table"></a></caption>
+<colgroup>
+<col style="width: 15.2%" />
+<col style="width: 21.2%" />
+<col style="width: 21.2%" />
+<col style="width: 21.2%" />
+<col style="width: 21.2%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Feature</p></th>
+<th class="head"><p>Events-Based</p></th>
+<th class="head"><p>Station-Based</p></th>
+<th class="head"><p>Continuous-Based</p></th>
+<th class="head"><p>Run from Parameters</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>Starting Point</strong></p></td>
+<td><p>Earthquake events</p></td>
+<td><p>Seismic stations</p></td>
+<td><p>Seismic stations</p></td>
+<td><p>Configuration file</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Workflow Steps</strong></p></td>
+<td><ol class="arabic simple">
+<li><p>Select Events</p></li>
+<li><p>Select Stations</p></li>
+<li><p>Download Waveforms</p></li>
+</ol>
+</td>
+<td><ol class="arabic simple">
+<li><p>Select Stations</p></li>
+<li><p>Select Events</p></li>
+<li><p>Download Waveforms</p></li>
+</ol>
+</td>
+<td><ol class="arabic simple">
+<li><p>Select Stations</p></li>
+<li><p>Download Continuous Data</p></li>
+</ol>
+</td>
+<td><ol class="arabic simple">
+<li><p>Load and Execute Configuration</p></li>
+</ol>
+</td>
+</tr>
+<tr class="row-even"><td><p><strong>Best For</strong></p></td>
+<td><p>Studying specific earthquakes</p></td>
+<td><p>Station-specific studies</p></td>
+<td><p>Background noise analysis</p></td>
+<td><p>Automated processing</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Data Type</strong></p></td>
+<td><p>Event-triggered waveforms</p></td>
+<td><p>Event-triggered waveforms</p></td>
+<td><p>Continuous time series</p></td>
+<td><p>Both event and continuous</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Time Selection</strong></p></td>
+<td><p>Around earthquake events</p></td>
+<td><p>Around earthquake events</p></td>
+<td><p>Any time period</p></td>
+<td><p>Defined in configuration</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Visualization</strong></p></td>
+<td><p>Waveform plots</p></td>
+<td><p>Waveform plots</p></td>
+<td><p>Log output (raw data)</p></td>
+<td><p>Log output (raw data)</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>User Interaction</strong></p></td>
+<td><p>Interactive selection</p></td>
+<td><p>Interactive selection</p></td>
+<td><p>Interactive selection</p></td>
+<td><p>Minimal (configuration-based)</p></td>
+</tr>
+</tbody>
+</table>
+<section id="choosing-the-right-workflow">
+<h2>Choosing the Right Workflow<a class="headerlink" href="#choosing-the-right-workflow" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt><strong>Use Events-Based Workflow When:</strong></dt><dd><ul class="simple">
+<li><p>You’re interested in specific earthquake events</p></li>
+<li><p>You want to study how different stations recorded the same event</p></li>
+<li><p>You’re researching particular seismic events</p></li>
+</ul>
+</dd>
+<dt><strong>Use Station-Based Workflow When:</strong></dt><dd><ul class="simple">
+<li><p>You’re focused on specific seismic stations</p></li>
+<li><p>You want to study all events recorded at particular stations</p></li>
+<li><p>You’re conducting station-specific research or calibration</p></li>
+</ul>
+</dd>
+<dt><strong>Use Continuous-Based Workflow When:</strong></dt><dd><ul class="simple">
+<li><p>You need time series data not tied to specific events</p></li>
+<li><p>You’re studying background noise or ambient seismic fields</p></li>
+<li><p>You need large volumes of continuous data for machine learning or other analyses</p></li>
+</ul>
+</dd>
+<dt><strong>Use Run from Parameters Workflow When:</strong></dt><dd><ul class="simple">
+<li><p>You need to automate repetitive data retrieval tasks</p></li>
+<li><p>You’re running batch processing operations</p></li>
+<li><p>You want to ensure reproducible research with identical parameters</p></li>
+<li><p>You’re integrating with scripts or scheduled tasks</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="app_main_flows.html" class="btn btn-neutral float-left" title="Main Flows" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="flows/events_based.html" class="btn btn-neutral float-right" title="Events Based" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, CSIRO.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

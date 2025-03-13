@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>seed_vault.ui.pages.helpers.common &mdash; Seed Vault 0.1.2 documentation</title>
+  <title>seed_vault.ui.app_pages.helpers.common &mdash; Seed Vault 0.1.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=e59714d7" />
 
@@ -41,41 +41,48 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../introduction.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../usage.html">Getting Started</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../../../usage.html#requirements">Requirements</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../../usage.html#installation">Installation</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../../../usage.html#install-via-pip-easy-way">Install via pip (easy way)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../../usage.html#install-from-source-if-you-insist">Install from source (if you insist!)</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../../../usage.html#step-1-clone-repository">Step 1: Clone repository</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../../../usage.html#step-2-setup-and-run">Step 2: Setup and run</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../../usage.html#starting-the-application">Starting the Application</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../../usage.html#getting-to-the-opening-page">Getting to the Opening Page</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../../usage.html#i-event-based-workflow">i. Event Based Workflow</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../../../usage.html#step-1-search-select-events-page">“Step 1: Search &amp; Select Events” Page</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../../usage.html#step-2-search-select-stations-page">“Step 2: Search &amp; Select Stations” Page</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../../usage.html#step-3-waveforms-page">“Step 3: Waveforms” Page</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../../usage.html#ii-station-based">ii. Station Based</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../../../usage.html#step-1-search-select-stations-page">“Step 1: Search &amp; Select Stations” Page</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../../usage.html#step-2-search-select-events-page">“Step 2: Search &amp; Select Events” Page</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../../usage.html#id1">“Step 3: Waveforms” Page</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../../usage.html#iii-continuous-downloads">iii. Continuous Downloads</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../../../usage.html#id2">“Step 1: Search &amp; Select Stations” Page</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../../usage.html#step-2-get-waveforms-page">“Step 2: Get Waveforms” Page</a></li>
-</ul>
-</li>
-</ul>
-</li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../app.html">Seed Vault App</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../../../app_main_flows.html">Main Flows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../../app_main_flows.html">Main Flows</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../workflow_comparison.html">Workflow Comparison</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../workflow_comparison.html#choosing-the-right-workflow">Choosing the Right Workflow</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../flows/events_based.html">Events Based</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../flows/events_based.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../flows/events_based.html#workflow-steps">Workflow Steps</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../flows/events_based.html#step-1-search-select-events">Step 1: Search &amp; Select Events</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../flows/events_based.html#step-2-select-stations">Step 2: Select Stations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../flows/events_based.html#step-3-download-analyze-waveforms">Step 3: Download &amp; Analyze Waveforms</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../flows/events_based.html#key-features">Key Features</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../flows/station_based.html">Station Based</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../flows/station_based.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../flows/station_based.html#workflow-steps">Workflow Steps</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../flows/station_based.html#step-1-search-select-stations">Step 1: Search &amp; Select Stations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../flows/station_based.html#step-2-select-events">Step 2: Select Events</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../flows/station_based.html#step-3-download-analyze-waveforms">Step 3: Download &amp; Analyze Waveforms</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../flows/station_based.html#key-features">Key Features</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../flows/continuous_based.html">Continuous Based</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../flows/continuous_based.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../flows/continuous_based.html#workflow-steps">Workflow Steps</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../flows/continuous_based.html#step-1-search-select-stations">Step 1: Search &amp; Select Stations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../flows/continuous_based.html#step-2-download-continuous-data">Step 2: Download Continuous Data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../flows/continuous_based.html#key-features">Key Features</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../flows/run_from_parameters.html">Run from Parameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../flows/run_from_parameters.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../flows/run_from_parameters.html#workflow-steps">Workflow Steps</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../flows/run_from_parameters.html#step-1-load-and-execute-configuration">Step 1: Load and Execute Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../flows/run_from_parameters.html#key-features">Key Features</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../../app_main_flows.html#workflow-components">Workflow Components</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../../app_run_from_config.html">Direct parameter input</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../../app_db_explorer.html">Database Explorer</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../../../app_db_explorer.html#execute-sql-tab">Execute SQL Tab</a></li>
@@ -104,14 +111,14 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../modules.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../../../seed_vault.html">seed_vault package</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../../../seed_vault.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../seed_vault.cli.html">seed_vault.cli package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../../seed_vault.enums.html">seed_vault.enums package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../../seed_vault.models.html">seed_vault.models package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../../seed_vault.service.html">seed_vault.service package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../../seed_vault.ui.html">seed_vault.ui package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../../seed_vault.utils.html">seed_vault.utils package</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../../seed_vault.html#submodules">Submodules</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../../seed_vault.html#module-seed_vault.cli">seed_vault.cli module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../../seed_vault.html#module-seed_vault">Module contents</a></li>
 </ul>
 </li>
@@ -141,7 +148,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
-      <li class="breadcrumb-item active">seed_vault.ui.pages.helpers.common</li>
+      <li class="breadcrumb-item active">seed_vault.ui.app_pages.helpers.common</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -150,7 +157,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <h1>Source code for seed_vault.ui.pages.helpers.common</h1><div class="highlight"><pre>
+  <h1>Source code for seed_vault.ui.app_pages.helpers.common</h1><div class="highlight"><pre>
 <span></span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -175,7 +182,7 @@
 
 
 <div class="viewcode-block" id="empty_settings_geo_constraints">
-<a class="viewcode-back" href="../../../../../seed_vault.ui.pages.helpers.html#seed_vault.ui.pages.helpers.common.empty_settings_geo_constraints">[docs]</a>
+<a class="viewcode-back" href="../../../../../seed_vault.ui.app_pages.helpers.html#seed_vault.ui.app_pages.helpers.common.empty_settings_geo_constraints">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">empty_settings_geo_constraints</span><span class="p">(</span><span class="n">settings</span><span class="p">:</span> <span class="n">SeismoLoaderSettings</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    TODO: a function that reads the latest app settings</span>
@@ -189,7 +196,7 @@
 
 
 <div class="viewcode-block" id="get_app_settings">
-<a class="viewcode-back" href="../../../../../seed_vault.ui.pages.helpers.html#seed_vault.ui.pages.helpers.common.get_app_settings">[docs]</a>
+<a class="viewcode-back" href="../../../../../seed_vault.ui.app_pages.helpers.html#seed_vault.ui.app_pages.helpers.common.get_app_settings">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_app_settings</span><span class="p">(</span><span class="n">create_new</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">empty_geo</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
     <span class="k">if</span> <span class="s2">&quot;app_settings&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">:</span>
         <span class="n">settings</span> <span class="o">=</span> <span class="n">SeismoLoaderSettings</span><span class="o">.</span><span class="n">from_cfg_file</span><span class="p">(</span><span class="n">target_file</span><span class="p">)</span>
@@ -209,14 +216,14 @@
 
 
 <div class="viewcode-block" id="set_app_settings">
-<a class="viewcode-back" href="../../../../../seed_vault.ui.pages.helpers.html#seed_vault.ui.pages.helpers.common.set_app_settings">[docs]</a>
+<a class="viewcode-back" href="../../../../../seed_vault.ui.app_pages.helpers.html#seed_vault.ui.app_pages.helpers.common.set_app_settings">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">set_app_settings</span><span class="p">(</span><span class="n">settings</span><span class="p">:</span> <span class="n">SeismoLoaderSettings</span><span class="p">):</span>
     <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">app_settings</span> <span class="o">=</span> <span class="n">settings</span></div>
 
 
 
 <div class="viewcode-block" id="get_direct_settings">
-<a class="viewcode-back" href="../../../../../seed_vault.ui.pages.helpers.html#seed_vault.ui.pages.helpers.common.get_direct_settings">[docs]</a>
+<a class="viewcode-back" href="../../../../../seed_vault.ui.app_pages.helpers.html#seed_vault.ui.app_pages.helpers.common.get_direct_settings">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_direct_settings</span><span class="p">(</span><span class="n">create_new</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">empty_geo</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
     <span class="k">if</span> <span class="s2">&quot;direct_settings&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">:</span>
         <span class="n">settings</span> <span class="o">=</span> <span class="n">SeismoLoaderSettings</span><span class="o">.</span><span class="n">from_cfg_file</span><span class="p">(</span><span class="n">target_file_direct</span><span class="p">)</span>
@@ -236,14 +243,14 @@
 
 
 <div class="viewcode-block" id="set_direct_settings">
-<a class="viewcode-back" href="../../../../../seed_vault.ui.pages.helpers.html#seed_vault.ui.pages.helpers.common.set_direct_settings">[docs]</a>
+<a class="viewcode-back" href="../../../../../seed_vault.ui.app_pages.helpers.html#seed_vault.ui.app_pages.helpers.common.set_direct_settings">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">set_direct_settings</span><span class="p">(</span><span class="n">settings</span><span class="p">:</span> <span class="n">SeismoLoaderSettings</span><span class="p">):</span>
     <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">direct_settings</span> <span class="o">=</span> <span class="n">settings</span></div>
 
 
 
 <div class="viewcode-block" id="save_filter">
-<a class="viewcode-back" href="../../../../../seed_vault.ui.pages.helpers.html#seed_vault.ui.pages.helpers.common.save_filter">[docs]</a>
+<a class="viewcode-back" href="../../../../../seed_vault.ui.app_pages.helpers.html#seed_vault.ui.app_pages.helpers.common.save_filter">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">save_filter</span><span class="p">(</span><span class="n">settings</span><span class="p">:</span>  <span class="n">SeismoLoaderSettings</span><span class="p">):</span>
     <span class="n">set_app_settings</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
     <span class="n">current_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
@@ -264,13 +271,13 @@
 
 
 <div class="viewcode-block" id="reset_config">
-<a class="viewcode-back" href="../../../../../seed_vault.ui.pages.helpers.html#seed_vault.ui.pages.helpers.common.reset_config">[docs]</a>
+<a class="viewcode-back" href="../../../../../seed_vault.ui.app_pages.helpers.html#seed_vault.ui.app_pages.helpers.common.reset_config">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">reset_config</span><span class="p">():</span>
     <span class="k">return</span> <span class="n">SeismoLoaderSettings</span><span class="o">.</span><span class="n">create_default</span><span class="p">()</span></div>
 
         
 <div class="viewcode-block" id="handle_polygon">
-<a class="viewcode-back" href="../../../../../seed_vault.ui.pages.helpers.html#seed_vault.ui.pages.helpers.common.handle_polygon">[docs]</a>
+<a class="viewcode-back" href="../../../../../seed_vault.ui.app_pages.helpers.html#seed_vault.ui.app_pages.helpers.common.handle_polygon">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">handle_polygon</span><span class="p">(</span><span class="n">geo</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeometryConstraint</span><span class="p">:</span>
     <span class="n">coords_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">geo</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;geometry&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;coordinates&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
     <span class="n">max_vals</span>   <span class="o">=</span> <span class="n">coords_arr</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
@@ -288,7 +295,7 @@
 
 
 <div class="viewcode-block" id="handle_circle">
-<a class="viewcode-back" href="../../../../../seed_vault.ui.pages.helpers.html#seed_vault.ui.pages.helpers.common.handle_circle">[docs]</a>
+<a class="viewcode-back" href="../../../../../seed_vault.ui.app_pages.helpers.html#seed_vault.ui.app_pages.helpers.common.handle_circle">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">handle_circle</span><span class="p">(</span><span class="n">geo</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GeometryConstraint</span><span class="p">:</span>
     <span class="n">coords</span> <span class="o">=</span> <span class="n">geo</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;geometry&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;coordinates&quot;</span><span class="p">)</span>
     <span class="c1"># min_radius = geo.get(&quot;properties&quot;).get(&quot;min_radius&quot;)</span>
@@ -310,7 +317,7 @@
 
 
 <div class="viewcode-block" id="get_selected_areas">
-<a class="viewcode-back" href="../../../../../seed_vault.ui.pages.helpers.html#seed_vault.ui.pages.helpers.common.get_selected_areas">[docs]</a>
+<a class="viewcode-back" href="../../../../../seed_vault.ui.app_pages.helpers.html#seed_vault.ui.app_pages.helpers.common.get_selected_areas">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_selected_areas</span><span class="p">(</span><span class="n">map_output</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">RectangleArea</span><span class="p">,</span> <span class="n">CircleArea</span><span class="p">]]:</span>
     <span class="n">lst_locs</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">k</span> <span class="o">=</span> <span class="s2">&quot;all_drawings&quot;</span>

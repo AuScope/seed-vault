@@ -19,8 +19,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="seed_vault.ui.pages package" href="seed_vault.ui.pages.html" />
-    <link rel="prev" title="seed_vault.ui package" href="seed_vault.ui.html" /> 
+    <link rel="next" title="seed_vault.utils package" href="seed_vault.utils.html" />
+    <link rel="prev" title="seed_vault.ui.app_pages.helpers package" href="seed_vault.ui.app_pages.helpers.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -44,41 +44,48 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="usage.html">Getting Started</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="usage.html#requirements">Requirements</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage.html#installation">Installation</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="usage.html#install-via-pip-easy-way">Install via pip (easy way)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="usage.html#install-from-source-if-you-insist">Install from source (if you insist!)</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="usage.html#step-1-clone-repository">Step 1: Clone repository</a></li>
-<li class="toctree-l4"><a class="reference internal" href="usage.html#step-2-setup-and-run">Step 2: Setup and run</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="usage.html#starting-the-application">Starting the Application</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage.html#getting-to-the-opening-page">Getting to the Opening Page</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage.html#i-event-based-workflow">i. Event Based Workflow</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="usage.html#step-1-search-select-events-page">“Step 1: Search &amp; Select Events” Page</a></li>
-<li class="toctree-l3"><a class="reference internal" href="usage.html#step-2-search-select-stations-page">“Step 2: Search &amp; Select Stations” Page</a></li>
-<li class="toctree-l3"><a class="reference internal" href="usage.html#step-3-waveforms-page">“Step 3: Waveforms” Page</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="usage.html#ii-station-based">ii. Station Based</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="usage.html#step-1-search-select-stations-page">“Step 1: Search &amp; Select Stations” Page</a></li>
-<li class="toctree-l3"><a class="reference internal" href="usage.html#step-2-search-select-events-page">“Step 2: Search &amp; Select Events” Page</a></li>
-<li class="toctree-l3"><a class="reference internal" href="usage.html#id1">“Step 3: Waveforms” Page</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="usage.html#iii-continuous-downloads">iii. Continuous Downloads</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="usage.html#id2">“Step 1: Search &amp; Select Stations” Page</a></li>
-<li class="toctree-l3"><a class="reference internal" href="usage.html#step-2-get-waveforms-page">“Step 2: Get Waveforms” Page</a></li>
-</ul>
-</li>
-</ul>
-</li>
 <li class="toctree-l1"><a class="reference internal" href="app.html">Seed Vault App</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="app_main_flows.html">Main Flows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="app_main_flows.html">Main Flows</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="workflow_comparison.html">Workflow Comparison</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="workflow_comparison.html#choosing-the-right-workflow">Choosing the Right Workflow</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="flows/events_based.html">Events Based</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="flows/events_based.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/events_based.html#workflow-steps">Workflow Steps</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/events_based.html#step-1-search-select-events">Step 1: Search &amp; Select Events</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/events_based.html#step-2-select-stations">Step 2: Select Stations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/events_based.html#step-3-download-analyze-waveforms">Step 3: Download &amp; Analyze Waveforms</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/events_based.html#key-features">Key Features</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="flows/station_based.html">Station Based</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="flows/station_based.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/station_based.html#workflow-steps">Workflow Steps</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/station_based.html#step-1-search-select-stations">Step 1: Search &amp; Select Stations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/station_based.html#step-2-select-events">Step 2: Select Events</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/station_based.html#step-3-download-analyze-waveforms">Step 3: Download &amp; Analyze Waveforms</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/station_based.html#key-features">Key Features</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="flows/continuous_based.html">Continuous Based</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="flows/continuous_based.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/continuous_based.html#workflow-steps">Workflow Steps</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/continuous_based.html#step-1-search-select-stations">Step 1: Search &amp; Select Stations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/continuous_based.html#step-2-download-continuous-data">Step 2: Download Continuous Data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/continuous_based.html#key-features">Key Features</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="flows/run_from_parameters.html">Run from Parameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="flows/run_from_parameters.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/run_from_parameters.html#workflow-steps">Workflow Steps</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/run_from_parameters.html#step-1-load-and-execute-configuration">Step 1: Load and Execute Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="flows/run_from_parameters.html#key-features">Key Features</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="app_main_flows.html#workflow-components">Workflow Components</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="app_run_from_config.html">Direct parameter input</a></li>
 <li class="toctree-l2"><a class="reference internal" href="app_db_explorer.html">Database Explorer</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="app_db_explorer.html#execute-sql-tab">Execute SQL Tab</a></li>
@@ -107,14 +114,14 @@
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="seed_vault.html">seed_vault package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="seed_vault.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="seed_vault.cli.html">seed_vault.cli package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seed_vault.enums.html">seed_vault.enums package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="seed_vault.models.html">seed_vault.models package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="seed_vault.service.html">seed_vault.service package</a></li>
 <li class="toctree-l4 current"><a class="reference internal" href="seed_vault.ui.html">seed_vault.ui package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="seed_vault.utils.html">seed_vault.utils package</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="seed_vault.html#submodules">Submodules</a></li>
-<li class="toctree-l3"><a class="reference internal" href="seed_vault.html#module-seed_vault.cli">seed_vault.cli module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="seed_vault.html#module-seed_vault">Module contents</a></li>
 </ul>
 </li>
@@ -222,6 +229,11 @@
 <span class="sig-name descname"><span class="pre">data_table_view</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ordered_col</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state_key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.data_table_view"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.data_table_view" title="Link to this definition"></a></dt>
 <dd><p>Displays the full data table, allowing selection.</p>
 </dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.delay_selection">
+<span class="sig-name descname"><span class="pre">delay_selection</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.delay_selection" title="Link to this definition"></a></dt>
+<dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.df_circ">
@@ -400,6 +412,11 @@
 <span class="sig-name descname"><span class="pre">old_settings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings"><code class="xref py py-class docutils literal notranslate"><span class="pre">SeismoLoaderSettings</span></code></a></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.old_settings" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.on_change_df_table">
+<span class="sig-name descname"><span class="pre">on_change_df_table</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.on_change_df_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.on_change_df_table" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.page_type">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">page_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.page_type" title="Link to this definition"></a></dt>
@@ -407,7 +424,7 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.prev_step_type">
-<span class="sig-name descname"><span class="pre">prev_step_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="modules/seed_vault.enums.html#seed_vault.enums.ui.Steps" title="seed_vault.enums.ui.Steps"><code class="xref py py-class docutils literal notranslate"><span class="pre">Steps</span></code></a></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.prev_step_type" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">prev_step_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="seed_vault.enums.html#seed_vault.enums.ui.Steps" title="seed_vault.enums.ui.Steps"><code class="xref py py-class docutils literal notranslate"><span class="pre">Steps</span></code></a></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.prev_step_type" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -427,7 +444,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.refresh_map_selection">
-<span class="sig-name descname"><span class="pre">refresh_map_selection</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.refresh_map_selection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.refresh_map_selection" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">refresh_map_selection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rerun</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recreate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.refresh_map_selection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.refresh_map_selection" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -481,6 +498,11 @@
 <dd><p>Displays selected items using an actual <cite>st.multiselect</cite>, controlled by table selection.</p>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.selected_marker_map_idx">
+<span class="sig-name descname"><span class="pre">selected_marker_map_idx</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.selected_marker_map_idx" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.set_geo_constraint">
 <span class="sig-name descname"><span class="pre">set_geo_constraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geo_constraint</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.set_geo_constraint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.set_geo_constraint" title="Link to this definition"></a></dt>
@@ -508,7 +530,7 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.step_type">
-<span class="sig-name descname"><span class="pre">step_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="modules/seed_vault.enums.html#seed_vault.enums.ui.Steps" title="seed_vault.enums.ui.Steps"><code class="xref py py-class docutils literal notranslate"><span class="pre">Steps</span></code></a></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.step_type" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">step_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="seed_vault.enums.html#seed_vault.enums.ui.Steps" title="seed_vault.enums.ui.Steps"><code class="xref py py-class docutils literal notranslate"><span class="pre">Steps</span></code></a></em><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.step_type" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -620,6 +642,12 @@ enforce_padding: puts the content in columns to enforce artificial padding.</p>
 <span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/continuous_waveform.html#ContinuousComponents.render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousComponents.render" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousComponents.render_polling_ui">
+<span class="sig-name descname"><span class="pre">render_polling_ui</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/continuous_waveform.html#ContinuousComponents.render_polling_ui"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousComponents.render_polling_ui" title="Link to this definition"></a></dt>
+<dd><p>Handles UI updates while monitoring background thread status</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
@@ -629,13 +657,19 @@ enforce_padding: puts the content in columns to enforce artificial padding.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousDisplay.process_continuous_data">
 <span class="sig-name descname"><span class="pre">process_continuous_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/continuous_waveform.html#ContinuousDisplay.process_continuous_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousDisplay.process_continuous_data" title="Link to this definition"></a></dt>
-<dd><p>Process continuous data with console output</p>
+<dd><p>Fetches continuous waveform data in a background thread with logging.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousDisplay.render">
 <span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/continuous_waveform.html#ContinuousDisplay.render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousDisplay.render" title="Link to this definition"></a></dt>
 <dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousDisplay.retrieve_waveforms">
+<span class="sig-name descname"><span class="pre">retrieve_waveforms</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/continuous_waveform.html#ContinuousDisplay.retrieve_waveforms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousDisplay.retrieve_waveforms" title="Link to this definition"></a></dt>
+<dd><p>Initiates waveform retrieval in a background thread with cancellation support</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -915,6 +949,12 @@ enforce_padding: puts the content in columns to enforce artificial padding.</p>
 <dt class="sig sig-object py" id="seed_vault.ui.components.run_from_config.RunFromConfigComponent">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.run_from_config.</span></span><span class="sig-name descname"><span class="pre">RunFromConfigComponent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/run_from_config.html#RunFromConfigComponent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.run_from_config.RunFromConfigComponent" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.run_from_config.RunFromConfigComponent.check_process_status">
+<span class="sig-name descname"><span class="pre">check_process_status</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/run_from_config.html#RunFromConfigComponent.check_process_status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.run_from_config.RunFromConfigComponent.check_process_status" title="Link to this definition"></a></dt>
+<dd><p>Check the status of the background process and update UI accordingly</p>
+</dd></dl>
+
 <dl class="py attribute">
 <dt class="sig sig-object py" id="seed_vault.ui.components.run_from_config.RunFromConfigComponent.config_str">
 <span class="sig-name descname"><span class="pre">config_str</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#seed_vault.ui.components.run_from_config.RunFromConfigComponent.config_str" title="Link to this definition"></a></dt>
@@ -931,9 +971,9 @@ enforce_padding: puts the content in columns to enforce artificial padding.</p>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="seed_vault.ui.components.run_from_config.RunFromConfigComponent.process_run_main">
-<span class="sig-name descname"><span class="pre">process_run_main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">from_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/run_from_config.html#RunFromConfigComponent.process_run_main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.run_from_config.RunFromConfigComponent.process_run_main" title="Link to this definition"></a></dt>
-<dd><p>Process direct run from config with console output</p>
+<dt class="sig sig-object py" id="seed_vault.ui.components.run_from_config.RunFromConfigComponent.process_config_in_background">
+<span class="sig-name descname"><span class="pre">process_config_in_background</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">from_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/run_from_config.html#RunFromConfigComponent.process_config_in_background"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.run_from_config.RunFromConfigComponent.process_config_in_background" title="Link to this definition"></a></dt>
+<dd><p>Process the config file in a background thread with logging to queue</p>
 </dd></dl>
 
 <dl class="py method">
@@ -946,10 +986,22 @@ enforce_padding: puts the content in columns to enforce artificial padding.</p>
 <span class="sig-name descname"><span class="pre">render_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/run_from_config.html#RunFromConfigComponent.render_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.run_from_config.RunFromConfigComponent.render_config" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.run_from_config.RunFromConfigComponent.render_logs">
+<span class="sig-name descname"><span class="pre">render_logs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">container</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/run_from_config.html#RunFromConfigComponent.render_logs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.run_from_config.RunFromConfigComponent.render_logs" title="Link to this definition"></a></dt>
+<dd><p>Render logs in the provided container</p>
+</dd></dl>
+
 <dl class="py attribute">
 <dt class="sig sig-object py" id="seed_vault.ui.components.run_from_config.RunFromConfigComponent.settings">
 <span class="sig-name descname"><span class="pre">settings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings"><code class="xref py py-class docutils literal notranslate"><span class="pre">SeismoLoaderSettings</span></code></a></em><a class="headerlink" href="#seed_vault.ui.components.run_from_config.RunFromConfigComponent.settings" title="Link to this definition"></a></dt>
 <dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.run_from_config.RunFromConfigComponent.start_background_process">
+<span class="sig-name descname"><span class="pre">start_background_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">from_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/run_from_config.html#RunFromConfigComponent.start_background_process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.run_from_config.RunFromConfigComponent.start_background_process" title="Link to this definition"></a></dt>
+<dd><p>Start the background processing thread</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -1027,7 +1079,7 @@ enforce_padding: puts the content in columns to enforce artificial padding.</p>
 <span id="seed-vault-ui-components-waveform-module"></span><h2>seed_vault.ui.components.waveform module<a class="headerlink" href="#module-seed_vault.ui.components.waveform" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="seed_vault.ui.components.waveform.MissingDataDisplay">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.waveform.</span></span><span class="sig-name descname"><span class="pre">MissingDataDisplay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">streams</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">missing_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#MissingDataDisplay"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.MissingDataDisplay" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.waveform.</span></span><span class="sig-name descname"><span class="pre">MissingDataDisplay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stream</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">missing_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#MissingDataDisplay"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.MissingDataDisplay" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.waveform.MissingDataDisplay.render">
@@ -1201,7 +1253,7 @@ enforce_padding: puts the content in columns to enforce artificial padding.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.handle_error">
-<span class="sig-name descname"><span class="pre">handle_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/workflows_combined.html#CombinedBasedWorkflow.handle_error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.handle_error" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">handle_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/workflows_combined.html#CombinedBasedWorkflow.handle_error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.workflows_combined.CombinedBasedWorkflow.handle_error" title="Link to this definition"></a></dt>
 <dd><p>Handles errors gracefully by displaying a helpful message and providing
 a link to reset the config the settings.</p>
 </dd></dl>
@@ -1307,8 +1359,8 @@ changes. Also, probably, we do not need clean up on the filter settings
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="seed_vault.ui.html" class="btn btn-neutral float-left" title="seed_vault.ui package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="seed_vault.ui.pages.html" class="btn btn-neutral float-right" title="seed_vault.ui.pages package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="seed_vault.ui.app_pages.helpers.html" class="btn btn-neutral float-left" title="seed_vault.ui.app_pages.helpers package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="seed_vault.utils.html" class="btn btn-neutral float-right" title="seed_vault.utils package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
