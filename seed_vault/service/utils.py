@@ -52,6 +52,8 @@ def convert_to_datetime(value):
     """Convert a string or other value to a date and time object, handling different formats.
     
     If only a date is provided, it defaults to 00:00:00 time.
+
+    note that this returns a tuple of (date, time)
     """
     if isinstance(value, datetime):
         return value.date(), value.time()

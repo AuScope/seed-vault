@@ -80,8 +80,8 @@ def station_response_to_df(inventory):
             latitude = station.latitude
             longitude = station.longitude
             elevation = station.elevation
-            locations = ",".join(set([channel.location_code if channel.location_code else "--" for channel in station]))
-            channels = ",".join(set([channel.code for channel in station]))
+            locations = ",".join(sorted(set([channel.location_code if channel.location_code else "--" for channel in station])))
+            channels = ",".join(sorted(set([channel.code for channel in station])))
             start_date = str(station.start_date.strftime("%Y-%m-%d"))
             end_date = str(station.end_date.strftime("%Y-%m-%d") if station.end_date else "ongoing")
 
