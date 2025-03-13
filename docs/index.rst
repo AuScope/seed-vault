@@ -3,8 +3,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Seed Vault Documentation
-===================================
+SEED-vault Documentation
+=====================
+
+Welcome to the SEED-vault documentation. SEED-vault is a cross-platform GUI utility for searching, viewing, and downloading seismic data from FDSN servers.
 
 .. image:: screenshots/Step1.png
   :width: 600
@@ -43,7 +45,7 @@ Runs on:
 .. note::
 
    **This project is sponsored by AuScope: We provide research tools, data, analytics and support to
-   Australia’s geoscience community. https://www.auscope.org.au/**
+   Australia's geoscience community. https://www.auscope.org.au/**
 
    **AuScope is an NCRIS-funded organisation**
 
@@ -54,19 +56,16 @@ Runs on:
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-   :hidden:
 
-   introduction
-   usage
    app
    cli
    modules
    
-
-Indices
-=======
+Indices and tables
+==================
 
 * :ref:`genindex`
 * :ref:`modindex`
+* :ref:`search`
 
 
