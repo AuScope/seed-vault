@@ -1237,6 +1237,8 @@ class BaseComponent:
 
         height = (len(self.df_markers) + 1) * 35 + 2
 
+        height = min(100*35, height)
+
         self.df_data_edit = st.data_editor(
             self.df_markers, 
             hide_index = True, 
