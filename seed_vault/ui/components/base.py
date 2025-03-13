@@ -1345,36 +1345,50 @@ class BaseComponent:
     def data_table_view(self, ordered_col, config, state_key):
         """Displays the full data table, allowing selection."""  
 
+        def _get_column_width(column):
+            max_length = max(self.df_markers[column].astype(str).apply(len))  # Get max string length            
+            if max_length <= 10:
+                return None 
+            elif max_length <= 10:
+                return "small"
+            elif max_length <= 50 or column=="description" or column=="loc. codes":
+                return "medium"
+            elif max_length <= 100:
+                return None
+            return "large"
+
         def _format_columns():
-            column_map = {
-                f"{Steps.EVENT.value}" : {
+            column_map = {}
+            if self.step_type == Steps.EVENT:
+                column_map = {
                     "is_selected": st.column_config.Column("", width=None, disabled=False),
-                    "place": st.column_config.TextColumn("place", width=None, disabled=True),
-                    "magnitude": st.column_config.Column("mag", width="small", disabled=True),
-                    "magnitude type": st.column_config.Column("type", width="small", disabled=True),
+                    "place": st.column_config.TextColumn("place", width=_get_column_width("place"), disabled=True),
+                    "magnitude": st.column_config.Column("mag", width=None, disabled=True),
+                    "magnitude type": st.column_config.Column("type", width=None, disabled=True),
                     "time": st.column_config.DatetimeColumn("time", width=None, disabled=True),
-                    "longitude": st.column_config.Column("lon", width="small", disabled=True),
-                    "latitude": st.column_config.Column("lat", width="small", disabled=True),
-                    "depth (km)": st.column_config.Column("depth (km)", width="small", disabled=True),
-                },
-                f"{Steps.STATION.value}" : {
-                    "is_selected": st.column_config.Column("", width=None, disabled=False),
-                    "network": st.column_config.TextColumn("net.", width=None, disabled=True),
-                    "station": st.column_config.TextColumn("sta.", width=None, disabled=True),
-                    "description": st.column_config.TextColumn("description", width=None, disabled=True),
-                    "latitude": st.column_config.Column("lat", width=None, disabled=True),
                     "longitude": st.column_config.Column("lon", width=None, disabled=True),
-                    "elevation": st.column_config.Column("elev.", width=None, disabled=True),
-                    "loc. codes": st.column_config.TextColumn("loc.", width="small", disabled=True),
-                    "channels": st.column_config.TextColumn("cha.", width="medium", disabled=True),
-                    "start date (UTC)": st.column_config.Column("started at", width=None, disabled=True),
-                    "end date (UTC)": st.column_config.Column("ended at", width=None, disabled=True),
+                    "latitude": st.column_config.Column("lat", width=None, disabled=True),
+                    "depth (km)": st.column_config.Column("dep (km)", width=None, disabled=True),
                 }
-            }
+            
+            if self.step_type == Steps.STATION:
+                column_map = {
+                        "is_selected": st.column_config.Column("", width=None, disabled=False),
+                        "network": st.column_config.TextColumn("net.", width=None, disabled=True),
+                        "station": st.column_config.TextColumn("sta.", width=None, disabled=True),
+                        "description": st.column_config.TextColumn("description", width=_get_column_width("description"), disabled=True),
+                        "latitude": st.column_config.Column("lat", width=None, disabled=True),
+                        "longitude": st.column_config.Column("lon", width=None, disabled=True),
+                        "elevation": st.column_config.Column("elev.", width=None, disabled=True),
+                        "loc. codes": st.column_config.ListColumn("loc.", width=_get_column_width("loc. codes")),
+                        "channels": st.column_config.ListColumn("cha.", width=_get_column_width("channels")),
+                        "start date (UTC)": st.column_config.Column("started at", width=None, disabled=True),
+                        "end date (UTC)": st.column_config.Column("ended at", width=None, disabled=True),
+                    }
 
             for col in ordered_col:
-                if col in column_map[self.step_type.value]:
-                    config[col] = column_map[self.step_type.value].get(col)
+                if col in column_map:
+                    config[col] = column_map.get(col)
                 else:
                     config[col] = st.column_config.Column(col)
 
@@ -1404,8 +1418,15 @@ class BaseComponent:
 
         height = min(100*35, height)
 
+        df_markers_view = None
+        if self.step_type == Steps.STATION:            
+            df_markers_view = deepcopy(self.df_markers)
+            df_markers_view["loc. codes"] = df_markers_view["loc. codes"].apply(lambda x: x.split(",")) 
+            df_markers_view["channels"] = df_markers_view["channels"].apply(lambda x: x.split(","))
+            # df_markers_view.drop("elevation", axis=1, inplace=True)
+
         self.df_data_edit = st.data_editor(
-            self.df_markers, 
+            df_markers_view if self.step_type == Steps.STATION else self.df_markers, 
             hide_index = True, 
             column_config=_format_columns(), 
             column_order = ordered_col, 
