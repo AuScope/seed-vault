@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+from typing import Tuple
 import obspy
 from obspy import UTCDateTime
 from obspy.clients.filesystem.sds import Client as LocalClient
@@ -35,7 +36,23 @@ def check_is_archived(cursor, req: SeismoQuery):
         return False
     return True
 
+def get_local_waveform(request: Tuple[str, str, str, str, str, str], settings: SeismoLoaderSettings):
+    client = LocalClient(settings.sds_path)
+    kwargs = {
+        'network': request[0].upper(),
+        'station': request[1].upper(),
+        'location': request[2].upper(),
+        'channel': request[3].upper(),
+        'starttime': UTCDateTime(request[4]),
+        'endtime': UTCDateTime(request[5])
+        }
+    try:
+        return client.get_waveforms(**kwargs)
+    except:
+        return None
+
 #this is a simpler version.. if the data doesn't exist it just returns an empty stream
+"""
 def get_local_waveform(req: SeismoQuery, settings: SeismoLoaderSettings):
     client = LocalClient(settings.sds_path)
     st = client.get_waveforms(network=req.network,station=req.station,
@@ -46,3 +63,4 @@ def get_local_waveform(req: SeismoQuery, settings: SeismoLoaderSettings):
     #if not st:
     #    raise NotFoundError("Not Found: the requested data was not found in local archived database.")
     return st
+"""

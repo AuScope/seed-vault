@@ -8,7 +8,7 @@ from seed_vault.enums.ui import Steps
 from seed_vault.models.config import SeismoLoaderSettings, DownloadType, WorkflowType
 
 from seed_vault.ui.components.base import BaseComponent
-from seed_vault.ui.pages.helpers.common import get_app_settings, save_filter, reset_config
+from seed_vault.ui.app_pages.helpers.common import get_app_settings, save_filter, reset_config
 
 download_options = [f.name.title() for f in DownloadType]
 
@@ -26,15 +26,13 @@ class CombinedBasedWorkflow:
     err_message: str = ""
 
     def __init__(self):
-        try:       
-            self.settings = get_app_settings()
+        self.settings = get_app_settings()
+        if(self.settings.status_handler.has_errors()):
+            self.handle_error("Initialization failed due to invalid parameters. Please review the details below.")
+        else:    
             self.event_components = BaseComponent(self.settings, step_type=Steps.EVENT, prev_step_type=None, stage=1)    
             self.station_components = BaseComponent(self.settings, step_type=Steps.STATION, prev_step_type=Steps.EVENT, stage=2)    
             self.waveform_components = WaveformComponents(self.settings)
-        except AttributeError as e:
-            self.handle_error(e, "It looks like some required settings are missing.")
-        except Exception as e:
-            self.handle_error(e, "An unexpected error occurred during initialization.")
 
     def next_stage(self):
         self.stage += 1
@@ -49,18 +47,13 @@ class CombinedBasedWorkflow:
         """
         See description in render_stage_0.
         """      
-        try:
-            
-            self.settings = get_app_settings()
-            self.err_message = ""
-            self.has_error = False
-            st.session_state.selected_flow_type = selected_flow_type
+        self.settings = get_app_settings()
+        if(self.settings.status_handler.has_errors()):
+            self.handle_error("Initialization failed due to invalid parameters. Please review the details below.")
 
-        except AttributeError as e:
-            self.handle_error(e, "Settings initialization failed due to missing values.")
-        except Exception as e:
-            self.handle_error(e, "An unexpected error occurred while initializing settings.")
-
+        self.err_message = ""
+        self.has_error = False
+        st.session_state.selected_flow_type = selected_flow_type
 
     def render_stage_0(self):
         """
@@ -71,52 +64,47 @@ class CombinedBasedWorkflow:
         changes. Also, probably, we do not need clean up on the filter settings 
         (we actually may need to keep the filters as is).
         """
-        c1, c2 = st.columns([1,2])
+        c1, c2 = st.columns([2,1])
         
-        try:
-            with c1:
-                workflow_options_list = list(workflow_options.keys())            
-                # if self.settings.event is None:
-                #     workflow_options_list= [WorkflowType.CONTINUOUS.value]
-                default_index = 0  
-                if self.settings.selected_workflow.value in workflow_options_list:
-                    default_index = workflow_options_list.index(self.settings.selected_workflow.value)
+        with c1:
+            workflow_options_list = list(workflow_options.keys())            
+            # if self.settings.event is None:
+            #     workflow_options_list= [WorkflowType.CONTINUOUS.value]
+            default_index = 0  
+            if self.settings.selected_workflow.value in workflow_options_list:
+                default_index = workflow_options_list.index(self.settings.selected_workflow.value)
 
-                selected_flow_type = st.selectbox(
-                    "Select the Seismic Data Request Flow", 
-                    workflow_options_list, 
-                    index=default_index, 
-                    key="combined-pg-download-type",
-                )
-                self.init_settings(selected_flow_type)
-                if selected_flow_type:
-                    self.settings.selected_workflow = workflow_options[selected_flow_type]
+            selected_flow_type = st.selectbox(
+                "Select the Seismic Data Request Flow", 
+                workflow_options_list, 
+                index=default_index, 
+                key="combined-pg-download-type",
+            )
+            self.init_settings(selected_flow_type)
+            if selected_flow_type:
+                self.settings.selected_workflow = workflow_options[selected_flow_type]
 
-            with c2:
-                st.text("")
-                if st.button("Start"):
-                    st.session_state.selected_flow_type = selected_flow_type
-                    self.settings.set_download_type_from_workflow()
-                    if self.settings.selected_workflow == WorkflowType.EVENT_BASED:
-                        self.event_components = BaseComponent(self.settings, step_type=Steps.EVENT, prev_step_type=None, stage=1)    
-                        self.station_components = BaseComponent(self.settings, step_type=Steps.STATION, prev_step_type=Steps.EVENT, stage=2)    
-                        self.waveform_components = WaveformComponents(self.settings)
+        with c2:
+            st.text("")
+            if st.button("Start"):
+                st.session_state.selected_flow_type = selected_flow_type
+                self.settings.set_download_type_from_workflow()
+                if self.settings.selected_workflow == WorkflowType.EVENT_BASED:
+                    self.event_components = BaseComponent(self.settings, step_type=Steps.EVENT, prev_step_type=None, stage=1)    
+                    self.station_components = BaseComponent(self.settings, step_type=Steps.STATION, prev_step_type=Steps.EVENT, stage=2)    
+                    self.waveform_components = WaveformComponents(self.settings)
 
-                    if self.settings.selected_workflow == WorkflowType.STATION_BASED:
-                        self.station_components = BaseComponent(self.settings, step_type=Steps.STATION, prev_step_type=None, stage=1)   
-                        self.event_components = BaseComponent(self.settings, step_type=Steps.EVENT, prev_step_type=Steps.STATION, stage=2)  
-                        self.waveform_components = WaveformComponents(self.settings)
+                if self.settings.selected_workflow == WorkflowType.STATION_BASED:
+                    self.station_components = BaseComponent(self.settings, step_type=Steps.STATION, prev_step_type=None, stage=1)   
+                    self.event_components = BaseComponent(self.settings, step_type=Steps.EVENT, prev_step_type=Steps.STATION, stage=2)  
+                    self.waveform_components = WaveformComponents(self.settings)
 
-                    if self.settings.selected_workflow == WorkflowType.CONTINUOUS:
-                        self.station_components = BaseComponent(self.settings, step_type=Steps.STATION, prev_step_type=None, stage=1)
-                        self.waveform_components = WaveformComponents(self.settings)
-                    self.next_stage()
+                if self.settings.selected_workflow == WorkflowType.CONTINUOUS:
+                    self.station_components = BaseComponent(self.settings, step_type=Steps.STATION, prev_step_type=None, stage=1)
+                    self.waveform_components = WaveformComponents(self.settings)
+                self.next_stage()
 
-            st.info(self.settings.selected_workflow.description)
-        except AttributeError as e:
-            self.handle_error(e, "It looks like some required values might be missing from your configuration file.")
-        except Exception as e:
-            self.handle_error(e, "An unexpected error occurred while rendering Stage 0.")
+        st.info(self.settings.selected_workflow.description)
 
     def trigger_error(self, message):
         """Set an error message in session state to be displayed."""
@@ -305,76 +293,38 @@ class CombinedBasedWorkflow:
 
 
     def render(self):
-        try:
-        
-            if self.stage == 0:
-                self.render_stage_0()
+        if self.stage == 0:
+            self.render_stage_0()
 
-            if self.stage == 1:
-                self.render_stage_1()
+        if self.stage == 1:
+            self.render_stage_1()
 
-            if self.stage == 2:
-                self.render_stage_2()
+        if self.stage == 2:
+            self.render_stage_2()
 
-            if self.stage == 3:
-                self.render_stage_3()
-        except AttributeError as e:
-            self.handle_error(e, "A configuration issue occurred while rendering the app.")
-        except Exception as e:
-            self.handle_error(e, "An unexpected error occurred while rendering.")
-            
+        if self.stage == 3:
+            self.render_stage_3()
+          
 
     def reset_config(self):
         self.settings = reset_config()   
         save_filter(self.settings)
         st.success("Settings have been reset to default.")
 
-
-
-    def handle_error(self, error, message):
+    def handle_error(self, message):
         """
         Handles errors gracefully by displaying a helpful message and providing
         a link to reset the config the settings.
         """
-        st.error(f"⚠️ {message}: {error}")
-        st.warning("Would you like to reset your settings?")      
-        st.button("Reset Settings", on_click=self.reset_config)
+        st.error(f"⚠️ {message}")
 
-        # If want to redirect the user to setting page
-        # settings_url = "/settings"
-        # st.markdown(f'''
-        #     <style>
-        #         .custom-button {{
-        #             display: inline-flex;
-        #             align-items: center;
-        #             justify-content: center;
-        #             font-weight: 400;
-        #             padding: 0.25rem 0.75rem;
-        #             border-radius: 0.5rem;
-        #             min-height: 2.5rem;
-        #             margin: 0px;
-        #             margin-bottom: 15px;
-        #             line-height: 1.6;
-        #             text-transform: none;
-        #             font-size: inherit;
-        #             font-family: inherit;
-        #             width: auto;
-        #             cursor: pointer;
-        #             user-select: none;
-        #             background-color: rgb(255, 75, 75); 
-        #             color: rgb(255, 255, 255); 
-        #             border: 1px solid rgb(255, 75, 75);
-        #             transition: background-color 0.3s, transform 0.2s;
-        #         }}
-        #         .custom-button:hover {{
-        #             background-color: rgb(220, 50, 50);
-        #             transform: scale(1.05);
-        #         }}
-        #     </style>
-        #     <a href="{settings_url}" target="_self">
-        #         <button class="custom-button">Go to Settings Page</button>
-        #     </a>
-        #     ''',
-        #     unsafe_allow_html=True
-        # )
+        if(self.settings.status_handler.has_errors()):
+            errors = self.settings.status_handler.generate_status_report("errors")                           
+            st.error(f"🔍 **Parameter Issues Detected:**\n\n{errors}")
+                        
+            self.settings.status_handler.display()        
+
+            st.warning("The system encountered issues with the provided parameters. Try restarting the application or resetting the settings.")
+            st.button("🔄 Reset Settings", on_click=self.reset_config)
+
         st.stop()  

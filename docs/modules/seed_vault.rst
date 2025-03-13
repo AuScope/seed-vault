@@ -7,21 +7,12 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
+   seed_vault.cli
+   seed_vault.enums
    seed_vault.models
    seed_vault.service
    seed_vault.ui
    seed_vault.utils
-
-Submodules
-----------
-
-seed\_vault.cli module
-----------------------
-
-.. automodule:: seed_vault.cli
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
 Module contents
 ---------------
