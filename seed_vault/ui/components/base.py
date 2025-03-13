@@ -772,21 +772,18 @@ class BaseComponent:
             error_message = str(e)
             http_status_code = None
 
-            # Extract HTTP error code if present
-            match = re.search(r"Error (\d{3})", error_message)
+            match = re.search(r"\b(\d{3})\b", error_message)
             if match:
                 http_status_code = int(match.group(1))
 
-            # Lookup user-friendly error message
-            user_friendly_message = http_error.get(http_status_code, "An error has occurred, please check parameters.")
+            user_friendly_message = http_error.get(http_status_code, "An unexpected error occurred. Please try again.")
 
-            # Construct detailed error message
             self.has_error = True
-            self.error = (
-                f"{user_friendly_message}\n\n"
-                f"**Technical details:**\n\n"
-                f"Error: {error_message}"
-            )
+            self.error = f"⚠️ {user_friendly_message}\n\n"
+
+            if http_status_code:
+                self.error += f"**Technical details:**\n\nError {http_status_code}: {error_message}"
+
 
             print(self.error)  # Logging for debugging
 
