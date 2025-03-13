@@ -190,6 +190,7 @@
 <div class="viewcode-block" id="BaseComponentTexts">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponentTexts">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">BaseComponentTexts</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Defines text constants for UI components in different configuration steps.&quot;&quot;&quot;</span>
     <span class="n">CLEAR_ALL_MAP_DATA</span> <span class="o">=</span> <span class="s2">&quot;Clear All&quot;</span>
     <span class="n">DOWNLOAD_CONFIG</span> <span class="o">=</span> <span class="s2">&quot;Download Config&quot;</span>
     <span class="n">SAVE_CONFIG</span> <span class="o">=</span> <span class="s2">&quot;Save Config&quot;</span>
@@ -233,6 +234,47 @@
 <div class="viewcode-block" id="BaseComponent">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">BaseComponent</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for handling the search and selection of seismic events and stations.</span>
+
+<span class="sd">    This class supports searching, selecting, and visualizing seismic data in a Streamlit application.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        settings (SeismoLoaderSettings): The current application settings.</span>
+<span class="sd">        old_settings (SeismoLoaderSettings): A deep copy of the initial settings before modifications.</span>
+<span class="sd">        step_type (Steps): The current processing step (event or station).</span>
+<span class="sd">        prev_step_type (Steps): The previous processing step, if applicable.</span>
+<span class="sd">        TXT (BaseComponentTexts): Stores UI-related text constants based on the step type.</span>
+<span class="sd">        stage (int): The current processing stage.</span>
+<span class="sd">        all_current_drawings (List[GeometryConstraint]): A list of current geometry constraints.</span>
+<span class="sd">        all_feature_drawings (List[GeometryConstraint]): A list of feature-based geometry constraints.</span>
+<span class="sd">        df_markers (pd.DataFrame): Dataframe containing marker information for events or stations.</span>
+<span class="sd">        df_data_edit (pd.DataFrame): Dataframe for editable data related to events or stations.</span>
+<span class="sd">        catalogs (Catalog): Holds seismic event catalog data.</span>
+<span class="sd">        inventories (Inventory): Holds station inventory data.</span>
+<span class="sd">        map_disp: The main map display object.</span>
+<span class="sd">        map_fg_area: Map layer displaying geographic areas.</span>
+<span class="sd">        map_fg_marker: Map layer displaying markers for events or stations.</span>
+<span class="sd">        map_fg_prev_selected_marker: Map layer for previously selected markers.</span>
+<span class="sd">        map_height (int): Height of the map display.</span>
+<span class="sd">        map_output: Output container for map elements.</span>
+<span class="sd">        selected_marker_map_idx: Index of the currently selected marker on the map.</span>
+<span class="sd">        map_view_center (dict): Dictionary storing the center coordinates of the map.</span>
+<span class="sd">        map_view_zoom (int): Zoom level of the map.</span>
+<span class="sd">        marker_info: Information about the currently selected marker.</span>
+<span class="sd">        clicked_marker_info: Information about the last clicked marker.</span>
+<span class="sd">        warning: Warning message to be displayed in the UI.</span>
+<span class="sd">        error (str): Error message to be displayed in the UI.</span>
+<span class="sd">        df_rect: Dataframe for rectangular selection areas.</span>
+<span class="sd">        df_circ: Dataframe for circular selection areas.</span>
+<span class="sd">        col_color: Column used for color coding markers.</span>
+<span class="sd">        col_size: Column used for size scaling of markers.</span>
+<span class="sd">        fig_color_bar: Color bar figure for the map visualization.</span>
+<span class="sd">        df_markers_prev (pd.DataFrame): Dataframe storing previously selected markers.</span>
+<span class="sd">        delay_selection (int): Delay time before processing a new selection.</span>
+<span class="sd">        cols_to_exclude (List[str]): List of columns to exclude from the display.</span>
+<span class="sd">        has_error (bool): Indicates whether an error has occurred.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">settings</span><span class="p">:</span> <span class="n">SeismoLoaderSettings</span>
     <span class="n">old_settings</span><span class="p">:</span> <span class="n">SeismoLoaderSettings</span>
     <span class="n">step_type</span><span class="p">:</span> <span class="n">Steps</span>
@@ -277,6 +319,11 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">page_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Determines the page type based on the previous or current step.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: The page type, which is the previous step type if available, otherwise the current step type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prev_step_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">prev_step_type</span> <span class="o">!=</span> <span class="n">Steps</span><span class="o">.</span><span class="n">NONE</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">prev_step_type</span>
         <span class="k">else</span><span class="p">:</span>
@@ -291,13 +338,22 @@
             <span class="n">init_map_center</span> <span class="o">=</span> <span class="p">{},</span> 
             <span class="n">init_map_zoom</span> <span class="o">=</span> <span class="mi">2</span>
         <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initializes the BaseComponent with the given settings and parameters.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            settings (SeismoLoaderSettings): Configuration settings for loading seismic data.</span>
+<span class="sd">            step_type (Steps): The current processing step (event or station).</span>
+<span class="sd">            prev_step_type (Steps): The previous processing step, if applicable.</span>
+<span class="sd">            stage (int): The current processing stage.</span>
+<span class="sd">            init_map_center (dict, optional): Initial map center coordinates. Defaults to an empty dictionary.</span>
+<span class="sd">            init_map_zoom (int, optional): Initial map zoom level. Defaults to 2.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span>       <span class="o">=</span> <span class="n">settings</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">old_settings</span>   <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span>      <span class="o">=</span> <span class="n">step_type</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">prev_step_type</span> <span class="o">=</span> <span class="n">prev_step_type</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">stage</span>          <span class="o">=</span> <span class="n">stage</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">map_id</span>         <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;map_</span><span class="si">{</span><span class="n">step_type</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">prev_step_type</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">stage</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">prev_step_type</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;map_</span><span class="si">{</span><span class="n">step_type</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">_no_prev_</span><span class="si">{</span><span class="n">stage</span><span class="si">}</span><span class="s2">&quot;</span>   <span class="c1"># str(uuid.uuid4())</span>
-        <span class="c1"># self.map_disp       = create_map(map_id=f&quot;init_{self.map_id}&quot;)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">map_id</span>         <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;map_</span><span class="si">{</span><span class="n">step_type</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">prev_step_type</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">stage</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">prev_step_type</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;map_</span><span class="si">{</span><span class="n">step_type</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">_no_prev_</span><span class="si">{</span><span class="n">stage</span><span class="si">}</span><span class="s2">&quot;</span> 
         <span class="bp">self</span><span class="o">.</span><span class="n">TXT</span>            <span class="o">=</span> <span class="n">BaseComponentTexts</span><span class="p">(</span><span class="n">step_type</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">all_feature_drawings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_geo_constraint</span><span class="p">()</span>
@@ -323,7 +379,15 @@
 
 <div class="viewcode-block" id="BaseComponent.get_key_element">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.get_key_element">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_key_element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>        
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_key_element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generates a unique key identifier for a UI element based on the step type and stage.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name (str): The base name of the element.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: A formatted string representing the unique key for the element.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">step_type</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">stage</span><span class="si">}</span><span class="s2">&quot;</span></div>
 
 
@@ -331,7 +395,14 @@
 <div class="viewcode-block" id="BaseComponent.get_geo_constraint">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.get_geo_constraint">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_geo_constraint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="c1"># if self.step_type == Steps.EVENT and self.settings.event is not None:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Retrieves the geographic constraints for the current step.</span>
+
+<span class="sd">        Geographic constraints define the search area on the map using bounding boxes or circles.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            List[GeometryConstraint]: A list of geographic constraints (boxes or circles) </span>
+<span class="sd">            that confine the search area. Returns an empty list if no constraints are set.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">EVENT</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">geo_constraint</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">STATION</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -342,6 +413,15 @@
 <div class="viewcode-block" id="BaseComponent.set_geo_constraint">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.set_geo_constraint">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">set_geo_constraint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">geo_constraint</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">GeometryConstraint</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sets the geographic constraints for the current step.</span>
+
+<span class="sd">        This method updates the geographic constraints, which define the search area on the map using </span>
+<span class="sd">        bounding boxes or circles.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            geo_constraint (List[GeometryConstraint]): A list of geographic constraints </span>
+<span class="sd">            (boxes or circles) to be applied to the current step.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">EVENT</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">geo_constraint</span> <span class="o">=</span> <span class="n">geo_constraint</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">STATION</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -355,12 +435,7 @@
 <div class="viewcode-block" id="BaseComponent.refresh_filters">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.refresh_filters">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">refresh_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Renders Export settings for all stages and Import settings only for stage 1.</span>
-
-<span class="sd">        - Allows users to download the current configuration (`config.cfg`) at all stages.</span>
-<span class="sd">        - Shows the import settings section only when `stage == 1`.</span>
-<span class="sd">        &quot;&quot;&quot;</span>        
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Refreshes and updates the filter settings based on configuration changes.&quot;&quot;&quot;</span>
         <span class="n">changes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">has_changed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">old_settings</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">changes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;has_changed&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">old_settings</span>      <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
@@ -371,6 +446,24 @@
 <div class="viewcode-block" id="BaseComponent.event_filter">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.event_filter">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">event_filter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Displays and manages event filtering options in the Streamlit sidebar.</span>
+
+<span class="sd">        This method allows users to filter seismic events based on:</span>
+<span class="sd">        - Client selection</span>
+<span class="sd">        - Time range (last month, last week, last day, or custom start/end dates)</span>
+<span class="sd">        - Magnitude range</span>
+<span class="sd">        - Depth range</span>
+
+<span class="sd">        Functionality:</span>
+<span class="sd">        - Users select a client from a dropdown list.</span>
+<span class="sd">        - A warning is displayed if the selected client does not support event services.</span>
+<span class="sd">        - Users can set predefined time intervals (last month, last week, last day).</span>
+<span class="sd">        - Users can manually set start and end dates/times.</span>
+<span class="sd">        - Validation ensures that the end date is after the start date.</span>
+<span class="sd">        - Users can adjust event magnitude and depth ranges using sliders.</span>
+<span class="sd">        - Map interaction buttons are rendered.</span>
+<span class="sd">        - Refreshes filters upon changes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">start_date</span><span class="p">,</span> <span class="n">start_time</span> <span class="o">=</span> <span class="n">convert_to_datetime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span><span class="p">)</span>
         <span class="n">end_date</span><span class="p">,</span> <span class="n">end_time</span>     <span class="o">=</span> <span class="n">convert_to_datetime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span><span class="p">)</span>
@@ -446,7 +539,26 @@
 <div class="viewcode-block" id="BaseComponent.station_filter">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.station_filter">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">station_filter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Displays and manages station filtering options in the Streamlit sidebar.</span>
 
+<span class="sd">        This method allows users to filter seismic stations based on:</span>
+<span class="sd">        - Client selection</span>
+<span class="sd">        - Time range (last month, last week, last day, or custom start/end dates)</span>
+<span class="sd">        - Network, station, location, and channel filters</span>
+<span class="sd">        - Highest sample rate option</span>
+<span class="sd">        - Restricted data inclusion</span>
+
+<span class="sd">        Functionality:</span>
+<span class="sd">        - Users select a client from a dropdown list.</span>
+<span class="sd">        - A warning is displayed if the selected client does not support station services.</span>
+<span class="sd">        - Users can set predefined time intervals (last month, last week, last day).</span>
+<span class="sd">        - Users can manually set start and end dates/times with a one-hour shift if needed.</span>
+<span class="sd">        - Validation ensures that the end date is after the start date.</span>
+<span class="sd">        - Users can input station metadata filters (network, station, location, channel).</span>
+<span class="sd">        - Users can enable highest sample rate filtering and restricted data inclusion.</span>
+<span class="sd">        - Map interaction buttons are rendered.</span>
+<span class="sd">        - Refreshes filters upon changes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">start_date</span><span class="p">,</span> <span class="n">start_time</span> <span class="o">=</span> <span class="n">convert_to_datetime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span><span class="p">)</span>
         <span class="n">end_date</span><span class="p">,</span> <span class="n">end_time</span> <span class="o">=</span> <span class="n">convert_to_datetime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span><span class="p">)</span>
 
@@ -540,6 +652,12 @@
 <div class="viewcode-block" id="BaseComponent.set_map_view">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.set_map_view">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">set_map_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">map_center</span><span class="p">,</span> <span class="n">map_zoom</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sets the map view properties, including center coordinates and zoom level.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            map_center (dict): A dictionary representing the center coordinates of the map.</span>
+<span class="sd">            map_zoom (int): The zoom level for the map.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">map_view_center</span> <span class="o">=</span> <span class="n">map_center</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">map_view_zoom</span>   <span class="o">=</span> <span class="n">map_zoom</span></div>
 
@@ -548,6 +666,13 @@
 <div class="viewcode-block" id="BaseComponent.update_filter_geometry">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.update_filter_geometry">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">update_filter_geometry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">geo_type</span><span class="p">:</span> <span class="n">GeoConstraintType</span><span class="p">,</span> <span class="n">geo_constraint</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">GeometryConstraint</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This method adds a new drawing (box or circle) to the existing drawings on the map.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            df (pd.DataFrame): A DataFrame containing the new geometric constraints.</span>
+<span class="sd">            geo_type (GeoConstraintType): The type of geographic constraint (bounding box or circle).</span>
+<span class="sd">            geo_constraint (List[GeometryConstraint]): The existing list of geographic constraints.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">add_geo</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
             <span class="n">coords</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
@@ -568,7 +693,23 @@
 <div class="viewcode-block" id="BaseComponent.is_valid_rectangle">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.is_valid_rectangle">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">is_valid_rectangle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_lat</span><span class="p">,</span> <span class="n">max_lat</span><span class="p">,</span> <span class="n">min_lon</span><span class="p">,</span> <span class="n">max_lon</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if min/max latitude and longitude values are valid.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks if the given latitude and longitude values define a valid rectangle.</span>
+
+<span class="sd">        A valid rectangle satisfies the following conditions:</span>
+<span class="sd">        - Latitude values (`min_lat`, `max_lat`) must be within the range [-90, 90].</span>
+<span class="sd">        - Longitude values (`min_lon`, `max_lon`) must be within the range [-180, 180].</span>
+<span class="sd">        - `min_lat` must be less than or equal to `max_lat`.</span>
+<span class="sd">        - `min_lon` must be less than or equal to `max_lon`.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            min_lat (float): Minimum latitude value.</span>
+<span class="sd">            max_lat (float): Maximum latitude value.</span>
+<span class="sd">            min_lon (float): Minimum longitude value.</span>
+<span class="sd">            max_lon (float): Maximum longitude value.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: `True` if the rectangle is valid, `False` otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">(</span><span class="o">-</span><span class="mi">90</span> <span class="o">&lt;=</span> <span class="n">min_lat</span> <span class="o">&lt;=</span> <span class="mi">90</span> <span class="ow">and</span> <span class="o">-</span><span class="mi">90</span> <span class="o">&lt;=</span> <span class="n">max_lat</span> <span class="o">&lt;=</span> <span class="mi">90</span> <span class="ow">and</span>
                 <span class="o">-</span><span class="mi">180</span> <span class="o">&lt;=</span> <span class="n">min_lon</span> <span class="o">&lt;=</span> <span class="mi">180</span> <span class="ow">and</span> <span class="o">-</span><span class="mi">180</span> <span class="o">&lt;=</span> <span class="n">max_lon</span> <span class="o">&lt;=</span> <span class="mi">180</span> <span class="ow">and</span>
                 <span class="n">min_lat</span> <span class="o">&lt;=</span> <span class="n">max_lat</span> <span class="ow">and</span> <span class="n">min_lon</span> <span class="o">&lt;=</span> <span class="n">max_lon</span><span class="p">)</span></div>
@@ -577,7 +718,24 @@
 <div class="viewcode-block" id="BaseComponent.is_valid_circle">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.is_valid_circle">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">is_valid_circle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">max_radius</span><span class="p">,</span> <span class="n">min_radius</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if circle data is valid.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks if the given latitude, longitude, and radius values define a valid circle.</span>
+
+<span class="sd">        A valid circle satisfies the following conditions:</span>
+<span class="sd">        - Latitude (`lat`) must be within the range [-90, 90].</span>
+<span class="sd">        - Longitude (`lon`) must be within the range [-180, 180].</span>
+<span class="sd">        - `max_radius` must be greater than 0.</span>
+<span class="sd">        - `min_radius` must be non-negative (&gt;= 0).</span>
+<span class="sd">        - `min_radius` must be less than or equal to `max_radius`.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            lat (float): Latitude of the circle&#39;s center.</span>
+<span class="sd">            lon (float): Longitude of the circle&#39;s center.</span>
+<span class="sd">            max_radius (float): Maximum radius of the circle.</span>
+<span class="sd">            min_radius (float): Minimum radius of the circle.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: `True` if the circle data is valid, `False` otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">(</span>
             <span class="o">-</span><span class="mi">90</span> <span class="o">&lt;=</span> <span class="n">lat</span> <span class="o">&lt;=</span> <span class="mi">90</span> <span class="ow">and</span>
             <span class="o">-</span><span class="mi">180</span> <span class="o">&lt;=</span> <span class="n">lon</span> <span class="o">&lt;=</span> <span class="mi">180</span> <span class="ow">and</span>
@@ -832,21 +990,18 @@
             <span class="n">error_message</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
             <span class="n">http_status_code</span> <span class="o">=</span> <span class="kc">None</span>
 
-            <span class="c1"># Extract HTTP error code if present</span>
-            <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;Error (\d</span><span class="si">{3}</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="n">error_message</span><span class="p">)</span>
+            <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\b(\d</span><span class="si">{3}</span><span class="s2">)\b&quot;</span><span class="p">,</span> <span class="n">error_message</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
                 <span class="n">http_status_code</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
 
-            <span class="c1"># Lookup user-friendly error message</span>
-            <span class="n">user_friendly_message</span> <span class="o">=</span> <span class="n">http_error</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">http_status_code</span><span class="p">,</span> <span class="s2">&quot;An error has occurred, please check parameters.&quot;</span><span class="p">)</span>
+            <span class="n">user_friendly_message</span> <span class="o">=</span> <span class="n">http_error</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">http_status_code</span><span class="p">,</span> <span class="s2">&quot;An unexpected error occurred. Please try again.&quot;</span><span class="p">)</span>
 
-            <span class="c1"># Construct detailed error message</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">has_error</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">error</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">user_friendly_message</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;**Technical details:**</span><span class="se">\n\n</span><span class="s2">&quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="n">error_message</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">error</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;⚠️ </span><span class="si">{</span><span class="n">user_friendly_message</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+
+            <span class="k">if</span> <span class="n">http_status_code</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">error</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;**Technical details:**</span><span class="se">\n\n</span><span class="s2">Error </span><span class="si">{</span><span class="n">http_status_code</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">error_message</span><span class="si">}</span><span class="s2">&quot;</span>
+
 
             <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">)</span>  <span class="c1"># Logging for debugging</span></div>
 
@@ -1228,7 +1383,6 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">update_rectangle_areas</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">update_circle_areas</span><span class="p">()</span></div>
 
-        <span class="c1"># self.render_map_buttons()</span>
         
 
 <div class="viewcode-block" id="BaseComponent.render_import_export">
@@ -1481,6 +1635,42 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">data_table_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ordered_col</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">state_key</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Displays the full data table, allowing selection.&quot;&quot;&quot;</span>  
 
+        <span class="k">def</span><span class="w"> </span><span class="nf">_format_columns</span><span class="p">():</span>
+            <span class="n">column_map</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Steps</span><span class="o">.</span><span class="n">EVENT</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span> <span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;is_selected&quot;</span><span class="p">:</span> <span class="n">st</span><span class="o">.</span><span class="n">column_config</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">disabled</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+                    <span class="s2">&quot;place&quot;</span><span class="p">:</span> <span class="n">st</span><span class="o">.</span><span class="n">column_config</span><span class="o">.</span><span class="n">TextColumn</span><span class="p">(</span><span class="s2">&quot;place&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">disabled</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                    <span class="s2">&quot;magnitude&quot;</span><span class="p">:</span> <span class="n">st</span><span class="o">.</span><span class="n">column_config</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s2">&quot;mag&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="s2">&quot;small&quot;</span><span class="p">,</span> <span class="n">disabled</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                    <span class="s2">&quot;magnitude type&quot;</span><span class="p">:</span> <span class="n">st</span><span class="o">.</span><span class="n">column_config</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="s2">&quot;small&quot;</span><span class="p">,</span> <span class="n">disabled</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                    <span class="s2">&quot;time&quot;</span><span class="p">:</span> <span class="n">st</span><span class="o">.</span><span class="n">column_config</span><span class="o">.</span><span class="n">DatetimeColumn</span><span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">disabled</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                    <span class="s2">&quot;longitude&quot;</span><span class="p">:</span> <span class="n">st</span><span class="o">.</span><span class="n">column_config</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s2">&quot;lon&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="s2">&quot;small&quot;</span><span class="p">,</span> <span class="n">disabled</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                    <span class="s2">&quot;latitude&quot;</span><span class="p">:</span> <span class="n">st</span><span class="o">.</span><span class="n">column_config</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="s2">&quot;small&quot;</span><span class="p">,</span> <span class="n">disabled</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                    <span class="s2">&quot;depth (km)&quot;</span><span class="p">:</span> <span class="n">st</span><span class="o">.</span><span class="n">column_config</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s2">&quot;depth (km)&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="s2">&quot;small&quot;</span><span class="p">,</span> <span class="n">disabled</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                <span class="p">},</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Steps</span><span class="o">.</span><span class="n">STATION</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span> <span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;is_selected&quot;</span><span class="p">:</span> <span class="n">st</span><span class="o">.</span><span class="n">column_config</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">disabled</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+                    <span class="s2">&quot;network&quot;</span><span class="p">:</span> <span class="n">st</span><span class="o">.</span><span class="n">column_config</span><span class="o">.</span><span class="n">TextColumn</span><span class="p">(</span><span class="s2">&quot;net.&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">disabled</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                    <span class="s2">&quot;station&quot;</span><span class="p">:</span> <span class="n">st</span><span class="o">.</span><span class="n">column_config</span><span class="o">.</span><span class="n">TextColumn</span><span class="p">(</span><span class="s2">&quot;sta.&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">disabled</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                    <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="n">st</span><span class="o">.</span><span class="n">column_config</span><span class="o">.</span><span class="n">TextColumn</span><span class="p">(</span><span class="s2">&quot;description&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">disabled</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                    <span class="s2">&quot;latitude&quot;</span><span class="p">:</span> <span class="n">st</span><span class="o">.</span><span class="n">column_config</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">disabled</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                    <span class="s2">&quot;longitude&quot;</span><span class="p">:</span> <span class="n">st</span><span class="o">.</span><span class="n">column_config</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s2">&quot;lon&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">disabled</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                    <span class="s2">&quot;elevation&quot;</span><span class="p">:</span> <span class="n">st</span><span class="o">.</span><span class="n">column_config</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s2">&quot;elev.&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">disabled</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                    <span class="s2">&quot;loc. codes&quot;</span><span class="p">:</span> <span class="n">st</span><span class="o">.</span><span class="n">column_config</span><span class="o">.</span><span class="n">TextColumn</span><span class="p">(</span><span class="s2">&quot;loc.&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="s2">&quot;small&quot;</span><span class="p">,</span> <span class="n">disabled</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                    <span class="s2">&quot;channels&quot;</span><span class="p">:</span> <span class="n">st</span><span class="o">.</span><span class="n">column_config</span><span class="o">.</span><span class="n">TextColumn</span><span class="p">(</span><span class="s2">&quot;cha.&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="s2">&quot;medium&quot;</span><span class="p">,</span> <span class="n">disabled</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                    <span class="s2">&quot;start date (UTC)&quot;</span><span class="p">:</span> <span class="n">st</span><span class="o">.</span><span class="n">column_config</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s2">&quot;started at&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">disabled</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                    <span class="s2">&quot;end date (UTC)&quot;</span><span class="p">:</span> <span class="n">st</span><span class="o">.</span><span class="n">column_config</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="s2">&quot;ended at&quot;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">disabled</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+
+            <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">ordered_col</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">column_map</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">step_type</span><span class="o">.</span><span class="n">value</span><span class="p">]:</span>
+                    <span class="n">config</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">column_map</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">step_type</span><span class="o">.</span><span class="n">value</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">config</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">column_config</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">config</span>
+                
+
         <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">,</span> <span class="n">c3</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
         <span class="k">with</span> <span class="n">c1</span><span class="p">:</span>
             <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total Number of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="si">}</span><span class="s2">s: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -1498,32 +1688,7 @@
         <span class="c1"># it would be prettier to merge &quot;magnitude_type&quot; with magnitude here.. TODO</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">selected_items_view</span><span class="p">(</span><span class="n">state_key</span><span class="p">)</span> 
-
-
-        <span class="c1"># Define desired column widths in pts</span>
-        <span class="n">column_widths</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;Select&quot;</span><span class="p">:</span> <span class="mi">60</span><span class="p">,</span>
-            <span class="s2">&quot;network&quot;</span><span class="p">:</span> <span class="mi">60</span><span class="p">,</span>
-            <span class="s2">&quot;station&quot;</span><span class="p">:</span> <span class="mi">80</span><span class="p">,</span>
-            <span class="s2">&quot;elevation&quot;</span><span class="p">:</span> <span class="mi">80</span><span class="p">,</span>
-            <span class="s2">&quot;longitude&quot;</span><span class="p">:</span> <span class="mi">130</span><span class="p">,</span>
-            <span class="s2">&quot;latitude&quot;</span><span class="p">:</span> <span class="mi">130</span><span class="p">,</span>
-            <span class="s2">&quot;start_date&quot;</span><span class="p">:</span> <span class="mi">140</span><span class="p">,</span>
-            <span class="s2">&quot;end_date&quot;</span><span class="p">:</span> <span class="mi">140</span>
-            <span class="p">}</span>
-
-        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">ordered_col</span><span class="p">:</span>
-            
-            <span class="c1"># Add width if this column should have a specific width</span>
-            <span class="k">if</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">column_widths</span><span class="p">:</span>
-                <span class="n">config</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">column_config</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span>
-                    <span class="n">col</span><span class="p">,</span>
-                    <span class="n">width</span><span class="o">=</span><span class="n">column_widths</span><span class="p">[</span><span class="n">col</span><span class="p">]</span>
-                <span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">config</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">column_config</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span>
-                    <span class="n">col</span><span class="p">,</span>
-                <span class="p">)</span>
+        
 
         <span class="n">height</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">35</span> <span class="o">+</span> <span class="mi">2</span>
 
@@ -1532,7 +1697,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">df_data_edit</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">data_editor</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="p">,</span> 
             <span class="n">hide_index</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> 
-            <span class="n">column_config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> 
+            <span class="n">column_config</span><span class="o">=</span><span class="n">_format_columns</span><span class="p">(),</span> 
             <span class="n">column_order</span> <span class="o">=</span> <span class="n">ordered_col</span><span class="p">,</span> 
             <span class="n">key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_key_element</span><span class="p">(</span><span class="s2">&quot;Data Table&quot;</span><span class="p">),</span>
             <span class="n">use_container_width</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
