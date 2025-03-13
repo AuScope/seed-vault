@@ -8,7 +8,7 @@ from seed_vault.enums.ui import Steps
 from seed_vault.models.config import SeismoLoaderSettings, DownloadType, WorkflowType
 
 from seed_vault.ui.components.base import BaseComponent
-from seed_vault.ui.pages.helpers.common import get_app_settings, save_filter, reset_config
+from seed_vault.ui.app_pages.helpers.common import get_app_settings, save_filter, reset_config
 
 download_options = [f.name.title() for f in DownloadType]
 

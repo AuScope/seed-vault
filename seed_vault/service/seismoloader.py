@@ -1488,23 +1488,11 @@ def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event =
         print("Starttime greater than than endtime!")
         return
 
-    # Check for cancellation before collecting requests
-    # This allows early termination before any network operations begin
-    if stop_event and stop_event.is_set():
-        print("Run cancelled!")
-        return None
-
     # Collect requests
     requests = collect_requests(settings.station.selected_invs, 
         starttime, endtime, days_per_request=settings.waveform.days_per_request,
         cha_pref=settings.waveform.channel_pref,loc_pref=settings.waveform.location_pref)
 
-    # Check for cancellation after request collection
-    # This allows termination after potentially time-consuming request generation
-    # but before database operations begin
-    if stop_event and stop_event.is_set():
-        print("Run cancelled!")
-        return None
 
     # Remove any for data we already have (requires updated db)
     # If force_redownload is flagged, then ignore request pruning
@@ -1549,12 +1537,6 @@ def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event =
 
     # Archive to disk and updated database
     for request in combined_requests:
-        # Check for cancellation before each individual request
-        # This allows termination between network requests, preventing
-        # unnecessary data downloads if the user cancels mid-process
-        if stop_event and stop_event.is_set():
-            print("Run cancelled!")
-            return None
             
         print("Requesting: ", request)
         time.sleep(0.05) # to help ctrl-C out if needed
@@ -1563,6 +1545,15 @@ def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event =
         except Exception as e:
             print(f"Continuous request not successful: {request} with exception:\n {e}")
             continue
+
+        # Check for cancellation before each individual request
+        # This allows termination between network requests, preventing
+        # unnecessary data downloads if the user cancels mid-process
+        # This is the only time consuming step so probably the only sensible place for a cancel break
+        if stop_event and stop_event.is_set():
+            print("Run cancelled!")
+            db_manager.join_continuous_segments(settings.processing.gap_tolerance)
+            return True
 
     # Cleanup the database
     try:
@@ -1632,22 +1623,33 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
 
     all_event_traces = []
     all_missing = {}
+    event_stream = Stream()
     for i, eq in enumerate(settings.event.selected_catalogs):
+
+        if stop_event and stop_event.is_set():
+            print("\nCancelling run_event!")
+            stop_event.clear()
+            try:
+                print("\n~~ Cleaning up database ~~")
+                db_manager.join_continuous_segments(settings.processing.gap_tolerance)
+            except Exception as e:
+                print(f"! Error with join_continuous_segments: {str(e)}")
+
+            if all_event_traces:
+                return all_event_traces, all_missing
+            else:
+                return None
+
         try:
             event_region = eq.event_descriptions[0].text
         except:
             event_region = ""
         print(
-            f"\nProcessing event {i+1}/{len(settings.event.selected_catalogs)} | "
+            f"Processing event {i+1}/{len(settings.event.selected_catalogs)} | "
             f"{event_region} | "
             f"{str(eq.origins[0].time)[0:16]} "
             f"({eq.origins[0].latitude:.2f},{eq.origins[0].longitude:.2f})"
         )
-        
-        # Check for cancellation
-        if stop_event and stop_event.is_set():
-            print("Run cancelled!")
-            return None
 
         # Collect requests for this event
         try:
@@ -1710,9 +1712,20 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
 
             # Process requests
             for request in combined_requests:
+
                 if stop_event and stop_event.is_set():
-                    print("Run cancelled!")
-                    return None
+                    print("\nCancelling run_event!")
+                    stop_event.clear()
+                    try:
+                        print("\n~~ Cleaning up database ~~")
+                        db_manager.join_continuous_segments(settings.processing.gap_tolerance)
+                    except Exception as e:
+                        print(f"! Error with join_continuous_segments: {str(e)}")
+
+                    if all_event_traces:
+                        return all_event_traces, all_missing
+                    else:
+                        return None
                 
                 print(f"Requesting: {request}")
                 try:
@@ -1724,49 +1737,36 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
                     )
                 except Exception as e:
                     print(f"Error archiving request {request}:\n {str(e)}")
+                    continue
+                
+                try:
+                    st = get_local_waveform(request, settings)
+                    if st:
+                        # Add event metadata to traces
+                        arrivals = db_manager.fetch_arrivals_distances(
+                            eq.preferred_origin_id.id,
+                            request[0].upper(), #network
+                            request[1].upper() #station
+                            )
+                        
+                        if arrivals:
+                            for tr in st:
+                                tr.stats.resource_id = eq.resource_id.id
+                                tr.stats.p_arrival = arrivals[0]
+                                tr.stats.s_arrival = arrivals[1]
+                                tr.stats.distance_km = arrivals[2]
+                                tr.stats.distance_deg = arrivals[3]
+                                tr.stats.azimuth = arrivals[4]
+                                tr.stats.event_magnitude = eq.magnitudes[0].mag if hasattr(eq, 'magnitudes') and eq.magnitudes else 0.99
+                                tr.stats.event_region = event_region
+                                tr.stats.event_time = eq.origins[0].time
+                        
+                        event_stream += st
+                except Exception as e:
+                    print(f"Error reading data for {request[0].upper()}.{request[1].upper()}:\n {str(e)}")
+                    continue
 
-        # Read all data for this event
-        event_stream = Stream()
-        for req in requests:
-            query = SeismoQuery(
-                network=req[0],
-                station=req[1],
-                location=req[2],
-                channel=req[3],
-                starttime=req[4],
-                endtime=req[5]
-            )
-            
-            if stop_event and stop_event.is_set():
-                print("Run cancelled!")
-                return None
-            
-            try:
-                st = get_local_waveform(query, settings)
-                if st:
-                    # Add event metadata to traces
-                    arrivals = db_manager.fetch_arrivals_distances(
-                        str(eq.preferred_origin_id),
-                        query.network,
-                        query.station
-                    )
-                    
-                    if arrivals:
-                        for tr in st:
-                            tr.stats.resource_id = eq.resource_id.id
-                            tr.stats.p_arrival = arrivals[0]
-                            tr.stats.s_arrival = arrivals[1]
-                            tr.stats.distance_km = arrivals[2]
-                            tr.stats.distance_deg = arrivals[3]
-                            tr.stats.azimuth = arrivals[4]
-                            tr.stats.event_magnitude = eq.magnitudes[0].mag if hasattr(eq, 'magnitudes') and eq.magnitudes else 0.99
-                            tr.stats.event_region = event_region
-                            tr.stats.event_time = eq.origins[0].time
-                    
-                    event_stream += st
-            except Exception as e:
-                print(f"Error reading data for {query.network}.{query.station}:\n {str(e)}")
-                continue
+            print(" ") #having newline issues in streamlet, but this works
 
         # Now attempt to keep track of what data was missing. Note that this is not catching out-of-bounds data, for better or worse (probably better)
         missing = get_missing_from_request(eq.resource_id.id,requests,event_stream)
@@ -1774,10 +1774,11 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
         #print("DEBUG stream: ", event_stream)
         #print("DEBUG requests: ", requests)
 
-        all_missing.update(missing)
+        if missing:
+            all_missing.update(missing)
 
-        if len(event_stream) > 0:
-            all_event_traces.extend(event_stream) #oops this was .append!
+        if event_stream:
+            all_event_traces.extend(event_stream)
 
 
     # Final database cleanup

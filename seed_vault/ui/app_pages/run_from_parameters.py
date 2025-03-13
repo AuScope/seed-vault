@@ -1,5 +1,5 @@
 import streamlit as st
-from seed_vault.ui.pages.helpers.common import get_direct_settings
+from seed_vault.ui.app_pages.helpers.common import get_direct_settings
 import os
 import jinja2
 import pickle
@@ -20,7 +20,7 @@ settings and when you do not want of much fine tuning on selection of Events and
 """
 )
 
-from seed_vault.ui.pages.helpers.common import get_app_settings
+from seed_vault.ui.app_pages.helpers.common import get_app_settings
 from seed_vault.ui.components.run_from_config import RunFromConfigComponent
 
 settings = get_direct_settings()

@@ -9,10 +9,11 @@ import pandas as pd
 from datetime import datetime, time
 from obspy.core.event import Catalog, read_events
 from obspy.core.inventory import Inventory, read_inventory
+import time
 
 
 from seed_vault.ui.components.map import create_map, add_area_overlays, add_data_points, clear_map_layers, clear_map_draw,add_map_draw
-from seed_vault.ui.pages.helpers.common import get_selected_areas, save_filter
+from seed_vault.ui.app_pages.helpers.common import get_selected_areas, save_filter
 
 from seed_vault.service.events import get_event_data, event_response_to_df
 from seed_vault.service.stations import get_station_data, station_response_to_df
@@ -88,6 +89,7 @@ class BaseComponent:
     map_fg_prev_selected_marker = None
     map_height                  = 500
     map_output                  = None
+    selected_marker_map_idx     = None
     map_view_center             = {}
     map_view_zoom               = 2
     marker_info                 = None
@@ -100,6 +102,8 @@ class BaseComponent:
     col_size                    = None
     fig_color_bar               = None
     df_markers_prev             = pd.DataFrame()
+    
+    delay_selection            = 0
 
     cols_to_exclude             = ['detail', 'is_selected']
 
@@ -677,10 +681,10 @@ class BaseComponent:
 
         self.df_markers['is_selected'] = self.df_data_edit['is_selected']
     
-    def refresh_map_selection(self):
+    def refresh_map_selection(self, rerun=True, recreate=False):
         selected_idx = self.get_selected_idx()
         self.update_selected_data()
-        self.refresh_map(reset_areas=False, selected_idx=selected_idx, rerun=True, recreate_map=False)
+        self.refresh_map(reset_areas=False, selected_idx=selected_idx, rerun=rerun, recreate_map=recreate)
 
 
     # ===================
@@ -930,8 +934,6 @@ class BaseComponent:
                 key=self.get_key_element(f"Load {self.TXT.STEP}s")
             ):
                 self.refresh_map(reset_areas=False, clear_draw=False, rerun=False)
-                # self.clear_all_data()
-                # self.refresh_map(reset_areas=True, clear_draw=True, rerun=True, get_data=True)
 
 
         with cc2:
@@ -1065,13 +1067,13 @@ class BaseComponent:
         if self.step_type == Steps.EVENT:
            info_display += "\nℹ️ **Marker size** is associated with **earthquake magnitude**"
 
-        st.caption(info_display)
+        st.caption(info_display)            
         
         c1, c2 = st.columns([18,1])
         with c1:
             self.map_output = st_folium(
                 self.map_disp, 
-                # key=f"map_{self.map_id}",
+                key=f"map_{self.map_id}",
                 feature_group_to_add=feature_groups, 
                 use_container_width=True, 
                 # height=self.map_height
@@ -1103,7 +1105,9 @@ class BaseComponent:
                 step = idx_info[0].lower()
                 idx  = int(idx_info[1])
                 if step == self.step_type:
-                    self.clicked_marker_info = self.marker_info[idx]
+                    if self.selected_marker_map_idx is None or idx != self.selected_marker_map_idx:
+                        self.selected_marker_map_idx = idx
+                        self.clicked_marker_info = self.marker_info[self.selected_marker_map_idx]
                 
             else:
                 self.clicked_marker_info = None
@@ -1179,6 +1183,11 @@ class BaseComponent:
                 disabled=is_disabled
             )
 
+
+    def on_change_df_table(self):
+        self.delay_selection = 1
+    
+    
     def data_table_view(self, ordered_col, config, state_key):
         """Displays the full data table, allowing selection."""  
 
@@ -1235,7 +1244,8 @@ class BaseComponent:
             column_order = ordered_col, 
             key=self.get_key_element("Data Table"),
             use_container_width=True,
-            height=height
+            height=height,
+            on_change=self.on_change_df_table
         )
         
 
@@ -1244,15 +1254,12 @@ class BaseComponent:
         else:
             has_changed = not self.df_data_edit.equals(st.session_state[state_key])
             
-            if has_changed:
-                df_sorted_new = self.df_data_edit.sort_values(by=self.df_data_edit.columns.tolist()).reset_index(drop=True)
-                df_sorted_old = st.session_state[state_key].sort_values(by=st.session_state[state_key].columns.tolist()).reset_index(drop=True)
-                has_changed = not df_sorted_new.equals(df_sorted_old)
-
         if has_changed:
+            time.sleep(self.delay_selection)
             st.session_state[state_key] = self.df_data_edit.copy()  # Save the unsorted version to preserve user sorting
             self.sync_df_markers_with_df_edit()
             self.refresh_map_selection()
+            self.delay_selection = 0
 
     def selected_items_view(self, state_key):
         """Displays selected items using an actual `st.multiselect`, controlled by table selection."""
@@ -1263,49 +1270,66 @@ class BaseComponent:
             return
 
         if self.step_type == Steps.EVENT:
-            preferred_column = "place"
-            unique_column = "magnitude"  # Extra column to make each entry unique
+            unique_columns = ["place", "magnitude", "magnitude type"]
 
-        if self.step_type == Steps.STATION:
-            preferred_column = "network"
-            unique_column = "station"  # Extra column to make each entry unique
+        elif self.step_type == Steps.STATION:
+            unique_columns = ["network", "station"]
 
-        ## causing issue in STATION table which doesn't have "magnitude" (NEEDS REVIEW)
-        if preferred_column not in df_selected.columns or unique_column not in df_selected.columns:
-            st.warning(f"Column '{preferred_column}' or '{unique_column}' not found in the data!")
+        # Ensure all unique_columns exist in the dataframe
+        missing_columns = [col for col in unique_columns if col not in df_selected.columns]
+        if missing_columns:
+            st.warning(f"Missing columns in data: {', '.join(missing_columns)}")
             return
 
-        df_selected["display_label"] = df_selected[preferred_column] + " (" + df_selected[unique_column].astype(str) + ")"
+
+        df_selected["display_label"] = df_selected[unique_columns].astype(str).agg(" | ".join, axis=1)
         
         selected_items = df_selected["display_label"].tolist()
 
         updated_selection = st.multiselect(
             "Selected Items",
-            options=self.df_markers[self.df_markers['is_selected']].apply(lambda x: f"{x[preferred_column]} ({x[unique_column]})", axis=1).tolist(),
+            options=selected_items,
             default=selected_items,
             key="selected_items_list",
             placeholder="Selected Items",
             disabled=False
         )
 
+        # Determine which items were removed
         removed_items = set(selected_items) - set(updated_selection)
 
         if removed_items:
             for item in removed_items:
-                place_name, magnitude = item.rsplit(" (", 1)
-                magnitude = magnitude.rstrip(")")  # Remove closing bracket
+                values = item.split(" | ")  # Extract the separated values
 
-                item_index = self.df_markers[
-                    (self.df_markers[preferred_column] == place_name) & 
-                    (self.df_markers[unique_column].astype(str) == magnitude)
-                ].index.tolist()
+                # Construct a mask for filtering rows based on extracted values
+                mask = (self.df_markers[unique_columns[0]].astype(str) == values[0])
+                for col, val in zip(unique_columns[1:], values[1:]):  # Loop over remaining columns
+                    mask &= (self.df_markers[col].astype(str) == val)
 
-                if item_index:
-                    self.df_markers.at[item_index[0], 'is_selected'] = False  
-                    # self.sync_df_markers_with_df_edit()
+                # Update `is_selected` to False for matching rows
+                self.df_markers.loc[mask, 'is_selected'] = False
+
 
             st.session_state[state_key] = self.df_markers.copy()
-            self.refresh_map_selection()
+            self.refresh_map_selection(recreate=False)
+
+        # if removed_items:
+        #     for item in removed_items:
+        #         place_name, magnitude = item.rsplit(" (", 1)
+        #         magnitude = magnitude.rstrip(")")  # Remove closing bracket
+
+        #         item_index = self.df_markers[
+        #             (self.df_markers[preferred_column] == place_name) & 
+        #             (self.df_markers[unique_column].astype(str) == magnitude)
+        #         ].index.tolist()
+
+        #         if item_index:
+        #             self.df_markers.at[item_index[0], 'is_selected'] = False  
+        #             # self.sync_df_markers_with_df_edit()
+
+        #     st.session_state[state_key] = self.df_markers.copy()
+        #     self.refresh_map_selection(recreate=False)
 
     def render(self):
         
