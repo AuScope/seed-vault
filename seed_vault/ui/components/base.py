@@ -28,6 +28,7 @@ from seed_vault.service.utils import convert_to_datetime, check_client_services,
 
 
 class BaseComponentTexts:
+    """Defines text constants for UI components in different configuration steps."""
     CLEAR_ALL_MAP_DATA = "Clear All"
     DOWNLOAD_CONFIG = "Download Config"
     SAVE_CONFIG = "Save Config"
@@ -68,6 +69,47 @@ class BaseComponentTexts:
 
 
 class BaseComponent:
+    """Base class for handling the search and selection of seismic events and stations.
+
+    This class supports searching, selecting, and visualizing seismic data in a Streamlit application.
+
+    Attributes:
+        settings (SeismoLoaderSettings): The current application settings.
+        old_settings (SeismoLoaderSettings): A deep copy of the initial settings before modifications.
+        step_type (Steps): The current processing step (event or station).
+        prev_step_type (Steps): The previous processing step, if applicable.
+        TXT (BaseComponentTexts): Stores UI-related text constants based on the step type.
+        stage (int): The current processing stage.
+        all_current_drawings (List[GeometryConstraint]): A list of current geometry constraints.
+        all_feature_drawings (List[GeometryConstraint]): A list of feature-based geometry constraints.
+        df_markers (pd.DataFrame): Dataframe containing marker information for events or stations.
+        df_data_edit (pd.DataFrame): Dataframe for editable data related to events or stations.
+        catalogs (Catalog): Holds seismic event catalog data.
+        inventories (Inventory): Holds station inventory data.
+        map_disp: The main map display object.
+        map_fg_area: Map layer displaying geographic areas.
+        map_fg_marker: Map layer displaying markers for events or stations.
+        map_fg_prev_selected_marker: Map layer for previously selected markers.
+        map_height (int): Height of the map display.
+        map_output: Output container for map elements.
+        selected_marker_map_idx: Index of the currently selected marker on the map.
+        map_view_center (dict): Dictionary storing the center coordinates of the map.
+        map_view_zoom (int): Zoom level of the map.
+        marker_info: Information about the currently selected marker.
+        clicked_marker_info: Information about the last clicked marker.
+        warning: Warning message to be displayed in the UI.
+        error (str): Error message to be displayed in the UI.
+        df_rect: Dataframe for rectangular selection areas.
+        df_circ: Dataframe for circular selection areas.
+        col_color: Column used for color coding markers.
+        col_size: Column used for size scaling of markers.
+        fig_color_bar: Color bar figure for the map visualization.
+        df_markers_prev (pd.DataFrame): Dataframe storing previously selected markers.
+        delay_selection (int): Delay time before processing a new selection.
+        cols_to_exclude (List[str]): List of columns to exclude from the display.
+        has_error (bool): Indicates whether an error has occurred.
+    """
+
     settings: SeismoLoaderSettings
     old_settings: SeismoLoaderSettings
     step_type: Steps
@@ -112,6 +154,11 @@ class BaseComponent:
 
     @property
     def page_type(self) -> str:
+        """Determines the page type based on the previous or current step.
+
+        Returns:
+            str: The page type, which is the previous step type if available, otherwise the current step type.
+        """
         if self.prev_step_type is not None and self.prev_step_type != Steps.NONE:
             return self.prev_step_type
         else:
@@ -126,13 +173,22 @@ class BaseComponent:
             init_map_center = {}, 
             init_map_zoom = 2
         ):
+        """Initializes the BaseComponent with the given settings and parameters.
+
+        Args:
+            settings (SeismoLoaderSettings): Configuration settings for loading seismic data.
+            step_type (Steps): The current processing step (event or station).
+            prev_step_type (Steps): The previous processing step, if applicable.
+            stage (int): The current processing stage.
+            init_map_center (dict, optional): Initial map center coordinates. Defaults to an empty dictionary.
+            init_map_zoom (int, optional): Initial map zoom level. Defaults to 2.
+        """
         self.settings       = settings
         self.old_settings   = deepcopy(settings)
         self.step_type      = step_type
         self.prev_step_type = prev_step_type
         self.stage          = stage
-        self.map_id         = f"map_{step_type.value}_{prev_step_type.value}_{stage}" if prev_step_type else f"map_{step_type.value}_no_prev_{stage}"   # str(uuid.uuid4())
-        # self.map_disp       = create_map(map_id=f"init_{self.map_id}")
+        self.map_id         = f"map_{step_type.value}_{prev_step_type.value}_{stage}" if prev_step_type else f"map_{step_type.value}_no_prev_{stage}" 
         self.TXT            = BaseComponentTexts(step_type)
 
         self.all_feature_drawings = self.get_geo_constraint()
@@ -156,12 +212,27 @@ class BaseComponent:
         self.map_view_zoom   = init_map_zoom
 
 
-    def get_key_element(self, name):        
+    def get_key_element(self, name):
+        """Generates a unique key identifier for a UI element based on the step type and stage.
+
+        Args:
+            name (str): The base name of the element.
+
+        Returns:
+            str: A formatted string representing the unique key for the element.
+        """
         return f"{name}-{self.step_type.value}-{self.stage}"
 
 
     def get_geo_constraint(self):
-        # if self.step_type == Steps.EVENT and self.settings.event is not None:
+        """Retrieves the geographic constraints for the current step.
+
+        Geographic constraints define the search area on the map using bounding boxes or circles.
+
+        Returns:
+            List[GeometryConstraint]: A list of geographic constraints (boxes or circles) 
+            that confine the search area. Returns an empty list if no constraints are set.
+        """
         if self.step_type == Steps.EVENT:
             return self.settings.event.geo_constraint
         if self.step_type == Steps.STATION and self.settings.station is not None:
@@ -169,6 +240,15 @@ class BaseComponent:
         return []
     
     def set_geo_constraint(self, geo_constraint: List[GeometryConstraint]):
+        """Sets the geographic constraints for the current step.
+
+        This method updates the geographic constraints, which define the search area on the map using 
+        bounding boxes or circles.
+
+        Args:
+            geo_constraint (List[GeometryConstraint]): A list of geographic constraints 
+            (boxes or circles) to be applied to the current step.
+        """
         if self.step_type == Steps.EVENT and self.settings.event is not None:
             self.settings.event.geo_constraint = geo_constraint
         if self.step_type == Steps.STATION and self.settings.station is not None:
@@ -179,12 +259,7 @@ class BaseComponent:
     # FILTERS
     # ====================
     def refresh_filters(self):
-        """
-        Renders Export settings for all stages and Import settings only for stage 1.
-
-        - Allows users to download the current configuration (`config.cfg`) at all stages.
-        - Shows the import settings section only when `stage == 1`.
-        """        
+        """Refreshes and updates the filter settings based on configuration changes."""
         changes = self.settings.has_changed(self.old_settings)
         if changes.get('has_changed', False):
             self.old_settings      = deepcopy(self.settings)
@@ -192,6 +267,24 @@ class BaseComponent:
             st.rerun()
 
     def event_filter(self):
+        """Displays and manages event filtering options in the Streamlit sidebar.
+
+        This method allows users to filter seismic events based on:
+        - Client selection
+        - Time range (last month, last week, last day, or custom start/end dates)
+        - Magnitude range
+        - Depth range
+
+        Functionality:
+        - Users select a client from a dropdown list.
+        - A warning is displayed if the selected client does not support event services.
+        - Users can set predefined time intervals (last month, last week, last day).
+        - Users can manually set start and end dates/times.
+        - Validation ensures that the end date is after the start date.
+        - Users can adjust event magnitude and depth ranges using sliders.
+        - Map interaction buttons are rendered.
+        - Refreshes filters upon changes.
+        """
 
         start_date, start_time = convert_to_datetime(self.settings.event.date_config.start_time)
         end_date, end_time     = convert_to_datetime(self.settings.event.date_config.end_time)
@@ -264,7 +357,26 @@ class BaseComponent:
 
 
     def station_filter(self):
+        """Displays and manages station filtering options in the Streamlit sidebar.
 
+        This method allows users to filter seismic stations based on:
+        - Client selection
+        - Time range (last month, last week, last day, or custom start/end dates)
+        - Network, station, location, and channel filters
+        - Highest sample rate option
+        - Restricted data inclusion
+
+        Functionality:
+        - Users select a client from a dropdown list.
+        - A warning is displayed if the selected client does not support station services.
+        - Users can set predefined time intervals (last month, last week, last day).
+        - Users can manually set start and end dates/times with a one-hour shift if needed.
+        - Validation ensures that the end date is after the start date.
+        - Users can input station metadata filters (network, station, location, channel).
+        - Users can enable highest sample rate filtering and restricted data inclusion.
+        - Map interaction buttons are rendered.
+        - Refreshes filters upon changes.
+        """
         start_date, start_time = convert_to_datetime(self.settings.station.date_config.start_time)
         end_date, end_time = convert_to_datetime(self.settings.station.date_config.end_time)
 
@@ -355,11 +467,24 @@ class BaseComponent:
     # MAP
     # ====================   
     def set_map_view(self, map_center, map_zoom):
+        """Sets the map view properties, including center coordinates and zoom level.
+
+        Args:
+            map_center (dict): A dictionary representing the center coordinates of the map.
+            map_zoom (int): The zoom level for the map.
+        """
         self.map_view_center = map_center
         self.map_view_zoom   = map_zoom
 
 
     def update_filter_geometry(self, df, geo_type: GeoConstraintType, geo_constraint: List[GeometryConstraint]):
+        """This method adds a new drawing (box or circle) to the existing drawings on the map.
+
+        Args:
+            df (pd.DataFrame): A DataFrame containing the new geometric constraints.
+            geo_type (GeoConstraintType): The type of geographic constraint (bounding box or circle).
+            geo_constraint (List[GeometryConstraint]): The existing list of geographic constraints.
+        """
         add_geo = []
         for _, row in df.iterrows():
             coords = row.to_dict()
@@ -377,13 +502,46 @@ class BaseComponent:
         self.set_geo_constraint(new_geo)
 
     def is_valid_rectangle(self, min_lat, max_lat, min_lon, max_lon):
-        """Check if min/max latitude and longitude values are valid."""
+        """Checks if the given latitude and longitude values define a valid rectangle.
+
+        A valid rectangle satisfies the following conditions:
+        - Latitude values (`min_lat`, `max_lat`) must be within the range [-90, 90].
+        - Longitude values (`min_lon`, `max_lon`) must be within the range [-180, 180].
+        - `min_lat` must be less than or equal to `max_lat`.
+        - `min_lon` must be less than or equal to `max_lon`.
+
+        Args:
+            min_lat (float): Minimum latitude value.
+            max_lat (float): Maximum latitude value.
+            min_lon (float): Minimum longitude value.
+            max_lon (float): Maximum longitude value.
+
+        Returns:
+            bool: `True` if the rectangle is valid, `False` otherwise.
+        """
         return (-90 <= min_lat <= 90 and -90 <= max_lat <= 90 and
                 -180 <= min_lon <= 180 and -180 <= max_lon <= 180 and
                 min_lat <= max_lat and min_lon <= max_lon)
 
     def is_valid_circle(self, lat, lon, max_radius, min_radius):
-        """Check if circle data is valid."""
+        """Checks if the given latitude, longitude, and radius values define a valid circle.
+
+        A valid circle satisfies the following conditions:
+        - Latitude (`lat`) must be within the range [-90, 90].
+        - Longitude (`lon`) must be within the range [-180, 180].
+        - `max_radius` must be greater than 0.
+        - `min_radius` must be non-negative (>= 0).
+        - `min_radius` must be less than or equal to `max_radius`.
+
+        Args:
+            lat (float): Latitude of the circle's center.
+            lon (float): Longitude of the circle's center.
+            max_radius (float): Maximum radius of the circle.
+            min_radius (float): Minimum radius of the circle.
+
+        Returns:
+            bool: `True` if the circle data is valid, `False` otherwise.
+        """
         return (
             -90 <= lat <= 90 and
             -180 <= lon <= 180 and
@@ -958,7 +1116,6 @@ class BaseComponent:
         with st.expander("Shape tools - edit areas", expanded=True):
             self.update_rectangle_areas()
             self.update_circle_areas()
-        # self.render_map_buttons()
         
 
     def render_import_export(self):
@@ -1191,6 +1348,42 @@ class BaseComponent:
     def data_table_view(self, ordered_col, config, state_key):
         """Displays the full data table, allowing selection."""  
 
+        def _format_columns():
+            column_map = {
+                f"{Steps.EVENT.value}" : {
+                    "is_selected": st.column_config.Column("", width=None, disabled=False),
+                    "place": st.column_config.TextColumn("place", width=None, disabled=True),
+                    "magnitude": st.column_config.Column("mag", width="small", disabled=True),
+                    "magnitude type": st.column_config.Column("type", width="small", disabled=True),
+                    "time": st.column_config.DatetimeColumn("time", width=None, disabled=True),
+                    "longitude": st.column_config.Column("lon", width="small", disabled=True),
+                    "latitude": st.column_config.Column("lat", width="small", disabled=True),
+                    "depth (km)": st.column_config.Column("depth (km)", width="small", disabled=True),
+                },
+                f"{Steps.STATION.value}" : {
+                    "is_selected": st.column_config.Column("", width=None, disabled=False),
+                    "network": st.column_config.TextColumn("net.", width=None, disabled=True),
+                    "station": st.column_config.TextColumn("sta.", width=None, disabled=True),
+                    "description": st.column_config.TextColumn("description", width=None, disabled=True),
+                    "latitude": st.column_config.Column("lat", width=None, disabled=True),
+                    "longitude": st.column_config.Column("lon", width=None, disabled=True),
+                    "elevation": st.column_config.Column("elev.", width=None, disabled=True),
+                    "loc. codes": st.column_config.TextColumn("loc.", width="small", disabled=True),
+                    "channels": st.column_config.TextColumn("cha.", width="medium", disabled=True),
+                    "start date (UTC)": st.column_config.Column("started at", width=None, disabled=True),
+                    "end date (UTC)": st.column_config.Column("ended at", width=None, disabled=True),
+                }
+            }
+
+            for col in ordered_col:
+                if col in column_map[self.step_type.value]:
+                    config[col] = column_map[self.step_type.value].get(col)
+                else:
+                    config[col] = st.column_config.Column(col)
+
+            return config
+                
+
         c1, c2, c3 = st.columns([1,1,1])
         with c1:
             st.write(f"Total Number of {self.TXT.STEP.title()}s: {len(self.df_markers)}")
@@ -1208,32 +1401,7 @@ class BaseComponent:
         # it would be prettier to merge "magnitude_type" with magnitude here.. TODO
 
         self.selected_items_view(state_key) 
-
-
-        # Define desired column widths in pts
-        column_widths = {
-            "Select": 60,
-            "network": 60,
-            "station": 80,
-            "elevation": 80,
-            "longitude": 130,
-            "latitude": 130,
-            "start_date": 140,
-            "end_date": 140
-            }
-
-        for col in ordered_col:
-            
-            # Add width if this column should have a specific width
-            if col in column_widths:
-                config[col] = st.column_config.Column(
-                    col,
-                    width=column_widths[col]
-                )
-            else:
-                config[col] = st.column_config.Column(
-                    col,
-                )
+        
 
         height = (len(self.df_markers) + 1) * 35 + 2
 
@@ -1242,7 +1410,7 @@ class BaseComponent:
         self.df_data_edit = st.data_editor(
             self.df_markers, 
             hide_index = True, 
-            column_config=config, 
+            column_config=_format_columns(), 
             column_order = ordered_col, 
             key=self.get_key_element("Data Table"),
             use_container_width=True,
