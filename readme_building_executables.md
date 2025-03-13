@@ -5,16 +5,16 @@ This readme outlines the steps to create executables for macOS, Linux, and Windo
 
 ---
 
-## Initial Setup
+## 1. Initial Setup
 
-### 1. Clean Previous Builds (if necessary)
+### 1.1 Clean Previous Builds (if necessary)
 Before starting, it's good to clean up any previous builds:
 ```bash
 rm -rf dist build *.spec
 sudo rm -rf /mnt/c/MyFiles/050-FDSN/seed-vault/.venv
 ```
 
-### 2. Install Python, Poetry, and PyInstaller
+### 1.2. Install Python, Poetry, and PyInstaller
 For each platform (Linux, macOS, Windows):
 - Install **Python** from [python.org](https://www.python.org/downloads/).
 - Install **Poetry** by running the following command:
@@ -26,7 +26,7 @@ For each platform (Linux, macOS, Windows):
   poetry add --dev pyinstaller
   ```
 
-### 3. Install Project Dependencies with Poetry
+### 1.3 Install Project Dependencies with Poetry
 Once Poetry is installed, install all dependencies for your project:
 ```bash
 poetry install
@@ -35,12 +35,14 @@ poetry show --with dev
 ```
 
 ---
+## 2. Modifications for PyInstaller & Streamlit
 
 ## Streamlit Adjustments
 [https://github.com/jvcss/PyInstallerStreamlit]
-### Modify Streamlit to Run in PyInstaller
 
-#### Add Content to `run_app.py`
+### 2.1 Modify Streamlit to work with PyInstaller
+
+#### 2.1.1 Add Content to `run_app.py`
 Create a file called `run_app.py` with the following content:
 ```python
 from streamlit.web import cli
@@ -49,7 +51,7 @@ if __name__ == '__main__':
     cli._main_run_clExplicit('seed_vault/ui/1_🌎_main_flows.py', is_hello=False)
 ```
 
-#### Modify Streamlit's CLI
+#### 2.1.2 Modify Streamlit's CLI
 Navigate to the Streamlit path in your virtual environment:
 ```
 .env\Lib\site-packages\streamlit\web\cli.py
@@ -60,23 +62,77 @@ def _main_run_clExplicit(file, is_hello, args=[], flag_options={}):
     bootstrap.run(file, is_hello, args, flag_options)
 ```
 
-#### Create a Hook to Collect Streamlit Metadata
+
+#### 2.2 Create a Hook to Collect Streamlit Metadata
 Create a new hook file `hook-streamlit.py` under the `./hooks` directory:
 ```python
 from PyInstaller.utils.hooks import copy_metadata
 
 datas = copy_metadata('streamlit')
+
+```
+### 3. Fixing Dependencies
+
+#### 3.1 Modify Obspy imaging
+Navigate to obspy path in your virtual environment:
+```
+.env\Lib\site-packages\obspy\imaging\cm.py
+```
+Modidfy  `cm.py` as follows:
+```python
+try:
+    _globals.update(_get_all_cmaps())
+    obspy_sequential = _globals["viridis"]
+    obspy_sequential_r = _globals["viridis_r"]
+except:
+    obspy_sequential = get_cmap("viridis")
+    obspy_sequential_r = get_cmap("viridis_r")
+obspy_divergent = get_cmap("RdBu_r")
+obspy_divergent_r = get_cmap("RdBu")
+#: PQLX colormap
+try:
+    pqlx = _get_cmap("pqlx.npz")
+except:
+    pqlx = get_cmap('seismic')
+
+```
+#### 3.2 Fix SciPy _distn_infrastructure.py Issue
+Navigate to the SciPy path in your virtual environment:
+```
+.env\Lib\site-packages\scipy\stats\_distn_infrastructure.py
+```
+Modidfy  `_distn_infrastructure.py`:
+Find this problematic block:
+
+```python
+for obj in [s for s in dir() if s.startswith('_doc_')]:
+    exec(f"del {obj}")
+
+del obj  # THIS CAUSES THE ERROR
+```
+Replace it with:
+
+```python
+for obj in [s for s in dir() if s.startswith('_doc_')]:
+    exec(f"del {obj}")
+
+try:
+    del obj  # Only delete if it exists
+except NameError:
+    pass
 ```
 
 ---
 
-## Compile the App with PyInstaller
+## 4. Compile the App with PyInstaller
+
+### 4.1 Compilation Commands
+Run the following command depending on your OS.
 
 ### For Linux
 Use the following command to compile the app on Linux:
 ```bash
 pyinstaller --name seed-vault \
-            --onefile \
             --additional-hooks-dir=./hooks \
             --collect-all streamlit \
             --collect-all folium \
@@ -91,7 +147,6 @@ pyinstaller --name seed-vault \
 For Windows, use PowerShell and the following command:
 ```bash
 pyinstaller --name seed-vault `
-            --onefile `
             --additional-hooks-dir=.\hooks `
             --collect-all streamlit `
             --collect-all folium `
@@ -106,7 +161,6 @@ pyinstaller --name seed-vault `
 For macOS, the command is similar to Linux:
 ```bash
 pyinstaller --name seed-vault \
-            --onefile \
             --additional-hooks-dir=./hooks \
             --collect-all streamlit \
             --collect-all folium \
@@ -118,32 +172,7 @@ pyinstaller --name seed-vault \
 ```
 
 ---
-
-## Streamlit Configuration
-
-Create the following configuration file for Streamlit to specify server options.
-
-### `.streamlit/config.toml`:
-```toml
-[global]
-developmentMode = false
-
-[server]
-port = 8502
-```
-
-Add this file either to the project root or the `dist` output folder after building.
-
-### Copy Configuration and Files
-After building, copy configuration and source files to the `dist` folder:
-```bash
-xcopy /s /e ".\.streamlit" "dist\.streamlit"
-Copy-Item -Path "seed_vault" -Destination "dist\seed_vault" -Recurse
-```
-
----
-
-## Modify the Spec File for Each Platform
+## 4.2 Modify the Spec File for Each Platform
 
 ### Linux Spec File
 For Linux, the `datas` and `hiddenimports` sections in the `.spec` file should look like this:
@@ -151,38 +180,43 @@ For Linux, the `datas` and `hiddenimports` sections in the `.spec` file should l
 from PyInstaller.utils.hooks import collect_all, collect_data_files, collect_dynamic_libs, copy_metadata, collect_submodules
 import os
 import pkg_resources  
+import matplotlib
+import obspy
+import scipy
+
 
 datas = []
 binaries = []
 hiddenimports = []
 
-for package in ['streamlit', 'folium', 'obspy', 'streamlit-folium']:
+for package in ['streamlit', 'folium', 'obspy', 'streamlit-folium', 'matplotlib','scipy']:
     tmp_ret = collect_all(package)
     datas += tmp_ret[0]
     binaries += tmp_ret[1]
     hiddenimports += tmp_ret[2]
 
-datas += collect_data_files('obspy', subdir='imaging/data')
-datas += collect_data_files('obspy', subdir='taup/data')
-
-binaries += collect_dynamic_libs('obspy')
-
-obspy_release_version_path = os.path.join(os.getcwd(), ".venv", "lib", "python3.12", "site-packages", "obspy", "RELEASE-VERSION")
-datas.append((obspy_release_version_path, "obspy/"))
-
 for dist in pkg_resources.working_set:
     datas += copy_metadata(dist.project_name)
 
+hiddenimports += collect_submodules('obspy')
+datas += collect_data_files('obspy')
+binaries += collect_dynamic_libs('obspy')
+
+
 hiddenimports += collect_submodules('requests')  
-datas += collect_data_files('requests')          
+datas += collect_data_files('requests')      
 
 hiddenimports += collect_submodules('streamlit_ace')
 datas += collect_data_files('streamlit_ace')
 
-# Collect required package files
-datas += collect_data_files('matplotlib')  
-datas += collect_data_files('scipy')       
-datas += collect_data_files('numpy')       
+
+datas += collect_data_files('numpy')      
+
+hiddenimports += collect_submodules('scipy')
+datas += collect_data_files('scipy')
+binaries += collect_dynamic_libs('scipy')
+
+
 
 datas += [
     (".venv/lib/python3.12/site-packages/altair/vegalite/v5/schema/vega-lite-schema.json", "./altair/vegalite/v5/schema/"),
@@ -196,13 +230,13 @@ datas += [
 
 hiddenimports += [
     'numpy', 'scipy', 'lxml', 'sqlalchemy', 'setuptools', 'requests', 'urllib3', 'packaging',
-    'matplotlib', 'matplotlib.pyplot', 'matplotlib.backends.backend_agg',
-    'obspy.core', 'obspy.clients', 'obspy.io', 'obspy.taup',
+    'matplotlib', 'matplotlib.pyplot', 'matplotlib.backends.backend_agg', 'matplotlib.cm', 'matplotlib.colors',
+    'matplotlib._cm_listed', 'matplotlib._cm', 'matplotlib._color_data',
+    'obspy.core', 'obspy.clients', 'obspy.io', 'obspy.taup', 'obspy.imaging.cm', 'obspy.imaging.data',
     'obspy.signal', 'obspy.imaging', 'tqdm', 'streamlit-folium', 
     'pydantic', 'jupyter', 'seaborn', 'plotly',
-    'pandas', 'click', 'tabulate', 'streamlit-extras', 'streamlit-ace', 'decorator'
+    'pandas', 'click', 'tabulate', 'streamlit-extras', 'streamlit-ace', 'decorator',
 ]
-
 
 a = Analysis(
     ['run_app.py'],
@@ -222,16 +256,13 @@ pyz = PYZ(a.pure)
 exe = EXE(
     pyz,
     a.scripts,
-    a.binaries,
-    a.datas,
     [],
+    exclude_binaries=True,
     name='seed-vault',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    upx_exclude=[],
-    runtime_tmpdir=None,
     console=True,
     disable_windowed_traceback=False,
     argv_emulation=False,
@@ -239,6 +270,16 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
 )
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.datas,
+    strip=False,
+    upx=True,
+    upx_exclude=[],
+    name='seed-vault',
+)
+
 ```
 
 ### Windows Spec File
@@ -246,55 +287,58 @@ For Windows, adjust the paths to Windows-style:
 ```python
 from PyInstaller.utils.hooks import collect_all, collect_data_files, collect_dynamic_libs, copy_metadata, collect_submodules
 import os
+import sys
 import pkg_resources  
+import matplotlib
+import obspy
+import scipy
 
 datas = []
 binaries = []
 hiddenimports = []
 
-for package in ['streamlit', 'folium', 'obspy', 'streamlit-folium']:
+site_packages = os.path.join(sys.prefix, 'Lib', 'site-packages')
+
+for package in ['streamlit', 'folium', 'obspy', 'streamlit-folium', 'matplotlib', 'scipy']:
     tmp_ret = collect_all(package)
     datas += tmp_ret[0]
     binaries += tmp_ret[1]
     hiddenimports += tmp_ret[2]
 
-datas += collect_data_files('obspy', subdir='imaging/data')
-datas += collect_data_files('obspy', subdir='taup/data')
-
+hiddenimports += collect_submodules('obspy')
+datas += collect_data_files('obspy')
 binaries += collect_dynamic_libs('obspy')
 
-obspy_release_version_path = os.path.join(os.getcwd(), ".venv", "Lib", "site-packages", "obspy", "RELEASE-VERSION")
-datas.append((obspy_release_version_path, "obspy/"))
-
-
-for dist in pkg_resources.working_set:
-    datas += copy_metadata(dist.project_name)
-
 hiddenimports += collect_submodules('requests')  
-datas += collect_data_files('requests')         
+datas += collect_data_files('requests')      
 
-hiddenimports += collect_submodules('streamlit_ace')  
-datas += collect_data_files('streamlit_ace')  
+hiddenimports += collect_submodules('streamlit_ace')
+datas += collect_data_files('streamlit_ace')
 
-datas += collect_data_files('matplotlib')  
-datas += collect_data_files('scipy')       
-datas += collect_data_files('numpy')       
+datas += collect_data_files('numpy')      
+
+hiddenimports += collect_submodules('scipy')
+datas += collect_data_files('scipy')
+binaries += collect_dynamic_libs('scipy')
+
 datas += [
-    (".venv\\Lib\\site-packages\\altair\\vegalite\\v5\\schema\\vega-lite-schema.json", "./altair/vegalite/v5/schema/"),
-    (".venv\\Lib\\site-packages\\streamlit\\static", "./streamlit/static"),
-    (".venv\\Lib\\site-packages\\streamlit\\runtime", "./streamlit/runtime"),
-    (".venv\\Lib\\site-packages\\streamlit_folium", "streamlit_folium"),
+    (os.path.join(site_packages, "altair", "vegalite", "v5", "schema", "vega-lite-schema.json"), "altair/vegalite/v5/schema/"),
+    (os.path.join(site_packages, "streamlit", "static"), "streamlit/static"),
+    (os.path.join(site_packages, "streamlit", "runtime"), "streamlit/runtime"),
+    (os.path.join(site_packages, "streamlit_folium"), "streamlit_folium"),
     ("seed_vault", "seed_vault"),
     ("data", "data"),
-    (".streamlit\\config.toml", ".streamlit/config.toml"),
+    (".streamlit/config.toml", ".streamlit/config.toml"),
 ]
 
 hiddenimports += [
-    'numpy', 'scipy', 'lxml', 'sqlalchemy', 'setuptools' ,'requests', 'urllib3', 'packaging',
-    'matplotlib', 'obspy.core', 'obspy.clients', 'obspy.io', 'obspy.taup',
+    'numpy', 'scipy', 'lxml', 'sqlalchemy', 'setuptools', 'requests', 'urllib3', 'packaging',
+    'matplotlib', 'matplotlib.pyplot', 'matplotlib.backends.backend_agg', 'matplotlib.cm', 'matplotlib.colors',
+    'matplotlib._cm_listed', 'matplotlib._cm', 'matplotlib._color_data',
+    'obspy.core', 'obspy.clients', 'obspy.io', 'obspy.taup', 'obspy.imaging.cm', 'obspy.imaging.data',
     'obspy.signal', 'obspy.imaging', 'tqdm', 'streamlit-folium', 
     'pydantic', 'jupyter', 'seaborn', 'plotly',
-    'pandas', 'click', 'tabulate', 'streamlit-extras', 'streamlit-ace', 'decorator'
+    'pandas', 'click', 'tabulate', 'streamlit-extras', 'streamlit-ace', 'decorator',
 ]
 
 a = Analysis(
@@ -303,35 +347,40 @@ a = Analysis(
     binaries=binaries,
     datas=datas,
     hiddenimports=hiddenimports,
-    hookspath=[],  
+    hookspath=['./hooks'],
     hooksconfig={},
     runtime_hooks=[],
     excludes=[],
     noarchive=False,
     optimize=0,
 )
-
 pyz = PYZ(a.pure)
 
 exe = EXE(
     pyz,
     a.scripts,
-    a.binaries,
-    a.datas,
     [],
+    exclude_binaries=True,
     name='seed-vault',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
-    upx_exclude=[],
-    runtime_tmpdir=None,
+    upx=False,  
     console=True,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+)
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.datas,
+    strip=False,
+    upx=False, 
+    upx_exclude=[],
+    name='seed-vault',
 )
 
 ```
@@ -342,104 +391,109 @@ For macOS, use the same style as Linux, with paths similar to Linux paths:
 # -*- mode: python ; coding: utf-8 -*-
 from PyInstaller.utils.hooks import collect_all, collect_data_files, collect_dynamic_libs, copy_metadata, collect_submodules
 import os
+import sys
 import pkg_resources  
+import matplotlib
+import obspy
+import scipy
 
 datas = []
 binaries = []
 hiddenimports = []
 
-for package in ['streamlit', 'folium', 'obspy', 'streamlit-folium']:
+site_packages = os.path.join(sys.prefix, 'lib', 'python3.12', 'site-packages')
+
+for package in ['streamlit', 'folium', 'obspy', 'streamlit-folium', 'matplotlib', 'scipy']:
     tmp_ret = collect_all(package)
     datas += tmp_ret[0]
     binaries += tmp_ret[1]
     hiddenimports += tmp_ret[2]
 
-datas += collect_data_files('obspy', subdir='imaging/data')
-datas += collect_data_files('obspy', subdir='taup/data')
-
+hiddenimports += collect_submodules('obspy')
+datas += collect_data_files('obspy')
 binaries += collect_dynamic_libs('obspy')
 
-obspy_release_version_path = os.path.join(os.getcwd(), ".venv", "lib", "python3.12", "site-packages", "obspy", "RELEASE-VERSION")
-datas.append((obspy_release_version_path, "obspy/"))
-
-for dist in pkg_resources.working_set:
-    datas += copy_metadata(dist.project_name)
-
+# Additional dependencies
 hiddenimports += collect_submodules('requests')  
-datas += collect_data_files('requests')          
+datas += collect_data_files('requests')      
 
 hiddenimports += collect_submodules('streamlit_ace')
 datas += collect_data_files('streamlit_ace')
 
-# Collect required package files
-datas += collect_data_files('matplotlib')  
-datas += collect_data_files('scipy')       
-datas += collect_data_files('numpy')       
+datas += collect_data_files('numpy')      
 
-# Additional required data files (macOS paths)
+hiddenimports += collect_submodules('scipy')
+datas += collect_data_files('scipy')
+binaries += collect_dynamic_libs('scipy')
+
 datas += [
-    (".venv/lib/python3.12/site-packages/altair/vegalite/v5/schema/vega-lite-schema.json", "./altair/vegalite/v5/schema/"),
-    (".venv/lib/python3.12/site-packages/streamlit/static", "./streamlit/static"),
-    (".venv/lib/python3.12/site-packages/streamlit/runtime", "./streamlit/runtime"),
-    (".venv/lib/python3.12/site-packages/streamlit_folium", "streamlit_folium"),
+    (os.path.join(site_packages, "altair", "vegalite", "v5", "schema", "vega-lite-schema.json"), "altair/vegalite/v5/schema/"),
+    (os.path.join(site_packages, "streamlit", "static"), "streamlit/static"),
+    (os.path.join(site_packages, "streamlit", "runtime"), "streamlit/runtime"),
+    (os.path.join(site_packages, "streamlit_folium"), "streamlit_folium"),
     ("seed_vault", "seed_vault"),
     ("data", "data"),
     (".streamlit/config.toml", ".streamlit/config.toml"),
 ]
 
-# Hidden imports (to prevent missing dependencies)
 hiddenimports += [
     'numpy', 'scipy', 'lxml', 'sqlalchemy', 'setuptools', 'requests', 'urllib3', 'packaging',
-    'matplotlib', 'matplotlib.pyplot', 'matplotlib.backends.backend_agg',
-    'obspy.core', 'obspy.clients', 'obspy.io', 'obspy.taup',
+    'matplotlib', 'matplotlib.pyplot', 'matplotlib.backends.backend_agg', 'matplotlib.cm', 'matplotlib.colors',
+    'matplotlib._cm_listed', 'matplotlib._cm', 'matplotlib._color_data',
+    'obspy.core', 'obspy.clients', 'obspy.io', 'obspy.taup', 'obspy.imaging.cm', 'obspy.imaging.data',
     'obspy.signal', 'obspy.imaging', 'tqdm', 'streamlit-folium', 
     'pydantic', 'jupyter', 'seaborn', 'plotly',
-    'pandas', 'click', 'tabulate', 'streamlit-extras', 'streamlit-ace', 'decorator'
+    'pandas', 'click', 'tabulate', 'streamlit-extras', 'streamlit-ace', 'decorator',
 ]
 
-# PyInstaller analysis
 a = Analysis(
     ['run_app.py'],
-    pathex=[os.getcwd()],  
+    pathex=[],
     binaries=binaries,
     datas=datas,
     hiddenimports=hiddenimports,
-    hookspath=[], 
+    hookspath=['./hooks'],
     hooksconfig={},
     runtime_hooks=[],
     excludes=[],
     noarchive=False,
     optimize=0,
 )
-
 pyz = PYZ(a.pure)
 
 exe = EXE(
     pyz,
     a.scripts,
-    a.binaries,
-    a.datas,
     [],
+    exclude_binaries=True,
     name='seed-vault',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
-    upx_exclude=[],
-    runtime_tmpdir=None,
+    upx=False,  
     console=True,
     disable_windowed_traceback=False,
     argv_emulation=False,
-    target_arch="x86_64",  # Ensure compatibility with macOS (modify for Apple Silicon if needed)
+    target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
 )
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.datas,
+    strip=False,
+    upx=False,  
+    upx_exclude=[],
+    name='seed-vault',
+)
+
 
 ```
 
 ---
 
-## Build the Executable
+## 4.3 Build the Executable
 
 Finally, to build the executable on any platform, run:
 ```bash
@@ -447,6 +501,32 @@ pyinstaller seed-vault.spec --clean
 ```
 
 ---
+
+
+## 5. Streamlit Configuration
+
+Create the following configuration file for Streamlit to specify server options.
+
+### `.streamlit/config.toml`:
+```toml
+[global]
+developmentMode = false
+
+[server]
+port = 8502
+```
+
+Add this file either to the project root or the `dist` output folder after building.
+
+### Copy Configuration and Files
+After building, copy configuration and source files to the `dist` folder:
+```bash
+xcopy /s /e ".\.streamlit" "dist\seed-vault\.streamlit"
+Copy-Item -Path "seed_vault" -Destination "dist\seed-vault\seed_vault" -Recurse
+```
+
+---
+
 
 ## Conclusion
 
