@@ -14,7 +14,7 @@ import random
 import fnmatch
 import multiprocessing
 from tqdm import tqdm
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from obspy import UTCDateTime,Stream
 from obspy.core.stream import read as streamread
@@ -724,6 +724,44 @@ class DatabaseManager:
             cursor.executemany(query, arrival_list)
             
             return cursor.rowcount
+
+    def check_data_existence(self, netcode: str, stacode: str, location: str, channel: str, starttime: str, endtime: str):
+        """
+        Run a simple check to see if a db element exists for a trace
+
+        Args:
+            db_manager (DatabaseManager): Database manager instance
+            network (str): Network code
+            station (str): Station code
+            location (str): Location code
+            channel (str): Channel code
+            start/endtime (str): Time in iso
+        
+        Returns:
+            bool: True if data exists for the specified parameters, False otherwise
+        """
+
+        time_point = datetime.fromisoformat(starttime) + timedelta(seconds=5) # just 5 seconds in is fine
+        
+        # Use the connection context manager from the DatabaseManager
+        with self.connection() as conn:
+            cursor = conn.cursor()
+            
+            # Query to check if any record spans the given time point
+            query = """
+                SELECT COUNT(*) FROM archive_data
+                WHERE network = ? 
+                AND station = ? 
+                AND location = ? 
+                AND channel = ?
+                AND starttime <= ?
+                AND endtime >= ?
+            """
+            
+            cursor.execute(query, (netcode, stacode, location, channel, starttime, endtime))
+            count = cursor.fetchone()[0]
+            
+            return count > 0        
 
     def get_arrival_data(self, resource_id: str, netcode: str, stacode: str) -> Optional[Dict[str, Any]]:
         """
