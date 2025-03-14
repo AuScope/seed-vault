@@ -679,7 +679,7 @@ class BaseComponent:
                 zoom_start=self.map_view_zoom,
                 map_center=[
                     self.map_view_center.get("lat", 0.0),
-                    self.map_view_center.get("lng", 0.0), # pacific ocean
+                    self.map_view_center.get("lng", 0.0),
                 ]
             )
         
@@ -949,8 +949,8 @@ class BaseComponent:
             # st.rerun()
 
     def update_area_around_prev_step_selections(self, min_radius, max_radius):
-        min_radius_value = float(min_radius) # * 1000
-        max_radius_value = float(max_radius) # * 1000
+        min_radius_value = float(min_radius)
+        max_radius_value = float(max_radius)
 
         updated_constraints = []
 
@@ -1309,7 +1309,10 @@ class BaseComponent:
         # Define ordered columns
         cols = self.df_markers.columns
         orig_cols = [col for col in cols if col != 'is_selected']
-        ordered_col = ['is_selected'] + orig_cols
+        if self.step_type == Steps.STATION:
+            ordered_col = ['is_selected'] + orig_cols
+        else: # Steps.EVENT
+            ordered_col = ['is_selected','place','time','magnitude_combined','latitude','longitude','depth (km)']
 
         # Define config
         config = {col: {'disabled': True} for col in orig_cols}
@@ -1357,33 +1360,40 @@ class BaseComponent:
                 return None
             return "large"
 
+
         def _format_columns():
             column_map = {}
+
             if self.step_type == Steps.EVENT:
+
+                # combine magnitude scalar and type into one column
+                self.df_markers['magnitude_combined'] = self.df_markers['magnitude'].astype(str) + ' ' + self.df_markers['magnitude type']
+
                 column_map = {
-                    "is_selected": st.column_config.Column("", width=None, disabled=False),
-                    "place": st.column_config.TextColumn("place", width=_get_column_width("place"), disabled=True),
-                    "magnitude": st.column_config.Column("mag", width=None, disabled=True),
-                    "magnitude type": st.column_config.Column("type", width=None, disabled=True),
-                    "time": st.column_config.DatetimeColumn("time", width=None, disabled=True),
-                    "longitude": st.column_config.Column("lon", width=None, disabled=True),
-                    "latitude": st.column_config.Column("lat", width=None, disabled=True),
-                    "depth (km)": st.column_config.Column("dep (km)", width=None, disabled=True),
+                    "is_selected": st.column_config.Column("", width=4, disabled=False),
+                    "place": st.column_config.TextColumn("place", width=None, disabled=True),
+                    "magnitude_combined": st.column_config.TextColumn("mag", width=12, disabled=True),
+                    #"magnitude": st.column_config.NumberColumn("mag", format="%.1f",width=6, disabled=True),
+                    #"magnitude type": st.column_config.Column("type", width=6, disabled=True),
+                    "time": st.column_config.DatetimeColumn("origin time", width=18, disabled=True),
+                    "longitude": st.column_config.NumberColumn("lon", format="%.3f", width=8, disabled=True),
+                    "latitude": st.column_config.NumberColumn("lat", format="%.3f", width=8, disabled=True),
+                    "depth (km)": st.column_config.NumberColumn("dep (km)", format="%.1f", width=6, disabled=True),
                 }
             
             if self.step_type == Steps.STATION:
                 column_map = {
-                        "is_selected": st.column_config.Column("", width=None, disabled=False),
-                        "network": st.column_config.TextColumn("net.", width=None, disabled=True),
-                        "station": st.column_config.TextColumn("sta.", width=None, disabled=True),
-                        "description": st.column_config.TextColumn("description", width=_get_column_width("description"), disabled=True),
-                        "latitude": st.column_config.Column("lat", width=None, disabled=True),
-                        "longitude": st.column_config.Column("lon", width=None, disabled=True),
-                        "elevation": st.column_config.Column("elev.", width=None, disabled=True),
-                        "loc. codes": st.column_config.ListColumn("loc.", width=_get_column_width("loc. codes")),
-                        "channels": st.column_config.ListColumn("cha.", width=_get_column_width("channels")),
-                        "start date (UTC)": st.column_config.Column("started at", width=None, disabled=True),
-                        "end date (UTC)": st.column_config.Column("ended at", width=None, disabled=True),
+                        "is_selected": st.column_config.Column("", width=4, disabled=False),
+                        "network": st.column_config.TextColumn("net", width=2, disabled=True),
+                        "station": st.column_config.TextColumn("sta", width=5, disabled=True),
+                        "description": st.column_config.TextColumn("description", width=38, disabled=True),
+                        "latitude": st.column_config.NumberColumn("lat", format="%.3f", width=8, disabled=True),
+                        "longitude": st.column_config.NumberColumn("lon", format="%.3f", width=8, disabled=True),
+                        "elevation": st.column_config.NumberColumn("elev", format="%d", width=6, disabled=True),
+                        "loc. codes": st.column_config.TextColumn("loc", width=None),
+                        "channels": st.column_config.TextColumn("cha", width=None),
+                        "start date (UTC)": st.column_config.Column("start", width=13, disabled=True),
+                        "end date (UTC)": st.column_config.Column("end", width=11, disabled=True),
                     }
 
             for col in ordered_col:
@@ -1407,9 +1417,6 @@ class BaseComponent:
             if st.button("Unselect All", key=self.get_key_element("Unselect All")):
                 self.df_markers['is_selected'] = False
                 self.clicked_marker_info = None
-                
-        
-        # it would be prettier to merge "magnitude_type" with magnitude here.. TODO
 
         self.selected_items_view(state_key) 
         
@@ -1418,15 +1425,17 @@ class BaseComponent:
 
         height = min(100*35, height)
 
-        df_markers_view = None
-        if self.step_type == Steps.STATION:            
-            df_markers_view = deepcopy(self.df_markers)
-            df_markers_view["loc. codes"] = df_markers_view["loc. codes"].apply(lambda x: x.split(",")) 
-            df_markers_view["channels"] = df_markers_view["channels"].apply(lambda x: x.split(","))
-            # df_markers_view.drop("elevation", axis=1, inplace=True)
+        # These create "bubble icons" for the codes.. but take up extra space
+        #df_markers_view = None
+        #if self.step_type == Steps.STATION:            
+        #    df_markers_view = deepcopy(self.df_markers)
+        #    df_markers_view["loc. codes"] = df_markers_view["loc. codes"].apply(lambda x: x.split(",")) 
+        #    df_markers_view["channels"] = df_markers_view["channels"].apply(lambda x: x.split(","))            
+        #    # df_markers_view.drop("elevation", axis=1, inplace=True)
 
         self.df_data_edit = st.data_editor(
-            df_markers_view if self.step_type == Steps.STATION else self.df_markers, 
+            #df_markers_view if self.step_type == Steps.STATION else self.df_markers, # for bubble icons
+            self.df_markers,
             hide_index = True, 
             column_config=_format_columns(), 
             column_order = ordered_col, 
@@ -1458,7 +1467,7 @@ class BaseComponent:
             return
 
         if self.step_type == Steps.EVENT:
-            unique_columns = ["place", "magnitude", "magnitude type"]
+            unique_columns = ["place", "magnitude"]
 
         elif self.step_type == Steps.STATION:
             unique_columns = ["network", "station"]
@@ -1555,7 +1564,3 @@ class BaseComponent:
             self.render_marker_select()
             with st.expander(self.TXT.SELECT_DATA_TABLE_TITLE, expanded = not self.df_markers.empty):
                 self.render_data_table(c2_export)
-  
-
-
-
