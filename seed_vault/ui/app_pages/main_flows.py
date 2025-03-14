@@ -36,6 +36,14 @@ st.markdown(
 
 from seed_vault.ui.components.workflows_combined import CombinedBasedWorkflow
 
+current_page = st.session_state.get("current_page", None)
+new_page = "main_flow"
+
+if current_page != new_page:
+    st.session_state.clear()
+
+st.session_state["current_page"] = new_page
+
 
 if "combined_based_workflow" not in st.session_state:
     combined_based_workflow                  = CombinedBasedWorkflow()

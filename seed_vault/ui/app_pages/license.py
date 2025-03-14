@@ -7,6 +7,12 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+current_page = st.session_state.get("current_page", None)
+new_page = "license"
+if current_page != new_page:
+    st.session_state.clear()
+st.session_state["current_page"] = new_page
+
 st.text(
     """
 CSIRO Open Source Software License Agreement (variation of the BSD/MIT License)

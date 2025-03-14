@@ -12,6 +12,12 @@ st.set_page_config(
 from seed_vault.ui.app_pages.helpers.common import get_app_settings
 from seed_vault.ui.components.settings import SettingsComponent
 
+current_page = st.session_state.get("current_page", None)
+new_page = "settings"
+if current_page != new_page:
+    st.session_state.clear()
+st.session_state["current_page"] = new_page
+
 settings = get_app_settings()
 
 

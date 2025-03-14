@@ -23,8 +23,14 @@ settings and when you do not want of much fine tuning on selection of Events and
 from seed_vault.ui.app_pages.helpers.common import get_app_settings
 from seed_vault.ui.components.run_from_config import RunFromConfigComponent
 
-settings = get_direct_settings()
+current_page = st.session_state.get("current_page", None)
+new_page = "run_config"
+if current_page != new_page:
+    st.session_state.clear()
+st.session_state["current_page"] = new_page
 
+
+settings = get_direct_settings()
 
 if "run_from_config_page" not in st.session_state:
     run_from_config_page           = RunFromConfigComponent(settings)
