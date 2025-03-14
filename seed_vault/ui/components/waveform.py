@@ -43,12 +43,20 @@ def get_tele_filter(tr):
     if senstype not in ['H','N']:
         return 0,0 # flagged elsewhere
 
-    if distance_km < 100:
+    if distance_km < 50:
         f0,f1 = 2.0,15
+    elif distance_km < 100:
+        f0,f1 = 1.8,12
+    elif distance_km < 250:
+        f0,f1 = 1.7,10
     elif distance_km < 500:
-        f0,f1 = 1.8,8
-    elif distance_km < 3000:
+        f0,f1 = 1.6,8
+    elif distance_km < 1000:
+        f0,f1 = 1.5,6
+    elif distance_km < 2500:
         f0,f1 = 1.4,5
+    elif distance_km < 5000:
+        f0,f1 = 1.2,4        
     elif distance_km < 10000:
         f0,f1 = 1.0,3
     else:
