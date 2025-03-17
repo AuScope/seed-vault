@@ -12,6 +12,7 @@ from html import escape
 
 from seed_vault.models.config import SeismoLoaderSettings
 from seed_vault.service.seismoloader import run_main
+from seed_vault.utils.constants import DOC_BASE_URL
 
 from .display_log import ConsoleDisplay
 
@@ -314,7 +315,7 @@ class RunFromConfigComponent:
                 with st.container(height=600):                    
                     st.code(self.config_str, language="python")
             else:
-                c11, c12 = st.columns([1,1])
+                c11, c12, c13 = st.columns([1,1,1])
                 with c11:
                     st.button(
                         "Edit config" if not st.session_state.is_editing else "Stop Editing",
@@ -325,6 +326,9 @@ class RunFromConfigComponent:
                         "Reset",
                         on_click=reset_config,
                     )
+
+                with c13:
+                    st.link_button("Help", f"{DOC_BASE_URL}/flows/run_from_parameters.html#parameter-reference")
 
                 if st.session_state.is_editing:
                     st.session_state.edited_config_str = st.text_area(
