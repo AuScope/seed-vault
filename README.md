@@ -28,7 +28,7 @@ Can run:
 
 #### User Guide 
 
-https://auscope.github.io/seed-vault/app_db_explorer.html
+https://auscope.github.io/seed-vault
 
 ---
 
