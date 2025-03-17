@@ -67,43 +67,6 @@ class ContinuousFilterMenu:
             # Catch any conversion or comparison errors
             st.session_state["date_range_valid"] = False
 
-    def validate_date_range_OLD(self):
-        """Validate that end time is not earlier than start time"""
-        try:
-            # Get the current start and end times
-            start_time = self.settings.station.date_config.start_time
-            end_time = self.settings.station.date_config.end_time
-            
-            # Make sure both are datetime objects for comparison
-            if start_time is not None and end_time is not None:
-                # Convert to strings and back to datetime to ensure consistency
-                start_str = start_time.isoformat() if hasattr(start_time, 'isoformat') else str(start_time)
-                end_str = end_time.isoformat() if hasattr(end_time, 'isoformat') else str(end_time)
-                
-                # Parse strings to datetime objects
-                try:
-                    parsed_start = datetime.fromisoformat(start_str)
-                    parsed_end = datetime.fromisoformat(end_str)
-                    
-                    # Update the values to ensure they are datetime objects
-                    self.settings.station.date_config.start_time = parsed_start
-                    self.settings.station.date_config.end_time = parsed_end
-                    
-                    # Now compare the datetime objects
-                    if parsed_end <= parsed_start:
-                        st.session_state["date_range_valid"] = False
-                    else:
-                        st.session_state["date_range_valid"] = True
-                except (ValueError, TypeError):
-                    # If parsing fails, default to invalid to be safe
-                    st.session_state["date_range_valid"] = False
-            else:
-                # If either date is None, validation fails
-                st.session_state["date_range_valid"] = False
-        except Exception as e:
-            # Log any errors and set validation to false
-            print(f"Date validation error: {str(e)}")
-            st.session_state["date_range_valid"] = False
 
     def refresh_filters(self):
         """Check for changes and trigger updates"""
