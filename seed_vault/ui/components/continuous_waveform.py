@@ -2,11 +2,11 @@
 
 from typing import List
 import streamlit as st
-from datetime import datetime
+from datetime import datetime, date, time
 from copy import deepcopy
 import threading
 import sys
-import time
+import time as systime
 import queue
 from html import escape
 from seed_vault.models.config import SeismoLoaderSettings
@@ -31,6 +31,47 @@ class ContinuousFilterMenu:
         }
         self.last_button_pressed = None
         self.todo_nets = None
+        
+        # Check if date range is valid
+        self.validate_date_range()
+
+    def validate_date_range(self):
+        """Validate that end time is not earlier than start time"""
+        try:
+            # Get the current start and end times
+            start_time = self.settings.station.date_config.start_time
+            end_time = self.settings.station.date_config.end_time
+            
+            # Make sure both are datetime objects for comparison
+            if start_time is not None and end_time is not None:
+                # Convert to strings and back to datetime to ensure consistency
+                start_str = start_time.isoformat() if hasattr(start_time, 'isoformat') else str(start_time)
+                end_str = end_time.isoformat() if hasattr(end_time, 'isoformat') else str(end_time)
+                
+                # Parse strings to datetime objects
+                try:
+                    parsed_start = datetime.fromisoformat(start_str)
+                    parsed_end = datetime.fromisoformat(end_str)
+                    
+                    # Update the values to ensure they are datetime objects
+                    self.settings.station.date_config.start_time = parsed_start
+                    self.settings.station.date_config.end_time = parsed_end
+                    
+                    # Now compare the datetime objects
+                    if parsed_end <= parsed_start:
+                        st.session_state["date_range_valid"] = False
+                    else:
+                        st.session_state["date_range_valid"] = True
+                except (ValueError, TypeError):
+                    # If parsing fails, default to invalid to be safe
+                    st.session_state["date_range_valid"] = False
+            else:
+                # If either date is None, validation fails
+                st.session_state["date_range_valid"] = False
+        except Exception as e:
+            # Log any errors and set validation to false
+            print(f"Date validation error: {str(e)}")
+            st.session_state["date_range_valid"] = False
 
     def refresh_filters(self):
         """Check for changes and trigger updates"""
@@ -49,6 +90,8 @@ class ContinuousFilterMenu:
                 'start_time': current_time_state['start_time'],
                 'end_time': current_time_state['end_time']
             }
+            # Validate date range whenever time changes
+            self.validate_date_range()
             save_filter(self.settings)
             st.rerun()
 
@@ -114,23 +157,27 @@ class ContinuousFilterMenu:
                 if st.button("- Year", key="start-year-minus"):
                     self.settings.station.date_config.start_time = shift_time(
                         self.settings.station.date_config.start_time, 'year', -1)
+                    self.validate_date_range()
                     self.refresh_filters()
             
             with col2:
                 if st.button("+ Year", key="start-year-plus"):
                     self.settings.station.date_config.start_time = shift_time(
                         self.settings.station.date_config.start_time, 'year', 1)
+                    self.validate_date_range()
                     self.refresh_filters()
             with col3:
                 if st.button("-Year", key="end-year-minus"):
                     self.settings.station.date_config.end_time = shift_time(
                         self.settings.station.date_config.end_time, 'year', -1)
+                    self.validate_date_range()
                     self.refresh_filters()
             
             with col4:
                 if st.button("+Year", key="end-year-plus"):
                     self.settings.station.date_config.end_time = shift_time(
                         self.settings.station.date_config.end_time, 'year', 1)
+                    self.validate_date_range()
                     self.refresh_filters()                   
             
             # Month controls
@@ -138,23 +185,27 @@ class ContinuousFilterMenu:
                 if st.button("-Month", key="start-month-minus"):
                     self.settings.station.date_config.start_time = shift_time(
                         self.settings.station.date_config.start_time, 'month', -1)
+                    self.validate_date_range()
                     self.refresh_filters()
             
             with col6:
                 if st.button("+Month", key="start-month-plus"):
                     self.settings.station.date_config.start_time = shift_time(
                         self.settings.station.date_config.start_time, 'month', 1)
+                    self.validate_date_range()
                     self.refresh_filters()
             with col7:
                 if st.button("-Month", key="end-month-minus"):
                     self.settings.station.date_config.end_time = shift_time(
                         self.settings.station.date_config.end_time, 'month', -1)
+                    self.validate_date_range()
                     self.refresh_filters()
             
             with col8:
                 if st.button("+Month", key="end-month-plus"):
                     self.settings.station.date_config.end_time = shift_time(
                         self.settings.station.date_config.end_time, 'month', 1)
+                    self.validate_date_range()
                     self.refresh_filters()                    
             
             # Week controls
@@ -162,23 +213,27 @@ class ContinuousFilterMenu:
                 if st.button("-Week", key="start-week-minus"):
                     self.settings.station.date_config.start_time = shift_time(
                         self.settings.station.date_config.start_time, 'week', -1)
+                    self.validate_date_range()
                     self.refresh_filters()
             
             with col10:
                 if st.button("+Week", key="start-week-plus"):
                     self.settings.station.date_config.start_time = shift_time(
                         self.settings.station.date_config.start_time, 'week', 1)
+                    self.validate_date_range()
                     self.refresh_filters()
             with col11:
                 if st.button("-Week", key="end-week-minus"):
                     self.settings.station.date_config.end_time = shift_time(
                         self.settings.station.date_config.end_time, 'week', -1)
+                    self.validate_date_range()
                     self.refresh_filters()
             
             with col12:
                 if st.button("+Week", key="end-week-plus"):
                     self.settings.station.date_config.end_time = shift_time(
                         self.settings.station.date_config.end_time, 'week', 1)
+                    self.validate_date_range()
                     self.refresh_filters()
             
             # Day controls
@@ -212,21 +267,36 @@ class ContinuousFilterMenu:
             with c1:
                 new_start_date = st.date_input("Start Date", value=start_date)
                 new_start_time = st.time_input("Start Time (UTC)", value=start_time)
-                new_start = datetime.combine(new_start_date, new_start_time)
-                if new_start != self.settings.station.date_config.start_time:
+                
+                # Handle cases where only date or only time has changed
+                date_changed = new_start_date != start_date
+                time_changed = new_start_time != start_time
+                
+                if date_changed or time_changed:
+                    new_start = datetime.combine(new_start_date, new_start_time)
                     self.settings.station.date_config.start_time = new_start
                     self.last_button_pressed = None
+                    self.validate_date_range()
                     self.refresh_filters()
 
             with c2:
                 new_end_date = st.date_input("End Date", value=end_date)                
                 new_end_time = st.time_input("End Time (UTC)", value=end_time)
-                new_end = datetime.combine(new_end_date, new_end_time)
-                if new_end != self.settings.station.date_config.end_time:
+                
+                # Handle cases where only date or only time has changed
+                date_changed = new_end_date != end_date
+                time_changed = new_end_time != end_time
+                
+                if date_changed or time_changed:
+                    new_end = datetime.combine(new_end_date, new_end_time)
                     self.settings.station.date_config.end_time = new_end
                     self.last_button_pressed = None
+                    self.validate_date_range()
                     self.refresh_filters()
 
+            # Display validation message if date range is invalid
+            if not st.session_state.get("date_range_valid", True):
+                st.error("End time must be later than start time")
 
             # also keep the last month/week/day options
             c21,c22,c23 = st.columns([1,1,1])
@@ -235,6 +305,7 @@ class ContinuousFilterMenu:
                     end_time, start_time = get_time_interval('month')
                     self.settings.station.date_config.end_time = end_time
                     self.settings.station.date_config.start_time = start_time
+                    self.validate_date_range()  # Validate after updating times
                     self.refresh_filters()
 
             with c22:
@@ -242,6 +313,7 @@ class ContinuousFilterMenu:
                     end_time, start_time = get_time_interval('week')
                     self.settings.station.date_config.end_time = end_time
                     self.settings.station.date_config.start_time = start_time
+                    self.validate_date_range()  # Validate after updating times
                     self.refresh_filters()
 
             with c23:
@@ -249,6 +321,7 @@ class ContinuousFilterMenu:
                     end_time, start_time = get_time_interval('day')
                     self.settings.station.date_config.end_time = end_time
                     self.settings.station.date_config.start_time = start_time
+                    self.validate_date_range()  # Validate after updating times
                     self.refresh_filters()
 
         with st.sidebar.expander("Submitted NSLCs:", expanded=True):
@@ -342,7 +415,7 @@ class ContinuousDisplay:
             get_waveforms_button = st.button(
                 "Download Waveforms",
                 key="download_continuous",
-                disabled=st.session_state.get("is_downloading", False),
+                disabled=st.session_state.get("is_downloading", False) or not st.session_state.get("date_range_valid", True),
                 use_container_width=True
             )
 
@@ -356,7 +429,8 @@ class ContinuousDisplay:
                 st.warning("Cancelling download...")
                 st.session_state.update({
                     "is_downloading": False,
-                    "polling_active": False
+                    "polling_active": False,
+                    "download_cancelled": True  # Add this flag to track cancellation
                 })
                 st.rerun()
 
@@ -419,6 +493,8 @@ class ContinuousDisplay:
                     )
                     
                     log_container.markdown(log_text, unsafe_allow_html=True)
+        elif st.session_state.get("download_cancelled"):
+            status_container.warning("Download was cancelled by user.")
         elif st.session_state.get("query_done"):
             status_container.success("Continuous data processing completed successfully!")
 
@@ -433,7 +509,8 @@ class ContinuousDisplay:
         st.session_state.update({
             "is_downloading": True,
             "query_done": False,
-            "polling_active": True
+            "polling_active": True,
+            "download_cancelled": False  # Reset cancellation flag when starting new download
         })
 
         st.rerun()
@@ -459,7 +536,8 @@ class ContinuousComponents:
             "polling_active": False,
             "query_thread": None,
             "trigger_rerun": False,
-            "log_entries": []
+            "log_entries": [],
+            "date_range_valid": True
         }
         for key, val in required_states.items():
             if key not in st.session_state:
@@ -511,7 +589,7 @@ class ContinuousComponents:
 
             # Always trigger a rerun while polling is active to check for new logs
             if st.session_state.get("polling_active"):
-                time.sleep(0.2)  # Shorter pause for more frequent updates
+                systime.sleep(0.2)  # Shorter pause for more frequent updates
                 st.rerun()
         
     def render(self):

@@ -435,7 +435,11 @@ class WaveformDisplay:
                 stop_event.clear()
             else:
                 success = False
-                print("Download failed or was cancelled.")
+                if stop_event.is_set():
+                    print("Download was cancelled by user.")
+                    st.session_state["download_cancelled"] = True
+                else:
+                    print("Download failed.")
         except Exception as e:
             success = False
             print(f"Error: {str(e)}") 
@@ -472,7 +476,8 @@ class WaveformDisplay:
         st.session_state.update({
             "is_downloading": True,
             "query_done": False,
-            "polling_active": True
+            "polling_active": True,
+            "download_cancelled": False  # Initialize cancellation flag
         })
 
         st.rerun()
@@ -1039,11 +1044,10 @@ class WaveformComponents:
                         disabled=not st.session_state.get("is_downloading", False),
                         use_container_width=True):
                 stop_event.set()  # Signal cancellation
-                st.warning("Cancel requested but finishing current request...")
-                #st.session_state.update({
-                #    "is_downloading": False,
-                #    "polling_active": False
-                #})
+                st.warning("Cancelling download...")
+                st.session_state.update({
+                    "download_cancelled": True  # Set cancellation flag
+                })
                 st.rerun()
 
         # Download status indicator
@@ -1110,7 +1114,12 @@ class WaveformComponents:
         elif st.session_state.get("query_done") and self.waveform_display.stream:
             status_container.success(f"Successfully retrieved waveforms for {len(self.waveform_display.stream)} channels.")
         elif st.session_state.get("query_done"):
-            status_container.warning("No waveforms retrieved. Please check your selection criteria and log view.")
+            if st.session_state.get("download_cancelled", False):
+                status_container.warning("Waveform download was cancelled by user.")
+                # Reset the flag after displaying
+                st.session_state["download_cancelled"] = False
+            else:
+                status_container.warning("No waveforms retrieved. Please check your selection criteria and log view.")
 
         # Display waveforms if they exist
         if self.waveform_display.stream:
