@@ -406,16 +406,16 @@ class BaseComponent:
 
                 c11, c12, c13 = st.columns([1,1,1])
                 with c11:
+                    if st.button('Last Year', key="station-set-last-year"):
+                        self.settings.station.date_config.end_time, self.settings.station.date_config.start_time = get_time_interval('year')
+                        st.rerun()
+                with c12:
                     if st.button('Last Month', key="station-set-last-month"):
                         self.settings.station.date_config.end_time, self.settings.station.date_config.start_time = get_time_interval('month')
                         st.rerun()
-                with c12:
+                with c13:
                     if st.button('Last Week', key="station-set-last-week"):
                         self.settings.station.date_config.end_time, self.settings.station.date_config.start_time = get_time_interval('week')
-                        st.rerun()
-                with c13:
-                    if st.button('Last Day', key="station-set-last-day"):
-                        self.settings.station.date_config.end_time, self.settings.station.date_config.start_time = get_time_interval('day')
                         st.rerun()
 
                 c11, c12 = st.columns([1,1])
@@ -649,7 +649,7 @@ class BaseComponent:
                         self.settings.station.selected_invs = self.inventories.select(station=row["station"])
                         is_init = True
                     else:
-                        self.settings.station.selected_invs += self.inventories.select(station=row["station"])
+                        self.settings.station.selected_invs += self.inventories.select(station=row["station"]) # may need to review for efficiency
             return
 
 
@@ -1479,7 +1479,7 @@ class BaseComponent:
             return
 
 
-        df_selected["display_label"] = df_selected[unique_columns].astype(str).agg(" | ".join, axis=1)
+        df_selected["display_label"] = df_selected[unique_columns].astype(str).agg(".".join, axis=1)
         
         selected_items = df_selected["display_label"].tolist()
 
