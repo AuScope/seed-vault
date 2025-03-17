@@ -10,7 +10,7 @@ SEED-vault supports multiple operational workflows to accommodate different seis
    flows/events_based
    flows/station_based
    flows/continuous_based
-   flows/run_from_parameters
+   .. flows/run_from_parameters
 
 Workflow Components
 ------------------

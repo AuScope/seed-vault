@@ -1092,12 +1092,12 @@ class SeismoLoaderSettings(BaseModel):
                 )
             )
 
-        elif geo_constraint_type is not None:  # Invalid type provided
-            # Log error for invalid geo_constraint types
-            status_handler.add_error("input_parameters" ,
-                f"Invalid 'geo_constraint' type '{geo_constraint_type}' in the [{section}] section. "
-                f"Allowed values are 'BOUNDING' or 'CIRCLE'."
-            )
+        # elif geo_constraint_type is not None:  # Invalid type provided
+        #     # Log error for invalid geo_constraint types
+        #     status_handler.add_error("input_parameters" ,
+        #         f"Invalid 'geo_constraint' type '{geo_constraint_type}' in the [{section}] section. "
+        #         f"Allowed values are 'BOUNDING' or 'CIRCLE'."
+        #     )
 
         return geo_constraint
 
