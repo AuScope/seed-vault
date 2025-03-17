@@ -1467,7 +1467,7 @@ class BaseComponent:
             return
 
         if self.step_type == Steps.EVENT:
-            unique_columns = ["place", "magnitude"]
+            unique_columns = ["place", "time"]
 
         elif self.step_type == Steps.STATION:
             unique_columns = ["network", "station"]
