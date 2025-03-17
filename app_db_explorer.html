@@ -88,7 +88,10 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="app_run_from_config.html">Direct parameter input</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Database Explorer</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#execute-sql-tab">Execute SQL Tab</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#execute-sql-tab">Execute SQL Tab</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#sql-reference">SQL Reference</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#query-history-tab">Query History Tab</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#db-schema-tab">DB Schema Tab</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#example-queries-tab">Example Queries Tab</a></li>
@@ -166,18 +169,32 @@
 <section id="execute-sql-tab">
 <h2>Execute SQL Tab<a class="headerlink" href="#execute-sql-tab" title="Link to this heading"></a></h2>
 <img alt="_images/db-execute.png" src="_images/db-execute.png" />
+<p>If you have the “Execute SQL” tab selected, you see a text window from which you can enter in SQL commands to query the local database.</p>
+<p>After you have entered your SQL query you hit the red “Apply” button and the results can be seen in a table underneath the text window.</p>
+<p>If the query was successfully executed then a green banner will be displayed. If there is a syntax error in the query, for example, a red banner will be displayed describing the error.</p>
+<section id="sql-reference">
+<h3>SQL Reference<a class="headerlink" href="#sql-reference" title="Link to this heading"></a></h3>
+<p><a class="reference external" href="https://www.sqlite.org/lang.html">SQLITE Database Language Reference</a></p>
+</section>
 </section>
 <section id="query-history-tab">
 <h2>Query History Tab<a class="headerlink" href="#query-history-tab" title="Link to this heading"></a></h2>
 <img alt="_images/db-history.png" src="_images/db-history.png" />
+<p>If you have the “Query History” tab selected you will see a list of past SQL queries.</p>
+<p>To copy a command move your mouse pointer to the command, then across to the far right and click on the copy icon. This will copy the command to the clipboard when can then be pasted into the “SQL Reference” tab.</p>
 </section>
 <section id="db-schema-tab">
 <h2>DB Schema Tab<a class="headerlink" href="#db-schema-tab" title="Link to this heading"></a></h2>
 <img alt="_images/db-schema.png" src="_images/db-schema.png" />
+<p>This tab displays the database tables used by seed-vault.</p>
+<p>The ‘archive_data’ table stores metadata concerning where and when the events occurred.</p>
+<p>The ‘arrival_data’ table stores seismic event data.</p>
 </section>
 <section id="example-queries-tab">
 <h2>Example Queries Tab<a class="headerlink" href="#example-queries-tab" title="Link to this heading"></a></h2>
 <img alt="_images/db-examples.png" src="_images/db-examples.png" />
+<p>Here we have example queries that can be copied to the clipboard for use in the “Execute SQL” tab.</p>
+<p>To copy a command move your mouse pointer to the command, then across to the far right and click on the copy icon. This will copy the command to the clipboard when can then be pasted into the “SQL Reference” tab.</p>
 </section>
 </section>
 

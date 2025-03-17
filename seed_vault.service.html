@@ -88,7 +88,10 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="app_run_from_config.html">Direct parameter input</a></li>
 <li class="toctree-l2"><a class="reference internal" href="app_db_explorer.html">Database Explorer</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="app_db_explorer.html#execute-sql-tab">Execute SQL Tab</a></li>
+<li class="toctree-l3"><a class="reference internal" href="app_db_explorer.html#execute-sql-tab">Execute SQL Tab</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="app_db_explorer.html#sql-reference">SQL Reference</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="app_db_explorer.html#query-history-tab">Query History Tab</a></li>
 <li class="toctree-l3"><a class="reference internal" href="app_db_explorer.html#db-schema-tab">DB Schema Tab</a></li>
 <li class="toctree-l3"><a class="reference internal" href="app_db_explorer.html#example-queries-tab">Example Queries Tab</a></li>
@@ -238,6 +241,30 @@ and querying for seismic archive and arrival data.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.check_data_existence">
+<span class="sig-name descname"><span class="pre">check_data_existence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">netcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stacode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">location</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">starttime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">endtime</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/db.html#DatabaseManager.check_data_existence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.check_data_existence" title="Link to this definition"></a></dt>
+<dd><p>Run a simple check to see if a db element exists for a trace</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>db_manager</strong> (<a class="reference internal" href="#seed_vault.service.db.DatabaseManager" title="seed_vault.service.db.DatabaseManager"><em>DatabaseManager</em></a>) – Database manager instance</p></li>
+<li><p><strong>network</strong> (<em>str</em>) – Network code</p></li>
+<li><p><strong>station</strong> (<em>str</em>) – Station code</p></li>
+<li><p><strong>location</strong> (<em>str</em>) – Location code</p></li>
+<li><p><strong>channel</strong> (<em>str</em>) – Channel code</p></li>
+<li><p><strong>start/endtime</strong> (<em>str</em>) – Time in iso</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if data exists for the specified parameters, False otherwise</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
 </dd></dl>
@@ -995,7 +1022,7 @@ Returns empty catalog if no events found.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="seed_vault.service.seismoloader.get_missing_from_request">
-<span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">get_missing_from_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eq_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">requests</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">st</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/seismoloader.html#get_missing_from_request"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.get_missing_from_request" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">get_missing_from_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_manager</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eq_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">requests</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">st</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/seismoloader.html#get_missing_from_request"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.get_missing_from_request" title="Link to this definition"></a></dt>
 <dd><p>Compare requested seismic data against what’s present in a Stream.
 Handles comma-separated values for location and channel codes.</p>
 <dl class="field-list simple">
@@ -1504,6 +1531,7 @@ here that gets the selection and runs Rob’s script.</p>
 <span class="sig-prename descclassname"><span class="pre">seed_vault.service.utils.</span></span><span class="sig-name descname"><span class="pre">convert_to_datetime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/utils.html#convert_to_datetime"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.utils.convert_to_datetime" title="Link to this definition"></a></dt>
 <dd><p>Convert a string or other value to a date and time object, handling different formats.</p>
 <p>If only a date is provided, it defaults to 00:00:00 time.</p>
+<p>note that this returns a tuple of (date, time)</p>
 </dd></dl>
 
 <dl class="py function">
@@ -1691,6 +1719,27 @@ The first occurrence of each resource_id is kept.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="seed_vault.service.waveform.get_local_waveform">
 <span class="sig-prename descclassname"><span class="pre">seed_vault.service.waveform.</span></span><span class="sig-name descname"><span class="pre">get_local_waveform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/waveform.html#get_local_waveform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.waveform.get_local_waveform" title="Link to this definition"></a></dt>
+<dd><p>Get waveform data from a local client, handling comma-separated values for network,
+station, location, and channel fields. Unlike remote requests, local SDS does not handle such things.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>request</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – Tuple containing (network, station, location, channel, starttime, endtime)</p></li>
+<li><p><strong>settings</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings"><code class="xref py py-class docutils literal notranslate"><span class="pre">SeismoLoaderSettings</span></code></a></span>) – Settings object containing SDS path</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Stream</span></code>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Stream object containing requested waveform data, or None if no data found</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.waveform.get_local_waveform_OLD">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.waveform.</span></span><span class="sig-name descname"><span class="pre">get_local_waveform_OLD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/service/waveform.html#get_local_waveform_OLD"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.waveform.get_local_waveform_OLD" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">

@@ -85,7 +85,10 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../app_run_from_config.html">Direct parameter input</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../app_db_explorer.html">Database Explorer</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../app_db_explorer.html#execute-sql-tab">Execute SQL Tab</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../app_db_explorer.html#execute-sql-tab">Execute SQL Tab</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../app_db_explorer.html#sql-reference">SQL Reference</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../../../app_db_explorer.html#query-history-tab">Query History Tab</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../app_db_explorer.html#db-schema-tab">DB Schema Tab</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../app_db_explorer.html#example-queries-tab">Example Queries Tab</a></li>
@@ -174,7 +177,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">fnmatch</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">multiprocessing</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">obspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">UTCDateTime</span><span class="p">,</span><span class="n">Stream</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">obspy.core.stream</span><span class="w"> </span><span class="kn">import</span> <span class="n">read</span> <span class="k">as</span> <span class="n">streamread</span>
@@ -936,6 +939,47 @@
             <span class="n">cursor</span><span class="o">.</span><span class="n">executemany</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">arrival_list</span><span class="p">)</span>
             
             <span class="k">return</span> <span class="n">cursor</span><span class="o">.</span><span class="n">rowcount</span></div>
+
+
+<div class="viewcode-block" id="DatabaseManager.check_data_existence">
+<a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.DatabaseManager.check_data_existence">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_data_existence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">netcode</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">stacode</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">location</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">starttime</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">endtime</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run a simple check to see if a db element exists for a trace</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            db_manager (DatabaseManager): Database manager instance</span>
+<span class="sd">            network (str): Network code</span>
+<span class="sd">            station (str): Station code</span>
+<span class="sd">            location (str): Location code</span>
+<span class="sd">            channel (str): Channel code</span>
+<span class="sd">            start/endtime (str): Time in iso</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: True if data exists for the specified parameters, False otherwise</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">time_point</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">starttime</span><span class="p">)</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span> <span class="c1"># just 5 seconds in is fine</span>
+        
+        <span class="c1"># Use the connection context manager from the DatabaseManager</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+            <span class="n">cursor</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+            
+            <span class="c1"># Query to check if any record spans the given time point</span>
+            <span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                SELECT COUNT(*) FROM archive_data</span>
+<span class="s2">                WHERE network = ? </span>
+<span class="s2">                AND station = ? </span>
+<span class="s2">                AND location = ? </span>
+<span class="s2">                AND channel = ?</span>
+<span class="s2">                AND starttime &lt;= ?</span>
+<span class="s2">                AND endtime &gt;= ?</span>
+<span class="s2">            &quot;&quot;&quot;</span>
+            
+            <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="p">(</span><span class="n">netcode</span><span class="p">,</span> <span class="n">stacode</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span> <span class="n">starttime</span><span class="p">,</span> <span class="n">endtime</span><span class="p">))</span>
+            <span class="n">count</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+            
+            <span class="k">return</span> <span class="n">count</span> <span class="o">&gt;</span> <span class="mi">0</span>        </div>
 
 
 <div class="viewcode-block" id="DatabaseManager.get_arrival_data">

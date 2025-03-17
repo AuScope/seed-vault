@@ -85,7 +85,10 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../app_run_from_config.html">Direct parameter input</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../app_db_explorer.html">Database Explorer</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../../app_db_explorer.html#execute-sql-tab">Execute SQL Tab</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../app_db_explorer.html#execute-sql-tab">Execute SQL Tab</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../app_db_explorer.html#sql-reference">SQL Reference</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../app_db_explorer.html#query-history-tab">Query History Tab</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../app_db_explorer.html#db-schema-tab">DB Schema Tab</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../app_db_explorer.html#example-queries-tab">Example Queries Tab</a></li>
@@ -205,12 +208,20 @@
     <span class="k">if</span> <span class="n">senstype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span><span class="s1">&#39;N&#39;</span><span class="p">]:</span>
         <span class="k">return</span> <span class="mi">0</span><span class="p">,</span><span class="mi">0</span> <span class="c1"># flagged elsewhere</span>
 
-    <span class="k">if</span> <span class="n">distance_km</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">distance_km</span> <span class="o">&lt;</span> <span class="mi">50</span><span class="p">:</span>
         <span class="n">f0</span><span class="p">,</span><span class="n">f1</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">,</span><span class="mi">15</span>
+    <span class="k">elif</span> <span class="n">distance_km</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="p">:</span>
+        <span class="n">f0</span><span class="p">,</span><span class="n">f1</span> <span class="o">=</span> <span class="mf">1.8</span><span class="p">,</span><span class="mi">12</span>
+    <span class="k">elif</span> <span class="n">distance_km</span> <span class="o">&lt;</span> <span class="mi">250</span><span class="p">:</span>
+        <span class="n">f0</span><span class="p">,</span><span class="n">f1</span> <span class="o">=</span> <span class="mf">1.7</span><span class="p">,</span><span class="mi">10</span>
     <span class="k">elif</span> <span class="n">distance_km</span> <span class="o">&lt;</span> <span class="mi">500</span><span class="p">:</span>
-        <span class="n">f0</span><span class="p">,</span><span class="n">f1</span> <span class="o">=</span> <span class="mf">1.8</span><span class="p">,</span><span class="mi">8</span>
-    <span class="k">elif</span> <span class="n">distance_km</span> <span class="o">&lt;</span> <span class="mi">3000</span><span class="p">:</span>
+        <span class="n">f0</span><span class="p">,</span><span class="n">f1</span> <span class="o">=</span> <span class="mf">1.6</span><span class="p">,</span><span class="mi">8</span>
+    <span class="k">elif</span> <span class="n">distance_km</span> <span class="o">&lt;</span> <span class="mi">1000</span><span class="p">:</span>
+        <span class="n">f0</span><span class="p">,</span><span class="n">f1</span> <span class="o">=</span> <span class="mf">1.5</span><span class="p">,</span><span class="mi">6</span>
+    <span class="k">elif</span> <span class="n">distance_km</span> <span class="o">&lt;</span> <span class="mi">2500</span><span class="p">:</span>
         <span class="n">f0</span><span class="p">,</span><span class="n">f1</span> <span class="o">=</span> <span class="mf">1.4</span><span class="p">,</span><span class="mi">5</span>
+    <span class="k">elif</span> <span class="n">distance_km</span> <span class="o">&lt;</span> <span class="mi">5000</span><span class="p">:</span>
+        <span class="n">f0</span><span class="p">,</span><span class="n">f1</span> <span class="o">=</span> <span class="mf">1.2</span><span class="p">,</span><span class="mi">4</span>        
     <span class="k">elif</span> <span class="n">distance_km</span> <span class="o">&lt;</span> <span class="mi">10000</span><span class="p">:</span>
         <span class="n">f0</span><span class="p">,</span><span class="n">f1</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span><span class="mi">3</span>
     <span class="k">else</span><span class="p">:</span>
@@ -1431,7 +1442,7 @@
 
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="n">missing_data_str</span> <span class="o">=</span> <span class="kc">None</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;DEBUG: missing data dict issue&quot;</span><span class="p">,</span><span class="n">e</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;DEBUG missing data dict issue: &quot;</span><span class="p">,</span><span class="n">e</span><span class="p">)</span>
 
 
             <span class="k">if</span> <span class="n">missing_data_str</span><span class="p">:</span>

@@ -85,7 +85,10 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../app_run_from_config.html">Direct parameter input</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../app_db_explorer.html">Database Explorer</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../app_db_explorer.html#execute-sql-tab">Execute SQL Tab</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../app_db_explorer.html#execute-sql-tab">Execute SQL Tab</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../app_db_explorer.html#sql-reference">SQL Reference</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../../../app_db_explorer.html#query-history-tab">Query History Tab</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../app_db_explorer.html#db-schema-tab">DB Schema Tab</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../app_db_explorer.html#example-queries-tab">Example Queries Tab</a></li>
@@ -220,6 +223,8 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a string or other value to a date and time object, handling different formats.</span>
 <span class="sd">    </span>
 <span class="sd">    If only a date is provided, it defaults to 00:00:00 time.</span>
+
+<span class="sd">    note that this returns a tuple of (date, time)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">datetime</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">date</span><span class="p">(),</span> <span class="n">value</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>

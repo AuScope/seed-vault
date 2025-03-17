@@ -85,7 +85,10 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../app_run_from_config.html">Direct parameter input</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../app_db_explorer.html">Database Explorer</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../app_db_explorer.html#execute-sql-tab">Execute SQL Tab</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../app_db_explorer.html#execute-sql-tab">Execute SQL Tab</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../app_db_explorer.html#sql-reference">SQL Reference</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../../../app_db_explorer.html#query-history-tab">Query History Tab</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../app_db_explorer.html#db-schema-tab">DB Schema Tab</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../app_db_explorer.html#example-queries-tab">Example Queries Tab</a></li>
@@ -160,9 +163,10 @@
   <h1>Source code for seed_vault.service.waveform</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuple</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">itertools</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">obspy</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">obspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">UTCDateTime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">obspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">UTCDateTime</span><span class="p">,</span> <span class="n">Stream</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">obspy.clients.filesystem.sds</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span> <span class="k">as</span> <span class="n">LocalClient</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.models.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">SeismoLoaderSettings</span><span class="p">,</span> <span class="n">SeismoQuery</span>
@@ -202,9 +206,73 @@
     <span class="k">return</span> <span class="kc">True</span></div>
 
 
+<span class="c1">#only in use for run_event</span>
 <div class="viewcode-block" id="get_local_waveform">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.waveform.get_local_waveform">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">get_local_waveform</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">settings</span><span class="p">:</span> <span class="n">SeismoLoaderSettings</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_local_waveform</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">settings</span><span class="p">:</span> <span class="n">SeismoLoaderSettings</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Stream</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get waveform data from a local client, handling comma-separated values for network, </span>
+<span class="sd">    station, location, and channel fields. Unlike remote requests, local SDS does not handle such things.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        request: Tuple containing (network, station, location, channel, starttime, endtime)</span>
+<span class="sd">        settings: Settings object containing SDS path</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Stream object containing requested waveform data, or None if no data found</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">client</span> <span class="o">=</span> <span class="n">LocalClient</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">sds_path</span><span class="p">)</span>
+    
+    <span class="c1"># Parse the comma-separated values</span>
+    <span class="n">networks</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">request</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)]</span>
+    <span class="n">stations</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">request</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)]</span>
+    <span class="c1"># sometimes location is &#39;&#39;...</span>
+    <span class="n">locations</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">request</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">loc</span> <span class="ow">in</span> <span class="n">request</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">):</span>
+            <span class="n">loc</span> <span class="o">=</span> <span class="n">loc</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+            <span class="n">locations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loc</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">locations</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">]</span>
+    <span class="n">channels</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">request</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)]</span>
+    
+    
+    <span class="n">combined_stream</span> <span class="o">=</span> <span class="n">Stream</span><span class="p">()</span>
+    
+    <span class="c1"># Generate all combinations of network, station, location, channel</span>
+    <span class="n">combinations</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">networks</span><span class="p">,</span> <span class="n">stations</span><span class="p">,</span> <span class="n">locations</span><span class="p">,</span> <span class="n">channels</span><span class="p">))</span>
+    
+    <span class="k">for</span> <span class="n">network</span><span class="p">,</span> <span class="n">station</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">channel</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;network&#39;</span><span class="p">:</span> <span class="n">network</span><span class="p">,</span>
+                <span class="s1">&#39;station&#39;</span><span class="p">:</span> <span class="n">station</span><span class="p">,</span>
+                <span class="s1">&#39;location&#39;</span><span class="p">:</span> <span class="n">location</span><span class="p">,</span>
+                <span class="s1">&#39;channel&#39;</span><span class="p">:</span> <span class="n">channel</span><span class="p">,</span>
+                <span class="s1">&#39;starttime&#39;</span><span class="p">:</span> <span class="n">UTCDateTime</span><span class="p">(</span><span class="n">request</span><span class="p">[</span><span class="mi">4</span><span class="p">]),</span>
+                <span class="s1">&#39;endtime&#39;</span><span class="p">:</span> <span class="n">UTCDateTime</span><span class="p">(</span><span class="n">request</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span>
+            <span class="p">}</span>
+            
+            <span class="n">stream</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_waveforms</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="n">stream</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">combined_stream</span> <span class="o">+=</span> <span class="n">stream</span>
+                
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="c1"># Continue to the next combination if this one fails</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;get_local_waveform problem:&quot;</span><span class="p">,</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">continue</span>
+    
+    <span class="c1"># Return the combined stream, or None if empty</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">combined_stream</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">combined_stream</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="get_local_waveform_OLD">
+<a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.waveform.get_local_waveform_OLD">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_local_waveform_OLD</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">settings</span><span class="p">:</span> <span class="n">SeismoLoaderSettings</span><span class="p">):</span>
     <span class="n">client</span> <span class="o">=</span> <span class="n">LocalClient</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">sds_path</span><span class="p">)</span>
     <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s1">&#39;network&#39;</span><span class="p">:</span> <span class="n">request</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span>
@@ -220,19 +288,6 @@
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
-<span class="c1">#this is a simpler version.. if the data doesn&#39;t exist it just returns an empty stream</span>
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">def get_local_waveform(req: SeismoQuery, settings: SeismoLoaderSettings):</span>
-<span class="sd">    client = LocalClient(settings.sds_path)</span>
-<span class="sd">    st = client.get_waveforms(network=req.network,station=req.station,</span>
-<span class="sd">                            location=req.location,channel=req.channel,</span>
-<span class="sd">                            starttime=UTCDateTime(req.starttime),endtime=UTCDateTime(req.endtime))</span>
-<span class="sd">    </span>
-<span class="sd">    # let&#39;s not raise this as en error. it&#39;s a pretty common occurence, it just means no data was downloaded/archived.</span>
-<span class="sd">    #if not st:</span>
-<span class="sd">    #    raise NotFoundError(&quot;Not Found: the requested data was not found in local archived database.&quot;)</span>
-<span class="sd">    return st</span>
-<span class="sd">&quot;&quot;&quot;</span>
 </pre></div>
 
            </div>

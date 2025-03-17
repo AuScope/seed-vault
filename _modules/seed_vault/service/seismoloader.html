@@ -85,7 +85,10 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../app_run_from_config.html">Direct parameter input</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../app_db_explorer.html">Database Explorer</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../app_db_explorer.html#execute-sql-tab">Execute SQL Tab</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../app_db_explorer.html#execute-sql-tab">Execute SQL Tab</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../app_db_explorer.html#sql-reference">SQL Reference</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../../../app_db_explorer.html#query-history-tab">Query History Tab</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../app_db_explorer.html#db-schema-tab">DB Schema Tab</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../app_db_explorer.html#example-queries-tab">Example Queries Tab</a></li>
@@ -751,10 +754,10 @@
 
             <span class="c1"># skip anything out of our search parameters</span>
             <span class="k">if</span> <span class="n">dist_deg</span> <span class="o">&lt;</span> <span class="n">min_radius</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Skipping </span><span class="si">{</span><span class="n">net</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">sta</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">  (distance </span><span class="si">{</span><span class="n">dist_deg</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> &lt; min_radius </span><span class="si">{</span><span class="n">min_radius</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Skipping </span><span class="si">{</span><span class="n">net</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">sta</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2"> </span><span class="se">\t</span><span class="s2">(distance </span><span class="si">{</span><span class="n">dist_deg</span><span class="si">:</span><span class="s2">4.1f</span><span class="si">}</span><span class="s2"> &lt; min_radius </span><span class="si">{</span><span class="n">min_radius</span><span class="si">:</span><span class="s2">4.1f</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
                 <span class="k">continue</span>
             <span class="k">elif</span> <span class="n">dist_deg</span> <span class="o">&gt;</span> <span class="n">max_radius</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Skipping </span><span class="si">{</span><span class="n">net</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">sta</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">  (distance </span><span class="si">{</span><span class="n">dist_deg</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> &gt; max_radius </span><span class="si">{</span><span class="n">max_radius</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Skipping </span><span class="si">{</span><span class="n">net</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">sta</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2"> </span><span class="se">\t</span><span class="s2">(distance </span><span class="si">{</span><span class="n">dist_deg</span><span class="si">:</span><span class="s2">4.1f</span><span class="si">}</span><span class="s2"> &gt; max_radius </span><span class="si">{</span><span class="n">max_radius</span><span class="si">:</span><span class="s2">4.1f</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
                 <span class="k">continue</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="c1"># Generate requests for each channel</span>
@@ -833,10 +836,10 @@
     <span class="k">return</span> <span class="n">combined_requests</span></div>
 
 
-
+<span class="c1">## need to also search the archive!! we&#39;re assuming db_manager already loaded as this is ran from run_events</span>
 <div class="viewcode-block" id="get_missing_from_request">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.seismoloader.get_missing_from_request">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">get_missing_from_request</span><span class="p">(</span><span class="n">eq_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">requests</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">],</span> <span class="n">st</span><span class="p">:</span> <span class="n">Stream</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_missing_from_request</span><span class="p">(</span><span class="n">db_manager</span><span class="p">,</span> <span class="n">eq_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">requests</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">],</span> <span class="n">st</span><span class="p">:</span> <span class="n">Stream</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Compare requested seismic data against what&#39;s present in a Stream.</span>
 <span class="sd">    Handles comma-separated values for location and channel codes.</span>
@@ -872,7 +875,7 @@
     
     <span class="c1"># Process each request</span>
     <span class="k">for</span> <span class="n">request</span> <span class="ow">in</span> <span class="n">requests</span><span class="p">:</span>
-        <span class="n">net</span><span class="p">,</span> <span class="n">sta</span><span class="p">,</span> <span class="n">loc</span><span class="p">,</span> <span class="n">cha</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">request</span>  <span class="c1"># Ignore time windows</span>
+        <span class="n">net</span><span class="p">,</span> <span class="n">sta</span><span class="p">,</span> <span class="n">loc</span><span class="p">,</span> <span class="n">cha</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">t1</span> <span class="o">=</span> <span class="n">request</span> <span class="c1">#only using t0 really</span>
         <span class="n">station_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">net</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">sta</span><span class="si">}</span><span class="s2">&quot;</span>
         
         <span class="c1"># Split location and channel if comma-separated</span>
@@ -889,11 +892,23 @@
                 <span class="n">total_combinations</span> <span class="o">+=</span> <span class="mi">1</span>
                 <span class="c1"># Look for matching trace</span>
                 <span class="n">found_match</span> <span class="o">=</span> <span class="kc">False</span>
+
                 <span class="k">for</span> <span class="n">tr</span> <span class="ow">in</span> <span class="n">st</span><span class="p">:</span>
+
+                    <span class="c1"># check the recently downloaded stream</span>
                     <span class="k">if</span> <span class="p">(</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">network</span> <span class="o">==</span> <span class="n">net</span> <span class="ow">and</span> 
                         <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">station</span> <span class="o">==</span> <span class="n">sta</span> <span class="ow">and</span>
                         <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">location</span> <span class="o">==</span> <span class="p">(</span><span class="n">location</span> <span class="k">if</span> <span class="n">location</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="ow">and</span>
                         <span class="n">fnmatch</span><span class="o">.</span><span class="n">fnmatch</span><span class="p">(</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">channel</span><span class="p">,</span> <span class="n">channel</span><span class="p">)):</span>
+                        <span class="n">found_match</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">break</span>
+
+                    <span class="c1"># also check the database</span>
+                    <span class="k">if</span> <span class="n">db_manager</span><span class="o">.</span><span class="n">check_data_existence</span><span class="p">(</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">network</span><span class="p">,</span>
+                                                    <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">station</span><span class="p">,</span>
+                                                    <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">location</span><span class="p">,</span>
+                                                    <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">channel</span><span class="p">,</span>
+                                                    <span class="n">t0</span><span class="p">,</span><span class="n">t1</span><span class="p">):</span>
                         <span class="n">found_match</span> <span class="o">=</span> <span class="kc">True</span>
                         <span class="k">break</span>
                 
@@ -1715,7 +1730,7 @@
 
     <span class="c1"># Break if nothing to do</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">pruned_requests</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;          ... already archived!&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;          ... Data already archived!&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">True</span>
 
     <span class="c1"># Check for cancellation after request pruning</span>
@@ -1836,12 +1851,12 @@
 
     <span class="n">all_event_traces</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">all_missing</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">event_stream</span> <span class="o">=</span> <span class="n">Stream</span><span class="p">()</span>
+
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">eq</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">selected_catalogs</span><span class="p">):</span>
 
         <span class="k">if</span> <span class="n">stop_event</span> <span class="ow">and</span> <span class="n">stop_event</span><span class="o">.</span><span class="n">is_set</span><span class="p">():</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Cancelling run_event!&quot;</span><span class="p">)</span>
-            <span class="n">stop_event</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+            <span class="c1"># ? stop_event.clear()</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">~~ Cleaning up database ~~&quot;</span><span class="p">)</span>
                 <span class="n">db_manager</span><span class="o">.</span><span class="n">join_continuous_segments</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">processing</span><span class="o">.</span><span class="n">gap_tolerance</span><span class="p">)</span>
@@ -1857,9 +1872,10 @@
             <span class="n">event_region</span> <span class="o">=</span> <span class="n">eq</span><span class="o">.</span><span class="n">event_descriptions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span>
         <span class="k">except</span><span class="p">:</span>
             <span class="n">event_region</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span> <span class="c1"># hack to make streamlit in-app log does not handle newlines properly</span>
         <span class="nb">print</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Processing event </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">selected_catalogs</span><span class="p">)</span><span class="si">}</span><span class="s2"> | &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">event_region</span><span class="si">}</span><span class="s2"> | &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">event_region</span><span class="si">:</span><span class="s2">^35</span><span class="si">}</span><span class="s2"> | &quot;</span>
             <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">eq</span><span class="o">.</span><span class="n">origins</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">time</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="mi">16</span><span class="p">]</span><span class="si">}</span><span class="s2"> &quot;</span>
             <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">eq</span><span class="o">.</span><span class="n">origins</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">latitude</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">eq</span><span class="o">.</span><span class="n">origins</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">longitude</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">)&quot;</span>
         <span class="p">)</span>
@@ -1892,7 +1908,7 @@
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Issue with run_event &gt; prune_requests:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,{</span><span class="n">e</span><span class="p">})</span>
         
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">requests</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">pruned_requests</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Data already in archive&quot;</span><span class="p">)</span> <span class="c1">#TODO add similar to continuous</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    All data already in archive&quot;</span><span class="p">)</span>
 
         <span class="c1"># Download new data if needed</span>
         <span class="k">if</span> <span class="n">pruned_requests</span><span class="p">:</span>
@@ -1902,7 +1918,7 @@
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Issue with run_event &gt; combine_requests:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,{</span><span class="n">e</span><span class="p">})</span>
 
             <span class="k">if</span> <span class="ow">not</span> <span class="n">combined_requests</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;DEBUG combined requests is empty? here was pruned_requests&quot;</span><span class="p">,</span><span class="n">pruned_requests</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;DEBUG: combined requests is empty? here was pruned_requests&quot;</span><span class="p">,</span><span class="n">pruned_requests</span><span class="p">)</span>
                 <span class="k">continue</span>
             
             <span class="c1"># Setup authenticated clients</span>
@@ -1926,21 +1942,7 @@
             <span class="c1"># Process requests</span>
             <span class="k">for</span> <span class="n">request</span> <span class="ow">in</span> <span class="n">combined_requests</span><span class="p">:</span>
 
-                <span class="k">if</span> <span class="n">stop_event</span> <span class="ow">and</span> <span class="n">stop_event</span><span class="o">.</span><span class="n">is_set</span><span class="p">():</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Cancelling run_event!&quot;</span><span class="p">)</span>
-                    <span class="n">stop_event</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
-                    <span class="k">try</span><span class="p">:</span>
-                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">~~ Cleaning up database ~~&quot;</span><span class="p">)</span>
-                        <span class="n">db_manager</span><span class="o">.</span><span class="n">join_continuous_segments</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">processing</span><span class="o">.</span><span class="n">gap_tolerance</span><span class="p">)</span>
-                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;! Error with join_continuous_segments: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-                    <span class="k">if</span> <span class="n">all_event_traces</span><span class="p">:</span>
-                        <span class="k">return</span> <span class="n">all_event_traces</span><span class="p">,</span> <span class="n">all_missing</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="k">return</span> <span class="kc">None</span>
-                
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Requesting: </span><span class="si">{</span><span class="n">request</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Requesting: </span><span class="si">{</span><span class="n">request</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">archive_request</span><span class="p">(</span>
                         <span class="n">request</span><span class="p">,</span>
@@ -1951,47 +1953,67 @@
                 <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error archiving request </span><span class="si">{</span><span class="n">request</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="s2"> </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                     <span class="k">continue</span>
-                
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">st</span> <span class="o">=</span> <span class="n">get_local_waveform</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="n">st</span><span class="p">:</span>
-                        <span class="c1"># Add event metadata to traces</span>
-                        <span class="n">arrivals</span> <span class="o">=</span> <span class="n">db_manager</span><span class="o">.</span><span class="n">fetch_arrivals_distances</span><span class="p">(</span>
-                            <span class="n">eq</span><span class="o">.</span><span class="n">preferred_origin_id</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-                            <span class="n">request</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span> <span class="c1">#network</span>
-                            <span class="n">request</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="c1">#station</span>
-                            <span class="p">)</span>
-                        
-                        <span class="k">if</span> <span class="n">arrivals</span><span class="p">:</span>
-                            <span class="k">for</span> <span class="n">tr</span> <span class="ow">in</span> <span class="n">st</span><span class="p">:</span>
-                                <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">resource_id</span> <span class="o">=</span> <span class="n">eq</span><span class="o">.</span><span class="n">resource_id</span><span class="o">.</span><span class="n">id</span>
-                                <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">p_arrival</span> <span class="o">=</span> <span class="n">arrivals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                                <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">s_arrival</span> <span class="o">=</span> <span class="n">arrivals</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-                                <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">distance_km</span> <span class="o">=</span> <span class="n">arrivals</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-                                <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">distance_deg</span> <span class="o">=</span> <span class="n">arrivals</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
-                                <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">azimuth</span> <span class="o">=</span> <span class="n">arrivals</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
-                                <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">event_magnitude</span> <span class="o">=</span> <span class="n">eq</span><span class="o">.</span><span class="n">magnitudes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">mag</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="s1">&#39;magnitudes&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">eq</span><span class="o">.</span><span class="n">magnitudes</span> <span class="k">else</span> <span class="mf">0.99</span>
-                                <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">event_region</span> <span class="o">=</span> <span class="n">event_region</span>
-                                <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">event_time</span> <span class="o">=</span> <span class="n">eq</span><span class="o">.</span><span class="n">origins</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">time</span>
-                        
-                        <span class="n">event_stream</span> <span class="o">+=</span> <span class="n">st</span>
-                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error reading data for </span><span class="si">{</span><span class="n">request</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">request</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="s2"> </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                    <span class="k">continue</span>
 
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span> <span class="c1">#having newline issues in streamlet, but this works</span>
+                <span class="k">if</span> <span class="n">stop_event</span> <span class="ow">and</span> <span class="n">stop_event</span><span class="o">.</span><span class="n">is_set</span><span class="p">():</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Cancelling run_event!&quot;</span><span class="p">)</span>
+                    <span class="c1"># ? stop_event.clear()</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">~~ Cleaning up database ~~&quot;</span><span class="p">)</span>
+                        <span class="n">db_manager</span><span class="o">.</span><span class="n">join_continuous_segments</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">processing</span><span class="o">.</span><span class="n">gap_tolerance</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;! Error with join_continuous_segments: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-        <span class="c1"># Now attempt to keep track of what data was missing. Note that this is not catching out-of-bounds data, for better or worse (probably better)</span>
-        <span class="n">missing</span> <span class="o">=</span> <span class="n">get_missing_from_request</span><span class="p">(</span><span class="n">eq</span><span class="o">.</span><span class="n">resource_id</span><span class="o">.</span><span class="n">id</span><span class="p">,</span><span class="n">requests</span><span class="p">,</span><span class="n">event_stream</span><span class="p">)</span>
-        <span class="c1">#print(&quot;DEBUG missing: &quot;, missing)</span>
-        <span class="c1">#print(&quot;DEBUG stream: &quot;, event_stream)</span>
-        <span class="c1">#print(&quot;DEBUG requests: &quot;, requests)</span>
+                    <span class="k">if</span> <span class="n">all_event_traces</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">all_event_traces</span><span class="p">,</span> <span class="n">all_missing</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="kc">None</span>
 
-        <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
-            <span class="n">all_missing</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span>
+        <span class="c1"># Now load everything in from our archive</span>
+        <span class="n">event_stream</span> <span class="o">=</span> <span class="n">Stream</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">request</span> <span class="ow">in</span> <span class="n">requests</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">st</span> <span class="o">=</span> <span class="n">get_local_waveform</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">st</span><span class="p">:</span>
+                    <span class="c1"># Add event metadata to traces</span>
+                    <span class="n">arrivals</span> <span class="o">=</span> <span class="n">db_manager</span><span class="o">.</span><span class="n">fetch_arrivals_distances</span><span class="p">(</span>
+                        <span class="n">eq</span><span class="o">.</span><span class="n">preferred_origin_id</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                        <span class="n">request</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span> <span class="c1"># network</span>
+                        <span class="n">request</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>  <span class="c1"># station</span>
+                        <span class="p">)</span>
+                    
+                    <span class="k">if</span> <span class="n">arrivals</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">tr</span> <span class="ow">in</span> <span class="n">st</span><span class="p">:</span>
+                            <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">resource_id</span> <span class="o">=</span> <span class="n">eq</span><span class="o">.</span><span class="n">resource_id</span><span class="o">.</span><span class="n">id</span>
+                            <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">p_arrival</span> <span class="o">=</span> <span class="n">arrivals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                            <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">s_arrival</span> <span class="o">=</span> <span class="n">arrivals</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                            <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">distance_km</span> <span class="o">=</span> <span class="n">arrivals</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                            <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">distance_deg</span> <span class="o">=</span> <span class="n">arrivals</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+                            <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">azimuth</span> <span class="o">=</span> <span class="n">arrivals</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+                            <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">event_magnitude</span> <span class="o">=</span> <span class="n">eq</span><span class="o">.</span><span class="n">magnitudes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">mag</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="s1">&#39;magnitudes&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">eq</span><span class="o">.</span><span class="n">magnitudes</span> <span class="k">else</span> <span class="mf">0.99</span>
+                            <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">event_region</span> <span class="o">=</span> <span class="n">event_region</span>
+                            <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">event_time</span> <span class="o">=</span> <span class="n">eq</span><span class="o">.</span><span class="n">origins</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">time</span>
+                    
+                    <span class="n">event_stream</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">st</span><span class="p">)</span>
 
+
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error reading data for </span><span class="si">{</span><span class="n">request</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">request</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="s2"> </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+
+        <span class="c1"># Now attempt to keep track of what data was missing. </span>
+        <span class="c1"># Note that this is not catching out-of-bounds data, for better or worse (probably better)</span>
         <span class="k">if</span> <span class="n">event_stream</span><span class="p">:</span>
+
             <span class="n">all_event_traces</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">event_stream</span><span class="p">)</span>
+
+            <span class="k">try</span><span class="p">:</span> 
+                <span class="n">missing</span> <span class="o">=</span> <span class="n">get_missing_from_request</span><span class="p">(</span><span class="n">db_manager</span><span class="p">,</span><span class="n">eq</span><span class="o">.</span><span class="n">resource_id</span><span class="o">.</span><span class="n">id</span><span class="p">,</span><span class="n">requests</span><span class="p">,</span><span class="n">event_stream</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;get_missing_from_request issue:&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+                <span class="n">all_missing</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span>
 
 
     <span class="c1"># Final database cleanup</span>
@@ -2001,7 +2023,11 @@
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;! Error with join_continuous_segments: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">all_event_traces</span><span class="p">,</span> <span class="n">all_missing</span></div>
+    <span class="c1"># And return to ui/components/waveform.py</span>
+    <span class="k">if</span> <span class="n">all_event_traces</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">all_event_traces</span><span class="p">,</span> <span class="n">all_missing</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
 
 
@@ -2068,7 +2094,6 @@
     <span class="k">if</span> <span class="n">download_type</span> <span class="o">==</span> <span class="n">DownloadType</span><span class="o">.</span><span class="n">EVENT</span><span class="p">:</span>
         <span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">selected_catalogs</span> <span class="o">=</span> <span class="n">get_events</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
         <span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">selected_invs</span> <span class="o">=</span> <span class="n">get_stations</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
-        <span class="c1"># return run_event(settings, stop_event)</span>
         <span class="n">event_traces</span><span class="p">,</span> <span class="n">missing</span> <span class="o">=</span> <span class="n">run_event</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">stop_event</span><span class="p">)</span> <span class="c1"># this returns a stream containing all the downloaded traces, and a dictionary of what&#39;s missing</span>
 
     <span class="k">return</span> <span class="kc">None</span></div>
