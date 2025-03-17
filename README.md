@@ -37,7 +37,7 @@ Can run:
 # Install via pip (easy way)
 
 ```
-$ python3 pip install seed-vault
+$ python3 -m pip install seed-vault
 ```
 
 # Install from source (if you insist!)

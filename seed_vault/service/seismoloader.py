@@ -19,13 +19,11 @@ from typing import Any, Dict, List, Tuple, Optional, Union
 from collections import defaultdict
 
 
-#import obspy
 from obspy import UTCDateTime
 from obspy.core.stream import Stream
 from obspy.core.stream import read as streamread
 from obspy.core.inventory import read_inventory,Inventory
 from obspy.core.event import read_events,Event,Catalog
-
 
 from obspy.clients.fdsn import Client
 from obspy.taup import TauPyModel
@@ -500,7 +498,7 @@ def collect_requests_event(
     if cha_pref or loc_pref:
         sub_inv = get_preferred_channels(sub_inv, cha_pref, loc_pref)
 
-    # Ensure model is loaded
+    # Ensure 1D vel model is loaded
     if not model:
         try:
             model = TauPyModel(model_name.upper())
@@ -636,7 +634,7 @@ def combine_requests(
         
         # Create combined request
         combined_requests.append((
-            net,
+            net, # keep networks distinct
             ','.join(sorted(stas)),
             ','.join(sorted(locs)),
             ','.join(sorted(chans)),
@@ -646,7 +644,7 @@ def combine_requests(
     
     return combined_requests
 
-## need to also search the archive!! we're assuming db_manager already loaded as this is ran from run_events
+
 def get_missing_from_request(db_manager, eq_id: str, requests: List[Tuple], st: Stream) -> dict:
     """
     Compare requested seismic data against what's present in a Stream.
@@ -781,6 +779,9 @@ def prune_requests(
             start_time = UTCDateTime(start_time)
             end_time = UTCDateTime(end_time)
 
+            if end_time - start_time < min_request_window:
+                continue
+
             # Check filesystem for existing files
             existing_filenames = get_sds_filenames(
                 network, station, location, channel,
@@ -882,6 +883,15 @@ def archive_request(
         >>> archive_request(request, clients, "/data/seismic", db_manager)
     """
     try:
+
+        t0 = UTCDateTime(request[4])
+        t1 = UTCDateTime(request[5])
+
+        # Double check that the request range is real and not some db artifact
+        # This is also done 
+        if t1 - t0 < 1:
+            return
+
         time0 = time.time()
         
         # Select appropriate client
@@ -897,8 +907,8 @@ def archive_request(
             'station': request[1].upper(),
             'location': request[2].upper(),
             'channel': request[3].upper(),
-            'starttime': UTCDateTime(request[4]),
-            'endtime': UTCDateTime(request[5])
+            'starttime': t0,
+            'endtime': t1
         }
 
         # Handle long station lists
@@ -1255,7 +1265,8 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
     # Apply station exclusions
     if settings.station.exclude_stations: # a "SeismoQuery" object
         for sq in settings.station.exclude_stations:
-            inv = inv.remove(network=sq.network, station=sq.station)
+            inv = inv.remove(network=sq.network, station=sq.station,
+                location=sq.location, channel=sq.channel)
 
     # Add forced stations
     if settings.station.force_stations: # a "SeismoQuery" object
@@ -1264,8 +1275,10 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
                 inv += station_client.get_stations(
                     network=sq.network,
                     station=sq.station,
-                    location=sq.location or '*',
+                    location='*' if sq.location is None else sq.location,
                     channel=sq.channel or '*',
+                    starttime=sq.starttime,
+                    endtime=sq.endtime,
                     level='channel'
                 )
             except Exception as e:
@@ -1362,6 +1375,7 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
             catalog.extend(cat)
         except FDSNNoDataException:
             print("No events found in global search")
+
         return catalog
 
     # Handle geographic constraints
@@ -1434,7 +1448,7 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
             print(f"No events found for constraint: {geo.geo_type}")
             continue
     
-    # Remove duplicates
+    # Remove duplicates (*now done below)
     #catalog = remove_duplicate_events(catalog)
 
     # Re-filter to remove anything that eclipsed original search. Also removes duplicates.
@@ -1549,7 +1563,7 @@ def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event =
 
     # Archive to disk and updated database
     for request in combined_requests:
-            
+        print(" ")    
         print("Requesting: ", request)
         time.sleep(0.05) # to help ctrl-C out if needed
         try:
@@ -1640,7 +1654,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
 
         if stop_event and stop_event.is_set():
             print("\nCancelling run_event!")
-            # ? stop_event.clear()
+            # stop_event.clear() # i don't think these are needed / REVIEW
             try:
                 print("\n~~ Cleaning up database ~~")
                 db_manager.join_continuous_segments(settings.processing.gap_tolerance)
@@ -1656,7 +1670,8 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
             event_region = eq.event_descriptions[0].text
         except:
             event_region = ""
-        print(" ") # hack to make streamlit in-app log does not handle newlines properly
+
+        print(" ") # hack to make streamlit in-app log insert a newline
         print(
             f"Processing event {i+1}/{len(settings.event.selected_catalogs)} | "
             f"{event_region:^35} | "
