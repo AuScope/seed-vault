@@ -33,9 +33,40 @@ DB Schema Tab
 
 This tab displays the database tables used by seed-vault.
 
-The 'archive_data' table stores metadata concerning where and when the events occurred.
+The 'archive_data' table stores metadata concerning where groups of events occurred.
+
+* network - FDSN network code
+* station - FDSN station code
+* location - FDSN location code
+* channel - FDSN channel code
+* starttime - start time (ISO 8601)
+* endtime - end time (ISO 8601)
+* importtime - database insertion time (UNIX integer timestamp)
+
 
 The 'arrival_data' table stores seismic event data.
+
+* resource_id - FDSN unique identifier for the seismic event
+* e_mag - event magnitude (Moment Magnitude)
+* e_lat - event latitude (degrees)
+* e_long - event longitude (degrees)
+* e_depth - event depth (kilometres)
+* e_time - event timestamp (UNIX integer timestamp)
+* s_netcode - FDSN network code
+* s_stacode - FDSN station code
+* s_lat - station latitude (degrees)
+* s_long - station longitude (degrees)
+* s_elev - station elevation (kilometres)
+* s_start - station start time (ISO 8601)
+* s_end - station end time (ISO 8601)
+* dist_deg - distance from event to station (degrees)
+* dist_km - distance from event to station (kilometers)
+* azimuth - azimuth angle from event to station (degrees)
+* p_arrival - P wave arrival time (UNIX float timestamp)
+* s_arrival - S wave arrival time (UNIX float timestamp)
+* model - name of seismic velocity model
+* importtime - database insertion time (UNIX integer timestamp)
+
 
 Example Queries Tab
 -------------------

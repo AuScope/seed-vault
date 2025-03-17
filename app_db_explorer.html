@@ -187,8 +187,39 @@
 <h2>DB Schema Tab<a class="headerlink" href="#db-schema-tab" title="Link to this heading"></a></h2>
 <img alt="_images/db-schema.png" src="_images/db-schema.png" />
 <p>This tab displays the database tables used by seed-vault.</p>
-<p>The ‘archive_data’ table stores metadata concerning where and when the events occurred.</p>
+<p>The ‘archive_data’ table stores metadata concerning where groups of events occurred.</p>
+<ul class="simple">
+<li><p>network - FDSN network code</p></li>
+<li><p>station - FDSN station code</p></li>
+<li><p>location - FDSN location code</p></li>
+<li><p>channel - FDSN channel code</p></li>
+<li><p>starttime - start time (ISO 8601)</p></li>
+<li><p>endtime - end time (ISO 8601)</p></li>
+<li><p>importtime - database insertion time (UNIX integer timestamp)</p></li>
+</ul>
 <p>The ‘arrival_data’ table stores seismic event data.</p>
+<ul class="simple">
+<li><p>resource_id - FDSN unique identifier for the seismic event</p></li>
+<li><p>e_mag - event magnitude (Moment Magnitude)</p></li>
+<li><p>e_lat - event latitude (degrees)</p></li>
+<li><p>e_long - event longitude (degrees)</p></li>
+<li><p>e_depth - event depth (kilometres)</p></li>
+<li><p>e_time - event timestamp (UNIX integer timestamp)</p></li>
+<li><p>s_netcode - FDSN network code</p></li>
+<li><p>s_stacode - FDSN station code</p></li>
+<li><p>s_lat - station latitude (degrees)</p></li>
+<li><p>s_long - station longitude (degrees)</p></li>
+<li><p>s_elev - station elevation (kilometres)</p></li>
+<li><p>s_start - station start time (ISO 8601)</p></li>
+<li><p>s_end - station end time (ISO 8601)</p></li>
+<li><p>dist_deg - distance from event to station (degrees)</p></li>
+<li><p>dist_km - distance from event to station (kilometers)</p></li>
+<li><p>azimuth - azimuth angle from event to station (degrees)</p></li>
+<li><p>p_arrival - P wave arrival time (UNIX float timestamp)</p></li>
+<li><p>s_arrival - S wave arrival time (UNIX float timestamp)</p></li>
+<li><p>model - name of seismic velocity model</p></li>
+<li><p>importtime - database insertion time (UNIX integer timestamp)</p></li>
+</ul>
 </section>
 <section id="example-queries-tab">
 <h2>Example Queries Tab<a class="headerlink" href="#example-queries-tab" title="Link to this heading"></a></h2>
