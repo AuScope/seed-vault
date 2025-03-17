@@ -1,7 +1,9 @@
 import pandas as pd
 import os
+import itertools
+from typing import Tuple, List, Optional
 import obspy
-from obspy import UTCDateTime
+from obspy import UTCDateTime, Stream
 from obspy.clients.filesystem.sds import Client as LocalClient
 
 from seed_vault.models.config import SeismoLoaderSettings, SeismoQuery
@@ -35,14 +37,79 @@ def check_is_archived(cursor, req: SeismoQuery):
         return False
     return True
 
-#this is a simpler version.. if the data doesn't exist it just returns an empty stream
-def get_local_waveform(req: SeismoQuery, settings: SeismoLoaderSettings):
-    client = LocalClient(settings.sds_path)
-    st = client.get_waveforms(network=req.network,station=req.station,
-                            location=req.location,channel=req.channel,
-                            starttime=UTCDateTime(req.starttime),endtime=UTCDateTime(req.endtime))
+#only in use for run_event
+def get_local_waveform(request: Tuple[str, str, str, str, str, str], settings: SeismoLoaderSettings) -> Optional[Stream]:
+    """
+    Get waveform data from a local client, handling comma-separated values for network, 
+    station, location, and channel fields. Unlike remote requests, local SDS does not handle such things.
     
-    # let's not raise this as en error. it's a pretty common occurence, it just means no data was downloaded/archived.
-    #if not st:
-    #    raise NotFoundError("Not Found: the requested data was not found in local archived database.")
-    return st
+    Args:
+        request: Tuple containing (network, station, location, channel, starttime, endtime)
+        settings: Settings object containing SDS path
+        
+    Returns:
+        Stream object containing requested waveform data, or None if no data found
+    """
+    client = LocalClient(settings.sds_path)
+    
+    # Parse the comma-separated values
+    networks = [n.strip().upper() for n in request[0].split(',')]
+    stations = [s.strip().upper() for s in request[1].split(',')]
+    # sometimes location is ''...
+    locations = []
+    if request[2]:
+        for loc in request[2].split(','):
+            loc = loc.strip().upper()
+            locations.append(loc)
+    else:
+        locations = ['']
+    channels = [c.strip().upper() for c in request[3].split(',')]
+    
+    
+    combined_stream = Stream()
+    
+    # Generate all combinations of network, station, location, channel
+    combinations = list(itertools.product(networks, stations, locations, channels))
+    
+    for network, station, location, channel in combinations:
+        try:
+            kwargs = {
+                'network': network,
+                'station': station,
+                'location': location,
+                'channel': channel,
+                'starttime': UTCDateTime(request[4]),
+                'endtime': UTCDateTime(request[5])
+            }
+            
+            stream = client.get_waveforms(**kwargs)
+            
+            if stream and len(stream) > 0:
+                combined_stream += stream
+                
+        except Exception as e:
+            # Continue to the next combination if this one fails
+            print("get_local_waveform problem:",e)
+            continue
+    
+    # Return the combined stream, or None if empty
+    if len(combined_stream) > 0:
+        return combined_stream
+    else:
+        return None
+
+def get_local_waveform_OLD(request: Tuple[str, str, str, str, str, str], settings: SeismoLoaderSettings):
+    client = LocalClient(settings.sds_path)
+    kwargs = {
+        'network': request[0].upper(),
+        'station': request[1].upper(),
+        'location': request[2].upper(),
+        'channel': request[3].upper(),
+        'starttime': UTCDateTime(request[4]),
+        'endtime': UTCDateTime(request[5])
+        }
+    try:
+        return client.get_waveforms(**kwargs)
+    except:
+        return None
+

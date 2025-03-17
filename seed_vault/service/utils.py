@@ -31,16 +31,19 @@ def get_time_interval(interval_type: str, amount: int = 1):
     now = datetime.now(timezone.utc)
 
     if interval_type == "hour":
+        now = now.replace(second=0, microsecond=0)
         past = now - timedelta(hours=amount)
     elif interval_type == "day":
+        now = now.replace(hour=0, minute=0, second=0, microsecond=0)
         past = now - timedelta(days=amount)
     elif interval_type == "week":
+        now = now.replace(hour=0, minute=0, second=0, microsecond=0)
         past = now - timedelta(weeks=amount)
     elif interval_type == "month":
+        now = now.replace(hour=0, minute=0, second=0, microsecond=0)
         past = now - relativedelta(months=amount)
     else:
-        st.error(f"Invalid interval type: {interval_type}. Choose from 'hour', 'day', 'week', 'month'.")
-        return now, now  # Default fallback
+        raise ValueError(f"Invalid interval type: {interval_type}. Choose from 'hour', 'day', 'week', 'month'.")
 
     return now, past
 
@@ -49,6 +52,8 @@ def convert_to_datetime(value):
     """Convert a string or other value to a date and time object, handling different formats.
     
     If only a date is provided, it defaults to 00:00:00 time.
+
+    note that this returns a tuple of (date, time)
     """
     if isinstance(value, datetime):
         return value.date(), value.time()

@@ -9,10 +9,11 @@ import pandas as pd
 from datetime import datetime, time
 from obspy.core.event import Catalog, read_events
 from obspy.core.inventory import Inventory, read_inventory
+import time
 
 
 from seed_vault.ui.components.map import create_map, add_area_overlays, add_data_points, clear_map_layers, clear_map_draw,add_map_draw
-from seed_vault.ui.pages.helpers.common import get_selected_areas, save_filter
+from seed_vault.ui.app_pages.helpers.common import get_selected_areas, save_filter
 
 from seed_vault.service.events import get_event_data, event_response_to_df
 from seed_vault.service.stations import get_station_data, station_response_to_df
@@ -27,6 +28,7 @@ from seed_vault.service.utils import convert_to_datetime, check_client_services,
 
 
 class BaseComponentTexts:
+    """Defines text constants for UI components in different configuration steps."""
     CLEAR_ALL_MAP_DATA = "Clear All"
     DOWNLOAD_CONFIG = "Download Config"
     SAVE_CONFIG = "Save Config"
@@ -67,6 +69,47 @@ class BaseComponentTexts:
 
 
 class BaseComponent:
+    """Base class for handling the search and selection of seismic events and stations.
+
+    This class supports searching, selecting, and visualizing seismic data in a Streamlit application.
+
+    Attributes:
+        settings (SeismoLoaderSettings): The current application settings.
+        old_settings (SeismoLoaderSettings): A deep copy of the initial settings before modifications.
+        step_type (Steps): The current processing step (event or station).
+        prev_step_type (Steps): The previous processing step, if applicable.
+        TXT (BaseComponentTexts): Stores UI-related text constants based on the step type.
+        stage (int): The current processing stage.
+        all_current_drawings (List[GeometryConstraint]): A list of current geometry constraints.
+        all_feature_drawings (List[GeometryConstraint]): A list of feature-based geometry constraints.
+        df_markers (pd.DataFrame): Dataframe containing marker information for events or stations.
+        df_data_edit (pd.DataFrame): Dataframe for editable data related to events or stations.
+        catalogs (Catalog): Holds seismic event catalog data.
+        inventories (Inventory): Holds station inventory data.
+        map_disp: The main map display object.
+        map_fg_area: Map layer displaying geographic areas.
+        map_fg_marker: Map layer displaying markers for events or stations.
+        map_fg_prev_selected_marker: Map layer for previously selected markers.
+        map_height (int): Height of the map display.
+        map_output: Output container for map elements.
+        selected_marker_map_idx: Index of the currently selected marker on the map.
+        map_view_center (dict): Dictionary storing the center coordinates of the map.
+        map_view_zoom (int): Zoom level of the map.
+        marker_info: Information about the currently selected marker.
+        clicked_marker_info: Information about the last clicked marker.
+        warning: Warning message to be displayed in the UI.
+        error (str): Error message to be displayed in the UI.
+        df_rect: Dataframe for rectangular selection areas.
+        df_circ: Dataframe for circular selection areas.
+        col_color: Column used for color coding markers.
+        col_size: Column used for size scaling of markers.
+        fig_color_bar: Color bar figure for the map visualization.
+        df_markers_prev (pd.DataFrame): Dataframe storing previously selected markers.
+        delay_selection (int): Delay time before processing a new selection.
+        cols_to_exclude (List[str]): List of columns to exclude from the display.
+        has_error (bool): Indicates whether an error has occurred.
+    """
+
     settings: SeismoLoaderSettings
     old_settings: SeismoLoaderSettings
     step_type: Steps
@@ -88,6 +131,7 @@ class BaseComponent:
     map_fg_prev_selected_marker = None
     map_height                  = 500
     map_output                  = None
+    selected_marker_map_idx     = None
     map_view_center             = {}
     map_view_zoom               = 2
     marker_info                 = None
@@ -100,6 +144,8 @@ class BaseComponent:
     col_size                    = None
     fig_color_bar               = None
     df_markers_prev             = pd.DataFrame()
+    
+    delay_selection            = 0
 
     cols_to_exclude             = ['detail', 'is_selected']
 
@@ -108,6 +154,11 @@ class BaseComponent:
 
     @property
     def page_type(self) -> str:
+        """Determines the page type based on the previous or current step.
+
+        Returns:
+            str: The page type, which is the previous step type if available, otherwise the current step type.
+        """
         if self.prev_step_type is not None and self.prev_step_type != Steps.NONE:
             return self.prev_step_type
         else:
@@ -122,13 +173,22 @@ class BaseComponent:
             init_map_center = {}, 
             init_map_zoom = 2
         ):
+        """Initializes the BaseComponent with the given settings and parameters.
+
+        Args:
+            settings (SeismoLoaderSettings): Configuration settings for loading seismic data.
+            step_type (Steps): The current processing step (event or station).
+            prev_step_type (Steps): The previous processing step, if applicable.
+            stage (int): The current processing stage.
+            init_map_center (dict, optional): Initial map center coordinates. Defaults to an empty dictionary.
+            init_map_zoom (int, optional): Initial map zoom level. Defaults to 2.
+        """
         self.settings       = settings
         self.old_settings   = deepcopy(settings)
         self.step_type      = step_type
         self.prev_step_type = prev_step_type
         self.stage          = stage
-        self.map_id         = f"map_{step_type.value}_{prev_step_type.value}_{stage}" if prev_step_type else f"map_{step_type.value}_no_prev_{stage}"   # str(uuid.uuid4())
-        self.map_disp       = create_map(map_id=self.map_id)
+        self.map_id         = f"map_{step_type.value}_{prev_step_type.value}_{stage}" if prev_step_type else f"map_{step_type.value}_no_prev_{stage}" 
         self.TXT            = BaseComponentTexts(step_type)
 
         self.all_feature_drawings = self.get_geo_constraint()
@@ -152,12 +212,27 @@ class BaseComponent:
         self.map_view_zoom   = init_map_zoom
 
 
-    def get_key_element(self, name):        
+    def get_key_element(self, name):
+        """Generates a unique key identifier for a UI element based on the step type and stage.
+
+        Args:
+            name (str): The base name of the element.
+
+        Returns:
+            str: A formatted string representing the unique key for the element.
+        """
         return f"{name}-{self.step_type.value}-{self.stage}"
 
 
     def get_geo_constraint(self):
-        # if self.step_type == Steps.EVENT and self.settings.event is not None:
+        """Retrieves the geographic constraints for the current step.
+
+        Geographic constraints define the search area on the map using bounding boxes or circles.
+
+        Returns:
+            List[GeometryConstraint]: A list of geographic constraints (boxes or circles) 
+            that confine the search area. Returns an empty list if no constraints are set.
+        """
         if self.step_type == Steps.EVENT:
             return self.settings.event.geo_constraint
         if self.step_type == Steps.STATION and self.settings.station is not None:
@@ -165,6 +240,15 @@ class BaseComponent:
         return []
     
     def set_geo_constraint(self, geo_constraint: List[GeometryConstraint]):
+        """Sets the geographic constraints for the current step.
+
+        This method updates the geographic constraints, which define the search area on the map using 
+        bounding boxes or circles.
+
+        Args:
+            geo_constraint (List[GeometryConstraint]): A list of geographic constraints 
+            (boxes or circles) to be applied to the current step.
+        """
         if self.step_type == Steps.EVENT and self.settings.event is not None:
             self.settings.event.geo_constraint = geo_constraint
         if self.step_type == Steps.STATION and self.settings.station is not None:
@@ -175,12 +259,7 @@ class BaseComponent:
     # FILTERS
     # ====================
     def refresh_filters(self):
-        """
-        Renders Export settings for all stages and Import settings only for stage 1.
-
-        - Allows users to download the current configuration (`config.cfg`) at all stages.
-        - Shows the import settings section only when `stage == 1`.
-        """        
+        """Refreshes and updates the filter settings based on configuration changes."""
         changes = self.settings.has_changed(self.old_settings)
         if changes.get('has_changed', False):
             self.old_settings      = deepcopy(self.settings)
@@ -188,6 +267,24 @@ class BaseComponent:
             st.rerun()
 
     def event_filter(self):
+        """Displays and manages event filtering options in the Streamlit sidebar.
+
+        This method allows users to filter seismic events based on:
+        - Client selection
+        - Time range (last month, last week, last day, or custom start/end dates)
+        - Magnitude range
+        - Depth range
+
+        Functionality:
+        - Users select a client from a dropdown list.
+        - A warning is displayed if the selected client does not support event services.
+        - Users can set predefined time intervals (last month, last week, last day).
+        - Users can manually set start and end dates/times.
+        - Validation ensures that the end date is after the start date.
+        - Users can adjust event magnitude and depth ranges using sliders.
+        - Map interaction buttons are rendered.
+        - Refreshes filters upon changes.
+        """
 
         start_date, start_time = convert_to_datetime(self.settings.event.date_config.start_time)
         end_date, end_time     = convert_to_datetime(self.settings.event.date_config.end_time)
@@ -260,7 +357,26 @@ class BaseComponent:
 
 
     def station_filter(self):
+        """Displays and manages station filtering options in the Streamlit sidebar.
 
+        This method allows users to filter seismic stations based on:
+        - Client selection
+        - Time range (last month, last week, last day, or custom start/end dates)
+        - Network, station, location, and channel filters
+        - Highest sample rate option
+        - Restricted data inclusion
+
+        Functionality:
+        - Users select a client from a dropdown list.
+        - A warning is displayed if the selected client does not support station services.
+        - Users can set predefined time intervals (last month, last week, last day).
+        - Users can manually set start and end dates/times with a one-hour shift if needed.
+        - Validation ensures that the end date is after the start date.
+        - Users can input station metadata filters (network, station, location, channel).
+        - Users can enable highest sample rate filtering and restricted data inclusion.
+        - Map interaction buttons are rendered.
+        - Refreshes filters upon changes.
+        """
         start_date, start_time = convert_to_datetime(self.settings.station.date_config.start_time)
         end_date, end_time = convert_to_datetime(self.settings.station.date_config.end_time)
 
@@ -351,11 +467,24 @@ class BaseComponent:
     # MAP
     # ====================   
     def set_map_view(self, map_center, map_zoom):
+        """Sets the map view properties, including center coordinates and zoom level.
+
+        Args:
+            map_center (dict): A dictionary representing the center coordinates of the map.
+            map_zoom (int): The zoom level for the map.
+        """
         self.map_view_center = map_center
         self.map_view_zoom   = map_zoom
 
 
     def update_filter_geometry(self, df, geo_type: GeoConstraintType, geo_constraint: List[GeometryConstraint]):
+        """This method adds a new drawing (box or circle) to the existing drawings on the map.
+
+        Args:
+            df (pd.DataFrame): A DataFrame containing the new geometric constraints.
+            geo_type (GeoConstraintType): The type of geographic constraint (bounding box or circle).
+            geo_constraint (List[GeometryConstraint]): The existing list of geographic constraints.
+        """
         add_geo = []
         for _, row in df.iterrows():
             coords = row.to_dict()
@@ -373,13 +502,46 @@ class BaseComponent:
         self.set_geo_constraint(new_geo)
 
     def is_valid_rectangle(self, min_lat, max_lat, min_lon, max_lon):
-        """Check if min/max latitude and longitude values are valid."""
+        """Checks if the given latitude and longitude values define a valid rectangle.
+
+        A valid rectangle satisfies the following conditions:
+        - Latitude values (`min_lat`, `max_lat`) must be within the range [-90, 90].
+        - Longitude values (`min_lon`, `max_lon`) must be within the range [-180, 180].
+        - `min_lat` must be less than or equal to `max_lat`.
+        - `min_lon` must be less than or equal to `max_lon`.
+
+        Args:
+            min_lat (float): Minimum latitude value.
+            max_lat (float): Maximum latitude value.
+            min_lon (float): Minimum longitude value.
+            max_lon (float): Maximum longitude value.
+
+        Returns:
+            bool: `True` if the rectangle is valid, `False` otherwise.
+        """
         return (-90 <= min_lat <= 90 and -90 <= max_lat <= 90 and
                 -180 <= min_lon <= 180 and -180 <= max_lon <= 180 and
                 min_lat <= max_lat and min_lon <= max_lon)
 
     def is_valid_circle(self, lat, lon, max_radius, min_radius):
-        """Check if circle data is valid."""
+        """Checks if the given latitude, longitude, and radius values define a valid circle.
+
+        A valid circle satisfies the following conditions:
+        - Latitude (`lat`) must be within the range [-90, 90].
+        - Longitude (`lon`) must be within the range [-180, 180].
+        - `max_radius` must be greater than 0.
+        - `min_radius` must be non-negative (>= 0).
+        - `min_radius` must be less than or equal to `max_radius`.
+
+        Args:
+            lat (float): Latitude of the circle's center.
+            lon (float): Longitude of the circle's center.
+            max_radius (float): Maximum radius of the circle.
+            min_radius (float): Minimum radius of the circle.
+
+        Returns:
+            bool: `True` if the circle data is valid, `False` otherwise.
+        """
         return (
             -90 <= lat <= 90 and
             -180 <= lon <= 180 and
@@ -517,7 +679,7 @@ class BaseComponent:
                 zoom_start=self.map_view_zoom,
                 map_center=[
                     self.map_view_center.get("lat", 0.0),
-                    self.map_view_center.get("lng", 0.0), # pacific ocean
+                    self.map_view_center.get("lng", 0.0),
                 ]
             )
         
@@ -610,21 +772,18 @@ class BaseComponent:
             error_message = str(e)
             http_status_code = None
 
-            # Extract HTTP error code if present
-            match = re.search(r"Error (\d{3})", error_message)
+            match = re.search(r"\b(\d{3})\b", error_message)
             if match:
                 http_status_code = int(match.group(1))
 
-            # Lookup user-friendly error message
-            user_friendly_message = http_error.get(http_status_code, "An error has occurred, please check parameters.")
+            user_friendly_message = http_error.get(http_status_code, "An unexpected error occurred. Please try again.")
 
-            # Construct detailed error message
             self.has_error = True
-            self.error = (
-                f"{user_friendly_message}\n\n"
-                f"**Technical details:**\n\n"
-                f"Error: {error_message}"
-            )
+            self.error = f"⚠️ {user_friendly_message}\n\n"
+
+            if http_status_code:
+                self.error += f"**Technical details:**\n\nError {http_status_code}: {error_message}"
+
 
             print(self.error)  # Logging for debugging
 
@@ -677,10 +836,10 @@ class BaseComponent:
 
         self.df_markers['is_selected'] = self.df_data_edit['is_selected']
     
-    def refresh_map_selection(self):
+    def refresh_map_selection(self, rerun=True, recreate=False):
         selected_idx = self.get_selected_idx()
         self.update_selected_data()
-        self.refresh_map(reset_areas=False, selected_idx=selected_idx, rerun=True, recreate_map=True)
+        self.refresh_map(reset_areas=False, selected_idx=selected_idx, rerun=rerun, recreate_map=recreate)
 
 
     # ===================
@@ -743,13 +902,13 @@ class BaseComponent:
         c1, c2 = st.columns([1, 1])
 
         with c1:
-            min_radius_str = st.text_input("Minimum radius (degree)", value="0")
+            self.settings.event.min_radius = st.number_input("Minimum radius (degree)", value=self.settings.event.min_radius)
         with c2:
-            max_radius_str = st.text_input("Maximum radius (degree)", value="90")
+            self.settings.event.max_radius = st.number_input("Maximum radius (degree)", value=self.settings.event.max_radius)
 
         try:
-            min_radius = float(min_radius_str)
-            max_radius = float(max_radius_str)
+            min_radius = float(self.settings.event.min_radius)
+            max_radius = float(self.settings.event.max_radius)
         except ValueError:
             st.error("Please enter valid numeric values for the radius.")
             return
@@ -786,12 +945,12 @@ class BaseComponent:
                 self.prev_marker = self.df_markers_prev.copy()
 
 
-            self.refresh_map(reset_areas=False, clear_draw=True)
-            st.rerun()
+            self.refresh_map(reset_areas=False, clear_draw=True, rerun=True)
+            # st.rerun()
 
     def update_area_around_prev_step_selections(self, min_radius, max_radius):
-        min_radius_value = float(min_radius) # * 1000
-        max_radius_value = float(max_radius) # * 1000
+        min_radius_value = float(min_radius)
+        max_radius_value = float(max_radius)
 
         updated_constraints = []
 
@@ -930,8 +1089,6 @@ class BaseComponent:
                 key=self.get_key_element(f"Load {self.TXT.STEP}s")
             ):
                 self.refresh_map(reset_areas=False, clear_draw=False, rerun=False)
-                # self.clear_all_data()
-                # self.refresh_map(reset_areas=True, clear_draw=True, rerun=True, get_data=True)
 
 
         with cc2:
@@ -946,7 +1103,7 @@ class BaseComponent:
                 # help="Use Reload button if the map is collapsed or some layers are missing.",
                 key=self.get_key_element(f"ReLoad {self.TXT.STEP}s")
             ):
-                self.refresh_map(get_data=False, rerun=True, recreate_map=True)
+                self.refresh_map(get_data=False, clear_draw=True, rerun=True, recreate_map=True)
 
         
 
@@ -956,7 +1113,6 @@ class BaseComponent:
         with st.expander("Shape tools - edit areas", expanded=True):
             self.update_rectangle_areas()
             self.update_circle_areas()
-        # self.render_map_buttons()
         
 
     def render_import_export(self):
@@ -1047,7 +1203,10 @@ class BaseComponent:
                 self.display_prev_step_selection_table() 
 
     def render_map(self):
-        if self.map_disp is not None:
+
+        if self.map_disp is None:
+            self.map_disp = create_map(map_id=f"init_{self.map_id}")
+        else:
             clear_map_layers(self.map_disp)
         
         self.display_prev_step_selection_marker()
@@ -1062,7 +1221,7 @@ class BaseComponent:
         if self.step_type == Steps.EVENT:
            info_display += "\nℹ️ **Marker size** is associated with **earthquake magnitude**"
 
-        st.caption(info_display)
+        st.caption(info_display)            
         
         c1, c2 = st.columns([18,1])
         with c1:
@@ -1100,7 +1259,9 @@ class BaseComponent:
                 step = idx_info[0].lower()
                 idx  = int(idx_info[1])
                 if step == self.step_type:
-                    self.clicked_marker_info = self.marker_info[idx]
+                    if self.selected_marker_map_idx is None or idx != self.selected_marker_map_idx:
+                        self.selected_marker_map_idx = idx
+                        self.clicked_marker_info = self.marker_info[self.selected_marker_map_idx]
                 
             else:
                 self.clicked_marker_info = None
@@ -1148,7 +1309,10 @@ class BaseComponent:
         # Define ordered columns
         cols = self.df_markers.columns
         orig_cols = [col for col in cols if col != 'is_selected']
-        ordered_col = ['is_selected'] + orig_cols
+        if self.step_type == Steps.STATION:
+            ordered_col = ['is_selected'] + orig_cols
+        else: # Steps.EVENT
+            ordered_col = ['is_selected','place','time','magnitude_combined','latitude','longitude','depth (km)']
 
         # Define config
         config = {col: {'disabled': True} for col in orig_cols}
@@ -1176,35 +1340,70 @@ class BaseComponent:
                 disabled=is_disabled
             )
 
-    def data_table_view(self, ordered_col, config, state_key):
-        """Displays the full data table, allowing selection."""
 
-        # Add custom CSS to ensure full width and remove scrollbars
-        st.markdown("""
-            <style>
-                .element-container {
-                    width: 100% !important;
+    def on_change_df_table(self):
+        self.delay_selection = 1
+    
+    
+    def data_table_view(self, ordered_col, config, state_key):
+        """Displays the full data table, allowing selection."""  
+
+        def _get_column_width(column):
+            max_length = max(self.df_markers[column].astype(str).apply(len))  # Get max string length            
+            if max_length <= 10:
+                return None 
+            elif max_length <= 10:
+                return "small"
+            elif max_length <= 50 or column=="description" or column=="loc. codes":
+                return "medium"
+            elif max_length <= 100:
+                return None
+            return "large"
+
+
+        def _format_columns():
+            column_map = {}
+
+            if self.step_type == Steps.EVENT:
+
+                # combine magnitude scalar and type into one column
+                self.df_markers['magnitude_combined'] = self.df_markers['magnitude'].astype(str) + ' ' + self.df_markers['magnitude type']
+
+                column_map = {
+                    "is_selected": st.column_config.Column("", width=4, disabled=False),
+                    "place": st.column_config.TextColumn("place", width=None, disabled=True),
+                    "magnitude_combined": st.column_config.TextColumn("mag", width=12, disabled=True),
+                    #"magnitude": st.column_config.NumberColumn("mag", format="%.1f",width=6, disabled=True),
+                    #"magnitude type": st.column_config.Column("type", width=6, disabled=True),
+                    "time": st.column_config.DatetimeColumn("origin time", width=18, disabled=True),
+                    "longitude": st.column_config.NumberColumn("lon", format="%.3f", width=8, disabled=True),
+                    "latitude": st.column_config.NumberColumn("lat", format="%.3f", width=8, disabled=True),
+                    "depth (km)": st.column_config.NumberColumn("dep (km)", format="%.1f", width=6, disabled=True),
                 }
-                .stDataFrame {
-                    width: 100% !important;
-                    text-align: center !important;                    
-                }
-                .data-editor-container {
-                    width: 100% !important;
-                }
-                [data-testid="stDataFrame"] {
-                    width: 100% !important;                 
-                }
-                div[data-testid="stDataFrame"] > div {
-                    width: 100% !important;                  
-                }
-                div[data-testid="stDataFrame"] > div > iframe {
-                    width: 100% !important;
-                    text-align: center !important;                    
-                    min-height: calc(100vh - 300px);  # Adjust this value as needed
-                }                   
-            </style>
-        """, unsafe_allow_html=True)  
+            
+            if self.step_type == Steps.STATION:
+                column_map = {
+                        "is_selected": st.column_config.Column("", width=4, disabled=False),
+                        "network": st.column_config.TextColumn("net", width=2, disabled=True),
+                        "station": st.column_config.TextColumn("sta", width=5, disabled=True),
+                        "description": st.column_config.TextColumn("description", width=38, disabled=True),
+                        "latitude": st.column_config.NumberColumn("lat", format="%.3f", width=8, disabled=True),
+                        "longitude": st.column_config.NumberColumn("lon", format="%.3f", width=8, disabled=True),
+                        "elevation": st.column_config.NumberColumn("elev", format="%d", width=6, disabled=True),
+                        "loc. codes": st.column_config.TextColumn("loc", width=None),
+                        "channels": st.column_config.TextColumn("cha", width=None),
+                        "start date (UTC)": st.column_config.Column("start", width=13, disabled=True),
+                        "end date (UTC)": st.column_config.Column("end", width=11, disabled=True),
+                    }
+
+            for col in ordered_col:
+                if col in column_map:
+                    config[col] = column_map.get(col)
+                else:
+                    config[col] = st.column_config.Column(col)
+
+            return config
+                
 
         c1, c2, c3 = st.columns([1,1,1])
         with c1:
@@ -1217,44 +1416,33 @@ class BaseComponent:
         with c3:
             if st.button("Unselect All", key=self.get_key_element("Unselect All")):
                 self.df_markers['is_selected'] = False
-        
-        # it would be prettier to merge "magnitude_type" with magnitude here.. TODO
+                self.clicked_marker_info = None
 
         self.selected_items_view(state_key) 
+        
 
+        height = (len(self.df_markers) + 1) * 35 + 2
 
-        # Define desired column widths in pts
-        column_widths = {
-            "Select": 60,
-            "network": 60,
-            "station": 80,
-            "elevation": 80,
-            "longitude": 130,
-            "latitude": 130,
-            "start_date": 140,
-            "end_date": 140
-            }
+        height = min(100*35, height)
 
-        for col in ordered_col:
-            
-            # Add width if this column should have a specific width
-            if col in column_widths:
-                config[col] = st.column_config.Column(
-                    col,
-                    width=column_widths[col]
-                )
-            else:
-                config[col] = st.column_config.Column(
-                    col,
-                )
+        # These create "bubble icons" for the codes.. but take up extra space
+        #df_markers_view = None
+        #if self.step_type == Steps.STATION:            
+        #    df_markers_view = deepcopy(self.df_markers)
+        #    df_markers_view["loc. codes"] = df_markers_view["loc. codes"].apply(lambda x: x.split(",")) 
+        #    df_markers_view["channels"] = df_markers_view["channels"].apply(lambda x: x.split(","))            
+        #    # df_markers_view.drop("elevation", axis=1, inplace=True)
 
         self.df_data_edit = st.data_editor(
-            self.df_markers, 
+            #df_markers_view if self.step_type == Steps.STATION else self.df_markers, # for bubble icons
+            self.df_markers,
             hide_index = True, 
-            column_config=config, 
+            column_config=_format_columns(), 
             column_order = ordered_col, 
             key=self.get_key_element("Data Table"),
-            use_container_width=True
+            use_container_width=True,
+            height=height,
+            on_change=self.on_change_df_table
         )
         
 
@@ -1263,15 +1451,12 @@ class BaseComponent:
         else:
             has_changed = not self.df_data_edit.equals(st.session_state[state_key])
             
-            if has_changed:
-                df_sorted_new = self.df_data_edit.sort_values(by=self.df_data_edit.columns.tolist()).reset_index(drop=True)
-                df_sorted_old = st.session_state[state_key].sort_values(by=st.session_state[state_key].columns.tolist()).reset_index(drop=True)
-                has_changed = not df_sorted_new.equals(df_sorted_old)
-
         if has_changed:
+            time.sleep(self.delay_selection)
             st.session_state[state_key] = self.df_data_edit.copy()  # Save the unsorted version to preserve user sorting
             self.sync_df_markers_with_df_edit()
             self.refresh_map_selection()
+            self.delay_selection = 0
 
     def selected_items_view(self, state_key):
         """Displays selected items using an actual `st.multiselect`, controlled by table selection."""
@@ -1282,49 +1467,66 @@ class BaseComponent:
             return
 
         if self.step_type == Steps.EVENT:
-            preferred_column = "place"
-            unique_column = "magnitude"  # Extra column to make each entry unique
+            unique_columns = ["place", "magnitude"]
 
-        if self.step_type == Steps.STATION:
-            preferred_column = "network"
-            unique_column = "station"  # Extra column to make each entry unique
+        elif self.step_type == Steps.STATION:
+            unique_columns = ["network", "station"]
 
-        ## causing issue in STATION table which doesn't have "magnitude" (NEEDS REVIEW)
-        if preferred_column not in df_selected.columns or unique_column not in df_selected.columns:
-            st.warning(f"Column '{preferred_column}' or '{unique_column}' not found in the data!")
+        # Ensure all unique_columns exist in the dataframe
+        missing_columns = [col for col in unique_columns if col not in df_selected.columns]
+        if missing_columns:
+            st.warning(f"Missing columns in data: {', '.join(missing_columns)}")
             return
 
-        df_selected["display_label"] = df_selected[preferred_column] + " (" + df_selected[unique_column].astype(str) + ")"
+
+        df_selected["display_label"] = df_selected[unique_columns].astype(str).agg(" | ".join, axis=1)
         
         selected_items = df_selected["display_label"].tolist()
 
         updated_selection = st.multiselect(
             "Selected Items",
-            options=self.df_markers[self.df_markers['is_selected']].apply(lambda x: f"{x[preferred_column]} ({x[unique_column]})", axis=1).tolist(),
+            options=selected_items,
             default=selected_items,
             key="selected_items_list",
             placeholder="Selected Items",
             disabled=False
         )
 
+        # Determine which items were removed
         removed_items = set(selected_items) - set(updated_selection)
 
         if removed_items:
             for item in removed_items:
-                place_name, magnitude = item.rsplit(" (", 1)
-                magnitude = magnitude.rstrip(")")  # Remove closing bracket
+                values = item.split(" | ")  # Extract the separated values
 
-                item_index = self.df_markers[
-                    (self.df_markers[preferred_column] == place_name) & 
-                    (self.df_markers[unique_column].astype(str) == magnitude)
-                ].index.tolist()
+                # Construct a mask for filtering rows based on extracted values
+                mask = (self.df_markers[unique_columns[0]].astype(str) == values[0])
+                for col, val in zip(unique_columns[1:], values[1:]):  # Loop over remaining columns
+                    mask &= (self.df_markers[col].astype(str) == val)
 
-                if item_index:
-                    self.df_markers.at[item_index[0], 'is_selected'] = False  
-                    # self.sync_df_markers_with_df_edit()
+                # Update `is_selected` to False for matching rows
+                self.df_markers.loc[mask, 'is_selected'] = False
+
 
             st.session_state[state_key] = self.df_markers.copy()
-            self.refresh_map_selection()
+            self.refresh_map_selection(recreate=False)
+
+        # if removed_items:
+        #     for item in removed_items:
+        #         place_name, magnitude = item.rsplit(" (", 1)
+        #         magnitude = magnitude.rstrip(")")  # Remove closing bracket
+
+        #         item_index = self.df_markers[
+        #             (self.df_markers[preferred_column] == place_name) & 
+        #             (self.df_markers[unique_column].astype(str) == magnitude)
+        #         ].index.tolist()
+
+        #         if item_index:
+        #             self.df_markers.at[item_index[0], 'is_selected'] = False  
+        #             # self.sync_df_markers_with_df_edit()
+
+        #     st.session_state[state_key] = self.df_markers.copy()
+        #     self.refresh_map_selection(recreate=False)
 
     def render(self):
         
@@ -1362,7 +1564,3 @@ class BaseComponent:
             self.render_marker_select()
             with st.expander(self.TXT.SELECT_DATA_TABLE_TITLE, expanded = not self.df_markers.empty):
                 self.render_data_table(c2_export)
-  
-
-
-

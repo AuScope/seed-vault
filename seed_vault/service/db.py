@@ -11,21 +11,27 @@ import sqlite3
 import contextlib
 import time
 import random
-from datetime import datetime
+import fnmatch
+import multiprocessing
+from tqdm import tqdm
+from datetime import datetime, timedelta
 from pathlib import Path
 from obspy import UTCDateTime,Stream
+from obspy.core.stream import read as streamread
 import pandas as pd
 from typing import Union, List, Dict, Tuple, Optional, Any
 
 from seed_vault.service.utils import to_timestamp
 
-def stream_to_db_element(st: Stream) -> Optional[Tuple[str, str, str, str, str, str]]:
+
+# this is just one which breaks if there are multiple segments per file
+def stream_to_db_element_OLD(st: Stream) -> Optional[Tuple[str, str, str, str, str, str]]:
     """
     Convert an ObsPy Stream object to a database element tuple.
 
-    Creates a database element from a stream, assuming all traces have the same
-    Network-Station-Location-Channel (NSLC) codes. This is typically faster than
-    reading from a file using miniseed_to_db_element.
+    Creates a database element from a stream, 
+    ***assuming all traces have the same Network-Station-Location-Channel (NSLC) codes.***
+    (e.g. an SDS file)
 
     Args:
         st: ObsPy Stream object containing seismic traces.
@@ -57,7 +63,73 @@ def stream_to_db_element(st: Stream) -> Optional[Tuple[str, str, str, str, str, 
             st[0].stats.location, st[0].stats.channel,
             start_time.isoformat(), end_time.isoformat())
 
-def miniseed_to_db_element(file_path: str) -> Optional[Tuple[str, str, str, str, str, str]]:
+
+#with an S! multiple!
+def stream_to_db_elements(st: Stream) -> List[Tuple[str, str, str, str, str, str]]:
+    """
+    Convert an ObsPy Stream object to multiple database element tuples, properly handling gaps.
+    Creates database elements from a stream, assuming all traces have the same 
+    Network-Station-Location-Channel (NSLC) codes (e.g. an SDS file).
+    
+    Args:
+        st: ObsPy Stream object containing seismic traces.
+    
+    Returns:
+        List[Tuple[str, str, str, str, str, str]]: A list of tuples, each containing:
+            - network: Network code
+            - station: Station code
+            - location: Location code
+            - channel: Channel code
+            - start_time: ISO format start time
+            - end_time: ISO format end time
+            Returns empty list if stream is empty.
+    
+    Example:
+        >>> stream = obspy.read()
+        >>> elements = stream_to_db_element(stream)
+        >>> for element in elements:
+        ...     network, station, location, channel, start, end = element
+    """
+    if len(st) == 0:
+        print("Warning: Empty stream provided")
+        return []
+    
+    # Sort traces by start time
+    st.sort(['starttime'])
+    
+    # Get NSLC codes from the first trace (assuming all are the same)
+    network = st[0].stats.network
+    station = st[0].stats.station
+    location = st[0].stats.location
+    channel = st[0].stats.channel
+    
+    # Group continuous segments
+    elements = []
+    current_segment_start = st[0].stats.starttime
+    current_segment_end = st[0].stats.endtime
+    
+    for i in range(1, len(st)):
+        # If there's a gap, add the current segment and start a new one
+        if st[i].stats.starttime > current_segment_end:
+            elements.append((
+                network, station, location, channel,
+                current_segment_start.isoformat(), current_segment_end.isoformat()
+            ))
+            current_segment_start = st[i].stats.starttime
+        
+        # Update the end time of the current segment
+        current_segment_end = max(current_segment_end, st[i].stats.endtime)
+    
+    # Add the final segment
+    elements.append((
+        network, station, location, channel,
+        current_segment_start.isoformat(), current_segment_end.isoformat()
+    ))
+    
+    return elements
+
+
+def miniseed_to_db_elements(file_path: str) -> Optional[Tuple[str, str, str, str, str, str]]:
     """
     Convert a miniseed file to a database element tuple.
 
@@ -83,31 +155,25 @@ def miniseed_to_db_element(file_path: str) -> Optional[Tuple[str, str, str, str,
         ...     network, station, location, channel, start, end = element
     """
     if not os.path.isfile(file_path):
-        return None
+        return []
     try:
         file = os.path.basename(file_path)
         parts = file.split('.')
         if len(parts) != 7:
-            return None  # Skip files that don't match expected format
+            return []  # Skip files that don't match expected format
         
         network, station, location, channel, _, year, dayfolder = parts
         
         # Read the file to get actual start and end times
-        st = Stream.read(file_path, headonly=True)
-        
-        if len(st) == 0:
-            print(f"Warning: No traces found in {file_path}")
-            return None
-        
-        start_time = min(tr.stats.starttime for tr in st)
-        end_time = max(tr.stats.endtime for tr in st)
-        
-        return (network, station, location, channel,
-                start_time.isoformat(), end_time.isoformat())
+        st = streamread(file_path, headonly=True)
+
+        db_elements = stream_to_db_elements(st)
+    
+        return db_elements #this is now a list of tuples
     
     except Exception as e:
         print(f"Error processing file {file_path}: {str(e)}")
-        return None
+        return []
 
 
 def populate_database_from_sds(sds_path, db_path,
@@ -138,7 +204,7 @@ def populate_database_from_sds(sds_path, db_path,
         - Attempts multiprocessing but falls back to single process if it fails
             (common on OSX and Windows)
         - Follows symbolic links when walking directory tree
-        - Files are processed using miniseed_to_db_element() function
+        - Files are processed using miniseed_to_db_elements() function
         - After insertion, continuous segments are joined based on gap_tolerance
         - Progress is displayed using tqdm progress bars
         - If newer_than is provided, it's converted to a Unix timestamp for comparison
@@ -151,7 +217,7 @@ def populate_database_from_sds(sds_path, db_path,
 
     # Set to possibly the maximum number of CPUs!
     if num_processes is None or num_processes <= 0:
-        num_processes = multiprocessing.cpu_count()
+        num_processes = os.cpu_count()
     
     # Convert newer_than (means to filter only new files) to timestamp
     if newer_than:
@@ -171,19 +237,21 @@ def populate_database_from_sds(sds_path, db_path,
     print(f"Found {total_files} files to process.")
     
     # Process files with or without multiprocessing
-    # TODO (currently having issues with OSX and undoubtably windows is going to be a bigger problem)
+    # TODO TODO TODO ensure cross platform compatibility with windows especially
     if num_processes > 1:
         try:
             with multiprocessing.Pool(processes=num_processes) as pool:
-                to_insert_db = list(tqdm(pool.imap(miniseed_to_db_element, file_paths), \
-                    total=total_files, desc="Processing files"))
+                results = list(tqdm(pool.imap(miniseed_to_db_elements, file_paths), 
+                              total=total_files, desc="Processing files"))
+                to_insert_db = [item for sublist in results for item in sublist]
+
         except Exception as e:
             print(f"Multiprocessing failed: {str(e)}. Falling back to single-process execution.")
             num_processes = 1
     else:
         to_insert_db = []
         for fp in tqdm(file_paths, desc="Scanning %s..." % sds_path):
-            to_insert_db.append(miniseed_to_db_element(fp))
+            to_insert_db.extend(miniseed_to_db_elements(fp))
 
     # Update database
     try:
@@ -194,6 +262,7 @@ def populate_database_from_sds(sds_path, db_path,
     print(f"Processed {total_files} files, inserted {num_inserted} records into the database.")
 
     db_manager.join_continuous_segments(gap_tolerance)
+
 
 def populate_database_from_files_dumb(cursor, file_paths=[]):
     """
@@ -209,14 +278,15 @@ def populate_database_from_files_dumb(cursor, file_paths=[]):
     """
     now = int(datetime.now().timestamp())
     for fp in file_paths:
-        result  = miniseed_to_db_element(fp)
-        if result:
-            result = result + (now,)
-            cursor.execute('''
-                INSERT OR REPLACE INTO archive_data
-                (network, station, location, channel, starttime, endtime, importtime)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ''', result)
+        results  = miniseed_to_db_elements(fp)
+        if results:
+            for result in results:
+                result = result + (now,)
+                cursor.execute('''
+                    INSERT OR REPLACE INTO archive_data
+                    (network, station, location, channel, starttime, endtime, importtime)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                ''', result)
 
 
 def populate_database_from_files(cursor, file_paths=[]):
@@ -225,7 +295,7 @@ def populate_database_from_files(cursor, file_paths=[]):
 
     Takes a list of SDS archive file paths, extracts metadata, and updates a database
     tracking data availability. If data spans overlap with existing database entries,
-    the spans are merged. Uses miniseed_to_db_element() to parse file metadata.
+    the spans are merged. Uses miniseed_to_db_elements() to parse file metadata.
 
     Args:
         cursor (sqlite3.Cursor): Database cursor for executing SQL commands
@@ -242,7 +312,7 @@ def populate_database_from_files(cursor, file_paths=[]):
             * importtime (integer): Unix timestamp of database insertion
         - Handles overlapping time spans by merging them into a single entry
         - Sets importtime to current Unix timestamp
-        - Skips files that fail metadata extraction (when miniseed_to_db_element returns None)
+        - Skips files that fail metadata extraction (when miniseed_to_db_elements returns None)
 
     Examples:
         >>> import sqlite3
@@ -254,37 +324,38 @@ def populate_database_from_files(cursor, file_paths=[]):
     """
     now = int(datetime.now().timestamp())
     for fp in file_paths:
-        result = miniseed_to_db_element(fp)
-        if result:
-            network, station, location, channel, start_timestamp, end_timestamp = result
-            
-            # First check for existing overlapping spans
-            cursor.execute('''
-                SELECT starttime, endtime FROM archive_data
-                WHERE network = ? AND station = ? AND location = ? AND channel = ?
-                AND NOT (endtime < ? OR starttime > ?)
-            ''', (network, station, location, channel, start_timestamp, end_timestamp))
-            
-            overlaps = cursor.fetchall()
-            if overlaps:
-                # Merge with existing spans
-                start_timestamp = min(start_timestamp, min(row[0] for row in overlaps))
-                end_timestamp = max(end_timestamp, max(row[1] for row in overlaps))
+        results = miniseed_to_db_elements(fp)
+        
+        for result in results:  # Process each tuple in the list
+            if result:
+                network, station, location, channel, start_timestamp, end_timestamp = result
                 
-                # Delete overlapping spans
+                # First check for existing overlapping spans
                 cursor.execute('''
-                    DELETE FROM archive_data
+                    SELECT starttime, endtime FROM archive_data
                     WHERE network = ? AND station = ? AND location = ? AND channel = ?
                     AND NOT (endtime < ? OR starttime > ?)
                 ''', (network, station, location, channel, start_timestamp, end_timestamp))
-            
-            # Insert the new or merged span
-            cursor.execute('''
-                INSERT INTO archive_data
-                (network, station, location, channel, starttime, endtime, importtime)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ''', (network, station, location, channel, start_timestamp, end_timestamp, now))
-
+                
+                overlaps = cursor.fetchall()
+                if overlaps:
+                    # Merge with existing spans
+                    start_timestamp = min(start_timestamp, min(row[0] for row in overlaps))
+                    end_timestamp = max(end_timestamp, max(row[1] for row in overlaps))
+                    
+                    # Delete overlapping spans
+                    cursor.execute('''
+                        DELETE FROM archive_data
+                        WHERE network = ? AND station = ? AND location = ? AND channel = ?
+                        AND NOT (endtime < ? OR starttime > ?)
+                    ''', (network, station, location, channel, start_timestamp, end_timestamp))
+                
+                # Insert the new or merged span
+                cursor.execute('''
+                    INSERT INTO archive_data
+                    (network, station, location, channel, starttime, endtime, importtime)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                ''', (network, station, location, channel, start_timestamp, end_timestamp, now))
  
 
 class DatabaseManager:
@@ -378,7 +449,7 @@ class DatabaseManager:
             # Create arrival_data table
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS arrival_data (
-                    event_id TEXT,
+                    resource_id TEXT,
                     e_mag REAL,
                     e_lat REAL,
                     e_lon REAL,
@@ -398,7 +469,7 @@ class DatabaseManager:
                     s_arrival REAL,
                     model TEXT,
                     importtime REAL,
-                    PRIMARY KEY (event_id, s_netcode, s_stacode, s_start)
+                    PRIMARY KEY (resource_id, s_netcode, s_stacode, s_start)
                 )
             ''')
 
@@ -636,7 +707,7 @@ class DatabaseManager:
 
         with self.connection() as conn:
             cursor = conn.cursor()
-            columns = ['event_id', 'e_mag', 'e_lat', 'e_lon', 'e_depth', 'e_time',
+            columns = ['resource_id', 'e_mag', 'e_lat', 'e_lon', 'e_depth', 'e_time',
                       's_netcode', 's_stacode', 's_lat', 's_lon', 's_elev', 's_start', 's_end',
                       'dist_deg', 'dist_km', 'azimuth', 'p_arrival', 's_arrival', 'model',
                       'importtime']
@@ -654,12 +725,50 @@ class DatabaseManager:
             
             return cursor.rowcount
 
-    def get_arrival_data(self, event_id: str, netcode: str, stacode: str) -> Optional[Dict[str, Any]]:
+    def check_data_existence(self, netcode: str, stacode: str, location: str, channel: str, starttime: str, endtime: str):
+        """
+        Run a simple check to see if a db element exists for a trace
+
+        Args:
+            db_manager (DatabaseManager): Database manager instance
+            network (str): Network code
+            station (str): Station code
+            location (str): Location code
+            channel (str): Channel code
+            start/endtime (str): Time in iso
+        
+        Returns:
+            bool: True if data exists for the specified parameters, False otherwise
+        """
+
+        time_point = datetime.fromisoformat(starttime) + timedelta(seconds=5) # just 5 seconds in is fine
+        
+        # Use the connection context manager from the DatabaseManager
+        with self.connection() as conn:
+            cursor = conn.cursor()
+            
+            # Query to check if any record spans the given time point
+            query = """
+                SELECT COUNT(*) FROM archive_data
+                WHERE network = ? 
+                AND station = ? 
+                AND location = ? 
+                AND channel = ?
+                AND starttime <= ?
+                AND endtime >= ?
+            """
+            
+            cursor.execute(query, (netcode, stacode, location, channel, starttime, endtime))
+            count = cursor.fetchone()[0]
+            
+            return count > 0        
+
+    def get_arrival_data(self, resource_id: str, netcode: str, stacode: str) -> Optional[Dict[str, Any]]:
         """
         Retrieve complete arrival data for a specific event and station.
 
         Args:
-            event_id: Unique identifier for the seismic event.
+            resource_id: Unique identifier for the seismic event.
             netcode: Network code for the station.
             stacode: Station code.
 
@@ -671,20 +780,20 @@ class DatabaseManager:
             cursor = conn.cursor()
             cursor.execute('''
                 SELECT * FROM arrival_data 
-                WHERE event_id = ? AND s_netcode = ? AND s_stacode = ?
-            ''', (event_id, netcode, stacode))
+                WHERE resource_id = ? AND s_netcode = ? AND s_stacode = ?
+            ''', (resource_id, netcode, stacode))
             result = cursor.fetchone()
             if result:
                 columns = [description[0] for description in cursor.description]
                 return dict(zip(columns, result))
         return None
 
-    def get_stations_for_event(self, event_id: str) -> List[Dict[str, Any]]:
+    def get_stations_for_event(self, resource_id: str) -> List[Dict[str, Any]]:
         """
         Retrieve all station data associated with a specific seismic event.
 
         Args:
-            event_id: Unique identifier for the seismic event.
+            resource_id: Unique identifier for the seismic event.
 
         Returns:
             List[Dict[str, Any]]: List of dictionaries containing arrival data for all
@@ -694,8 +803,8 @@ class DatabaseManager:
             cursor = conn.cursor()
             cursor.execute('''
                 SELECT * FROM arrival_data 
-                WHERE event_id = ?
-            ''', (event_id,))
+                WHERE resource_id = ?
+            ''', (resource_id,))
             results = cursor.fetchall()
             if results:
                 columns = [description[0] for description in cursor.description]
@@ -727,12 +836,12 @@ class DatabaseManager:
         return []
 
     # this function may be redundant now, only using fetch_arrivals_distances (?)
-    def fetch_arrivals(self, event_id: str, netcode: str, stacode: str) -> Optional[Tuple[float, float]]:
+    def fetch_arrivals(self, resource_id: str, netcode: str, stacode: str) -> Optional[Tuple[float, float]]:
         """
         Retrieve P and S wave arrival times for a specific event and station.
 
         Args:
-            event_id: Unique identifier for the seismic event.
+            resource_id: Unique identifier for the seismic event.
             netcode: Network code for the station.
             stacode: Station code.
 
@@ -745,19 +854,19 @@ class DatabaseManager:
             cursor.execute('''
                 SELECT p_arrival, s_arrival 
                 FROM arrival_data 
-                WHERE event_id = ? AND s_netcode = ? AND s_stacode = ?
-            ''', (event_id, netcode, stacode))
+                WHERE resource_id = ? AND s_netcode = ? AND s_stacode = ?
+            ''', (resource_id, netcode, stacode))
             result = cursor.fetchone()
             if result:
                 return (result[0], result[1])
         return None
 
-    def fetch_arrivals_distances(self, event_id: str, netcode: str, stacode: str) -> Optional[Tuple[float, float, float, float, float]]:
+    def fetch_arrivals_distances(self, resource_id: str, netcode: str, stacode: str) -> Optional[Tuple[float, float, float, float, float]]:
         """
         Retrieve arrival times and distance metrics for a specific event and station.
 
         Args:
-            event_id: Unique identifier for the seismic event.
+            resource_id: Unique identifier for the seismic event.
             netcode: Network code for the station.
             stacode: Station code.
 
@@ -776,8 +885,8 @@ class DatabaseManager:
             cursor.execute('''
                 SELECT p_arrival, s_arrival, dist_km, dist_deg, azimuth 
                 FROM arrival_data 
-                WHERE event_id = ? AND s_netcode = ? AND s_stacode = ?
-            ''', (event_id, netcode, stacode))
+                WHERE resource_id = ? AND s_netcode = ? AND s_stacode = ?
+            ''', (resource_id, netcode, stacode))
             result = cursor.fetchone()
             if result:
                 return (result[0], result[1], result[2], result[3], result[4])

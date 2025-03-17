@@ -1,6 +1,6 @@
 import streamlit as st
 
-from seed_vault.ui.pages.helpers.common import get_app_settings
+from seed_vault.ui.app_pages.helpers.common import get_app_settings
 from seed_vault.ui.components.workflows import StationBasedWorkflow
 
 get_app_settings()

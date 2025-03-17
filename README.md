@@ -4,34 +4,38 @@
 
 #### SEED Vault is a cross platform GUI utility which can search, view and download seismic data from FDSN servers
 
-*  Download & view EQ arrival data via a station-to-event OR an event-to-station search
-*  Quickly download and archive bulk continuous data, saving your progress along the way
-*  View and plot event arrivals
-*  A CLI scripting tool to automate common jobs
-*  Search, export, or import earthquake event catalogs and station metadata
-*  Download restricted/embargoed data by storing auth passwords in local config
-*  Add and use custom FDSN servers
-*  Saves all downloaded data as miniseed in a local SDS database to speed up future retrievals
-*  Local sqlite3 database editor
-*  Load and save search parameters and configuration
+- Download & view EQ arrival data via a station-to-event OR an event-to-station search
+- Quickly download and archive bulk continuous data, saving your progress along the way
+- View and plot event arrivals
+- A CLI scripting tool to automate common jobs
+- Search, export, or import earthquake event catalogs and station metadata
+- Download restricted/embargoed data by storing auth passwords in local config
+- Add and use custom FDSN servers
+- Saves all downloaded data as miniseed in a local SDS database to speed up future retrievals
+- Local sqlite3 database editor
+- Load and save search parameters and configuration
 
 Runs on:
-* Linux
-* Windows
-* MacOS
+
+- Linux
+- Windows
+- MacOS
 
 Can run:
-* As web service
-* From the command line (CLI)
 
-----
+- As web service
+- From the command line (CLI)
+
+---
 
 ### Requirements
-* 8 GB RAM
-* Python >= 3.10
-* ObsPy (>=1.4.1), Streamlit (>=1.39), Plotly (>-5.24), Pandas (>=2.2.2), Matplotlib (>=3.8.5)
+
+- 8 GB RAM
+- Python >= 3.10
+- ObsPy (>=1.4.1), Streamlit (>=1.39), Plotly (>-5.24), Pandas (>=2.2.2), Matplotlib (>=3.8.5)
 
 # Install via pip (easy way)
+
 ```
 $ python3 pip install seed-vault
 ```
@@ -53,29 +57,35 @@ $ python3 -m pip install ./seed-vault
 ```
 
 Or,
+
 ```
 #### Linux/MacOS
 cd seed-vault
 source setup.sh
 source run.sh
 ```
+
 #### Windows
+
 Open a powershell and run following commands:
+
 ```
 cd seed-vault
 .\setup-win.ps1
 .\run-win.ps1
 ```
 
-**NOTES:** 
+**NOTES:**
+
 1. For Win OS, you would need to convert the shell scripts to PowerShell. Or simply follow the steps in the shell scripts to set up the app.
 2. Requires python3 venv software package e.g. For python v10 on Ubuntu you may need to:
    ```
    sudo apt update
    sudo apt install python3.10-venv
-   ``` 
+   ```
 
 ## Project Folder structure
+
 ```
 seed-vault/
 │
@@ -90,13 +100,8 @@ seed-vault/
 │
 └── pyproject.toml     # Project configuration file
 ```
-----
 
-
-
-
-
-
+---
 
 # Development
 
@@ -104,27 +109,33 @@ seed-vault/
 
 If you look to further develop this app, it is highly recommended to set up the project with `poetry`. Follow the steps below to set up using `poetry`.
 
-### Install poetry 
+### Install poetry
 
 Refer to this link: https://python-poetry.org/docs/
 
 Alternatively,
 
 **Linux**
+
 ```bash
 curl -sSL https://install.python-poetry.org | python3 -
 ```
+
 then, add following to .bashrc:
+
 ```bash
 export PATH="$HOME/.local/bin:$PATH"
 ```
 
 **Windows**
 powershell:
+
 ```powershell
 (Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python -
 ```
+
 then, add poetry to your system path. It should be located here:
+
 ```
 %USERPROFILE%\.poetry\bin
 ```
@@ -137,11 +148,13 @@ poetry config virtualenvs.in-project true
 ```
 
 ## Install pyenv (Optional)
-This project uses python 3.10.*. If your base python is a different version (check via `python --version`), you may get errors when trying to install via poetry. Use pyenv to manage this.
+
+This project uses python 3.10.\*. If your base python is a different version (check via `python --version`), you may get errors when trying to install via poetry. Use pyenv to manage this.
 
 **Linux**
 
 Install the required packages for building Python with the following command
+
 ```
 sudo apt update
 
@@ -151,11 +164,13 @@ xz-utils tk-dev libffi-dev liblzma-dev git
 ```
 
 Then, install pyenv
+
 ```
 curl https://pyenv.run | bash
 ```
 
 After installation, add following to `.bashrc`:
+
 ```
 export PATH="$HOME/.pyenv/bin:$PATH"
 
@@ -166,10 +181,9 @@ eval "$(pyenv init -)"
 
 Run .bashrc to get things updated: `source ~/.bashrc`
 
-
 ### Start the project
 
-Install python 3.12.* if you have a different version locally:
+Install python 3.12.\* if you have a different version locally:
 
 ```
 pyenv install 3.12.0
@@ -186,6 +200,7 @@ poetry install
 ```
 
 Start the project:
+
 ```
 poetry shell
 ```
@@ -212,33 +227,40 @@ poetry build
 
 ### Build Installers
 
-*Need to be added*
+_Need to be added_
 
 ## Docker Development
+
 To develop and run the application using Docker, follow these steps:
 
 ### Prerequisites
+
 - Install Docker Application on your system
 
 ### Build and Run the Docker Container
 
 1. Navigate to the project root directory:
+
 ```bash
 cd seed-vault
 ```
 
 2. Build and run the Docker container:
+
 ```bash
 docker compose up --build
 ```
+
 The application should now be running and accessible at `http://localhost:8501`.
 
 ## Export poetry packages to requirements.txt
+
 ```
 poetry export -f requirements.txt --output requirements.txt --without-hashes
 ```
 
 ## Publishing the lib to test: pypi
+
 Define a package name in pyproject.toml (e.g. `seed-vault`).
 Then, run following commands
 
@@ -254,40 +276,55 @@ To install from pypi-test:
 ```bash
 pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple seed-vault
 ```
+
 Note: include both `test` and `official` indexes.
 
+## Publishing the lib to official: pypi:
+
+```
+poetry build
+poetry config pypi-token.pypi <YOUR_PYPI_TOKEN>
+poetry publish
+```
 
 ## Unit test
 
 The repository includes a number of unit tests. These tests only covers
-the main functions in `seed_vault.service.seismoloader` as these are the 
+the main functions in `seed_vault.service.seismoloader` as these are the
 core logics adopted in the app.
 
 ### Run tests
+
 To run the test units:
 
 1. Running only mockup tests
+
 ```
 poetry run pytest
 ```
 
 2. Running tests with actual FDSN API calls
+
 ```
 poetry run pytest --run-real-fdsn
 ```
 
 3. Generate coverage report:
 
- **to include the whole module:**
+**to include the whole module:**
+
 ```
 poetry run pytest --run-real-fdsn --cov=seed_vault --cov-report=html
 ```
+
 **to only include `service/*` tests:**
+
 ```
 poetry run pytest --run-real-fdsn --cov=seed_vault --cov-config=.coveragerc --cov-report=html
 ```
 
 4. Generate coverage badge
+
 ```
 poetry run coverage-badge -o coverage.svg
 ```

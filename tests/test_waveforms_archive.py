@@ -67,10 +67,10 @@ def not_implement_test():
 def test_get_fresh_data(test_settings: SeismoLoaderSettings, clean_up_data, check_real_data):
     
     test_settings.download_type = 'event'
-    event_streams = run_event(test_settings)
+    event_stream = run_event(test_settings)
 
-    assert event_streams, "Expected waveform data but got None or an empty list."
-    for stream in event_streams:
+    assert event_stream, "Expected waveform data but got None or an empty list."
+    for stream in event_stream:
         assert len(stream) > 0, "Expected non-empty waveform data."
 
     assert os.path.exists(test_settings.sds_path)
@@ -103,11 +103,12 @@ def test_force_redownload_data(test_settings: SeismoLoaderSettings, check_real_d
 @pytest.mark.xfail(reason="Testing live servers is not reliable as they are sometimes unavailable")
 def test_get_continuous_data(test_cont_settings: SeismoLoaderSettings, clean_up_data, check_real_data, not_implement_test):
     
-    event_streams = run_continuous(test_cont_settings)
+    success = run_continuous(test_cont_settings) #note that this doesn't return any data, just True
 
-    assert event_streams, "Expected waveform data but got None or an empty list."
-    for stream in event_streams:
-        assert len(stream) > 0, "Expected non-empty waveform data."
+    assert success
+    #assert event_streams, "Expected waveform data but got None or an empty list."
+    #for stream in event_streams:
+    #    assert len(stream) > 0, "Expected non-empty waveform data."
 
     assert os.path.exists(test_cont_settings.sds_path)
     assert os.path.exists(test_cont_settings.db_path)
