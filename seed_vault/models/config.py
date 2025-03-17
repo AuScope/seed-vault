@@ -164,20 +164,24 @@ class SeismoQuery(BaseModel):
     def cmb_str_n_s_to_props(self, cmb_n_s):
         lst_split = cmb_n_s.split(".")
         if len(lst_split) < 2:
-            raise ValueError(f"Inputted station code is malformed: {cmb_n_s}")
+            raise ValueError(f"Input station code is malformed: {cmb_n_s}")
         
-        for item in lst_split:
+        for item in lst_split[0:2]:
             if item == "":  # Add other validation checks here
-                raise ValueError(f"Inputted station code is malformed: {cmb_n_s}")
+                raise ValueError(f"Input station code is malformed: {cmb_n_s}")
         
         setattr(self, 'network', lst_split[0])
         setattr(self, 'station', lst_split[1])
 
-        if len(lst_split) == 3:
+        if len(lst_split) >= 3:
             setattr(self, 'location', lst_split[2])
+        else:
+            setattr(self, 'location', None)
 
-        if len(lst_split) == 4:
+        if len(lst_split) >= 4:
             setattr(self, 'channel', lst_split[3])
+        else:
+            setattr(self, 'channel', None)
         
 
 class DateConfig(BaseModel):
@@ -768,7 +772,7 @@ class SeismoLoaderSettings(BaseModel):
 
         # Parse force_stations (can be network.station.location.channel)
         force_stations_cmb_n_s = config.get(station_section, 'force_stations', fallback='').split(',')
-        force_stations = [SeismoQuery(cmb_str_n_s=cmb_n_s) for cmb_n_s in force_stations_cmb_n_s if cmb_n_s.strip()]
+        force_stations = [SeismoQuery(cmb_str_n_s=cmb_n_s,starttime=start_time,endtime=end_time) for cmb_n_s in force_stations_cmb_n_s if cmb_n_s.strip()]
 
         # Parse exclude_stations (just network.station)
         exclude_stations_cmb_n_s = config.get(station_section, 'exclude_stations', fallback='').split(',')
