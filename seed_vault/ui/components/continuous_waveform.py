@@ -12,7 +12,7 @@ from html import escape
 from seed_vault.models.config import SeismoLoaderSettings
 from seed_vault.service.seismoloader import run_continuous
 from seed_vault.ui.components.display_log import ConsoleDisplay
-from seed_vault.service.utils import convert_to_datetime, get_time_interval
+from seed_vault.service.utils import convert_to_datetime, get_time_interval, shift_time, parse_inv
 from seed_vault.ui.app_pages.helpers.common import save_filter
 
 # Create a global stop event for cancellation
@@ -29,8 +29,37 @@ class ContinuousFilterMenu:
             'start_time': self.settings.station.date_config.start_time,
             'end_time': self.settings.station.date_config.end_time
         }
+        self.last_button_pressed = None
+        self.todo_nets = None
 
     def refresh_filters(self):
+        """Check for changes and trigger updates"""
+        current_time_state = {
+            'start_time': self.settings.station.date_config.start_time,
+            'end_time': self.settings.station.date_config.end_time
+        }
+        
+        # Check if time state changed - use deep comparison for datetime objects
+        # it doesn't seem to stay updated always.. possible not working correctly in __init__
+        time_changed = (current_time_state['start_time'] != self.old_time_state['start_time'] or 
+                       current_time_state['end_time'] != self.old_time_state['end_time'])
+        
+        if time_changed:
+            self.old_time_state = {
+                'start_time': current_time_state['start_time'],
+                'end_time': current_time_state['end_time']
+            }
+            save_filter(self.settings)
+            st.rerun()
+
+        # Check if other settings changed
+        changes = self.settings.has_changed(self.old_settings)
+        if changes.get('has_changed', False):
+            self.old_settings = deepcopy(self.settings)
+            save_filter(self.settings)
+            st.rerun()
+
+    def refresh_filters_OLD(self):
         """Check for changes and trigger updates"""
         current_time_state = {
             'start_time': self.settings.station.date_config.start_time,
@@ -49,43 +78,135 @@ class ContinuousFilterMenu:
             self.old_settings = deepcopy(self.settings)
             save_filter(self.settings)
             st.rerun()
-        
+
     def render(self):
-        st.sidebar.title("Continuous Waveform Information")
+        st.sidebar.title("Download Parameters")
+
+        # debugging
+        #st.sidebar.write("Current start time:", self.settings.station.date_config.start_time)
+        #st.sidebar.write("Old start time:", self.old_time_state['start_time'])
+        #st.sidebar.write("Current end time:", self.settings.station.date_config.end_time)
+        #st.sidebar.write("Old end time:", self.old_time_state['ed_time'])
+
+        ## Get the list of items about to be downloaded
+        # ...For some reason this snippet only works in render
+        #    & we don't want to re-run it needlessly
+        if not self.todo_nets:
+            self.todo_nets,self.todo_stas,self.todo_locs,self.todo_chas = \
+            parse_inv(self.settings.station.selected_invs)
         
-        with st.sidebar.expander("Time Selection", expanded=True):
+        with st.sidebar.expander("Adjust Time Range?", expanded=True):
             start_date, start_time = convert_to_datetime(self.settings.station.date_config.start_time)
             end_date, end_time = convert_to_datetime(self.settings.station.date_config.end_time)
 
-            c11, c12 = st.columns([1,1])
-            c21, c22 = st.columns([1,1])
-            with c11:
-                if st.button('Last Month', key="station-set-last-month"):
-                    end_time, start_time = get_time_interval('month')
-                    self.settings.station.date_config.end_time = end_time
-                    self.settings.station.date_config.start_time = start_time
-                    self.refresh_filters()
 
-            with c12:
-                if st.button('Last Week', key="station-set-last-week"):
-                    end_time, start_time = get_time_interval('week')
-                    self.settings.station.date_config.end_time = end_time
-                    self.settings.station.date_config.start_time = start_time
+            # Row 1: Year controls
+            col1, col2, col3, col4 = st.columns(4)
+            # Row 2: Month controls
+            col5, col6, col7, col8 = st.columns(4)
+            # Row 3: Week controls
+            col9, col10, col11, col12 = st.columns(4)
+            # Row 4: Day controls
+            #col13, col14, col15, col16 = st.columns(4)
+            
+            # Year controls
+            with col1:
+                if st.button("- Year", key="start-year-minus"):
+                    self.settings.station.date_config.start_time = shift_time(
+                        self.settings.station.date_config.start_time, 'year', -1)
                     self.refresh_filters()
+            
+            with col2:
+                if st.button("+ Year", key="start-year-plus"):
+                    self.settings.station.date_config.start_time = shift_time(
+                        self.settings.station.date_config.start_time, 'year', 1)
+                    self.refresh_filters()
+            with col3:
+                if st.button("-Year", key="end-year-minus"):
+                    self.settings.station.date_config.end_time = shift_time(
+                        self.settings.station.date_config.end_time, 'year', -1)
+                    self.refresh_filters()
+            
+            with col4:
+                if st.button("+Year", key="end-year-plus"):
+                    self.settings.station.date_config.end_time = shift_time(
+                        self.settings.station.date_config.end_time, 'year', 1)
+                    self.refresh_filters()                   
+            
+            # Month controls
+            with col5:
+                if st.button("-Month", key="start-month-minus"):
+                    self.settings.station.date_config.start_time = shift_time(
+                        self.settings.station.date_config.start_time, 'month', -1)
+                    self.refresh_filters()
+            
+            with col6:
+                if st.button("+Month", key="start-month-plus"):
+                    self.settings.station.date_config.start_time = shift_time(
+                        self.settings.station.date_config.start_time, 'month', 1)
+                    self.refresh_filters()
+            with col7:
+                if st.button("-Month", key="end-month-minus"):
+                    self.settings.station.date_config.end_time = shift_time(
+                        self.settings.station.date_config.end_time, 'month', -1)
+                    self.refresh_filters()
+            
+            with col8:
+                if st.button("+Month", key="end-month-plus"):
+                    self.settings.station.date_config.end_time = shift_time(
+                        self.settings.station.date_config.end_time, 'month', 1)
+                    self.refresh_filters()                    
+            
+            # Week controls
+            with col9:
+                if st.button("-Week", key="start-week-minus"):
+                    self.settings.station.date_config.start_time = shift_time(
+                        self.settings.station.date_config.start_time, 'week', -1)
+                    self.refresh_filters()
+            
+            with col10:
+                if st.button("+Week", key="start-week-plus"):
+                    self.settings.station.date_config.start_time = shift_time(
+                        self.settings.station.date_config.start_time, 'week', 1)
+                    self.refresh_filters()
+            with col11:
+                if st.button("-Week", key="end-week-minus"):
+                    self.settings.station.date_config.end_time = shift_time(
+                        self.settings.station.date_config.end_time, 'week', -1)
+                    self.refresh_filters()
+            
+            with col12:
+                if st.button("+Week", key="end-week-plus"):
+                    self.settings.station.date_config.end_time = shift_time(
+                        self.settings.station.date_config.end_time, 'week', 1)
+                    self.refresh_filters()
+            
+            # Day controls
+            """
+            with col13:
+                if st.button("- Day", key="start-day-minus"):
+                    self.settings.station.date_config.start_time = shift_time(
+                        self.settings.station.date_config.start_time, 'day', -1)
+                    self.refresh_filters()
+            
+            with col14:
+                if st.button("+ Day", key="start-day-plus"):
+                    self.settings.station.date_config.start_time = shift_time(
+                        self.settings.station.date_config.start_time, 'day', 1)
+                    self.refresh_filters()
+            with col15:
+                if st.button("- Day", key="end-day-minus"):
+                    self.settings.station.date_config.end_time = shift_time(
+                        self.settings.station.date_config.end_time, 'day', -1)
+                    self.refresh_filters()
+            
+            with col16:
+                if st.button("+ Day", key="end-day-plus"):
+                    self.settings.station.date_config.end_time = shift_time(
+                        self.settings.station.date_config.end_time, 'day', 1)
+                    self.refresh_filters()
+            """
 
-            with c21:
-                if st.button('Last Day', key="station-set-last-day"):
-                    end_time, start_time = get_time_interval('day')
-                    self.settings.station.date_config.end_time = end_time
-                    self.settings.station.date_config.start_time = start_time
-                    self.refresh_filters()
-
-            with c22:
-                if st.button('Last Hour', key="station-set-last-hour"):
-                    end_time, start_time = get_time_interval('hour')
-                    self.settings.station.date_config.end_time = end_time
-                    self.settings.station.date_config.start_time = start_time
-                    self.refresh_filters()
 
             c1, c2 = st.columns([1,1])
             with c1:
@@ -94,6 +215,7 @@ class ContinuousFilterMenu:
                 new_start = datetime.combine(new_start_date, new_start_time)
                 if new_start != self.settings.station.date_config.start_time:
                     self.settings.station.date_config.start_time = new_start
+                    self.last_button_pressed = None
                     self.refresh_filters()
 
             with c2:
@@ -102,13 +224,39 @@ class ContinuousFilterMenu:
                 new_end = datetime.combine(new_end_date, new_end_time)
                 if new_end != self.settings.station.date_config.end_time:
                     self.settings.station.date_config.end_time = new_end
+                    self.last_button_pressed = None
+                    self.refresh_filters()
+
+
+            # also keep the last month/week/day options
+            c21,c22,c23 = st.columns([1,1,1])
+            with c21:
+                if st.button('Last Month', key="station-set-last-month"):
+                    end_time, start_time = get_time_interval('month')
+                    self.settings.station.date_config.end_time = end_time
+                    self.settings.station.date_config.start_time = start_time
+                    self.refresh_filters()
+
+            with c22:
+                if st.button('Last Week', key="station-set-last-week"):
+                    end_time, start_time = get_time_interval('week')
+                    self.settings.station.date_config.end_time = end_time
+                    self.settings.station.date_config.start_time = start_time
+                    self.refresh_filters()
+
+            with c23:
+                if st.button('Last Day', key="station-set-last-day"):
+                    end_time, start_time = get_time_interval('day')
+                    self.settings.station.date_config.end_time = end_time
+                    self.settings.station.date_config.start_time = start_time
                     self.refresh_filters()
 
         with st.sidebar.expander("Submitted NSLCs:", expanded=True):
-            st.caption(f"Network: {self.settings.station.network}")
-            st.caption(f"Station: {self.settings.station.station}")
-            st.caption(f"Location: {self.settings.station.location}")
-            st.caption(f"Channel: {self.settings.station.channel}")
+            st.caption(f"Networks: {','.join(self.todo_nets)  if self.todo_nets else 'None'}")
+            st.caption(f"Stations: {','.join(self.todo_stas)  if self.todo_stas else 'None'}")
+            st.caption(f"Locations: {','.join([loc if loc != '' else '--' for loc in self.todo_locs]) if self.todo_locs else 'None'}")
+            st.caption(f"Channels: {','.join(self.todo_chas)  if self.todo_chas else 'None'}")
+
 
 class ContinuousDisplay:
     def __init__(self, settings: SeismoLoaderSettings, filter_menu: ContinuousFilterMenu):
@@ -184,7 +332,7 @@ class ContinuousDisplay:
         })
         
     def render(self):
-        st.title("Continuous Waveform Processing")
+        st.title("Continuous Waveform Archiving")
         
         # Create three columns for the controls
         col1, col2 = st.columns(2)

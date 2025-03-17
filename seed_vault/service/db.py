@@ -14,7 +14,7 @@ import random
 import fnmatch
 import multiprocessing
 from tqdm import tqdm
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from obspy import UTCDateTime,Stream
 from obspy.core.stream import read as streamread
@@ -24,47 +24,7 @@ from typing import Union, List, Dict, Tuple, Optional, Any
 from seed_vault.service.utils import to_timestamp
 
 
-# this is just one which breaks if there are multiple segments per file
-def stream_to_db_element_OLD(st: Stream) -> Optional[Tuple[str, str, str, str, str, str]]:
-    """
-    Convert an ObsPy Stream object to a database element tuple.
 
-    Creates a database element from a stream, 
-    ***assuming all traces have the same Network-Station-Location-Channel (NSLC) codes.***
-    (e.g. an SDS file)
-
-    Args:
-        st: ObsPy Stream object containing seismic traces.
-
-    Returns:
-        Optional[Tuple[str, str, str, str, str, str]]: A tuple containing:
-            - network: Network code
-            - station: Station code
-            - location: Location code
-            - channel: Channel code
-            - start_time: ISO format start time
-            - end_time: ISO format end time
-            Returns None if stream is empty.
-
-    Example:
-        >>> stream = obspy.read()
-        >>> element = stream_to_db_element(stream)
-        >>> if element:
-        ...     network, station, location, channel, start, end = element
-    """
-    if len(st) == 0:
-        print("Warning: Empty stream provided")
-        return None
-        
-    start_time = min(tr.stats.starttime for tr in st)
-    end_time = max(tr.stats.endtime for tr in st)
-        
-    return (st[0].stats.network, st[0].stats.station,
-            st[0].stats.location, st[0].stats.channel,
-            start_time.isoformat(), end_time.isoformat())
-
-
-#with an S! multiple!
 def stream_to_db_elements(st: Stream) -> List[Tuple[str, str, str, str, str, str]]:
     """
     Convert an ObsPy Stream object to multiple database element tuples, properly handling gaps.
@@ -278,7 +238,11 @@ def populate_database_from_files_dumb(cursor, file_paths=[]):
     """
     now = int(datetime.now().timestamp())
     for fp in file_paths:
-        results  = miniseed_to_db_elements(fp)
+        try:
+            results = miniseed_to_db_elements(fp)
+        except Exception as e:
+            print(f"error in miniseed_to_db_elements: {fp}")
+            continue
         if results:
             for result in results:
                 result = result + (now,)
@@ -324,10 +288,16 @@ def populate_database_from_files(cursor, file_paths=[]):
     """
     now = int(datetime.now().timestamp())
     for fp in file_paths:
-        results = miniseed_to_db_elements(fp)
+        try:
+            results = miniseed_to_db_elements(fp)
+        except Exception as e:
+            print(f"error in miniseed_to_db_elements: {fp}")
+            continue
         
         for result in results:  # Process each tuple in the list
-            if result:
+            if not result or len(result) != 6:
+                print(f"populate_database_from_files: invalid result: {result}")
+            else:
                 network, station, location, channel, start_timestamp, end_timestamp = result
                 
                 # First check for existing overlapping spans
@@ -473,8 +443,10 @@ class DatabaseManager:
                 )
             ''')
 
-    def display_contents(self, table_name: str, start_time: Union[int, float, datetime, UTCDateTime] = 0,
-                        end_time: Union[int, float, datetime, UTCDateTime] = 4102444799, limit: int = 100):
+    def display_contents(
+        self, table_name: str, start_time: Union[int, float, datetime, UTCDateTime] = 0,
+        end_time: Union[int, float, datetime, UTCDateTime] = 4102444799, limit: int = 100):
+        
         """
         Display contents of a specified table within a given time range.
 
@@ -725,7 +697,49 @@ class DatabaseManager:
             
             return cursor.rowcount
 
-    def get_arrival_data(self, resource_id: str, netcode: str, stacode: str) -> Optional[Dict[str, Any]]:
+    def check_data_existence(
+        self, netcode: str, stacode: str, location: str, 
+        channel: str, starttime: str, endtime: str) -> bool:
+        """
+        Run a simple check to see if a db element exists for a trace
+
+        Args:
+            db_manager (DatabaseManager): Database manager instance
+            network (str): Network code
+            station (str): Station code
+            location (str): Location code
+            channel (str): Channel code
+            start/endtime (str): Time in iso
+        
+        Returns:
+            bool: True if data exists for the specified parameters, False otherwise
+        """
+
+        time_point = datetime.fromisoformat(starttime) + timedelta(seconds=5) # just 5 seconds in is fine
+        
+        # Use the connection context manager from the DatabaseManager
+        with self.connection() as conn:
+            cursor = conn.cursor()
+            
+            # Query to check if any record spans the given time point
+            query = """
+                SELECT COUNT(*) FROM archive_data
+                WHERE network = ? 
+                AND station = ? 
+                AND location = ? 
+                AND channel = ?
+                AND starttime <= ?
+                AND endtime >= ?
+            """
+            
+            cursor.execute(query, (netcode, stacode, location, channel, starttime, endtime))
+            count = cursor.fetchone()[0]
+            
+            return count > 0        
+
+    def get_arrival_data(
+    self, resource_id: str, netcode: str, stacode: str
+    ) -> Optional[Dict[str, Any]]:
         """
         Retrieve complete arrival data for a specific event and station.
 
@@ -798,7 +812,9 @@ class DatabaseManager:
         return []
 
     # this function may be redundant now, only using fetch_arrivals_distances (?)
-    def fetch_arrivals(self, resource_id: str, netcode: str, stacode: str) -> Optional[Tuple[float, float]]:
+    def fetch_arrivals(
+    self, resource_id: str, netcode: str, stacode: str
+    ) -> Optional[Tuple[float, float]]:
         """
         Retrieve P and S wave arrival times for a specific event and station.
 
@@ -823,7 +839,9 @@ class DatabaseManager:
                 return (result[0], result[1])
         return None
 
-    def fetch_arrivals_distances(self, resource_id: str, netcode: str, stacode: str) -> Optional[Tuple[float, float, float, float, float]]:
+    def fetch_arrivals_distances(
+    self, resource_id: str, netcode: str, stacode: str
+    ) -> Optional[Tuple[float, float, float, float, float]]:    
         """
         Retrieve arrival times and distance metrics for a specific event and station.
 

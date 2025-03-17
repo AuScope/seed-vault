@@ -17,6 +17,47 @@ def is_in_enum(item, enum_class):
     return item in (member.value for member in enum_class)
 
 
+# It may be worth also outputting the max/min network spans (TODO)
+def parse_inv(inv: Inventory):
+    """
+    Return 4 lists (net, sta, loc, cha) detailing the contents of an ObsPy inventory file
+    
+    Args:
+        inv (Inventory): ObsPy Inventory object
+        
+    Returns:
+        tuple: Four lists containing all network, station, location, and channel codes
+    """
+    networks = []
+    stations = []
+    locations = []
+    channels = []
+
+    if not inv:
+        return networks, stations, locations, channels
+    
+    for network in inv:
+        networks.append(network.code)
+        
+        for station in network:
+            stations.append(station.code)
+            
+            for channel in station:
+                if channel.location_code not in locations:
+                    locations.append(channel.location_code)
+                
+                if channel.code not in channels:
+                    channels.append(channel.code)
+    
+    networks = sorted(list(set(networks)))
+    stations = sorted(list(set(stations)))
+    locations = sorted(list(set(locations)))
+    channels = sorted(list(set(channels)))
+    
+    return networks, stations, locations, channels
+
+
+
 def get_time_interval(interval_type: str, amount: int = 1):
     """
     Get the current date-time and the date-time `amount` intervals earlier.
@@ -42,16 +83,56 @@ def get_time_interval(interval_type: str, amount: int = 1):
     elif interval_type == "month":
         now = now.replace(hour=0, minute=0, second=0, microsecond=0)
         past = now - relativedelta(months=amount)
+    elif interval_type == "year":
+        now = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        past = now - relativedelta(years=amount)
     else:
-        raise ValueError(f"Invalid interval type: {interval_type}. Choose from 'hour', 'day', 'week', 'month'.")
+        raise ValueError(f"Invalid interval type: {interval_type}. Choose from 'hour', 'day', 'week', 'month', 'year'.")
 
     return now, past
+
+def shift_time(reftime, interval_type: str, amount: int = 1):
+    """
+    Shift time `amount` intervals relative to reftime
+    Args:
+        reftime (datetime): Reference time
+        interval_type (str): One of ['hour', 'day', 'week', 'month', 'year']
+        amount (int): Number of intervals to shift (positive = forward, negative = backward)
+    Returns:
+        shifted_datetime: The new datetime after the shift, capped at current time if shifting forward
+    """
+        
+    if interval_type == "hour":
+        newtime = reftime + timedelta(hours=amount)
+    elif interval_type == "day":
+        newtime = reftime + timedelta(days=amount)
+    elif interval_type == "week":
+        newtime = reftime + timedelta(weeks=amount)
+    elif interval_type == "month":
+        newtime = reftime + relativedelta(months=amount)
+    elif interval_type == "year":
+        newtime = reftime + relativedelta(years=amount)
+    else:
+        raise ValueError(f"Invalid interval type: {interval_type}. Choose from 'hour', 'day', 'week', 'month', 'year'.")
+    
+    newtime = newtime.replace(tzinfo=timezone.utc)
+
+    if amount > 0:
+        now = datetime.now(timezone.utc)
+        if newtime > now:
+            return now
+        else:
+            return newtime.date()
+    else:
+        return newtime.date()
 
 
 def convert_to_datetime(value):
     """Convert a string or other value to a date and time object, handling different formats.
     
     If only a date is provided, it defaults to 00:00:00 time.
+
+    note that this returns a tuple of (date, time)
     """
     if isinstance(value, datetime):
         return value.date(), value.time()
