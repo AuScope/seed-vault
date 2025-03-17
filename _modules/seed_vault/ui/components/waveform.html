@@ -73,17 +73,20 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../flows/continuous_based.html#key-features">Key Features</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../flows/run_from_parameters.html">Run from Parameters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../app_main_flows.html#workflow-components">Workflow Components</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../app_run_from_config.html">Run from Parameters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../flows/run_from_parameters.html">Direct parameter input</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../../flows/run_from_parameters.html#overview">Overview</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../flows/run_from_parameters.html#workflow-steps">Workflow Steps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../flows/run_from_parameters.html#step-1-load-and-execute-configuration">Step 1: Load and Execute Configuration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../flows/run_from_parameters.html#key-features">Key Features</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../flows/run_from_parameters.html#parameter-reference">Parameter Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../app_main_flows.html#workflow-components">Workflow Components</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../app_run_from_config.html">Direct parameter input</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../app_db_explorer.html">Database Explorer</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../../app_db_explorer.html#execute-sql-tab">Execute SQL Tab</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../../app_db_explorer.html#sql-reference">SQL Reference</a></li>
@@ -620,7 +623,11 @@
                 <span class="n">stop_event</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Download failed or was cancelled.&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">stop_event</span><span class="o">.</span><span class="n">is_set</span><span class="p">():</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Download was cancelled by user.&quot;</span><span class="p">)</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;download_cancelled&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Download failed.&quot;</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> 
@@ -660,7 +667,8 @@
         <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
             <span class="s2">&quot;is_downloading&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
             <span class="s2">&quot;query_done&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-            <span class="s2">&quot;polling_active&quot;</span><span class="p">:</span> <span class="kc">True</span>
+            <span class="s2">&quot;polling_active&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;download_cancelled&quot;</span><span class="p">:</span> <span class="kc">False</span>  <span class="c1"># Initialize cancellation flag</span>
         <span class="p">})</span>
 
         <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span></div>
@@ -1246,11 +1254,10 @@
                         <span class="n">disabled</span><span class="o">=</span><span class="ow">not</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;is_downloading&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
                         <span class="n">use_container_width</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
                 <span class="n">stop_event</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>  <span class="c1"># Signal cancellation</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Cancel requested but finishing current request...&quot;</span><span class="p">)</span>
-                <span class="c1">#st.session_state.update({</span>
-                <span class="c1">#    &quot;is_downloading&quot;: False,</span>
-                <span class="c1">#    &quot;polling_active&quot;: False</span>
-                <span class="c1">#})</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Cancelling download...&quot;</span><span class="p">)</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+                    <span class="s2">&quot;download_cancelled&quot;</span><span class="p">:</span> <span class="kc">True</span>  <span class="c1"># Set cancellation flag</span>
+                <span class="p">})</span>
                 <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span>
 
         <span class="c1"># Download status indicator</span>
@@ -1317,7 +1324,12 @@
         <span class="k">elif</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;query_done&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">waveform_display</span><span class="o">.</span><span class="n">stream</span><span class="p">:</span>
             <span class="n">status_container</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successfully retrieved waveforms for </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">waveform_display</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span><span class="si">}</span><span class="s2"> channels.&quot;</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;query_done&quot;</span><span class="p">):</span>
-            <span class="n">status_container</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No waveforms retrieved. Please check your selection criteria and log view.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;download_cancelled&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+                <span class="n">status_container</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Waveform download was cancelled by user.&quot;</span><span class="p">)</span>
+                <span class="c1"># Reset the flag after displaying</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;download_cancelled&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">status_container</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No waveforms retrieved. Please check your selection criteria and log view.&quot;</span><span class="p">)</span>
 
         <span class="c1"># Display waveforms if they exist</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">waveform_display</span><span class="o">.</span><span class="n">stream</span><span class="p">:</span>

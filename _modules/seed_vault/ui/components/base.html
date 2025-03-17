@@ -73,17 +73,20 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../flows/continuous_based.html#key-features">Key Features</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../flows/run_from_parameters.html">Run from Parameters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../app_main_flows.html#workflow-components">Workflow Components</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../app_run_from_config.html">Run from Parameters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../flows/run_from_parameters.html">Direct parameter input</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../../flows/run_from_parameters.html#overview">Overview</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../flows/run_from_parameters.html#workflow-steps">Workflow Steps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../flows/run_from_parameters.html#step-1-load-and-execute-configuration">Step 1: Load and Execute Configuration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../flows/run_from_parameters.html#key-features">Key Features</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../flows/run_from_parameters.html#parameter-reference">Parameter Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../app_main_flows.html#workflow-components">Workflow Components</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../app_run_from_config.html">Direct parameter input</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../app_db_explorer.html">Database Explorer</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../../app_db_explorer.html#execute-sql-tab">Execute SQL Tab</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../../app_db_explorer.html#sql-reference">SQL Reference</a></li>
@@ -591,16 +594,16 @@
 
                 <span class="n">c11</span><span class="p">,</span> <span class="n">c12</span><span class="p">,</span> <span class="n">c13</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
                 <span class="k">with</span> <span class="n">c11</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s1">&#39;Last Year&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;station-set-last-year&quot;</span><span class="p">):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">get_time_interval</span><span class="p">(</span><span class="s1">&#39;year&#39;</span><span class="p">)</span>
+                        <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span>
+                <span class="k">with</span> <span class="n">c12</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s1">&#39;Last Month&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;station-set-last-month&quot;</span><span class="p">):</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">get_time_interval</span><span class="p">(</span><span class="s1">&#39;month&#39;</span><span class="p">)</span>
                         <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span>
-                <span class="k">with</span> <span class="n">c12</span><span class="p">:</span>
+                <span class="k">with</span> <span class="n">c13</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s1">&#39;Last Week&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;station-set-last-week&quot;</span><span class="p">):</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">get_time_interval</span><span class="p">(</span><span class="s1">&#39;week&#39;</span><span class="p">)</span>
-                        <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span>
-                <span class="k">with</span> <span class="n">c13</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s1">&#39;Last Day&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;station-set-last-day&quot;</span><span class="p">):</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">get_time_interval</span><span class="p">(</span><span class="s1">&#39;day&#39;</span><span class="p">)</span>
                         <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span>
 
                 <span class="n">c11</span><span class="p">,</span> <span class="n">c12</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
@@ -855,7 +858,7 @@
                         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">selected_invs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inventories</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">station</span><span class="o">=</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;station&quot;</span><span class="p">])</span>
                         <span class="n">is_init</span> <span class="o">=</span> <span class="kc">True</span>
                     <span class="k">else</span><span class="p">:</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">selected_invs</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inventories</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">station</span><span class="o">=</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;station&quot;</span><span class="p">])</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">selected_invs</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inventories</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">station</span><span class="o">=</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;station&quot;</span><span class="p">])</span> <span class="c1"># may need to review for efficiency</span>
             <span class="k">return</span></div>
 
 
@@ -1763,7 +1766,7 @@
             <span class="k">return</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">EVENT</span><span class="p">:</span>
-            <span class="n">unique_columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;place&quot;</span><span class="p">,</span> <span class="s2">&quot;magnitude&quot;</span><span class="p">]</span>
+            <span class="n">unique_columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;place&quot;</span><span class="p">,</span> <span class="s2">&quot;time&quot;</span><span class="p">]</span>
 
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">STATION</span><span class="p">:</span>
             <span class="n">unique_columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;network&quot;</span><span class="p">,</span> <span class="s2">&quot;station&quot;</span><span class="p">]</span>
@@ -1775,7 +1778,7 @@
             <span class="k">return</span>
 
 
-        <span class="n">df_selected</span><span class="p">[</span><span class="s2">&quot;display_label&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_selected</span><span class="p">[</span><span class="n">unique_columns</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="s2">&quot; | &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">df_selected</span><span class="p">[</span><span class="s2">&quot;display_label&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_selected</span><span class="p">[</span><span class="n">unique_columns</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         
         <span class="n">selected_items</span> <span class="o">=</span> <span class="n">df_selected</span><span class="p">[</span><span class="s2">&quot;display_label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
 

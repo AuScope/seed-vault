@@ -73,17 +73,20 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../flows/continuous_based.html#key-features">Key Features</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../flows/run_from_parameters.html">Run from Parameters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../app_main_flows.html#workflow-components">Workflow Components</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../app_run_from_config.html">Run from Parameters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../flows/run_from_parameters.html">Direct parameter input</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../../flows/run_from_parameters.html#overview">Overview</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../flows/run_from_parameters.html#workflow-steps">Workflow Steps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../flows/run_from_parameters.html#step-1-load-and-execute-configuration">Step 1: Load and Execute Configuration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../flows/run_from_parameters.html#key-features">Key Features</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../flows/run_from_parameters.html#parameter-reference">Parameter Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../app_main_flows.html#workflow-components">Workflow Components</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../app_run_from_config.html">Direct parameter input</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../app_db_explorer.html">Database Explorer</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../../app_db_explorer.html#execute-sql-tab">Execute SQL Tab</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../../app_db_explorer.html#sql-reference">SQL Reference</a></li>
@@ -165,17 +168,17 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">streamlit</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">st</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">time</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">systime</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">queue</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">html</span><span class="w"> </span><span class="kn">import</span> <span class="n">escape</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.models.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">SeismoLoaderSettings</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.service.seismoloader</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_continuous</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.ui.components.display_log</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConsoleDisplay</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.service.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">convert_to_datetime</span><span class="p">,</span> <span class="n">get_time_interval</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.service.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">convert_to_datetime</span><span class="p">,</span> <span class="n">get_time_interval</span><span class="p">,</span> <span class="n">shift_time</span><span class="p">,</span> <span class="n">parse_inv</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.ui.app_pages.helpers.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">save_filter</span>
 
 <span class="c1"># Create a global stop event for cancellation</span>
@@ -194,10 +197,88 @@
             <span class="s1">&#39;start_time&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span><span class="p">,</span>
             <span class="s1">&#39;end_time&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span>
         <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_button_pressed</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">todo_nets</span> <span class="o">=</span> <span class="kc">None</span>
+        
+        <span class="c1"># Check if date range is valid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validate_date_range</span><span class="p">()</span>
+
+<div class="viewcode-block" id="ContinuousFilterMenu.validate_date_range">
+<a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu.validate_date_range">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_date_range</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate that end time is not earlier than start time&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Get the current start and end times</span>
+            <span class="n">start_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span>
+            <span class="n">end_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span>
+            
+            <span class="c1"># Make sure both are datetime objects for comparison</span>
+            <span class="k">if</span> <span class="n">start_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">end_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># Convert to strings and back to datetime to ensure consistency</span>
+                <span class="n">start_str</span> <span class="o">=</span> <span class="n">start_time</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">start_time</span><span class="p">,</span> <span class="s1">&#39;isoformat&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">start_time</span><span class="p">)</span>
+                <span class="n">end_str</span> <span class="o">=</span> <span class="n">end_time</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">end_time</span><span class="p">,</span> <span class="s1">&#39;isoformat&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">end_time</span><span class="p">)</span>
+                
+                <span class="c1"># Parse strings to datetime objects</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">parsed_start</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">start_str</span><span class="p">)</span>
+                    <span class="n">parsed_end</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">end_str</span><span class="p">)</span>
+                    
+                    <span class="c1"># Update the values to ensure they are datetime objects</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">parsed_start</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span> <span class="o">=</span> <span class="n">parsed_end</span>
+                    
+                    <span class="c1"># Now compare the datetime objects</span>
+                    <span class="k">if</span> <span class="n">parsed_end</span> <span class="o">&lt;=</span> <span class="n">parsed_start</span><span class="p">:</span>
+                        <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;date_range_valid&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;date_range_valid&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+                    <span class="c1"># If parsing fails, default to invalid to be safe</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;date_range_valid&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># If either date is None, validation fails</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;date_range_valid&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="c1"># Log any errors and set validation to false</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Date validation error: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;date_range_valid&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span></div>
+
 
 <div class="viewcode-block" id="ContinuousFilterMenu.refresh_filters">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu.refresh_filters">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">refresh_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check for changes and trigger updates&quot;&quot;&quot;</span>
+        <span class="n">current_time_state</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;start_time&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span><span class="p">,</span>
+            <span class="s1">&#39;end_time&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span>
+        <span class="p">}</span>
+        
+        <span class="c1"># Check if time state changed - use deep comparison for datetime objects</span>
+        <span class="c1"># it doesn&#39;t seem to stay updated always.. possible not working correctly in __init__</span>
+        <span class="n">time_changed</span> <span class="o">=</span> <span class="p">(</span><span class="n">current_time_state</span><span class="p">[</span><span class="s1">&#39;start_time&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">old_time_state</span><span class="p">[</span><span class="s1">&#39;start_time&#39;</span><span class="p">]</span> <span class="ow">or</span> 
+                       <span class="n">current_time_state</span><span class="p">[</span><span class="s1">&#39;end_time&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">old_time_state</span><span class="p">[</span><span class="s1">&#39;end_time&#39;</span><span class="p">])</span>
+        
+        <span class="k">if</span> <span class="n">time_changed</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">old_time_state</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;start_time&#39;</span><span class="p">:</span> <span class="n">current_time_state</span><span class="p">[</span><span class="s1">&#39;start_time&#39;</span><span class="p">],</span>
+                <span class="s1">&#39;end_time&#39;</span><span class="p">:</span> <span class="n">current_time_state</span><span class="p">[</span><span class="s1">&#39;end_time&#39;</span><span class="p">]</span>
+            <span class="p">}</span>
+            <span class="c1"># Validate date range whenever time changes</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">validate_date_range</span><span class="p">()</span>
+            <span class="n">save_filter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span>
+
+        <span class="c1"># Check if other settings changed</span>
+        <span class="n">changes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">has_changed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">old_settings</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">changes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;has_changed&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">old_settings</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+            <span class="n">save_filter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ContinuousFilterMenu.refresh_filters_OLD">
+<a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu.refresh_filters_OLD">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">refresh_filters_OLD</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Check for changes and trigger updates&quot;&quot;&quot;</span>
         <span class="n">current_time_state</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s1">&#39;start_time&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span><span class="p">,</span>
@@ -217,69 +298,218 @@
             <span class="n">save_filter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
             <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span></div>
 
-        
+
 <div class="viewcode-block" id="ContinuousFilterMenu.render">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu.render">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Continuous Waveform Information&quot;</span><span class="p">)</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Download Parameters&quot;</span><span class="p">)</span>
+
+        <span class="c1"># debugging</span>
+        <span class="c1">#st.sidebar.write(&quot;Current start time:&quot;, self.settings.station.date_config.start_time)</span>
+        <span class="c1">#st.sidebar.write(&quot;Old start time:&quot;, self.old_time_state[&#39;start_time&#39;])</span>
+        <span class="c1">#st.sidebar.write(&quot;Current end time:&quot;, self.settings.station.date_config.end_time)</span>
+        <span class="c1">#st.sidebar.write(&quot;Old end time:&quot;, self.old_time_state[&#39;ed_time&#39;])</span>
+
+        <span class="c1">## Get the list of items about to be downloaded</span>
+        <span class="c1"># ...For some reason this snippet only works in render</span>
+        <span class="c1">#    &amp; we don&#39;t want to re-run it needlessly</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">todo_nets</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">todo_nets</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">todo_stas</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">todo_locs</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">todo_chas</span> <span class="o">=</span> \
+            <span class="n">parse_inv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">selected_invs</span><span class="p">)</span>
         
-        <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Time Selection&quot;</span><span class="p">,</span> <span class="n">expanded</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Adjust Time Range?&quot;</span><span class="p">,</span> <span class="n">expanded</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
             <span class="n">start_date</span><span class="p">,</span> <span class="n">start_time</span> <span class="o">=</span> <span class="n">convert_to_datetime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span><span class="p">)</span>
             <span class="n">end_date</span><span class="p">,</span> <span class="n">end_time</span> <span class="o">=</span> <span class="n">convert_to_datetime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span><span class="p">)</span>
 
-            <span class="n">c11</span><span class="p">,</span> <span class="n">c12</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
-            <span class="n">c21</span><span class="p">,</span> <span class="n">c22</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
-            <span class="k">with</span> <span class="n">c11</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s1">&#39;Last Month&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;station-set-last-month&quot;</span><span class="p">):</span>
-                    <span class="n">end_time</span><span class="p">,</span> <span class="n">start_time</span> <span class="o">=</span> <span class="n">get_time_interval</span><span class="p">(</span><span class="s1">&#39;month&#39;</span><span class="p">)</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span> <span class="o">=</span> <span class="n">end_time</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">start_time</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">refresh_filters</span><span class="p">()</span>
 
-            <span class="k">with</span> <span class="n">c12</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s1">&#39;Last Week&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;station-set-last-week&quot;</span><span class="p">):</span>
-                    <span class="n">end_time</span><span class="p">,</span> <span class="n">start_time</span> <span class="o">=</span> <span class="n">get_time_interval</span><span class="p">(</span><span class="s1">&#39;week&#39;</span><span class="p">)</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span> <span class="o">=</span> <span class="n">end_time</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">start_time</span>
+            <span class="c1"># Row 1: Year controls</span>
+            <span class="n">col1</span><span class="p">,</span> <span class="n">col2</span><span class="p">,</span> <span class="n">col3</span><span class="p">,</span> <span class="n">col4</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+            <span class="c1"># Row 2: Month controls</span>
+            <span class="n">col5</span><span class="p">,</span> <span class="n">col6</span><span class="p">,</span> <span class="n">col7</span><span class="p">,</span> <span class="n">col8</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+            <span class="c1"># Row 3: Week controls</span>
+            <span class="n">col9</span><span class="p">,</span> <span class="n">col10</span><span class="p">,</span> <span class="n">col11</span><span class="p">,</span> <span class="n">col12</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+            <span class="c1"># Row 4: Day controls</span>
+            <span class="c1">#col13, col14, col15, col16 = st.columns(4)</span>
+            
+            <span class="c1"># Year controls</span>
+            <span class="k">with</span> <span class="n">col1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;- Year&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;start-year-minus&quot;</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">shift_time</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span><span class="p">,</span> <span class="s1">&#39;year&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">validate_date_range</span><span class="p">()</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">refresh_filters</span><span class="p">()</span>
+            
+            <span class="k">with</span> <span class="n">col2</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;+ Year&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;start-year-plus&quot;</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">shift_time</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span><span class="p">,</span> <span class="s1">&#39;year&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">validate_date_range</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">refresh_filters</span><span class="p">()</span>
+            <span class="k">with</span> <span class="n">col3</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;-Year&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;end-year-minus&quot;</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span> <span class="o">=</span> <span class="n">shift_time</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span><span class="p">,</span> <span class="s1">&#39;year&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">validate_date_range</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">refresh_filters</span><span class="p">()</span>
+            
+            <span class="k">with</span> <span class="n">col4</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;+Year&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;end-year-plus&quot;</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span> <span class="o">=</span> <span class="n">shift_time</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span><span class="p">,</span> <span class="s1">&#39;year&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">validate_date_range</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">refresh_filters</span><span class="p">()</span>                   
+            
+            <span class="c1"># Month controls</span>
+            <span class="k">with</span> <span class="n">col5</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;-Month&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;start-month-minus&quot;</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">shift_time</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span><span class="p">,</span> <span class="s1">&#39;month&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">validate_date_range</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">refresh_filters</span><span class="p">()</span>
+            
+            <span class="k">with</span> <span class="n">col6</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;+Month&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;start-month-plus&quot;</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">shift_time</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span><span class="p">,</span> <span class="s1">&#39;month&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">validate_date_range</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">refresh_filters</span><span class="p">()</span>
+            <span class="k">with</span> <span class="n">col7</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;-Month&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;end-month-minus&quot;</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span> <span class="o">=</span> <span class="n">shift_time</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span><span class="p">,</span> <span class="s1">&#39;month&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">validate_date_range</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">refresh_filters</span><span class="p">()</span>
+            
+            <span class="k">with</span> <span class="n">col8</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;+Month&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;end-month-plus&quot;</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span> <span class="o">=</span> <span class="n">shift_time</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span><span class="p">,</span> <span class="s1">&#39;month&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">validate_date_range</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">refresh_filters</span><span class="p">()</span>                    
+            
+            <span class="c1"># Week controls</span>
+            <span class="k">with</span> <span class="n">col9</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;-Week&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;start-week-minus&quot;</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">shift_time</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span><span class="p">,</span> <span class="s1">&#39;week&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">validate_date_range</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">refresh_filters</span><span class="p">()</span>
+            
+            <span class="k">with</span> <span class="n">col10</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;+Week&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;start-week-plus&quot;</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">shift_time</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span><span class="p">,</span> <span class="s1">&#39;week&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">validate_date_range</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">refresh_filters</span><span class="p">()</span>
+            <span class="k">with</span> <span class="n">col11</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;-Week&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;end-week-minus&quot;</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span> <span class="o">=</span> <span class="n">shift_time</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span><span class="p">,</span> <span class="s1">&#39;week&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">validate_date_range</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">refresh_filters</span><span class="p">()</span>
+            
+            <span class="k">with</span> <span class="n">col12</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;+Week&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;end-week-plus&quot;</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span> <span class="o">=</span> <span class="n">shift_time</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span><span class="p">,</span> <span class="s1">&#39;week&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">validate_date_range</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">refresh_filters</span><span class="p">()</span>
+            
+            <span class="c1"># Day controls</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            with col13:</span>
+<span class="sd">                if st.button(&quot;- Day&quot;, key=&quot;start-day-minus&quot;):</span>
+<span class="sd">                    self.settings.station.date_config.start_time = shift_time(</span>
+<span class="sd">                        self.settings.station.date_config.start_time, &#39;day&#39;, -1)</span>
+<span class="sd">                    self.refresh_filters()</span>
+<span class="sd">            </span>
+<span class="sd">            with col14:</span>
+<span class="sd">                if st.button(&quot;+ Day&quot;, key=&quot;start-day-plus&quot;):</span>
+<span class="sd">                    self.settings.station.date_config.start_time = shift_time(</span>
+<span class="sd">                        self.settings.station.date_config.start_time, &#39;day&#39;, 1)</span>
+<span class="sd">                    self.refresh_filters()</span>
+<span class="sd">            with col15:</span>
+<span class="sd">                if st.button(&quot;- Day&quot;, key=&quot;end-day-minus&quot;):</span>
+<span class="sd">                    self.settings.station.date_config.end_time = shift_time(</span>
+<span class="sd">                        self.settings.station.date_config.end_time, &#39;day&#39;, -1)</span>
+<span class="sd">                    self.refresh_filters()</span>
+<span class="sd">            </span>
+<span class="sd">            with col16:</span>
+<span class="sd">                if st.button(&quot;+ Day&quot;, key=&quot;end-day-plus&quot;):</span>
+<span class="sd">                    self.settings.station.date_config.end_time = shift_time(</span>
+<span class="sd">                        self.settings.station.date_config.end_time, &#39;day&#39;, 1)</span>
+<span class="sd">                    self.refresh_filters()</span>
+<span class="sd">            &quot;&quot;&quot;</span>
 
-            <span class="k">with</span> <span class="n">c21</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s1">&#39;Last Day&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;station-set-last-day&quot;</span><span class="p">):</span>
-                    <span class="n">end_time</span><span class="p">,</span> <span class="n">start_time</span> <span class="o">=</span> <span class="n">get_time_interval</span><span class="p">(</span><span class="s1">&#39;day&#39;</span><span class="p">)</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span> <span class="o">=</span> <span class="n">end_time</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">start_time</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">refresh_filters</span><span class="p">()</span>
-
-            <span class="k">with</span> <span class="n">c22</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s1">&#39;Last Hour&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;station-set-last-hour&quot;</span><span class="p">):</span>
-                    <span class="n">end_time</span><span class="p">,</span> <span class="n">start_time</span> <span class="o">=</span> <span class="n">get_time_interval</span><span class="p">(</span><span class="s1">&#39;hour&#39;</span><span class="p">)</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span> <span class="o">=</span> <span class="n">end_time</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">start_time</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">refresh_filters</span><span class="p">()</span>
 
             <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
             <span class="k">with</span> <span class="n">c1</span><span class="p">:</span>
                 <span class="n">new_start_date</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">date_input</span><span class="p">(</span><span class="s2">&quot;Start Date&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">start_date</span><span class="p">)</span>
                 <span class="n">new_start_time</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">time_input</span><span class="p">(</span><span class="s2">&quot;Start Time (UTC)&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">start_time</span><span class="p">)</span>
-                <span class="n">new_start</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span><span class="n">new_start_date</span><span class="p">,</span> <span class="n">new_start_time</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">new_start</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span><span class="p">:</span>
+                
+                <span class="c1"># Handle cases where only date or only time has changed</span>
+                <span class="n">date_changed</span> <span class="o">=</span> <span class="n">new_start_date</span> <span class="o">!=</span> <span class="n">start_date</span>
+                <span class="n">time_changed</span> <span class="o">=</span> <span class="n">new_start_time</span> <span class="o">!=</span> <span class="n">start_time</span>
+                
+                <span class="k">if</span> <span class="n">date_changed</span> <span class="ow">or</span> <span class="n">time_changed</span><span class="p">:</span>
+                    <span class="n">new_start</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span><span class="n">new_start_date</span><span class="p">,</span> <span class="n">new_start_time</span><span class="p">)</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">new_start</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">last_button_pressed</span> <span class="o">=</span> <span class="kc">None</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">validate_date_range</span><span class="p">()</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">refresh_filters</span><span class="p">()</span>
 
             <span class="k">with</span> <span class="n">c2</span><span class="p">:</span>
                 <span class="n">new_end_date</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">date_input</span><span class="p">(</span><span class="s2">&quot;End Date&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">end_date</span><span class="p">)</span>                
                 <span class="n">new_end_time</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">time_input</span><span class="p">(</span><span class="s2">&quot;End Time (UTC)&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">end_time</span><span class="p">)</span>
-                <span class="n">new_end</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span><span class="n">new_end_date</span><span class="p">,</span> <span class="n">new_end_time</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">new_end</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span><span class="p">:</span>
+                
+                <span class="c1"># Handle cases where only date or only time has changed</span>
+                <span class="n">date_changed</span> <span class="o">=</span> <span class="n">new_end_date</span> <span class="o">!=</span> <span class="n">end_date</span>
+                <span class="n">time_changed</span> <span class="o">=</span> <span class="n">new_end_time</span> <span class="o">!=</span> <span class="n">end_time</span>
+                
+                <span class="k">if</span> <span class="n">date_changed</span> <span class="ow">or</span> <span class="n">time_changed</span><span class="p">:</span>
+                    <span class="n">new_end</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span><span class="n">new_end_date</span><span class="p">,</span> <span class="n">new_end_time</span><span class="p">)</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span> <span class="o">=</span> <span class="n">new_end</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">last_button_pressed</span> <span class="o">=</span> <span class="kc">None</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">validate_date_range</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">refresh_filters</span><span class="p">()</span>
+
+            <span class="c1"># Display validation message if date range is invalid</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;date_range_valid&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;End time must be later than start time&quot;</span><span class="p">)</span>
+
+            <span class="c1"># also keep the last month/week/day options</span>
+            <span class="n">c21</span><span class="p">,</span><span class="n">c22</span><span class="p">,</span><span class="n">c23</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">with</span> <span class="n">c21</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s1">&#39;Last Month&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;station-set-last-month&quot;</span><span class="p">):</span>
+                    <span class="n">end_time</span><span class="p">,</span> <span class="n">start_time</span> <span class="o">=</span> <span class="n">get_time_interval</span><span class="p">(</span><span class="s1">&#39;month&#39;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span> <span class="o">=</span> <span class="n">end_time</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">start_time</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">validate_date_range</span><span class="p">()</span>  <span class="c1"># Validate after updating times</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">refresh_filters</span><span class="p">()</span>
+
+            <span class="k">with</span> <span class="n">c22</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s1">&#39;Last Week&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;station-set-last-week&quot;</span><span class="p">):</span>
+                    <span class="n">end_time</span><span class="p">,</span> <span class="n">start_time</span> <span class="o">=</span> <span class="n">get_time_interval</span><span class="p">(</span><span class="s1">&#39;week&#39;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span> <span class="o">=</span> <span class="n">end_time</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">start_time</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">validate_date_range</span><span class="p">()</span>  <span class="c1"># Validate after updating times</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">refresh_filters</span><span class="p">()</span>
+
+            <span class="k">with</span> <span class="n">c23</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s1">&#39;Last Day&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;station-set-last-day&quot;</span><span class="p">):</span>
+                    <span class="n">end_time</span><span class="p">,</span> <span class="n">start_time</span> <span class="o">=</span> <span class="n">get_time_interval</span><span class="p">(</span><span class="s1">&#39;day&#39;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span> <span class="o">=</span> <span class="n">end_time</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">start_time</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">validate_date_range</span><span class="p">()</span>  <span class="c1"># Validate after updating times</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">refresh_filters</span><span class="p">()</span>
 
         <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Submitted NSLCs:&quot;</span><span class="p">,</span> <span class="n">expanded</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">caption</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Network: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">network</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">caption</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Station: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">station</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">caption</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Location: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">location</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">caption</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Channel: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">channel</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+            <span class="n">st</span><span class="o">.</span><span class="n">caption</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Networks: </span><span class="si">{</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">todo_nets</span><span class="p">)</span><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">todo_nets</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;None&#39;</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">caption</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Stations: </span><span class="si">{</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">todo_stas</span><span class="p">)</span><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">todo_stas</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;None&#39;</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">caption</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Locations: </span><span class="si">{</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">loc</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">loc</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;--&#39;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">loc</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">todo_locs</span><span class="p">])</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">todo_locs</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;None&#39;</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">caption</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Channels: </span><span class="si">{</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">todo_chas</span><span class="p">)</span><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">todo_chas</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;None&#39;</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 </div>
+
 
 
 <div class="viewcode-block" id="ContinuousDisplay">
@@ -363,7 +593,7 @@
 <div class="viewcode-block" id="ContinuousDisplay.render">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.continuous_waveform.ContinuousDisplay.render">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">st</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Continuous Waveform Processing&quot;</span><span class="p">)</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Continuous Waveform Archiving&quot;</span><span class="p">)</span>
         
         <span class="c1"># Create three columns for the controls</span>
         <span class="n">col1</span><span class="p">,</span> <span class="n">col2</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
@@ -373,7 +603,7 @@
             <span class="n">get_waveforms_button</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span>
                 <span class="s2">&quot;Download Waveforms&quot;</span><span class="p">,</span>
                 <span class="n">key</span><span class="o">=</span><span class="s2">&quot;download_continuous&quot;</span><span class="p">,</span>
-                <span class="n">disabled</span><span class="o">=</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;is_downloading&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+                <span class="n">disabled</span><span class="o">=</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;is_downloading&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;date_range_valid&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
                 <span class="n">use_container_width</span><span class="o">=</span><span class="kc">True</span>
             <span class="p">)</span>
 
@@ -387,7 +617,8 @@
                 <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Cancelling download...&quot;</span><span class="p">)</span>
                 <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
                     <span class="s2">&quot;is_downloading&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-                    <span class="s2">&quot;polling_active&quot;</span><span class="p">:</span> <span class="kc">False</span>
+                    <span class="s2">&quot;polling_active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                    <span class="s2">&quot;download_cancelled&quot;</span><span class="p">:</span> <span class="kc">True</span>  <span class="c1"># Add this flag to track cancellation</span>
                 <span class="p">})</span>
                 <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span>
 
@@ -450,6 +681,8 @@
                     <span class="p">)</span>
                     
                     <span class="n">log_container</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="n">log_text</span><span class="p">,</span> <span class="n">unsafe_allow_html</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;download_cancelled&quot;</span><span class="p">):</span>
+            <span class="n">status_container</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Download was cancelled by user.&quot;</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;query_done&quot;</span><span class="p">):</span>
             <span class="n">status_container</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s2">&quot;Continuous data processing completed successfully!&quot;</span><span class="p">)</span></div>
 
@@ -467,7 +700,8 @@
         <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
             <span class="s2">&quot;is_downloading&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
             <span class="s2">&quot;query_done&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-            <span class="s2">&quot;polling_active&quot;</span><span class="p">:</span> <span class="kc">True</span>
+            <span class="s2">&quot;polling_active&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;download_cancelled&quot;</span><span class="p">:</span> <span class="kc">False</span>  <span class="c1"># Reset cancellation flag when starting new download</span>
         <span class="p">})</span>
 
         <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span></div>
@@ -497,7 +731,8 @@
             <span class="s2">&quot;polling_active&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
             <span class="s2">&quot;query_thread&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
             <span class="s2">&quot;trigger_rerun&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-            <span class="s2">&quot;log_entries&quot;</span><span class="p">:</span> <span class="p">[]</span>
+            <span class="s2">&quot;log_entries&quot;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s2">&quot;date_range_valid&quot;</span><span class="p">:</span> <span class="kc">True</span>
         <span class="p">}</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">required_states</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">:</span>
@@ -551,7 +786,7 @@
 
             <span class="c1"># Always trigger a rerun while polling is active to check for new logs</span>
             <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;polling_active&quot;</span><span class="p">):</span>
-                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.2</span><span class="p">)</span>  <span class="c1"># Shorter pause for more frequent updates</span>
+                <span class="n">systime</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.2</span><span class="p">)</span>  <span class="c1"># Shorter pause for more frequent updates</span>
                 <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span></div>
 
         

@@ -73,17 +73,20 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../flows/continuous_based.html#key-features">Key Features</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../flows/run_from_parameters.html">Run from Parameters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../app_main_flows.html#workflow-components">Workflow Components</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../app_run_from_config.html">Run from Parameters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../flows/run_from_parameters.html">Direct parameter input</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../flows/run_from_parameters.html#overview">Overview</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../flows/run_from_parameters.html#workflow-steps">Workflow Steps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../flows/run_from_parameters.html#step-1-load-and-execute-configuration">Step 1: Load and Execute Configuration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../flows/run_from_parameters.html#key-features">Key Features</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../flows/run_from_parameters.html#parameter-reference">Parameter Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../app_main_flows.html#workflow-components">Workflow Components</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../../app_run_from_config.html">Direct parameter input</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../app_db_explorer.html">Database Explorer</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../app_db_explorer.html#execute-sql-tab">Execute SQL Tab</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../app_db_explorer.html#sql-reference">SQL Reference</a></li>
@@ -187,50 +190,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.service.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_timestamp</span>
 
 
-<span class="c1"># this is just one which breaks if there are multiple segments per file</span>
-<div class="viewcode-block" id="stream_to_db_element_OLD">
-<a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.stream_to_db_element_OLD">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">stream_to_db_element_OLD</span><span class="p">(</span><span class="n">st</span><span class="p">:</span> <span class="n">Stream</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Convert an ObsPy Stream object to a database element tuple.</span>
 
-<span class="sd">    Creates a database element from a stream, </span>
-<span class="sd">    ***assuming all traces have the same Network-Station-Location-Channel (NSLC) codes.***</span>
-<span class="sd">    (e.g. an SDS file)</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        st: ObsPy Stream object containing seismic traces.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        Optional[Tuple[str, str, str, str, str, str]]: A tuple containing:</span>
-<span class="sd">            - network: Network code</span>
-<span class="sd">            - station: Station code</span>
-<span class="sd">            - location: Location code</span>
-<span class="sd">            - channel: Channel code</span>
-<span class="sd">            - start_time: ISO format start time</span>
-<span class="sd">            - end_time: ISO format end time</span>
-<span class="sd">            Returns None if stream is empty.</span>
-
-<span class="sd">    Example:</span>
-<span class="sd">        &gt;&gt;&gt; stream = obspy.read()</span>
-<span class="sd">        &gt;&gt;&gt; element = stream_to_db_element(stream)</span>
-<span class="sd">        &gt;&gt;&gt; if element:</span>
-<span class="sd">        ...     network, station, location, channel, start, end = element</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">st</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning: Empty stream provided&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">None</span>
-        
-    <span class="n">start_time</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">starttime</span> <span class="k">for</span> <span class="n">tr</span> <span class="ow">in</span> <span class="n">st</span><span class="p">)</span>
-    <span class="n">end_time</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">endtime</span> <span class="k">for</span> <span class="n">tr</span> <span class="ow">in</span> <span class="n">st</span><span class="p">)</span>
-        
-    <span class="k">return</span> <span class="p">(</span><span class="n">st</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">network</span><span class="p">,</span> <span class="n">st</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">station</span><span class="p">,</span>
-            <span class="n">st</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">location</span><span class="p">,</span> <span class="n">st</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">channel</span><span class="p">,</span>
-            <span class="n">start_time</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span> <span class="n">end_time</span><span class="o">.</span><span class="n">isoformat</span><span class="p">())</span></div>
-
-
-
-<span class="c1">#with an S! multiple!</span>
 <div class="viewcode-block" id="stream_to_db_elements">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.stream_to_db_elements">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">stream_to_db_elements</span><span class="p">(</span><span class="n">st</span><span class="p">:</span> <span class="n">Stream</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
@@ -455,7 +415,11 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">now</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">timestamp</span><span class="p">())</span>
     <span class="k">for</span> <span class="n">fp</span> <span class="ow">in</span> <span class="n">file_paths</span><span class="p">:</span>
-        <span class="n">results</span>  <span class="o">=</span> <span class="n">miniseed_to_db_elements</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="n">miniseed_to_db_elements</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;error in miniseed_to_db_elements: </span><span class="si">{</span><span class="n">fp</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">continue</span>
         <span class="k">if</span> <span class="n">results</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
                 <span class="n">result</span> <span class="o">=</span> <span class="n">result</span> <span class="o">+</span> <span class="p">(</span><span class="n">now</span><span class="p">,)</span>
@@ -504,10 +468,16 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">now</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">timestamp</span><span class="p">())</span>
     <span class="k">for</span> <span class="n">fp</span> <span class="ow">in</span> <span class="n">file_paths</span><span class="p">:</span>
-        <span class="n">results</span> <span class="o">=</span> <span class="n">miniseed_to_db_elements</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="n">miniseed_to_db_elements</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;error in miniseed_to_db_elements: </span><span class="si">{</span><span class="n">fp</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">continue</span>
         
         <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>  <span class="c1"># Process each tuple in the list</span>
-            <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">6</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;populate_database_from_files: invalid result: </span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
                 <span class="n">network</span><span class="p">,</span> <span class="n">station</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span> <span class="n">start_timestamp</span><span class="p">,</span> <span class="n">end_timestamp</span> <span class="o">=</span> <span class="n">result</span>
                 
                 <span class="c1"># First check for existing overlapping spans</span>
@@ -664,8 +634,10 @@
 
 <div class="viewcode-block" id="DatabaseManager.display_contents">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.DatabaseManager.display_contents">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">display_contents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">start_time</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">UTCDateTime</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
-                        <span class="n">end_time</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">UTCDateTime</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4102444799</span><span class="p">,</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">display_contents</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">start_time</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">UTCDateTime</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">end_time</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">UTCDateTime</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4102444799</span><span class="p">,</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">):</span>
+<span class="w">        </span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Display contents of a specified table within a given time range.</span>
 
@@ -943,7 +915,9 @@
 
 <div class="viewcode-block" id="DatabaseManager.check_data_existence">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.DatabaseManager.check_data_existence">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">check_data_existence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">netcode</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">stacode</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">location</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">starttime</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">endtime</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_data_existence</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">netcode</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">stacode</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">location</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> 
+        <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">starttime</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">endtime</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run a simple check to see if a db element exists for a trace</span>
 
@@ -984,7 +958,9 @@
 
 <div class="viewcode-block" id="DatabaseManager.get_arrival_data">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.DatabaseManager.get_arrival_data">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_arrival_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">netcode</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">stacode</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_arrival_data</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span> <span class="n">resource_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">netcode</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">stacode</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Retrieve complete arrival data for a specific event and station.</span>
 
@@ -1066,7 +1042,9 @@
     <span class="c1"># this function may be redundant now, only using fetch_arrivals_distances (?)</span>
 <div class="viewcode-block" id="DatabaseManager.fetch_arrivals">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.DatabaseManager.fetch_arrivals">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">fetch_arrivals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">netcode</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">stacode</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fetch_arrivals</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span> <span class="n">resource_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">netcode</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">stacode</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Retrieve P and S wave arrival times for a specific event and station.</span>
 
@@ -1094,7 +1072,9 @@
 
 <div class="viewcode-block" id="DatabaseManager.fetch_arrivals_distances">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.DatabaseManager.fetch_arrivals_distances">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">fetch_arrivals_distances</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">netcode</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">stacode</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fetch_arrivals_distances</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span> <span class="n">resource_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">netcode</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">stacode</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>    
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Retrieve arrival times and distance metrics for a specific event and station.</span>
 

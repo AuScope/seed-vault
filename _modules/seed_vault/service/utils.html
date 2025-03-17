@@ -73,17 +73,20 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../flows/continuous_based.html#key-features">Key Features</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../flows/run_from_parameters.html">Run from Parameters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../app_main_flows.html#workflow-components">Workflow Components</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../app_run_from_config.html">Run from Parameters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../flows/run_from_parameters.html">Direct parameter input</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../flows/run_from_parameters.html#overview">Overview</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../flows/run_from_parameters.html#workflow-steps">Workflow Steps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../flows/run_from_parameters.html#step-1-load-and-execute-configuration">Step 1: Load and Execute Configuration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../flows/run_from_parameters.html#key-features">Key Features</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../flows/run_from_parameters.html#parameter-reference">Parameter Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../app_main_flows.html#workflow-components">Workflow Components</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../../app_run_from_config.html">Direct parameter input</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../app_db_explorer.html">Database Explorer</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../app_db_explorer.html#execute-sql-tab">Execute SQL Tab</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../app_db_explorer.html#sql-reference">SQL Reference</a></li>
@@ -183,6 +186,50 @@
 
 
 
+<span class="c1"># It may be worth also outputting the max/min network spans (TODO)</span>
+<div class="viewcode-block" id="parse_inv">
+<a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.utils.parse_inv">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_inv</span><span class="p">(</span><span class="n">inv</span><span class="p">:</span> <span class="n">Inventory</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return 4 lists (net, sta, loc, cha) detailing the contents of an ObsPy inventory file</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        inv (Inventory): ObsPy Inventory object</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: Four lists containing all network, station, location, and channel codes</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">networks</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">stations</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">locations</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">channels</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">inv</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">networks</span><span class="p">,</span> <span class="n">stations</span><span class="p">,</span> <span class="n">locations</span><span class="p">,</span> <span class="n">channels</span>
+    
+    <span class="k">for</span> <span class="n">network</span> <span class="ow">in</span> <span class="n">inv</span><span class="p">:</span>
+        <span class="n">networks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">network</span><span class="o">.</span><span class="n">code</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">station</span> <span class="ow">in</span> <span class="n">network</span><span class="p">:</span>
+            <span class="n">stations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">station</span><span class="o">.</span><span class="n">code</span><span class="p">)</span>
+            
+            <span class="k">for</span> <span class="n">channel</span> <span class="ow">in</span> <span class="n">station</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">channel</span><span class="o">.</span><span class="n">location_code</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">locations</span><span class="p">:</span>
+                    <span class="n">locations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">channel</span><span class="o">.</span><span class="n">location_code</span><span class="p">)</span>
+                
+                <span class="k">if</span> <span class="n">channel</span><span class="o">.</span><span class="n">code</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">channels</span><span class="p">:</span>
+                    <span class="n">channels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">channel</span><span class="o">.</span><span class="n">code</span><span class="p">)</span>
+    
+    <span class="n">networks</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">networks</span><span class="p">)))</span>
+    <span class="n">stations</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">stations</span><span class="p">)))</span>
+    <span class="n">locations</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">locations</span><span class="p">)))</span>
+    <span class="n">channels</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">channels</span><span class="p">)))</span>
+    
+    <span class="k">return</span> <span class="n">networks</span><span class="p">,</span> <span class="n">stations</span><span class="p">,</span> <span class="n">locations</span><span class="p">,</span> <span class="n">channels</span></div>
+
+
+
+
 <div class="viewcode-block" id="get_time_interval">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.utils.get_time_interval">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_time_interval</span><span class="p">(</span><span class="n">interval_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">amount</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
@@ -210,10 +257,51 @@
     <span class="k">elif</span> <span class="n">interval_type</span> <span class="o">==</span> <span class="s2">&quot;month&quot;</span><span class="p">:</span>
         <span class="n">now</span> <span class="o">=</span> <span class="n">now</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">hour</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">minute</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">second</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">microsecond</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="n">past</span> <span class="o">=</span> <span class="n">now</span> <span class="o">-</span> <span class="n">relativedelta</span><span class="p">(</span><span class="n">months</span><span class="o">=</span><span class="n">amount</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interval_type</span> <span class="o">==</span> <span class="s2">&quot;year&quot;</span><span class="p">:</span>
+        <span class="n">now</span> <span class="o">=</span> <span class="n">now</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">hour</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">minute</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">second</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">microsecond</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">past</span> <span class="o">=</span> <span class="n">now</span> <span class="o">-</span> <span class="n">relativedelta</span><span class="p">(</span><span class="n">years</span><span class="o">=</span><span class="n">amount</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid interval type: </span><span class="si">{</span><span class="n">interval_type</span><span class="si">}</span><span class="s2">. Choose from &#39;hour&#39;, &#39;day&#39;, &#39;week&#39;, &#39;month&#39;.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid interval type: </span><span class="si">{</span><span class="n">interval_type</span><span class="si">}</span><span class="s2">. Choose from &#39;hour&#39;, &#39;day&#39;, &#39;week&#39;, &#39;month&#39;, &#39;year&#39;.&quot;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">now</span><span class="p">,</span> <span class="n">past</span></div>
+
+
+<div class="viewcode-block" id="shift_time">
+<a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.utils.shift_time">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">shift_time</span><span class="p">(</span><span class="n">reftime</span><span class="p">,</span> <span class="n">interval_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">amount</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Shift time `amount` intervals relative to reftime</span>
+<span class="sd">    Args:</span>
+<span class="sd">        reftime (datetime): Reference time</span>
+<span class="sd">        interval_type (str): One of [&#39;hour&#39;, &#39;day&#39;, &#39;week&#39;, &#39;month&#39;, &#39;year&#39;]</span>
+<span class="sd">        amount (int): Number of intervals to shift (positive = forward, negative = backward)</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        shifted_datetime: The new datetime after the shift, capped at current time if shifting forward</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+        
+    <span class="k">if</span> <span class="n">interval_type</span> <span class="o">==</span> <span class="s2">&quot;hour&quot;</span><span class="p">:</span>
+        <span class="n">newtime</span> <span class="o">=</span> <span class="n">reftime</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="n">amount</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interval_type</span> <span class="o">==</span> <span class="s2">&quot;day&quot;</span><span class="p">:</span>
+        <span class="n">newtime</span> <span class="o">=</span> <span class="n">reftime</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">amount</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interval_type</span> <span class="o">==</span> <span class="s2">&quot;week&quot;</span><span class="p">:</span>
+        <span class="n">newtime</span> <span class="o">=</span> <span class="n">reftime</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">weeks</span><span class="o">=</span><span class="n">amount</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interval_type</span> <span class="o">==</span> <span class="s2">&quot;month&quot;</span><span class="p">:</span>
+        <span class="n">newtime</span> <span class="o">=</span> <span class="n">reftime</span> <span class="o">+</span> <span class="n">relativedelta</span><span class="p">(</span><span class="n">months</span><span class="o">=</span><span class="n">amount</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interval_type</span> <span class="o">==</span> <span class="s2">&quot;year&quot;</span><span class="p">:</span>
+        <span class="n">newtime</span> <span class="o">=</span> <span class="n">reftime</span> <span class="o">+</span> <span class="n">relativedelta</span><span class="p">(</span><span class="n">years</span><span class="o">=</span><span class="n">amount</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid interval type: </span><span class="si">{</span><span class="n">interval_type</span><span class="si">}</span><span class="s2">. Choose from &#39;hour&#39;, &#39;day&#39;, &#39;week&#39;, &#39;month&#39;, &#39;year&#39;.&quot;</span><span class="p">)</span>
+    
+    <span class="n">newtime</span> <span class="o">=</span> <span class="n">newtime</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tzinfo</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">amount</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">newtime</span> <span class="o">&gt;</span> <span class="n">now</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">now</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">newtime</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">newtime</span><span class="o">.</span><span class="n">date</span><span class="p">()</span></div>
 
 
 

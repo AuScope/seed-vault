@@ -73,17 +73,20 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../flows/continuous_based.html#key-features">Key Features</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../flows/run_from_parameters.html">Run from Parameters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../app_main_flows.html#workflow-components">Workflow Components</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../app_run_from_config.html">Run from Parameters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../flows/run_from_parameters.html">Direct parameter input</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../flows/run_from_parameters.html#overview">Overview</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../flows/run_from_parameters.html#workflow-steps">Workflow Steps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../flows/run_from_parameters.html#step-1-load-and-execute-configuration">Step 1: Load and Execute Configuration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../flows/run_from_parameters.html#key-features">Key Features</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../flows/run_from_parameters.html#parameter-reference">Parameter Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../app_main_flows.html#workflow-components">Workflow Components</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../../app_run_from_config.html">Direct parameter input</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../app_db_explorer.html">Database Explorer</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../app_db_explorer.html#execute-sql-tab">Execute SQL Tab</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../app_db_explorer.html#sql-reference">SQL Reference</a></li>
@@ -182,13 +185,11 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
 
 
-<span class="c1">#import obspy</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">obspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">UTCDateTime</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">obspy.core.stream</span><span class="w"> </span><span class="kn">import</span> <span class="n">Stream</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">obspy.core.stream</span><span class="w"> </span><span class="kn">import</span> <span class="n">read</span> <span class="k">as</span> <span class="n">streamread</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">obspy.core.inventory</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_inventory</span><span class="p">,</span><span class="n">Inventory</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">obspy.core.event</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_events</span><span class="p">,</span><span class="n">Event</span><span class="p">,</span><span class="n">Catalog</span>
-
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">obspy.clients.fdsn</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">obspy.taup</span><span class="w"> </span><span class="kn">import</span> <span class="n">TauPyModel</span>
@@ -686,7 +687,7 @@
     <span class="k">if</span> <span class="n">cha_pref</span> <span class="ow">or</span> <span class="n">loc_pref</span><span class="p">:</span>
         <span class="n">sub_inv</span> <span class="o">=</span> <span class="n">get_preferred_channels</span><span class="p">(</span><span class="n">sub_inv</span><span class="p">,</span> <span class="n">cha_pref</span><span class="p">,</span> <span class="n">loc_pref</span><span class="p">)</span>
 
-    <span class="c1"># Ensure model is loaded</span>
+    <span class="c1"># Ensure 1D vel model is loaded</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">model</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">model</span> <span class="o">=</span> <span class="n">TauPyModel</span><span class="p">(</span><span class="n">model_name</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
@@ -825,7 +826,7 @@
         
         <span class="c1"># Create combined request</span>
         <span class="n">combined_requests</span><span class="o">.</span><span class="n">append</span><span class="p">((</span>
-            <span class="n">net</span><span class="p">,</span>
+            <span class="n">net</span><span class="p">,</span> <span class="c1"># keep networks distinct</span>
             <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">stas</span><span class="p">)),</span>
             <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">locs</span><span class="p">)),</span>
             <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">chans</span><span class="p">)),</span>
@@ -836,7 +837,7 @@
     <span class="k">return</span> <span class="n">combined_requests</span></div>
 
 
-<span class="c1">## need to also search the archive!! we&#39;re assuming db_manager already loaded as this is ran from run_events</span>
+
 <div class="viewcode-block" id="get_missing_from_request">
 <a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.seismoloader.get_missing_from_request">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_missing_from_request</span><span class="p">(</span><span class="n">db_manager</span><span class="p">,</span> <span class="n">eq_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">requests</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">],</span> <span class="n">st</span><span class="p">:</span> <span class="n">Stream</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
@@ -976,6 +977,9 @@
             <span class="n">start_time</span> <span class="o">=</span> <span class="n">UTCDateTime</span><span class="p">(</span><span class="n">start_time</span><span class="p">)</span>
             <span class="n">end_time</span> <span class="o">=</span> <span class="n">UTCDateTime</span><span class="p">(</span><span class="n">end_time</span><span class="p">)</span>
 
+            <span class="k">if</span> <span class="n">end_time</span> <span class="o">-</span> <span class="n">start_time</span> <span class="o">&lt;</span> <span class="n">min_request_window</span><span class="p">:</span>
+                <span class="k">continue</span>
+
             <span class="c1"># Check filesystem for existing files</span>
             <span class="n">existing_filenames</span> <span class="o">=</span> <span class="n">get_sds_filenames</span><span class="p">(</span>
                 <span class="n">network</span><span class="p">,</span> <span class="n">station</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span>
@@ -1080,6 +1084,15 @@
 <span class="sd">        &gt;&gt;&gt; archive_request(request, clients, &quot;/data/seismic&quot;, db_manager)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
+
+        <span class="n">t0</span> <span class="o">=</span> <span class="n">UTCDateTime</span><span class="p">(</span><span class="n">request</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
+        <span class="n">t1</span> <span class="o">=</span> <span class="n">UTCDateTime</span><span class="p">(</span><span class="n">request</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span>
+
+        <span class="c1"># Double check that the request range is real and not some db artifact</span>
+        <span class="c1"># This is also done </span>
+        <span class="k">if</span> <span class="n">t1</span> <span class="o">-</span> <span class="n">t0</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span>
+
         <span class="n">time0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
         
         <span class="c1"># Select appropriate client</span>
@@ -1095,8 +1108,8 @@
             <span class="s1">&#39;station&#39;</span><span class="p">:</span> <span class="n">request</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span>
             <span class="s1">&#39;location&#39;</span><span class="p">:</span> <span class="n">request</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span>
             <span class="s1">&#39;channel&#39;</span><span class="p">:</span> <span class="n">request</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span>
-            <span class="s1">&#39;starttime&#39;</span><span class="p">:</span> <span class="n">UTCDateTime</span><span class="p">(</span><span class="n">request</span><span class="p">[</span><span class="mi">4</span><span class="p">]),</span>
-            <span class="s1">&#39;endtime&#39;</span><span class="p">:</span> <span class="n">UTCDateTime</span><span class="p">(</span><span class="n">request</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span>
+            <span class="s1">&#39;starttime&#39;</span><span class="p">:</span> <span class="n">t0</span><span class="p">,</span>
+            <span class="s1">&#39;endtime&#39;</span><span class="p">:</span> <span class="n">t1</span>
         <span class="p">}</span>
 
         <span class="c1"># Handle long station lists</span>
@@ -1462,7 +1475,8 @@
     <span class="c1"># Apply station exclusions</span>
     <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">exclude_stations</span><span class="p">:</span> <span class="c1"># a &quot;SeismoQuery&quot; object</span>
         <span class="k">for</span> <span class="n">sq</span> <span class="ow">in</span> <span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">exclude_stations</span><span class="p">:</span>
-            <span class="n">inv</span> <span class="o">=</span> <span class="n">inv</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">network</span><span class="o">=</span><span class="n">sq</span><span class="o">.</span><span class="n">network</span><span class="p">,</span> <span class="n">station</span><span class="o">=</span><span class="n">sq</span><span class="o">.</span><span class="n">station</span><span class="p">)</span>
+            <span class="n">inv</span> <span class="o">=</span> <span class="n">inv</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">network</span><span class="o">=</span><span class="n">sq</span><span class="o">.</span><span class="n">network</span><span class="p">,</span> <span class="n">station</span><span class="o">=</span><span class="n">sq</span><span class="o">.</span><span class="n">station</span><span class="p">,</span>
+                <span class="n">location</span><span class="o">=</span><span class="n">sq</span><span class="o">.</span><span class="n">location</span><span class="p">,</span> <span class="n">channel</span><span class="o">=</span><span class="n">sq</span><span class="o">.</span><span class="n">channel</span><span class="p">)</span>
 
     <span class="c1"># Add forced stations</span>
     <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">force_stations</span><span class="p">:</span> <span class="c1"># a &quot;SeismoQuery&quot; object</span>
@@ -1471,8 +1485,10 @@
                 <span class="n">inv</span> <span class="o">+=</span> <span class="n">station_client</span><span class="o">.</span><span class="n">get_stations</span><span class="p">(</span>
                     <span class="n">network</span><span class="o">=</span><span class="n">sq</span><span class="o">.</span><span class="n">network</span><span class="p">,</span>
                     <span class="n">station</span><span class="o">=</span><span class="n">sq</span><span class="o">.</span><span class="n">station</span><span class="p">,</span>
-                    <span class="n">location</span><span class="o">=</span><span class="n">sq</span><span class="o">.</span><span class="n">location</span> <span class="ow">or</span> <span class="s1">&#39;*&#39;</span><span class="p">,</span>
+                    <span class="n">location</span><span class="o">=</span><span class="s1">&#39;*&#39;</span> <span class="k">if</span> <span class="n">sq</span><span class="o">.</span><span class="n">location</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">sq</span><span class="o">.</span><span class="n">location</span><span class="p">,</span>
                     <span class="n">channel</span><span class="o">=</span><span class="n">sq</span><span class="o">.</span><span class="n">channel</span> <span class="ow">or</span> <span class="s1">&#39;*&#39;</span><span class="p">,</span>
+                    <span class="n">starttime</span><span class="o">=</span><span class="n">sq</span><span class="o">.</span><span class="n">starttime</span><span class="p">,</span>
+                    <span class="n">endtime</span><span class="o">=</span><span class="n">sq</span><span class="o">.</span><span class="n">endtime</span><span class="p">,</span>
                     <span class="n">level</span><span class="o">=</span><span class="s1">&#39;channel&#39;</span>
                 <span class="p">)</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
@@ -1572,6 +1588,7 @@
             <span class="n">catalog</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">FDSNNoDataException</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No events found in global search&quot;</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="n">catalog</span>
 
     <span class="c1"># Handle geographic constraints</span>
@@ -1644,7 +1661,7 @@
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No events found for constraint: </span><span class="si">{</span><span class="n">geo</span><span class="o">.</span><span class="n">geo_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">continue</span>
     
-    <span class="c1"># Remove duplicates</span>
+    <span class="c1"># Remove duplicates (*now done below)</span>
     <span class="c1">#catalog = remove_duplicate_events(catalog)</span>
 
     <span class="c1"># Re-filter to remove anything that eclipsed original search. Also removes duplicates.</span>
@@ -1762,7 +1779,7 @@
 
     <span class="c1"># Archive to disk and updated database</span>
     <span class="k">for</span> <span class="n">request</span> <span class="ow">in</span> <span class="n">combined_requests</span><span class="p">:</span>
-            
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>    
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Requesting: &quot;</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
         <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.05</span><span class="p">)</span> <span class="c1"># to help ctrl-C out if needed</span>
         <span class="k">try</span><span class="p">:</span>
@@ -1856,7 +1873,7 @@
 
         <span class="k">if</span> <span class="n">stop_event</span> <span class="ow">and</span> <span class="n">stop_event</span><span class="o">.</span><span class="n">is_set</span><span class="p">():</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Cancelling run_event!&quot;</span><span class="p">)</span>
-            <span class="c1"># ? stop_event.clear()</span>
+            <span class="c1"># stop_event.clear() # i don&#39;t think these are needed / REVIEW</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">~~ Cleaning up database ~~&quot;</span><span class="p">)</span>
                 <span class="n">db_manager</span><span class="o">.</span><span class="n">join_continuous_segments</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">processing</span><span class="o">.</span><span class="n">gap_tolerance</span><span class="p">)</span>
@@ -1872,7 +1889,8 @@
             <span class="n">event_region</span> <span class="o">=</span> <span class="n">eq</span><span class="o">.</span><span class="n">event_descriptions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span>
         <span class="k">except</span><span class="p">:</span>
             <span class="n">event_region</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span> <span class="c1"># hack to make streamlit in-app log does not handle newlines properly</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span> <span class="c1"># hack to make streamlit in-app log insert a newline</span>
         <span class="nb">print</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Processing event </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">selected_catalogs</span><span class="p">)</span><span class="si">}</span><span class="s2"> | &quot;</span>
             <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">event_region</span><span class="si">:</span><span class="s2">^35</span><span class="si">}</span><span class="s2"> | &quot;</span>

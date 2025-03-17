@@ -74,17 +74,20 @@
 <li class="toctree-l4"><a class="reference internal" href="../flows/continuous_based.html#key-features">Key Features</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../flows/run_from_parameters.html">Run from Parameters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../app_main_flows.html#workflow-components">Workflow Components</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../app_run_from_config.html">Run from Parameters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../flows/run_from_parameters.html">Direct parameter input</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../flows/run_from_parameters.html#overview">Overview</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../flows/run_from_parameters.html#workflow-steps">Workflow Steps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../flows/run_from_parameters.html#step-1-load-and-execute-configuration">Step 1: Load and Execute Configuration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../flows/run_from_parameters.html#key-features">Key Features</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../flows/run_from_parameters.html#parameter-reference">Parameter Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../app_main_flows.html#workflow-components">Workflow Components</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../app_run_from_config.html">Direct parameter input</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../app_db_explorer.html">Database Explorer</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../app_db_explorer.html#execute-sql-tab">Execute SQL Tab</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../app_db_explorer.html#sql-reference">SQL Reference</a></li>
@@ -648,45 +651,6 @@ that should be considered continuous. Defaults to 60.</p></li>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="seed_vault.service.db.stream_to_db_element_OLD">
-<span class="sig-prename descclassname"><span class="pre">seed_vault.service.db.</span></span><span class="sig-name descname"><span class="pre">stream_to_db_element_OLD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">st</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/db.html#stream_to_db_element_OLD"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.stream_to_db_element_OLD" title="Link to this definition"></a></dt>
-<dd><p>Convert an ObsPy Stream object to a database element tuple.</p>
-<p>Creates a database element from a stream,
-<strong>*assuming all traces have the same Network-Station-Location-Channel (NSLC) codes.*</strong>
-(e.g. an SDS file)</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>st</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Stream</span></code></span>) – ObsPy Stream object containing seismic traces.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><dl>
-<dt>A tuple containing:</dt><dd><ul class="simple">
-<li><p>network: Network code</p></li>
-<li><p>station: Station code</p></li>
-<li><p>location: Location code</p></li>
-<li><p>channel: Channel code</p></li>
-<li><p>start_time: ISO format start time</p></li>
-<li><p>end_time: ISO format end time</p></li>
-</ul>
-<p>Returns None if stream is empty.</p>
-</dd>
-</dl>
-</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Optional[Tuple[str, str, str, str, str, str]]</p>
-</dd>
-</dl>
-<p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">stream</span> <span class="o">=</span> <span class="n">obspy</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">element</span> <span class="o">=</span> <span class="n">stream_to_db_element</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="n">element</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="n">network</span><span class="p">,</span> <span class="n">station</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">element</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py function">
 <dt class="sig sig-object py" id="seed_vault.service.db.stream_to_db_elements">
 <span class="sig-prename descclassname"><span class="pre">seed_vault.service.db.</span></span><span class="sig-name descname"><span class="pre">stream_to_db_elements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">st</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/db.html#stream_to_db_elements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.stream_to_db_elements" title="Link to this definition"></a></dt>
 <dd><p>Convert an ObsPy Stream object to multiple database element tuples, properly handling gaps.
@@ -749,18 +713,8 @@ here that gets the selection and runs Rob’s script.</p>
 <dd></dd></dl>
 
 </section>
-<section id="module-seed_vault.service.gen_config_models">
-<span id="seed-vault-service-gen-config-models-module"></span><h2>seed_vault.service.gen_config_models module<a class="headerlink" href="#module-seed_vault.service.gen_config_models" title="Link to this heading"></a></h2>
-<dl class="py function">
-<dt class="sig sig-object py" id="seed_vault.service.gen_config_models.generate_pydantic_model_from_config">
-<span class="sig-prename descclassname"><span class="pre">seed_vault.service.gen_config_models.</span></span><span class="sig-name descname"><span class="pre">generate_pydantic_model_from_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/gen_config_models.html#generate_pydantic_model_from_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.gen_config_models.generate_pydantic_model_from_config" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="seed_vault.service.gen_config_models.merge_configs">
-<span class="sig-prename descclassname"><span class="pre">seed_vault.service.gen_config_models.</span></span><span class="sig-name descname"><span class="pre">merge_configs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/gen_config_models.html#merge_configs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.gen_config_models.merge_configs" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
+<section id="seed-vault-service-gen-config-models-module">
+<h2>seed_vault.service.gen_config_models module<a class="headerlink" href="#seed-vault-service-gen-config-models-module" title="Link to this heading"></a></h2>
 </section>
 <section id="module-seed_vault.service.seismoloader">
 <span id="seed-vault-service-seismoloader-module"></span><h2>seed_vault.service.seismoloader module<a class="headerlink" href="#module-seed_vault.service.seismoloader" title="Link to this heading"></a></h2>
@@ -1649,6 +1603,23 @@ location, and channel codes over a specified time period.</p>
 <dd></dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.utils.parse_inv">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.utils.</span></span><span class="sig-name descname"><span class="pre">parse_inv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inv</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/utils.html#parse_inv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.utils.parse_inv" title="Link to this definition"></a></dt>
+<dd><p>Return 4 lists (net, sta, loc, cha) detailing the contents of an ObsPy inventory file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>inv</strong> (<em>Inventory</em>) – ObsPy Inventory object</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Four lists containing all network, station, location, and channel codes</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="seed_vault.service.utils.remove_duplicate_events">
 <span class="sig-prename descclassname"><span class="pre">seed_vault.service.utils.</span></span><span class="sig-name descname"><span class="pre">remove_duplicate_events</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">catalog</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/utils.html#remove_duplicate_events"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.utils.remove_duplicate_events" title="Link to this definition"></a></dt>
 <dd><p>Remove duplicate events from an ObsPy Catalog based on resource IDs.</p>
@@ -1673,6 +1644,29 @@ The first occurrence of each resource_id is kept.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Removed </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">unique_cat</span><span class="p">)</span><span class="si">}</span><span class="s2"> duplicate events&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.utils.shift_time">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.utils.</span></span><span class="sig-name descname"><span class="pre">shift_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reftime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interval_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/utils.html#shift_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.utils.shift_time" title="Link to this definition"></a></dt>
+<dd><p>Shift time <cite>amount</cite> intervals relative to reftime
+:type reftime: 
+:param reftime: Reference time
+:type reftime: datetime
+:type interval_type: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>
+:param interval_type: One of [‘hour’, ‘day’, ‘week’, ‘month’, ‘year’]
+:type interval_type: str
+:type amount: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>
+:param amount: Number of intervals to shift (positive = forward, negative = backward)
+:type amount: int</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The new datetime after the shift, capped at current time if shifting forward</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>shifted_datetime</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">

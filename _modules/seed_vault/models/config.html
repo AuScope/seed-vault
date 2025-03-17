@@ -73,17 +73,20 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../flows/continuous_based.html#key-features">Key Features</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../flows/run_from_parameters.html">Run from Parameters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../app_main_flows.html#workflow-components">Workflow Components</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../app_run_from_config.html">Run from Parameters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../flows/run_from_parameters.html">Direct parameter input</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../flows/run_from_parameters.html#overview">Overview</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../flows/run_from_parameters.html#workflow-steps">Workflow Steps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../flows/run_from_parameters.html#step-1-load-and-execute-configuration">Step 1: Load and Execute Configuration</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../flows/run_from_parameters.html#key-features">Key Features</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../flows/run_from_parameters.html#parameter-reference">Parameter Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../app_main_flows.html#workflow-components">Workflow Components</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../../app_run_from_config.html">Direct parameter input</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../app_db_explorer.html">Database Explorer</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../app_db_explorer.html#execute-sql-tab">Execute SQL Tab</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../app_db_explorer.html#sql-reference">SQL Reference</a></li>
@@ -346,20 +349,24 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">cmb_str_n_s_to_props</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmb_n_s</span><span class="p">):</span>
         <span class="n">lst_split</span> <span class="o">=</span> <span class="n">cmb_n_s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst_split</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Inputted station code is malformed: </span><span class="si">{</span><span class="n">cmb_n_s</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Input station code is malformed: </span><span class="si">{</span><span class="n">cmb_n_s</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         
-        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">lst_split</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">lst_split</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]:</span>
             <span class="k">if</span> <span class="n">item</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>  <span class="c1"># Add other validation checks here</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Inputted station code is malformed: </span><span class="si">{</span><span class="n">cmb_n_s</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Input station code is malformed: </span><span class="si">{</span><span class="n">cmb_n_s</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         
         <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;network&#39;</span><span class="p">,</span> <span class="n">lst_split</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
         <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;station&#39;</span><span class="p">,</span> <span class="n">lst_split</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst_split</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst_split</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">:</span>
             <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;location&#39;</span><span class="p">,</span> <span class="n">lst_split</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;location&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst_split</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
-            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;channel&#39;</span><span class="p">,</span> <span class="n">lst_split</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span></div>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst_split</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;channel&#39;</span><span class="p">,</span> <span class="n">lst_split</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;channel&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
 </div>
 
         
@@ -996,7 +1003,7 @@
 
         <span class="c1"># Parse force_stations (can be network.station.location.channel)</span>
         <span class="n">force_stations_cmb_n_s</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">station_section</span><span class="p">,</span> <span class="s1">&#39;force_stations&#39;</span><span class="p">,</span> <span class="n">fallback</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
-        <span class="n">force_stations</span> <span class="o">=</span> <span class="p">[</span><span class="n">SeismoQuery</span><span class="p">(</span><span class="n">cmb_str_n_s</span><span class="o">=</span><span class="n">cmb_n_s</span><span class="p">)</span> <span class="k">for</span> <span class="n">cmb_n_s</span> <span class="ow">in</span> <span class="n">force_stations_cmb_n_s</span> <span class="k">if</span> <span class="n">cmb_n_s</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+        <span class="n">force_stations</span> <span class="o">=</span> <span class="p">[</span><span class="n">SeismoQuery</span><span class="p">(</span><span class="n">cmb_str_n_s</span><span class="o">=</span><span class="n">cmb_n_s</span><span class="p">,</span><span class="n">starttime</span><span class="o">=</span><span class="n">start_time</span><span class="p">,</span><span class="n">endtime</span><span class="o">=</span><span class="n">end_time</span><span class="p">)</span> <span class="k">for</span> <span class="n">cmb_n_s</span> <span class="ow">in</span> <span class="n">force_stations_cmb_n_s</span> <span class="k">if</span> <span class="n">cmb_n_s</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
 
         <span class="c1"># Parse exclude_stations (just network.station)</span>
         <span class="n">exclude_stations_cmb_n_s</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">station_section</span><span class="p">,</span> <span class="s1">&#39;exclude_stations&#39;</span><span class="p">,</span> <span class="n">fallback</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
@@ -1319,12 +1326,12 @@
                 <span class="p">)</span>
             <span class="p">)</span>
 
-        <span class="k">elif</span> <span class="n">geo_constraint_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># Invalid type provided</span>
-            <span class="c1"># Log error for invalid geo_constraint types</span>
-            <span class="n">status_handler</span><span class="o">.</span><span class="n">add_error</span><span class="p">(</span><span class="s2">&quot;input_parameters&quot;</span> <span class="p">,</span>
-                <span class="sa">f</span><span class="s2">&quot;Invalid &#39;geo_constraint&#39; type &#39;</span><span class="si">{</span><span class="n">geo_constraint_type</span><span class="si">}</span><span class="s2">&#39; in the [</span><span class="si">{</span><span class="n">section</span><span class="si">}</span><span class="s2">] section. &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;Allowed values are &#39;BOUNDING&#39; or &#39;CIRCLE&#39;.&quot;</span>
-            <span class="p">)</span>
+        <span class="c1"># elif geo_constraint_type is not None:  # Invalid type provided</span>
+        <span class="c1">#     # Log error for invalid geo_constraint types</span>
+        <span class="c1">#     status_handler.add_error(&quot;input_parameters&quot; ,</span>
+        <span class="c1">#         f&quot;Invalid &#39;geo_constraint&#39; type &#39;{geo_constraint_type}&#39; in the [{section}] section. &quot;</span>
+        <span class="c1">#         f&quot;Allowed values are &#39;BOUNDING&#39; or &#39;CIRCLE&#39;.&quot;</span>
+        <span class="c1">#     )</span>
 
         <span class="k">return</span> <span class="n">geo_constraint</span>
 
