@@ -154,14 +154,14 @@ class ContinuousFilterMenu:
             
             # Year controls
             with col1:
-                if st.button("- Year", key="start-year-minus"):
+                if st.button("-Year", key="start-year-minus"):
                     self.settings.station.date_config.start_time = shift_time(
                         self.settings.station.date_config.start_time, 'year', -1)
                     self.validate_date_range()
                     self.refresh_filters()
             
             with col2:
-                if st.button("+ Year", key="start-year-plus"):
+                if st.button("+Year", key="start-year-plus"):
                     self.settings.station.date_config.start_time = shift_time(
                         self.settings.station.date_config.start_time, 'year', 1)
                     self.validate_date_range()
