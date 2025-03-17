@@ -888,7 +888,6 @@ def archive_request(
         t1 = UTCDateTime(request[5])
 
         # Double check that the request range is real and not some db artifact
-        # This is also done 
         if t1 - t0 < 1:
             return
 
@@ -1135,6 +1134,9 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
 
     starttime = UTCDateTime(settings.station.date_config.start_time)
     endtime = UTCDateTime(settings.station.date_config.end_time)
+    if starttime >= endtime:
+        print("get_stations: Starttime greater than endtime!")
+        return None
     waveform_client = Client(settings.waveform.client)
 
     highest_sr_only = settings.station.highest_samplerate_only
@@ -1324,6 +1326,9 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
 
     starttime = UTCDateTime(settings.event.date_config.start_time)
     endtime = UTCDateTime(settings.event.date_config.end_time)
+    if starttime >= endtime:
+        print("get_events: Starttime greater than endtime!")
+        return Catalog()
 
     waveform_client = Client(settings.waveform.client)
     event_client = Client(settings.event.client) if settings.event.client else waveform_client
@@ -1511,8 +1516,8 @@ def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event =
     # Sanity check times
     endtime = min(endtime, UTCDateTime.now()-120)
     if starttime > endtime:
-        print("Starttime greater than than endtime!")
-        return
+        print("run_continuous: Starttime greater than endtime!")
+        return True
 
     # Collect requests
     requests = collect_requests(settings.station.selected_invs, 
