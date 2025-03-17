@@ -75,17 +75,20 @@ def get_time_interval(interval_type: str, amount: int = 1):
         now = now.replace(second=0, microsecond=0)
         past = now - timedelta(hours=amount)
     elif interval_type == "day":
-        now = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        now = now.replace(second=0, microsecond=0)
         past = now - timedelta(days=amount)
     elif interval_type == "week":
-        now = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        now = now.replace(second=0, microsecond=0)
         past = now - timedelta(weeks=amount)
+        past = past.replace(hour=0, minute=0)
     elif interval_type == "month":
-        now = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        now = now.replace(second=0, microsecond=0)
         past = now - relativedelta(months=amount)
+        past = past.replace(hour=0, minute=0)
     elif interval_type == "year":
-        now = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        now = now.replace(second=0, microsecond=0)
         past = now - relativedelta(years=amount)
+        past = past.replace(hour=0, minute=0)        
     else:
         raise ValueError(f"Invalid interval type: {interval_type}. Choose from 'hour', 'day', 'week', 'month', 'year'.")
 
@@ -115,16 +118,16 @@ def shift_time(reftime, interval_type: str, amount: int = 1):
     else:
         raise ValueError(f"Invalid interval type: {interval_type}. Choose from 'hour', 'day', 'week', 'month', 'year'.")
     
-    newtime = newtime.replace(tzinfo=timezone.utc)
+    newtime = newtime.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=timezone.utc)
 
     if amount > 0:
         now = datetime.now(timezone.utc)
         if newtime > now:
             return now
         else:
-            return newtime.date()
+            return newtime
     else:
-        return newtime.date()
+        return newtime
 
 
 def convert_to_datetime(value):
