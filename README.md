@@ -26,6 +26,10 @@ Can run:
 - As web service
 - From the command line (CLI)
 
+#### User Guide 
+
+https://auscope.github.io/seed-vault/app_db_explorer.html
+
 ---
 
 ### Requirements
