@@ -1013,7 +1013,7 @@ class WaveformComponents:
 
 
     def _render_waveform_view(self):
-        st.title("Waveform Analysis")
+        st.title("Event Arrivals")
 
         # Create three columns for the controls
         col1, col2, col3 = st.columns(3)
@@ -1092,7 +1092,7 @@ class WaveformComponents:
 
 
                     log_text = (
-                        '<div class="terminal" id="log-terminal" style="max-height: 500px;">'
+                        '<div class="terminal" id="log-terminal" style="max-height: 700px;">'
                         f'<pre style="margin: 0; white-space: pre; tab-size: 4;">{escaped_content}</pre>'
                         '</div>'
                         '<script>'

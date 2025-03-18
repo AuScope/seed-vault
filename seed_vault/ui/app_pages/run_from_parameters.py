@@ -14,9 +14,7 @@ st.set_page_config(
 
 st.info(
     """
-In this page, you can directly set the search configs for your data and run the flow without needing
-to go through the steps of main flow. Suits use cases where you are quite familiar with the config parameter
-settings and when you do not want of much fine tuning on selection of Events and Stations.
+Here you can directly set the search configs and run your desired workflow instantly.
 """
 )
 

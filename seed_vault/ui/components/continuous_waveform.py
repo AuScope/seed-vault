@@ -462,7 +462,7 @@ class ContinuousDisplay:
                     escaped_content = escape('\n'.join(self.console.accumulated_output))
                     
                     log_text = (
-                        '<div class="terminal" id="log-terminal" style="max-height: 400px; background-color: black; color: #ffffff; padding: 10px; border-radius: 5px; overflow-y: auto;">'
+                        '<div class="terminal" id="log-terminal" style="max-height: 700px; background-color: black; color: #ffffff; padding: 10px; border-radius: 5px; overflow-y: auto;">'
                         f'<pre style="margin: 0; white-space: pre; tab-size: 4; font-family: \'Courier New\', Courier, monospace; font-size: 14px; line-height: 1.4;">{escaped_content}</pre>'
                         '</div>'
                         '<script>'
