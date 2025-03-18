@@ -1,9 +1,9 @@
 [project]
 name = "seed-vault"
-version = "0.1.2"
+version = "1.0.0"
 description = "Seismic FDSN data search, view and download tool."
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved",
     "Operating System :: POSIX :: Linux",
