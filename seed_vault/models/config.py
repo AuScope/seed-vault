@@ -1092,7 +1092,7 @@ class SeismoLoaderSettings(BaseModel):
                 )
             )
 
-        elif geo_constraint_type == '' or geo_constraint_type.isspace():
+        elif geo_constraint_type is None or geo_constraint_type == '' or geo_constraint_type.isspace():
             geo_constraint = None
 
         elif geo_constraint_type is not None:  # Invalid type provided
