@@ -2,11 +2,11 @@
 
 from typing import List
 import streamlit as st
-from datetime import datetime, date, time
+from datetime import datetime, date, timezone
 from copy import deepcopy
 import threading
 import sys
-import time as systime
+import time
 import queue
 from html import escape
 from seed_vault.models.config import SeismoLoaderSettings
@@ -37,41 +37,36 @@ class ContinuousFilterMenu:
 
     def validate_date_range(self):
         """Validate that end time is not earlier than start time"""
-        try:
-            # Get the current start and end times
-            start_time = self.settings.station.date_config.start_time
-            end_time = self.settings.station.date_config.end_time
-            
-            # Make sure both are datetime objects for comparison
-            if start_time is not None and end_time is not None:
-                # Convert to strings and back to datetime to ensure consistency
-                start_str = start_time.isoformat() if hasattr(start_time, 'isoformat') else str(start_time)
-                end_str = end_time.isoformat() if hasattr(end_time, 'isoformat') else str(end_time)
-                
-                # Parse strings to datetime objects
-                try:
-                    parsed_start = datetime.fromisoformat(start_str)
-                    parsed_end = datetime.fromisoformat(end_str)
-                    
-                    # Update the values to ensure they are datetime objects
-                    self.settings.station.date_config.start_time = parsed_start
-                    self.settings.station.date_config.end_time = parsed_end
-                    
-                    # Now compare the datetime objects
-                    if parsed_end <= parsed_start:
-                        st.session_state["date_range_valid"] = False
-                    else:
-                        st.session_state["date_range_valid"] = True
-                except (ValueError, TypeError):
-                    # If parsing fails, default to invalid to be safe
-                    st.session_state["date_range_valid"] = False
-            else:
-                # If either date is None, validation fails
-                st.session_state["date_range_valid"] = False
-        except Exception as e:
-            # Log any errors and set validation to false
-            print(f"Date validation error: {str(e)}")
+        start_time = self.settings.station.date_config.start_time
+        end_time = self.settings.station.date_config.end_time
+        
+        # Check if dates exist
+        if start_time is None or end_time is None:
             st.session_state["date_range_valid"] = False
+            return
+        
+        # Convert to datetime objects with UTC timezone
+        try:
+            # Handle string inputs
+            if isinstance(start_time, str):
+                start_time = datetime.fromisoformat(start_time).replace(tzinfo=timezone.utc)
+            # Handle datetime inputs
+            elif hasattr(start_time, 'tzinfo'):
+                if start_time.tzinfo is None:
+                    start_time = start_time.replace(tzinfo=timezone.utc)
+            
+            if isinstance(end_time, str):
+                end_time = datetime.fromisoformat(end_time).replace(tzinfo=timezone.utc)
+            elif hasattr(end_time, 'tzinfo'):
+                if end_time.tzinfo is None:
+                    end_time = end_time.replace(tzinfo=timezone.utc)
+            
+            # Now we can safely compare
+            st.session_state["date_range_valid"] = end_time > start_time
+        except (ValueError, AttributeError, TypeError):
+            # Catch any conversion or comparison errors
+            st.session_state["date_range_valid"] = False
+
 
     def refresh_filters(self):
         """Check for changes and trigger updates"""
@@ -124,12 +119,6 @@ class ContinuousFilterMenu:
 
     def render(self):
         st.sidebar.title("Download Parameters")
-
-        # debugging
-        #st.sidebar.write("Current start time:", self.settings.station.date_config.start_time)
-        #st.sidebar.write("Old start time:", self.old_time_state['start_time'])
-        #st.sidebar.write("Current end time:", self.settings.station.date_config.end_time)
-        #st.sidebar.write("Old end time:", self.old_time_state['ed_time'])
 
         ## Get the list of items about to be downloaded
         # ...For some reason this snippet only works in render
@@ -236,7 +225,7 @@ class ContinuousFilterMenu:
                     self.validate_date_range()
                     self.refresh_filters()
             
-            # Day controls
+            # Day controls (...overkill)
             """
             with col13:
                 if st.button("- Day", key="start-day-minus"):
@@ -296,7 +285,7 @@ class ContinuousFilterMenu:
 
             # Display validation message if date range is invalid
             if not st.session_state.get("date_range_valid", True):
-                st.error("End time must be later than start time")
+                st.error("End time must be > start time")
 
             # also keep the last month/week/day options
             c21,c22,c23 = st.columns([1,1,1])
@@ -305,7 +294,6 @@ class ContinuousFilterMenu:
                     end_time, start_time = get_time_interval('month')
                     self.settings.station.date_config.end_time = end_time
                     self.settings.station.date_config.start_time = start_time
-                    self.validate_date_range()  # Validate after updating times
                     self.refresh_filters()
 
             with c22:
@@ -313,7 +301,6 @@ class ContinuousFilterMenu:
                     end_time, start_time = get_time_interval('week')
                     self.settings.station.date_config.end_time = end_time
                     self.settings.station.date_config.start_time = start_time
-                    self.validate_date_range()  # Validate after updating times
                     self.refresh_filters()
 
             with c23:
@@ -321,7 +308,6 @@ class ContinuousFilterMenu:
                     end_time, start_time = get_time_interval('day')
                     self.settings.station.date_config.end_time = end_time
                     self.settings.station.date_config.start_time = start_time
-                    self.validate_date_range()  # Validate after updating times
                     self.refresh_filters()
 
         with st.sidebar.expander("Submitted NSLCs:", expanded=True):
@@ -476,7 +462,7 @@ class ContinuousDisplay:
                     escaped_content = escape('\n'.join(self.console.accumulated_output))
                     
                     log_text = (
-                        '<div class="terminal" id="log-terminal" style="max-height: 400px; background-color: black; color: #ffffff; padding: 10px; border-radius: 5px; overflow-y: auto;">'
+                        '<div class="terminal" id="log-terminal" style="max-height: 700px; background-color: black; color: #ffffff; padding: 10px; border-radius: 5px; overflow-y: auto;">'
                         f'<pre style="margin: 0; white-space: pre; tab-size: 4; font-family: \'Courier New\', Courier, monospace; font-size: 14px; line-height: 1.4;">{escaped_content}</pre>'
                         '</div>'
                         '<script>'
@@ -589,7 +575,7 @@ class ContinuousComponents:
 
             # Always trigger a rerun while polling is active to check for new logs
             if st.session_state.get("polling_active"):
-                systime.sleep(0.2)  # Shorter pause for more frequent updates
+                time.sleep(0.2)  # Shorter pause for more frequent updates
                 st.rerun()
         
     def render(self):

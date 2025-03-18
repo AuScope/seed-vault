@@ -385,7 +385,7 @@ class BaseComponent:
             start_time = time(hour=0, minute=0, second=0)
             end_time   = time(hour=1, minute=0, second=0)
 
-        with st.sidebar:                
+        with st.sidebar:
             with st.expander("### Filters", expanded=True):
                 client_options = list(self.settings.client_url_mapping.get_clients())
                 self.settings.station.client = st.selectbox(
@@ -465,7 +465,7 @@ class BaseComponent:
 
     # ====================
     # MAP
-    # ====================   
+    # ====================
     def set_map_view(self, map_center, map_zoom):
         """Sets the map view properties, including center coordinates and zoom level.
 
@@ -761,7 +761,7 @@ class BaseComponent:
                     self.reset_markers()
                 
             if not self.df_markers.empty:
-                cols = self.df_markers.columns                
+                cols = self.df_markers.columns
                 cols_to_disp = {c:c.capitalize() for c in cols if c not in self.cols_to_exclude}
                 self.map_fg_marker, self.marker_info, self.fig_color_bar = add_data_points( self.df_markers, cols_to_disp, step=self.step_type, col_color=self.col_color, col_size=self.col_size)
 
@@ -797,7 +797,7 @@ class BaseComponent:
         if self.step_type == Steps.EVENT:
             self.catalogs=Catalog()
             self.settings.event.geo_constraint = []
-            self.settings.event.selected_catalogs=Catalog(events=None)    
+            self.settings.event.selected_catalogs=Catalog(events=None)
 
         if self.step_type == Steps.STATION:
             self.inventories = Inventory()
@@ -1118,7 +1118,7 @@ class BaseComponent:
     def render_import_export(self):
         def reset_import_setting_processed():
             if uploaded_file is not None:
-                uploaded_file_info = f"{uploaded_file.name}-{uploaded_file.size}"               
+                uploaded_file_info = f"{uploaded_file.name}-{uploaded_file.size}"
                 if "uploaded_file_info" not in st.session_state or st.session_state.uploaded_file_info != uploaded_file_info:
                     st.session_state['import_setting_processed'] = False
                     st.session_state['uploaded_file_info'] = uploaded_file_info  
@@ -1140,8 +1140,8 @@ class BaseComponent:
                     st.download_button(
                         label="Download file",
                         data=file_data,  
-                        file_name="config.cfg",  
-                        mime="application/octet-stream",  
+                        file_name="config.cfg",
+                        mime="application/octet-stream",
                         help="Download the current settings.",
                         use_container_width=True,
                     )
@@ -1163,11 +1163,11 @@ class BaseComponent:
 
                             settings = SeismoLoaderSettings.from_cfg_file(text_file_object)
                             if(settings.status_handler.has_errors()):
-                                errors = settings.status_handler.generate_status_report("errors")                           
+                                errors = settings.status_handler.generate_status_report("errors")
                                 st.error(f"{errors}\n\n**Please review the errors in the imported file. Resolve them before proceeding.**")
 
                                 if(settings.status_handler.has_warnings()):
-                                    warning = settings.status_handler.generate_status_report("warnings")                           
+                                    warning = settings.status_handler.generate_status_report("warnings")
                                     st.warning(warning)                            
                                 settings.status_handler.display()
 
@@ -1186,7 +1186,7 @@ class BaseComponent:
                                 st.session_state['import_setting_processed'] = True   
                                 
                                 if(settings.status_handler.has_warnings()):
-                                    warning = settings.status_handler.generate_status_report("warnings")                           
+                                    warning = settings.status_handler.generate_status_report("warnings")
                                     st.warning(warning) 
 
                                 st.success("Settings imported successfully!")   
@@ -1221,7 +1221,7 @@ class BaseComponent:
         if self.step_type == Steps.EVENT:
            info_display += "\nℹ️ **Marker size** is associated with **earthquake magnitude**"
 
-        st.caption(info_display)            
+        st.caption(info_display)
         
         c1, c2 = st.columns([18,1])
         with c1:
@@ -1283,7 +1283,7 @@ class BaseComponent:
                         self.sync_df_markers_with_df_edit()
                         self.df_markers.loc[self.clicked_marker_info['id'] - 1, 'is_selected'] = True
                         self.clicked_marker_info = None
-                        self.refresh_map_selection()                                           
+                        self.refresh_map_selection()
                     # else:
                     #     self.df_markers.loc[self.clicked_marker_info['id'] - 1, 'is_selected'] = False
                     #     self.refresh_map_selection()     
@@ -1427,7 +1427,7 @@ class BaseComponent:
 
         # These create "bubble icons" for the codes.. but take up extra space
         #df_markers_view = None
-        #if self.step_type == Steps.STATION:            
+        #if self.step_type == Steps.STATION:
         #    df_markers_view = deepcopy(self.df_markers)
         #    df_markers_view["loc. codes"] = df_markers_view["loc. codes"].apply(lambda x: x.split(",")) 
         #    df_markers_view["channels"] = df_markers_view["channels"].apply(lambda x: x.split(","))            

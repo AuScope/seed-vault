@@ -1092,6 +1092,7 @@ class SeismoLoaderSettings(BaseModel):
                 )
             )
 
+
         elif geo_constraint_type is not None:  # Invalid type provided
             if geo_constraint_type == '' or geo_constraint_type.isspace():
                 geo_constraint = None
@@ -1101,7 +1102,7 @@ class SeismoLoaderSettings(BaseModel):
                     f"Invalid 'geo_constraint' type '{geo_constraint_type}' in the [{section}] section. "
                     f"Allowed values are 'BOUNDING' or 'CIRCLE'."
                 )
-
+              
         return geo_constraint
 
 
