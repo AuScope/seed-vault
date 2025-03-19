@@ -573,7 +573,7 @@
             <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="p">(</span><span class="n">hour</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">minute</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">second</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
             <span class="n">end_time</span>   <span class="o">=</span> <span class="n">time</span><span class="p">(</span><span class="n">hour</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">minute</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">second</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-        <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="p">:</span>                
+        <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="p">:</span>
             <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;### Filters&quot;</span><span class="p">,</span> <span class="n">expanded</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
                 <span class="n">client_options</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">client_url_mapping</span><span class="o">.</span><span class="n">get_clients</span><span class="p">())</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
@@ -654,7 +654,7 @@
 
     <span class="c1"># ====================</span>
     <span class="c1"># MAP</span>
-    <span class="c1"># ====================   </span>
+    <span class="c1"># ====================</span>
 <div class="viewcode-block" id="BaseComponent.set_map_view">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.set_map_view">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">set_map_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">map_center</span><span class="p">,</span> <span class="n">map_zoom</span><span class="p">):</span>
@@ -985,7 +985,7 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">reset_markers</span><span class="p">()</span>
                 
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
-                <span class="n">cols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="o">.</span><span class="n">columns</span>                
+                <span class="n">cols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="o">.</span><span class="n">columns</span>
                 <span class="n">cols_to_disp</span> <span class="o">=</span> <span class="p">{</span><span class="n">c</span><span class="p">:</span><span class="n">c</span><span class="o">.</span><span class="n">capitalize</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cols</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols_to_exclude</span><span class="p">}</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">map_fg_marker</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">marker_info</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fig_color_bar</span> <span class="o">=</span> <span class="n">add_data_points</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="p">,</span> <span class="n">cols_to_disp</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">step_type</span><span class="p">,</span> <span class="n">col_color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">col_color</span><span class="p">,</span> <span class="n">col_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">col_size</span><span class="p">)</span>
 
@@ -1024,7 +1024,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">EVENT</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">catalogs</span><span class="o">=</span><span class="n">Catalog</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">geo_constraint</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">selected_catalogs</span><span class="o">=</span><span class="n">Catalog</span><span class="p">(</span><span class="n">events</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>    
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">selected_catalogs</span><span class="o">=</span><span class="n">Catalog</span><span class="p">(</span><span class="n">events</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">STATION</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">inventories</span> <span class="o">=</span> <span class="n">Inventory</span><span class="p">()</span>
@@ -1396,7 +1396,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">render_import_export</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">def</span><span class="w"> </span><span class="nf">reset_import_setting_processed</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">uploaded_file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">uploaded_file_info</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">uploaded_file</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">uploaded_file</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2">&quot;</span>               
+                <span class="n">uploaded_file_info</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">uploaded_file</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">uploaded_file</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2">&quot;</span>
                 <span class="k">if</span> <span class="s2">&quot;uploaded_file_info&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span> <span class="ow">or</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">uploaded_file_info</span> <span class="o">!=</span> <span class="n">uploaded_file_info</span><span class="p">:</span>
                     <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s1">&#39;import_setting_processed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
                     <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s1">&#39;uploaded_file_info&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">uploaded_file_info</span>  
@@ -1418,8 +1418,8 @@
                     <span class="n">st</span><span class="o">.</span><span class="n">download_button</span><span class="p">(</span>
                         <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Download file&quot;</span><span class="p">,</span>
                         <span class="n">data</span><span class="o">=</span><span class="n">file_data</span><span class="p">,</span>  
-                        <span class="n">file_name</span><span class="o">=</span><span class="s2">&quot;config.cfg&quot;</span><span class="p">,</span>  
-                        <span class="n">mime</span><span class="o">=</span><span class="s2">&quot;application/octet-stream&quot;</span><span class="p">,</span>  
+                        <span class="n">file_name</span><span class="o">=</span><span class="s2">&quot;config.cfg&quot;</span><span class="p">,</span>
+                        <span class="n">mime</span><span class="o">=</span><span class="s2">&quot;application/octet-stream&quot;</span><span class="p">,</span>
                         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Download the current settings.&quot;</span><span class="p">,</span>
                         <span class="n">use_container_width</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                     <span class="p">)</span>
@@ -1441,11 +1441,11 @@
 
                             <span class="n">settings</span> <span class="o">=</span> <span class="n">SeismoLoaderSettings</span><span class="o">.</span><span class="n">from_cfg_file</span><span class="p">(</span><span class="n">text_file_object</span><span class="p">)</span>
                             <span class="k">if</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">status_handler</span><span class="o">.</span><span class="n">has_errors</span><span class="p">()):</span>
-                                <span class="n">errors</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">status_handler</span><span class="o">.</span><span class="n">generate_status_report</span><span class="p">(</span><span class="s2">&quot;errors&quot;</span><span class="p">)</span>                           
+                                <span class="n">errors</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">status_handler</span><span class="o">.</span><span class="n">generate_status_report</span><span class="p">(</span><span class="s2">&quot;errors&quot;</span><span class="p">)</span>
                                 <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">errors</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">**Please review the errors in the imported file. Resolve them before proceeding.**&quot;</span><span class="p">)</span>
 
                                 <span class="k">if</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">status_handler</span><span class="o">.</span><span class="n">has_warnings</span><span class="p">()):</span>
-                                    <span class="n">warning</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">status_handler</span><span class="o">.</span><span class="n">generate_status_report</span><span class="p">(</span><span class="s2">&quot;warnings&quot;</span><span class="p">)</span>                           
+                                    <span class="n">warning</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">status_handler</span><span class="o">.</span><span class="n">generate_status_report</span><span class="p">(</span><span class="s2">&quot;warnings&quot;</span><span class="p">)</span>
                                     <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">warning</span><span class="p">)</span>                            
                                 <span class="n">settings</span><span class="o">.</span><span class="n">status_handler</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
 
@@ -1464,7 +1464,7 @@
                                 <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s1">&#39;import_setting_processed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>   
                                 
                                 <span class="k">if</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">status_handler</span><span class="o">.</span><span class="n">has_warnings</span><span class="p">()):</span>
-                                    <span class="n">warning</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">status_handler</span><span class="o">.</span><span class="n">generate_status_report</span><span class="p">(</span><span class="s2">&quot;warnings&quot;</span><span class="p">)</span>                           
+                                    <span class="n">warning</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">status_handler</span><span class="o">.</span><span class="n">generate_status_report</span><span class="p">(</span><span class="s2">&quot;warnings&quot;</span><span class="p">)</span>
                                     <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">warning</span><span class="p">)</span> 
 
                                 <span class="n">st</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s2">&quot;Settings imported successfully!&quot;</span><span class="p">)</span>   
@@ -1505,7 +1505,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">EVENT</span><span class="p">:</span>
            <span class="n">info_display</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">ℹ️ **Marker size** is associated with **earthquake magnitude**&quot;</span>
 
-        <span class="n">st</span><span class="o">.</span><span class="n">caption</span><span class="p">(</span><span class="n">info_display</span><span class="p">)</span>            
+        <span class="n">st</span><span class="o">.</span><span class="n">caption</span><span class="p">(</span><span class="n">info_display</span><span class="p">)</span>
         
         <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">18</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
         <span class="k">with</span> <span class="n">c1</span><span class="p">:</span>
@@ -1570,7 +1570,7 @@
                         <span class="bp">self</span><span class="o">.</span><span class="n">sync_df_markers_with_df_edit</span><span class="p">()</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">clicked_marker_info</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;is_selected&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">clicked_marker_info</span> <span class="o">=</span> <span class="kc">None</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">refresh_map_selection</span><span class="p">()</span>                                           
+                        <span class="bp">self</span><span class="o">.</span><span class="n">refresh_map_selection</span><span class="p">()</span>
                     <span class="c1"># else:</span>
                     <span class="c1">#     self.df_markers.loc[self.clicked_marker_info[&#39;id&#39;] - 1, &#39;is_selected&#39;] = False</span>
                     <span class="c1">#     self.refresh_map_selection()     </span>
@@ -1723,7 +1723,7 @@
 
         <span class="c1"># These create &quot;bubble icons&quot; for the codes.. but take up extra space</span>
         <span class="c1">#df_markers_view = None</span>
-        <span class="c1">#if self.step_type == Steps.STATION:            </span>
+        <span class="c1">#if self.step_type == Steps.STATION:</span>
         <span class="c1">#    df_markers_view = deepcopy(self.df_markers)</span>
         <span class="c1">#    df_markers_view[&quot;loc. codes&quot;] = df_markers_view[&quot;loc. codes&quot;].apply(lambda x: x.split(&quot;,&quot;)) </span>
         <span class="c1">#    df_markers_view[&quot;channels&quot;] = df_markers_view[&quot;channels&quot;].apply(lambda x: x.split(&quot;,&quot;))            </span>

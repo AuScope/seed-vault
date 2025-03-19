@@ -1089,7 +1089,6 @@
         <span class="n">t1</span> <span class="o">=</span> <span class="n">UTCDateTime</span><span class="p">(</span><span class="n">request</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span>
 
         <span class="c1"># Double check that the request range is real and not some db artifact</span>
-        <span class="c1"># This is also done </span>
         <span class="k">if</span> <span class="n">t1</span> <span class="o">-</span> <span class="n">t0</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span>
 
@@ -1345,6 +1344,9 @@
 
     <span class="n">starttime</span> <span class="o">=</span> <span class="n">UTCDateTime</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span><span class="p">)</span>
     <span class="n">endtime</span> <span class="o">=</span> <span class="n">UTCDateTime</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">starttime</span> <span class="o">&gt;=</span> <span class="n">endtime</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;get_stations: Starttime greater than endtime!&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
     <span class="n">waveform_client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">waveform</span><span class="o">.</span><span class="n">client</span><span class="p">)</span>
 
     <span class="n">highest_sr_only</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">highest_samplerate_only</span>
@@ -1537,6 +1539,9 @@
 
     <span class="n">starttime</span> <span class="o">=</span> <span class="n">UTCDateTime</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span><span class="p">)</span>
     <span class="n">endtime</span> <span class="o">=</span> <span class="n">UTCDateTime</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">starttime</span> <span class="o">&gt;=</span> <span class="n">endtime</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;get_events: Starttime greater than endtime!&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Catalog</span><span class="p">()</span>
 
     <span class="n">waveform_client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">waveform</span><span class="o">.</span><span class="n">client</span><span class="p">)</span>
     <span class="n">event_client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">client</span><span class="p">)</span> <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">client</span> <span class="k">else</span> <span class="n">waveform_client</span>
@@ -1727,8 +1732,8 @@
     <span class="c1"># Sanity check times</span>
     <span class="n">endtime</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">endtime</span><span class="p">,</span> <span class="n">UTCDateTime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">-</span><span class="mi">120</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">starttime</span> <span class="o">&gt;</span> <span class="n">endtime</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Starttime greater than than endtime!&quot;</span><span class="p">)</span>
-        <span class="k">return</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;run_continuous: Starttime greater than endtime!&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
 
     <span class="c1"># Collect requests</span>
     <span class="n">requests</span> <span class="o">=</span> <span class="n">collect_requests</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">selected_invs</span><span class="p">,</span> 
