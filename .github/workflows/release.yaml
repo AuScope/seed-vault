@@ -12,6 +12,9 @@ on:
           - patch
           - minor
           - major
+      release_notes:
+        description: "Optional release notes"
+        required: false
 
 jobs:
   release:
@@ -25,7 +28,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11" # or your preferred Python version
+          python-version: "3.11"
 
       - name: Install Poetry
         run: pip install poetry==2.0.1
@@ -38,14 +41,12 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Build the package
-        run: |
-          poetry build
+        run: poetry build
 
       - name: Publish to PyPI
         env:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
-        run: |
-          poetry publish --no-interaction
+        run: poetry publish --no-interaction
 
       - name: Configure git
         run: |
@@ -55,7 +56,21 @@ jobs:
       - name: Commit and push version bump and tag (after successful publish)
         run: |
           VERSION=${{ steps.bump_version.outputs.version }}
+          RELEASE_NOTES="${{ github.event.inputs.release_notes }}"
+          if [ -z "$RELEASE_NOTES" ]; then
+            RELEASE_NOTES="Release $VERSION"
+          fi
           git add pyproject.toml
           git commit -m "chore(release): bump version to $VERSION"
-          git tag v$VERSION
-          git push origin main --follow-tags
+          git tag -a v$VERSION -m "$RELEASE_NOTES"
+          git push origin main
+          git push origin v$VERSION
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.bump_version.outputs.version }}
+          name: v${{ steps.bump_version.outputs.version }}
+          body: ${{ github.event.inputs.release_notes }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
