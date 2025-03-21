@@ -25,33 +25,37 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.11" # or your preferred Python version
 
       - name: Install Poetry
         run: pip install poetry==2.0.1
 
-      - name: Configure git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Bump version
+      - name: Bump version (locally, without committing yet)
         id: bump_version
         run: |
           poetry version ${{ github.event.inputs.release_type }}
           VERSION=$(poetry version -s)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Commit and push version bump
+      - name: Build the package
+        run: |
+          poetry build
+
+      - name: Publish to PyPI
+        env:
+          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
+        run: |
+          poetry publish --no-interaction
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit and push version bump and tag (after successful publish)
         run: |
           VERSION=${{ steps.bump_version.outputs.version }}
           git add pyproject.toml
           git commit -m "chore(release): bump version to $VERSION"
           git tag v$VERSION
           git push origin main --follow-tags
-
-      - name: Publish to PyPI
-        env:
-          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
-        run: |
-          poetry publish --build --no-interaction
