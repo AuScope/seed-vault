@@ -106,6 +106,18 @@ class CombinedBasedWorkflow:
 
         st.info(self.settings.selected_workflow.description)
 
+        st.text("For further information about the flows, please visit the documentation:")
+
+        doc_links = {
+            "Workflow Overview": "https://auscope.github.io/seed-vault/app_main_flows.html#",
+            "Event-based workflow": "https://auscope.github.io/seed-vault/flows/events_based.html",
+            "Station-based workflow": "https://auscope.github.io/seed-vault/flows/station_based.html",
+            "Download continuous data": "https://auscope.github.io/seed-vault/flows/continuous_based.html"
+        }
+
+        for name, url in doc_links.items():
+            st.markdown(f"- [{name}]({url})")
+
     def trigger_error(self, message):
         """Set an error message in session state to be displayed."""
 
