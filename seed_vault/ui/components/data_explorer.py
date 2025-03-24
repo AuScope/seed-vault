@@ -153,6 +153,7 @@ class DataExplorerComponent:
 
     
     def render(self):
+        st.markdown("[DB Explorer Documentation](https://auscope.github.io/seed-vault/app_db_explorer.html)")
         tab1, tab2, tab3, tab4 = st.tabs(['Execute SQL', 'Query History', 'DB Schema', 'Example Queries'])
         with tab1:
             self.render_query()

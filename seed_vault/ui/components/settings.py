@@ -171,6 +171,73 @@ class SettingsComponent:
         save_filter(self.settings)
         st.success("Settings have been reset to default.")
 
+    
+    def render_license(self):
+        st.text(
+        """
+        CSIRO Open Source Software License Agreement (variation of the BSD/MIT License)
+
+        Copyright (c) 2013, Commonwealth Scientific and Industrial Research Organisation
+        (CSIRO) ABN 41 687 119 230.
+
+        All rights reserved. CSIRO is willing to grant you a license to this software
+        product on the following terms, except where otherwise indicated for third
+        party material.
+
+        Redistribution and use of this software in source and binary forms, with or
+        without modification, are permitted provided that the following conditions are
+        met:
+
+        1. Redistributions of source code must retain the above copyright notice, this
+        list of conditions and the following disclaimer.
+        2. Redistributions in binary form must reproduce the above copyright notice,
+        this list of conditions and the following disclaimer in the documentation
+        and/or other materials provided with the distribution.
+        3. Neither the name of CSIRO nor the names of its contributors may be used to
+        endorse or promote products derived from this software without specific prior
+        written permission of CSIRO.
+
+        EXCEPT AS EXPRESSLY STATED IN THIS LICENCE AND TO THE FULL EXTENT PERMITTED BY
+        APPLICABLE LAW, THE SOFTWARE IS PROVIDED "AS-IS". CSIRO AND ITS CONTRIBUTORS
+        MAKE NO REPRESENTATIONS, WARRANTIES OR CONDITIONS OF ANY KIND, EXPRESS OR
+        IMPLIED, INCLUDING BUT NOT LIMITED TO ANY REPRESENTATIONS, WARRANTIES OR
+        CONDITIONS REGARDING THE CONTENTS OR ACCURACY OF THE SOFTWARE, OR OF TITLE,
+        MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, THE ABSENCE
+        OF LATENT OR OTHER DEFECTS, OR THE PRESENCE OR ABSENCE OF ERRORS, WHETHER OR NOT
+        DISCOVERABLE.
+
+        TO THE FULL EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL CSIRO OR ITS
+        CONTRIBUTORS BE LIABLE ON ANY LEGAL THEORY (INCLUDING, WITHOUT LIMITATION, IN AN
+        ACTION FOR BREACH OF CONTRACT, NEGLIGENCE OR OTHERWISE) FOR ANY CLAIM, LOSS,
+        DAMAGES OR OTHER LIABILITY HOWSOEVER INCURRED. WITHOUT LIMITING THE SCOPE OF THE
+        PREVIOUS SENTENCE THE EXCLUSION OF LIABILITY SHALL INCLUDE: LOSS OF PRODUCTION
+        OR OPERATION TIME, LOSS, DAMAGE OR CORRUPTION OF DATA OR RECORDS; OR LOSS OF
+        ANTICIPATED SAVINGS, OPPORTUNITY, REVENUE, PROFIT OR GOODWILL, OR OTHER ECONOMIC
+        LOSS; OR ANY SPECIAL, INCIDENTAL, INDIRECT, CONSEQUENTIAL, PUNITIVE OR EXEMPLARY
+        DAMAGES, ARISING OUT OF OR IN CONNECTION WITH THIS LICENCE, THE USE OF THE
+        SOFTWARE OR THE USE OF OR OTHER DEALINGS WITH THE SOFTWARE, EVEN IF CSIRO OR ITS
+        CONTRIBUTORS HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH CLAIM, LOSS, DAMAGES
+        OR OTHER LIABILITY.
+
+        APPLICABLE LEGISLATION SUCH AS THE AUSTRALIAN CONSUMER LAW MAY IMPLY
+        REPRESENTATIONS, WARRANTIES, OR CONDITIONS, OR IMPOSES OBLIGATIONS OR LIABILITY
+        ON CSIRO OR ONE OF ITS CONTRIBUTORS IN RESPECT OF THE SOFTWARE THAT CANNOT BE
+        WHOLLY OR PARTLY EXCLUDED, RESTRICTED OR MODIFIED "CONSUMER GUARANTEES". IF SUCH
+        CONSUMER GUARANTEES APPLY THEN THE LIABILITY OF CSIRO AND ITS CONTRIBUTORS IS
+        LIMITED, TO THE FULL EXTENT PERMITTED BY THE APPLICABLE LEGISLATION. WHERE THE
+        APPLICABLE LEGISLATION PERMITS THE FOLLOWING REMEDIES TO BE PROVIDED FOR BREACH
+        OF THE CONSUMER GUARANTEES THEN, AT ITS OPTION, CSIRO'S LIABILITY IS LIMITED TO
+        ANY ONE OR MORE OF THEM:
+
+        1. THE REPLACEMENT OF THE SOFTWARE, THE SUPPLY OF EQUIVALENT SOFTWARE, OR
+        SUPPLYING RELEVANT SERVICES AGAIN;
+        2. THE REPAIR OF THE SOFTWARE;
+        3. THE PAYMENT OF THE COST OF REPLACING THE SOFTWARE, OF ACQUIRING EQUIVALENT
+        SOFTWARE, HAVING THE RELEVANT SERVICES SUPPLIED AGAIN, OR HAVING THE SOFTWARE
+        REPAIRED.
+        """
+        )
+
     def render(self):
         c1, c2, c3 = st.columns([1,1,1])
         with c1:
@@ -203,12 +270,16 @@ class SettingsComponent:
             st.text("")
             st.link_button("Help", f"{DOC_BASE_URL}/app_settings.html")
 
-        tab1, tab2, tab3 = st.tabs(["Data", "Credentials", "Clients"])
+        tab1, tab2, tab3, tab4 = st.tabs(["🛠️ Data", "🔑 Credentials", "📡 Clients", "📜 License"])
         with tab1:
             self.render_db()
         with tab2:
             self.render_auth()
         with tab3:
             self.render_clients()
+        with tab4:
+            self.render_license()
+
+        
 
         
