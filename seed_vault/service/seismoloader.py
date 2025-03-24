@@ -1520,6 +1520,7 @@ def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event =
         return True
 
     # Collect requests
+    print("Collecting, combining, and pruning requests against database...")
     requests = collect_requests(settings.station.selected_invs, 
         starttime, endtime, days_per_request=settings.waveform.days_per_request,
         cha_pref=settings.waveform.channel_pref,loc_pref=settings.waveform.location_pref)
@@ -1685,6 +1686,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
         )
 
         # Collect requests for this event
+        print("Collecting, combining, and pruning requests against database...")
         try:
             requests, new_arrivals, p_arrivals = collect_requests_event(
                 eq, settings.station.selected_invs,

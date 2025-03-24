@@ -371,6 +371,12 @@ class DatabaseManager:
         while retry_count < max_retries:
             try:
                 conn = sqlite3.connect(self.db_path, timeout=20)
+                # try to optimize somewhat.. 
+                conn.execute('PRAGMA journal_mode = WAL')
+                conn.execute('PRAGMA synchronous = NORMAL')
+                conn.execute('PRAGMA cache_size = -64000')  # 64MB
+                conn.execute('PRAGMA mmap_size = 30000000000')  # Use memory mapping for faster reads
+                conn.execute('PRAGMA temp_store = MEMORY')
                 yield conn
                 conn.commit()
                 return
