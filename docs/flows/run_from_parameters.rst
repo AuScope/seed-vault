@@ -8,6 +8,26 @@ Overview
 
 The Run from Parameters workflow enables users to execute operations using configuration files rather than interactive selection. This approach provides automation and reproducibility for various seismic data processing tasks, allowing users to quickly run common workflows without manual configuration.
 
+References and Documentation
+---------------------------
+
+The parameters used in this workflow are based on standard FDSN web service specifications:
+
+**Station Parameters** (for searching seismic stations)
+   * `FDSN Station Web Service Specification <https://www.fdsn.org/webservices/fdsnws-station-1.1.pdf>`_
+   * `FDSN Station GitHub Repository <https://github.com/FDSN/fdsnws-station>`_
+   * `AusPass Station Service Example <https://auspass.edu.au/fdsnws/station/1/>`_
+
+**Event Parameters** (for searching earthquakes)
+   * `FDSN Event Web Service Specification <http://www.fdsn.org/webservices/fdsnws-event-1.2.pdf>`_
+   * `FDSN Event GitHub Repository <https://github.com/FDSN/fdsnws-event>`_
+   * `AusPass Event Service Example <https://auspass.edu.au/fdsnws/event/1/>`_
+
+**Dataselect Parameters** (for searching waveform data)
+   * `FDSN Dataselect Web Service Specification <http://www.fdsn.org/webservices/fdsnws-dataselect-1.1.pdf>`_
+   * `FDSN Dataselect GitHub Repository <https://github.com/FDSN/fdsnws-dataselect>`_
+   * `AusPass Dataselect Service Example <https://auspass.edu.au/fdsnws/dataselect/1/>`_
+
 Workflow Steps
 -------------
 
@@ -585,9 +605,9 @@ Parameter Reference
             <td
                style="border: 1px solid black; padding: 8px; word-wrap: break-word"
             >
-            PLEASE DEFINE
+                Specify if results should include information for restricted stations.
             </td>
-            <td style="border: 1px solid black; padding: 8px"></code>????</code></td>
+            <td style="border: 1px solid black; padding: 8px"><code>True</code></td>
          </tr>
          <tr>
             <td style="border: 1px solid black; padding: 8px">level</td>
@@ -834,81 +854,83 @@ Parameter Reference
             <td
                style="border: 1px solid black; padding: 8px; word-wrap: break-word"
             >
-            PLEASE DEFINE
+                Specify if all origins for the event should be included, default is data center dependent but is suggested to be the preferred origin only.
             </td>
-            <td style="border: 1px solid black; padding: 8px"></code>????</code></td>
+            <td style="border: 1px solid black; padding: 8px"><code>True</code></td>
          </tr>
          <tr style="background-color: orange;">
             <td style="border: 1px solid black; padding: 8px">includeallmagnitudes</td>
             <td
                style="border: 1px solid black; padding: 8px; word-wrap: break-word"
             >
-            PLEASE DEFINE
+                Specify if all magnitudes for the event should be included, default is data center dependent but is suggested to be the preferred magnitude only
             </td>
-            <td style="border: 1px solid black; padding: 8px"></code>????</code></td>
+            <td style="border: 1px solid black; padding: 8px"><code>True</code></td>
          </tr>
          <tr style="background-color: orange;">
             <td style="border: 1px solid black; padding: 8px">includearrivals</td>
             <td
                style="border: 1px solid black; padding: 8px; word-wrap: break-word"
             >
-            PLEASE DEFINE
+            Specify if phase arrivals should be included.
             </td>
-            <td style="border: 1px solid black; padding: 8px"></code>????</code></td>
+            <td style="border: 1px solid black; padding: 8px"><code>True</code></td>
          </tr>
          <tr style="background-color: orange;">
             <td style="border: 1px solid black; padding: 8px">limit</td>
             <td
                style="border: 1px solid black; padding: 8px; word-wrap: break-word"
             >
-            PLEASE DEFINE
+                Limit the results to the specified number of events.
             </td>
-            <td style="border: 1px solid black; padding: 8px"></code>????</code></td>
+            <td style="border: 1px solid black; padding: 8px"><code>100</code></td>
          </tr>
          <tr style="background-color: orange;">
             <td style="border: 1px solid black; padding: 8px">offset</td>
             <td
                style="border: 1px solid black; padding: 8px; word-wrap: break-word"
             >
-            PLEASE DEFINE
+                Return results starting at the event count specified, starting at 1.
             </td>
-            <td style="border: 1px solid black; padding: 8px"></code>????</code></td>
+            <td style="border: 1px solid black; padding: 8px"><code>1</code></td>
          </tr>
          <tr style="background-color: orange;">
             <td style="border: 1px solid black; padding: 8px">contributor</td>
             <td
                style="border: 1px solid black; padding: 8px; word-wrap: break-word"
             >
-            PLEASE DEFINE
+                Limit to events contributed by a specified contributor.
             </td>
-            <td style="border: 1px solid black; padding: 8px"></code>????</code></td>
+            <td style="border: 1px solid black; padding: 8px"><code>USGS</code></td>
          </tr>
          <tr style="background-color: orange;">
             <td style="border: 1px solid black; padding: 8px">updatedafter</td>
             <td
                style="border: 1px solid black; padding: 8px; word-wrap: break-word"
             >
-            PLEASE DEFINE
+                Limit to events updated after the specified time.
+                <br/><br/>
+                <strong>Note:</strong> While this option is not required it is highly recommended due to usefulness.
             </td>
-            <td style="border: 1px solid black; padding: 8px"></code>????</code></td>
+            <td style="border: 1px solid black; padding: 8px"><code>2023-01-01T00:00:00</code></td>
          </tr>
          <tr style="background-color: orange;">
             <td style="border: 1px solid black; padding: 8px">eventtype</td>
             <td
                style="border: 1px solid black; padding: 8px; word-wrap: break-word"
             >
-            PLEASE DEFINE
+                Limit to events with a specified eventType. The parameter value can be a single item, a comma-separated list of items. Allowed values are from QuakeML or unknown if eventType is not given
             </td>
-            <td style="border: 1px solid black; padding: 8px"></code>????</code></td>
+            <td style="border: 1px solid black; padding: 8px"><code>earthquake</code></td>
          </tr>
          <tr style="background-color: orange;">
             <td style="border: 1px solid black; padding: 8px">catalog</td>
             <td
                style="border: 1px solid black; padding: 8px; word-wrap: break-word"
             >
-            PLEASE DEFINE
+                Limit to events from a specified catalog.
             </td>
-            <td style="border: 1px solid black; padding: 8px"></code>????</code></td>
+            <td style="border: 1px solid black; padding: 8px"><code>ISC</code></td>
          </tr>
          </tbody>
          <tfoot>
