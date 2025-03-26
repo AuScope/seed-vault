@@ -28,36 +28,56 @@ icon = folium.DivIcon(html="""
     </svg>
 """)
 
-def create_map(map_center=[0.0,0.0], zoom_start=2, map_id=None):
+def create_map(map_center=[0,180.0], zoom_start=2, map_id=None):
     """
     Create a base map with controls but without dynamic layers.
     """
     m = folium.Map(
         location=map_center,
         zoom_start=zoom_start,
-        min_zoom=2, # doesn't seem to work?
+        min_zoom=2, 
         id=map_id,
     )
 
     folium.TileLayer(
-        tiles='CartoDB positron',  
-        attr='Map data © OpenStreetMap contributors, CartoDB',
-        name='Mirrored Layer',
-        control=False,
-        no_wrap=False,
-        bounds = [[-90, -180], [90, 180]]
-    ).add_to(m)
-
-    # Add the main tile layer (blue) with no_wrap enabled
-    folium.TileLayer(
         tiles='OpenStreetMap',
         name='Main Layer',
         control=False,
-        no_wrap=True ,
+        no_wrap=False ,
         bounds = [[-90, -180], [90, 180]]
     ).add_to(m)
     
-    # m.location = [0, 0]
+    outer_boundary = [
+        [-90, -10000],
+        [90, -10000],
+        [90, 10000],
+        [-90, 10000],
+        [-90, -10000]
+    ]
+
+    active_area_hole = [
+        [-90, -180],
+        [-90, 180],
+        [90, 180],
+        [90, -180],
+        [-90, -180]
+    ]
+    folium.Polygon(
+        locations=[outer_boundary, active_area_hole],  
+        color=None,
+        fill=True,
+        fill_color="LightSteelBlue",
+        fill_opacity=0.4,
+        weight=0,
+    ).add_to(m)
+
+    folium.Rectangle(
+    bounds=[[-90, -180], [90, 180]],
+    color="dodgerblue",
+    weight=1,
+    dash_array="5,5",
+    fill=False,
+    ).add_to(m)
 
     add_draw_controls(m)
     add_fullscreen_control(m)
