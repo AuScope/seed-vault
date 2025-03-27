@@ -30,7 +30,7 @@ from obspy.taup import TauPyModel
 from obspy.geodetics.base import locations2degrees,gps2dist_azimuth
 from obspy.clients.fdsn.header import URL_MAPPINGS, FDSNNoDataException
 
-from seed_vault.models.config import SeismoLoaderSettings, SeismoQuery
+from seed_vault.models.config import SeismoLoaderSettings, SeismoQuery, convert_geo_to_minus180_180
 from seed_vault.enums.config import DownloadType, GeoConstraintType
 from seed_vault.service.utils import is_in_enum,get_sds_filenames,to_timestamp,\
     filter_inventory_by_geo_constraints,filter_catalog_by_geo_constraints
@@ -1183,11 +1183,13 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
     # Query stations based on geographic constraints
     elif settings.station.geo_constraint:
 
+        geo_constraints_for_obspy = convert_geo_to_minus180_180(settings.station.geo_constraint)
+
         # Reduce number of circular constraints to reduce excessive client calls
-        bound_searches = [ele for ele in settings.station.geo_constraint 
+        bound_searches = [ele for ele in geo_constraints_for_obspy 
                         if ele.geo_type == GeoConstraintType.BOUNDING]
 
-        circle_searches = [ele for ele in settings.station.geo_constraint 
+        circle_searches = [ele for ele in geo_constraints_for_obspy 
                         if ele.geo_type == GeoConstraintType.CIRCLE]
 
         if len(circle_searches) > 4: # not as strict for stations
@@ -1249,7 +1251,7 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
 
         # Remove any events that may have been added by loosening geo searches. Also removes duplicates. 
         try:
-            inv = filter_inventory_by_geo_constraints(inv,settings.station.geo_constraint)
+            inv = filter_inventory_by_geo_constraints(inv,geo_constraints_for_obspy)
         except Exception as e:
             print("filter_inventory_by_geo_constraits issue:",e)
 
@@ -1295,7 +1297,6 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
         inv = get_preferred_channels(inv, cha_pref, loc_pref)
 
     return inv
-
 
 def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
     """
@@ -1385,10 +1386,13 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
 
     # Handle geographic constraints
     # But first.. reduce number of circular constraints to reduce excessive client calls
-    bound_searches = [ele for ele in settings.event.geo_constraint 
+
+    geo_constraints_for_obspy = convert_geo_to_minus180_180(settings.event.geo_constraint)
+
+    bound_searches = [ele for ele in geo_constraints_for_obspy 
                     if ele.geo_type == GeoConstraintType.BOUNDING]
 
-    circle_searches = [ele for ele in settings.event.geo_constraint 
+    circle_searches = [ele for ele in geo_constraints_for_obspy 
                     if ele.geo_type == GeoConstraintType.CIRCLE]
 
     if len(circle_searches) > 1:
@@ -1458,7 +1462,7 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
 
     # Re-filter to remove anything that eclipsed original search. Also removes duplicates.
     try:
-        catalog = filter_catalog_by_geo_constraints(catalog,settings.event.geo_constraint)
+        catalog = filter_catalog_by_geo_constraints(catalog,geo_constraints_for_obspy)
     except Exception as e:
         print("filter_catalog_by_geo_constraints issue:",e)
 

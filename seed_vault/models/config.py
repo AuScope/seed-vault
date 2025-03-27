@@ -105,7 +105,6 @@ def convert_to_str(val):
         print(f"Error converting value {val}: {e}")
         return ''  # Return empty string if conversion fails
             
-
 class ProcessingConfig(BaseModel):
     """
     This class defines a configuration for processing with default values for the number of processes,
@@ -1404,3 +1403,66 @@ class SeismoLoaderSettings(BaseModel):
             changes["has_changed"] = True
 
         return changes
+
+
+def convert_geo_to_minus180_180(geo_constraints: List[GeometryConstraint]) -> List[GeometryConstraint]:
+    """
+    Convert a list of GeometryConstraint objects from [0, 360] to [-180, 180].
+    If a bounding box crosses the dateline, it will be split into multiple constraints.
+    """
+    converted = []
+    for constraint in geo_constraints:
+        coords = constraint.coords
+        if isinstance(coords, RectangleArea):
+            rects = convert_bounds_to_minus180_180(coords)  # this returns a list
+            for rect in rects:
+                converted.append(
+                    GeometryConstraint(coords=rect)
+                )
+        elif isinstance(coords, CircleArea):
+            circle_converted = convert_circle_to_minus180_180(coords)
+            converted.append(
+                GeometryConstraint(coords=circle_converted)
+            )
+    return converted
+
+
+def convert_bounds_to_minus180_180(rect: RectangleArea) -> List[RectangleArea]:
+    min_lon = rect.min_lon if rect.min_lon <= 180 else rect.min_lon - 360
+    max_lon = rect.max_lon if rect.max_lon <= 180 else rect.max_lon - 360
+
+    if min_lon <= max_lon:
+        return [RectangleArea(
+            min_lat=rect.min_lat,
+            max_lat=rect.max_lat,
+            min_lon=min_lon,
+            max_lon=max_lon,
+            color=rect.color
+        )]
+    else:
+        # Split into two bounding boxes
+        left_part = RectangleArea(
+            min_lat=rect.min_lat,
+            max_lat=rect.max_lat,
+            min_lon=min_lon,
+            max_lon=180,
+            color=rect.color
+        )
+        right_part = RectangleArea(
+            min_lat=rect.min_lat,
+            max_lat=rect.max_lat,
+            min_lon=-180,
+            max_lon=max_lon,
+            color=rect.color
+        )
+        return [left_part, right_part]
+
+def convert_circle_to_minus180_180(circle: CircleArea) -> CircleArea:
+    return CircleArea(
+        lat=circle.lat,
+        lon=circle.lon if circle.lon <= 180 else circle.lon - 360,
+        max_radius=circle.max_radius,
+        min_radius=circle.min_radius,
+        color=circle.color
+    )
+

@@ -18,7 +18,8 @@ from seed_vault.enums.ui import Steps
 from seed_vault.utils.constants import AREA_COLOR
 from seed_vault.models.config import GeometryConstraint
 
-
+LON_RANGE_START = 0
+LON_RANGE_END = 360
 
 DEFAULT_COLOR_MARKER = 'blue'
 
@@ -35,7 +36,7 @@ def create_map(map_center=[0,180.0], zoom_start=2, map_id=None):
     m = folium.Map(
         location=map_center,
         zoom_start=zoom_start,
-        min_zoom=2, 
+        # min_zoom=2, 
         id=map_id,
     )
 
@@ -44,7 +45,7 @@ def create_map(map_center=[0,180.0], zoom_start=2, map_id=None):
         name='Main Layer',
         control=False,
         no_wrap=False ,
-        bounds = [[-90, -180], [90, 180]]
+        # bounds=[[-90, 0], [90, 360]]  
     ).add_to(m)
     
     outer_boundary = [
@@ -56,12 +57,13 @@ def create_map(map_center=[0,180.0], zoom_start=2, map_id=None):
     ]
 
     active_area_hole = [
-        [-90, -180],
-        [-90, 180],
-        [90, 180],
-        [90, -180],
-        [-90, -180]
+        [-90, 0],
+        [-90, 360],
+        [90, 360],
+        [90, 0],
+        [-90, 0]
     ]
+
     folium.Polygon(
         locations=[outer_boundary, active_area_hole],  
         color=None,
@@ -72,11 +74,11 @@ def create_map(map_center=[0,180.0], zoom_start=2, map_id=None):
     ).add_to(m)
 
     folium.Rectangle(
-    bounds=[[-90, -180], [90, 180]],
-    color="dodgerblue",
-    weight=1,
-    dash_array="5,5",
-    fill=False,
+        bounds=[[-90, 0], [90, 360]],
+        color="dodgerblue",
+        weight=1,
+        dash_array="5,5",
+        fill=False,
     ).add_to(m)
 
     add_draw_controls(m)
@@ -300,27 +302,31 @@ def add_data_points(df, cols_to_disp, step: Steps, selected_idx=[], col_color=No
 
     return fg, marker_info, fig
 
-
+def lon_to_360(lon: float) -> float:
+    return lon if lon >= 0 else lon + 360
 
 def add_marker_to_cluster(fg, latitude, longitude, color, edge_color, size, fill_opacity, popup, tooltip_text, step):
     """
     Add a marker to a cluster with specific attributes.
+    Converts longitude from [-180, 180] to [0, 360] for proper placement.
     """
+    longitude_360 = lon_to_360(longitude)
+
     if step == Steps.EVENT:
-        fg.add_child (folium.CircleMarker(
-                location=[latitude, longitude],
-                radius=size,
-                popup=popup,
-                tooltip=tooltip_text,
-                color=edge_color,
-                fill=True,
-                fill_color=color,
-                fill_opacity=fill_opacity,
+        fg.add_child(folium.CircleMarker(
+            location=[latitude, longitude_360],
+            radius=size,
+            popup=popup,
+            tooltip=tooltip_text,
+            color=edge_color,
+            fill=True,
+            fill_color=color,
+            fill_opacity=fill_opacity,
         ))
 
     if step == Steps.STATION:
         fg.add_child(folium.RegularPolygonMarker(
-            location=[latitude, longitude],
+            location=[latitude, longitude_360],
             number_of_sides=3,
             rotation=-90,
             radius=size,
@@ -331,6 +337,7 @@ def add_marker_to_cluster(fg, latitude, longitude, color, edge_color, size, fill
             fill_color=color,
             fill_opacity=fill_opacity,
         ))
+
 
     # if step == Steps.STATION:
     #     folium.RegularPolygonMarker(
@@ -536,128 +543,119 @@ class DrawEventHandler(MacroElement):
         """)
 
 
+
 def normalize_bounds(geometry_constraint: GeometryConstraint) -> List[GeometryConstraint]:
     """
-    Split bounds of a GeometryConstraint that crosses the 180° meridian or falls partly in a mirrored instance.
-    
-    Args:
-    - geometry_constraint: A GeometryConstraint instance containing RectangleArea bounds.
-    
-    Returns:
-    - A list of GeometryConstraint instances. If the rectangle crosses the 180° meridian or falls in a mirrored instance,
-      it will return one or two GeometryConstraints.
+    Split bounds of a GeometryConstraint that crosses the active window boundary, 
+    and normalize everything between LON_RANGE_START and LON_RANGE_END.
     """
     rect_bounds = geometry_constraint.coords
     lat_min, lon_min = rect_bounds.min_lat, rect_bounds.min_lon
     lat_max, lon_max = rect_bounds.max_lat, rect_bounds.max_lon
-    if lon_min >= -180 and lon_max <= 180:
+    start_lon = LON_RANGE_START
+    end_lon = LON_RANGE_END
+
+    if lon_min >= start_lon and lon_max <= end_lon:
         return [geometry_constraint]
-    
-    elif lon_min < 180 and lon_max > 180:
+
+    elif lon_min < end_lon and lon_max > end_lon:
         left_rectangle = GeometryConstraint(
             coords=RectangleArea(
                 min_lat=lat_min,
                 max_lat=lat_max,
                 min_lon=lon_min,
-                max_lon=180
+                max_lon=end_lon,
+                color=rect_bounds.color,
             )
         )
-        
         right_rectangle = GeometryConstraint(
             coords=RectangleArea(
                 min_lat=lat_min,
                 max_lat=lat_max,
-                min_lon=-180,
-                max_lon=lon_max - 360
+                min_lon=start_lon,
+                max_lon=lon_max - end_lon,
+                color=rect_bounds.color,
             )
         )
-        
         return [left_rectangle, right_rectangle]
 
-    elif lon_min < -180 and lon_max <= 180:
-        # Normalize the left part to be within [-180, 180] range
+    elif lon_min < start_lon and lon_max <= end_lon:
         left_rectangle = GeometryConstraint(
             coords=RectangleArea(
                 min_lat=lat_min,
                 max_lat=lat_max,
-                min_lon=lon_min + 360,  
-                max_lon=180
+                min_lon=lon_min + end_lon,
+                max_lon=end_lon,
+                color=rect_bounds.color,
             )
         )
-        
-        # Right side remains within the original range
-        main_rectangle = GeometryConstraint(
+        right_rectangle = GeometryConstraint(
             coords=RectangleArea(
                 min_lat=lat_min,
                 max_lat=lat_max,
-                min_lon=-180,
-                max_lon=lon_max
+                min_lon=start_lon,
+                max_lon=lon_max,
+                color=rect_bounds.color,
             )
         )
-        print(left_rectangle, main_rectangle)
-        return [left_rectangle, main_rectangle]
-    
-    # Case where both longitudes are less than -180 (entirely in the left mirrored instance)
-    elif lon_min < -180 and lon_max < -180:
+        return [left_rectangle, right_rectangle]
+
+    elif lon_min < start_lon and lon_max < start_lon:
         normalized_rectangle = GeometryConstraint(
             coords=RectangleArea(
                 min_lat=lat_min,
                 max_lat=lat_max,
-                min_lon=lon_min + 360,
-                max_lon=lon_max + 360
-            )
-        )
-        return [normalized_rectangle]
-    
-    # Case where both longitudes are greater than 180 (entirely in the right mirrored instance)
-    elif lon_min > 180 and lon_max > 180:
-        normalized_rectangle = GeometryConstraint(
-            coords=RectangleArea(
-                min_lat=lat_min,
-                max_lat=lat_max,
-                min_lon=lon_min - 360,
-                max_lon=lon_max - 360
+                min_lon=lon_min + end_lon,
+                max_lon=lon_max + end_lon,
+                color=rect_bounds.color,
             )
         )
         return [normalized_rectangle]
 
+    elif lon_min > end_lon and lon_max > end_lon:
+        normalized_rectangle = GeometryConstraint(
+            coords=RectangleArea(
+                min_lat=lat_min,
+                max_lat=lat_max,
+                min_lon=lon_min - end_lon,
+                max_lon=lon_max - end_lon,
+                color=rect_bounds.color,
+            )
+        )
+        return [normalized_rectangle]
 
 def normalize_circle(geometry_constraint: GeometryConstraint) -> List[GeometryConstraint]:
     """
-    Normalize circle bounds for circles that are completely located in the left or right mirrored instance.
-    
-    Args:
-    - geometry_constraint: A GeometryConstraint instance containing CircleArea bounds.
-    
-    Returns:
-    - A list with the normalized GeometryConstraint instance. If the circle falls entirely within the left or right mirrored instance,
-      the longitude will be adjusted to bring it within the [-180, 180] range.
+    Normalize circle bounds so that center longitudes are between LON_RANGE_START and LON_RANGE_END.
     """
     circle = geometry_constraint.coords
     center_lat, center_lon, radius = circle.lat, circle.lon, circle.max_radius
+    start_lon = LON_RANGE_START
+    end_lon = LON_RANGE_END
 
-    # Case where the circle is within the main instance or partially overlaps it (no need to modify)
-    if -180 <= center_lon <= 180:
+    if start_lon <= center_lon <= end_lon:
         return [geometry_constraint]
-    
-    # Case where the circle is entirely in the left mirrored instance (center_lon < -180)
-    elif center_lon < -180:
+
+    elif center_lon < start_lon:
         normalized_circle = GeometryConstraint(
             coords=CircleArea(
                 lat=center_lat,
-                lon=center_lon + 360,  # Normalize center_lon to be within [-180, 180]
-                max_radius=radius
+                lon=center_lon + end_lon,
+                max_radius=radius,
+                min_radius=circle.min_radius,
+                color=circle.color,
             )
         )
         return [normalized_circle]
 
-    # Case where the circle is entirely in the right mirrored instance (center_lon > 180)
-    elif center_lon > 180:
+    elif center_lon > end_lon:
         normalized_circle = GeometryConstraint(
             coords=CircleArea(
                 lat=center_lat,
-                lon=center_lon - 360,  # Normalize center_lon to be within [-180, 180]
-                max_radius=radius
+                lon=center_lon - end_lon,
+                max_radius=radius,
+                min_radius=circle.min_radius,
+                color=circle.color,
             )
         )
         return [normalized_circle]
