@@ -35,7 +35,32 @@ if "log_entries" not in st.session_state:
     st.session_state["log_entries"] = []
 
 def get_tele_filter(tr):
-    # get a generic teleseismic filter band
+    """Calculate appropriate filter band for teleseismic data based on distance.
+
+    This function determines the optimal frequency band for filtering teleseismic
+    data based on the distance from the source and the sensor type.
+
+    Args:
+        tr (Trace): ObsPy Trace object containing waveform data.
+
+    Returns:
+        tuple: A tuple of (f0, f1) where:
+            - f0 (float): Lower frequency bound in Hz
+            - f1 (float): Upper frequency bound in Hz
+            Returns (0, 0) for non-seismic sensors.
+
+    Note:
+        The filter bands are optimized for different distance ranges:
+        - < 50 km: 2.0-15 Hz
+        - 50-100 km: 1.8-12 Hz
+        - 100-250 km: 1.7-10 Hz
+        - 250-500 km: 1.6-8 Hz
+        - 500-1000 km: 1.5-6 Hz
+        - 1000-2500 km: 1.4-5 Hz
+        - 2500-5000 km: 1.2-4 Hz
+        - 5000-10000 km: 1.0-3 Hz
+        - > 10000 km: 0.7-2 Hz
+    """
     distance_km = tr.stats.distance_km
     nyq = tr.stats.sampling_rate/2 - 0.1
     senstype = tr.stats.channel[1]
@@ -73,6 +98,11 @@ class WaveformFilterMenu:
     display_limit: int
 
     def __init__(self, settings: SeismoLoaderSettings):
+        """Initialize the WaveformFilterMenu.
+
+        Args:
+            settings (SeismoLoaderSettings): Configuration settings for seismic data processing.
+        """
         self.settings = settings
         self.old_settings = deepcopy(settings)  # Track previous state
         self.network_filter = "All networks"
@@ -89,7 +119,16 @@ class WaveformFilterMenu:
         }
 
     def refresh_filters(self):
-        """Check for changes and trigger updates"""
+        """Check for changes in filter settings and trigger UI updates.
+
+        This method compares current filter settings with previous state and
+        triggers a UI refresh if changes are detected. It also handles saving
+        of filter settings.
+
+        Note:
+            The method uses Streamlit's rerun mechanism to update the UI
+            when changes are detected.
+        """
         current_state = {
             'network_filter': self.network_filter,
             'station_filter': self.station_filter,
@@ -110,6 +149,18 @@ class WaveformFilterMenu:
             st.rerun()
 
     def update_available_channels(self, stream: Stream):
+        """Update the list of available channels based on the current stream.
+
+        This method extracts unique channel codes from the provided stream
+        and updates the available_channels list.
+
+        Args:
+            stream (Stream): ObsPy Stream object containing waveform data.
+
+        Note:
+            The method handles different types of stream objects and ensures
+            "All channels" remains as the first option in the list.
+        """
         if not stream:
             self.available_channels = ["All channels"]
             return
@@ -155,6 +206,22 @@ class WaveformFilterMenu:
             self.channel_filter = "All channels"
     
     def render(self, stream=None):
+        """Render the waveform filter menu interface.
+
+        This method creates the UI for waveform filtering and control, including:
+        - Network, station, and channel filters
+        - Display limit controls
+        - Status information
+        - Reset functionality
+
+        Args:
+            stream (Stream, optional): Current waveform stream to filter.
+                If None, only basic controls are shown.
+
+        Note:
+            The interface is organized in expandable sections for better
+            user experience and space management.
+        """
         st.sidebar.title("Waveform Controls")
         
 
@@ -337,7 +404,28 @@ class WaveformFilterMenu:
                     self.refresh_filters()
 
 class WaveformDisplay:
+    """A component for displaying and managing waveform data visualization.
+
+    This class handles the display of seismic waveform data, including both
+    event-based and station-based views, with support for filtering and pagination.
+
+    Attributes:
+        settings (SeismoLoaderSettings): Configuration settings for seismic data processing.
+        filter_menu (WaveformFilterMenu): Menu component for filtering waveforms.
+        client (Client): FDSN client for waveform data retrieval.
+        ttmodel (TauPyModel): Travel-time model for seismic phases.
+        stream (List[Stream]): List of waveform streams.
+        missing_data (Dict): Dictionary tracking missing data.
+        console (ConsoleDisplay): Console for logging output.
+    """
+
     def __init__(self, settings: SeismoLoaderSettings, filter_menu: WaveformFilterMenu):
+        """Initialize the WaveformDisplay component.
+
+        Args:
+            settings (SeismoLoaderSettings): Configuration settings for seismic data processing.
+            filter_menu (WaveformFilterMenu): Menu component for filtering waveforms.
+        """
         self.settings = settings
         self.filter_menu = filter_menu
         
@@ -351,7 +439,15 @@ class WaveformDisplay:
         self.console = ConsoleDisplay()  # Add console display
 
     def apply_filters(self, stream) -> Stream:
-        """Filter stream based on user selection"""
+        """Apply filters to the waveform stream based on user selections.
+
+        Args:
+            stream (Stream): Input ObsPy Stream object to filter.
+
+        Returns:
+            Stream: Filtered stream containing only traces matching the selected
+                network, station, and channel filters.
+        """
         filtered_stream = Stream()
         
         # Handle case where stream is a list of traces
@@ -376,8 +472,13 @@ class WaveformDisplay:
     
 
     def fetch_data(self):
-        """
-        Fetches waveform data in a background thread with logging.
+        """Fetch waveform data in a background thread with logging.
+
+        This method sets up a custom logging system, retrieves waveform data,
+        and handles any errors or cancellations during the process.
+
+        Note:
+            The method updates the session state with processing status and logs.
         """
         # Custom stdout/stderr handler that writes to both the original traces and our queue
         class QueueLogger:
@@ -462,8 +563,13 @@ class WaveformDisplay:
         })
 
     def retrieve_waveforms(self):
-        """
-        Initiates waveform retrieval in a background thread with cancellation support
+        """Initiate waveform retrieval in a background thread.
+
+        This method starts a new thread for waveform data retrieval and updates
+        the UI state accordingly.
+
+        Note:
+            The method handles thread creation, state management, and UI updates.
         """
         if not self.settings.event.selected_catalogs or not self.settings.station.selected_invs:
             st.warning("Please select events and stations before downloading waveforms.")
@@ -483,7 +589,19 @@ class WaveformDisplay:
         st.rerun()
 
     def _get_trace_color(self, tr) -> str:
-        """Get color based on channel component"""
+        """Get color for a trace based on its channel component.
+
+        Args:
+            tr (Trace): ObsPy Trace object.
+
+        Returns:
+            str: Color code for the trace based on its component:
+                - 'Z': black
+                - 'N' or '1': blue
+                - 'E' or '2': green
+                - others: gray
+                - non-seismic sensors: tomato
+        """
         # Extract last character of channel code
         component = tr.stats.channel[-1].upper()
         sensortype = tr.stats.channel[1].upper()
@@ -503,7 +621,16 @@ class WaveformDisplay:
 
 
     def _calculate_figure_dimensions(self, num_traces: int) -> tuple:
-        """Calculate figure dimensions based on number of traces"""
+        """Calculate figure dimensions based on number of traces.
+
+        Args:
+            num_traces (int): Number of traces to display.
+
+        Returns:
+            tuple: A tuple of (width, height) in inches for the figure.
+                Width is fixed at 12 inches, height is calculated based on
+                number of traces with a minimum of 4 inches.
+        """
         width = 12  # Slightly wider for better readability
         height_per_trace = 1.0  # Reduced slightly to fit more traces
         
@@ -514,7 +641,17 @@ class WaveformDisplay:
         return (width, total_height)
 
     def plot_event_view(self, event, stream: Stream, page: int, num_pages: int):
-        """Plot event view with proper time alignment and improved layout"""
+        """Plot event view with proper time alignment and improved layout.
+
+        Args:
+            event: Event object containing event information.
+            stream (Stream): ObsPy Stream object containing waveform data.
+            page (int): Current page number for pagination.
+            num_pages (int): Total number of pages.
+
+        Returns:
+            Figure: Matplotlib figure object containing the plot.
+        """
         if not stream:
             return
 
@@ -627,7 +764,17 @@ class WaveformDisplay:
         return fig
 
     def plot_station_view(self, station_code: str, stream: Stream, page: int, num_pages: int):
-        """Plot station view with event information"""
+        """Plot station view with event information.
+
+        Args:
+            station_code (str): Code of the station to display.
+            stream (Stream): ObsPy Stream object containing waveform data.
+            page (int): Current page number for pagination.
+            num_pages (int): Total number of pages.
+
+        Returns:
+            Figure: Matplotlib figure object containing the plot.
+        """
         if not stream:
             return
         
@@ -752,6 +899,13 @@ class WaveformDisplay:
         return fig
 
     def render(self):
+        """Render the waveform display interface.
+
+        This method creates the main UI for waveform visualization, including:
+        - View type selection (Event/Station view)
+        - Waveform display
+        - Missing data information
+        """
         view_type = st.radio(
             "Select View Type",
             ["Single Event - Multiple Stations", "Single Station - Multiple Events"],
@@ -1197,17 +1351,48 @@ class WaveformComponents:
             st.info("Perform a waveform download first :)")
 
 class MissingDataDisplay:
+    """A component for displaying information about missing waveform data.
+
+    This class provides a user interface for showing which events or stations
+    have missing data and what specific channels are missing.
+
+    Attributes:
+        stream (List[Stream]): List of waveform streams.
+        missing_data (Dict): Dictionary tracking missing data.
+        settings (SeismoLoaderSettings): Configuration settings for seismic data processing.
+    """
+
     def __init__(self, stream: List[Stream], missing_data: Dict[str, Union[List[str], str]], settings: SeismoLoaderSettings):
+        """Initialize the MissingDataDisplay component.
+
+        Args:
+            stream (List[Stream]): List of waveform streams.
+            missing_data (Dict[str, Union[List[str], str]]): Dictionary mapping event IDs to missing data information.
+            settings (SeismoLoaderSettings): Configuration settings for seismic data processing.
+        """
         self.stream = stream #is this needed? i think we can drop it TODO
         self.missing_data = missing_data
         self.settings = settings
     
     def _format_event_time(self, event) -> str:
-        """Format event time in a readable way"""
+        """Format event time in a readable way.
+
+        Args:
+            event: Event object containing event information.
+
+        Returns:
+            str: Formatted event time string.
+        """
         return event.origins[0].time.strftime('%Y-%m-%d %H:%M:%S')
     
     def _get_missing_events(self):
-        """Identify events with no data and their missing channels"""
+        """Identify events with no data and their missing channels.
+
+        Returns:
+            List[Dict]: List of dictionaries containing information about events
+                with missing data, including event ID, time, magnitude, region,
+                and missing channels.
+        """
         missing_events = []
         
         # sort events by time
@@ -1258,7 +1443,13 @@ class MissingDataDisplay:
         return missing_events
     
     def render(self):
-        """Display missing event information in a table format"""
+        """Render the missing data display interface.
+
+        This method creates a table showing events with missing data, including:
+        - Event information (time, magnitude, region)
+        - Missing channel information
+        - Dynamic height adjustment based on number of entries
+        """
         missing_events = self._get_missing_events()
         
         if missing_events:
