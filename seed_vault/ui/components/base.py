@@ -292,7 +292,7 @@ class BaseComponent:
         end_date, end_time     = convert_to_datetime(self.settings.event.date_config.end_time)
 
         with st.sidebar:
-            with st.expander("### Filters", expanded=True):
+            with st.expander("Filters", expanded=True):
                 client_options = list(self.settings.client_url_mapping.get_clients())
                 self.settings.event.client = st.selectbox(
                     'Choose a client:',
@@ -388,7 +388,7 @@ class BaseComponent:
             end_time   = time(hour=1, minute=0, second=0)
 
         with st.sidebar:
-            with st.expander("### Filters", expanded=True):
+            with st.expander("Filters", expanded=True):
                 client_options = list(self.settings.client_url_mapping.get_clients())
                 self.settings.station.client = st.selectbox(
                     'Choose a client:', 

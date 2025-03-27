@@ -8,4 +8,5 @@ pg = st.navigation([
     # st.Page("app_pages/license.py", icon="📜"),
     ]
 )
+
 pg.run()

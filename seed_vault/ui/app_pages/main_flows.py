@@ -10,6 +10,10 @@ st.set_page_config(
 st.markdown(
     """
     <style>
+        details summary p {
+            font-size: 20px !important;
+            font-weight: bold !important;
+        }
         section[data-testid="stSidebar"] {
             width: 450px !important;
         }
