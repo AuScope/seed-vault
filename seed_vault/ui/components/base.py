@@ -12,7 +12,7 @@ from obspy.core.inventory import Inventory, read_inventory
 import time
 
 
-from seed_vault.ui.components.map import create_map, add_area_overlays, add_data_points, clear_map_layers, clear_map_draw,add_map_draw
+from seed_vault.ui.components.map import LON_RANGE_END, LON_RANGE_START, create_map, add_area_overlays, add_data_points, clear_map_layers, clear_map_draw,add_map_draw
 from seed_vault.ui.app_pages.helpers.common import get_selected_areas, save_filter
 
 from seed_vault.service.events import get_event_data, event_response_to_df
@@ -521,8 +521,9 @@ class BaseComponent:
         Returns:
             bool: `True` if the rectangle is valid, `False` otherwise.
         """
+        
         return (-90 <= min_lat <= 90 and -90 <= max_lat <= 90 and
-                -180 <= min_lon <= 180 and -180 <= max_lon <= 180 and
+                LON_RANGE_START <= min_lon <= LON_RANGE_END and LON_RANGE_START <= max_lon <= LON_RANGE_END and
                 min_lat <= max_lat and min_lon <= max_lon)
 
     def is_valid_circle(self, lat, lon, max_radius, min_radius):
@@ -546,7 +547,7 @@ class BaseComponent:
         """
         return (
             -90 <= lat <= 90 and
-            -180 <= lon <= 180 and
+            LON_RANGE_START <= lon <= LON_RANGE_END and
             max_radius > 0 and
             min_radius >= 0 and
             min_radius <= max_radius
@@ -573,7 +574,7 @@ class BaseComponent:
 
                 if not invalid_entries.empty:
                     st.warning(
-                        "Invalid circle data detected. Ensure lat is between -90 and 90, lon is between -180 and 180, "
+                        f"Invalid circle data detected. Ensure lat is between -90 and 90, lon is between {LON_RANGE_START} and {LON_RANGE_END}, "
                         "max_radius is positive, and min_radius ≤ max_radius."
                     )
                     return  # Stop further processing if validation fails
@@ -607,7 +608,7 @@ class BaseComponent:
                 ]
 
                 if not invalid_entries.empty:
-                    st.warning("Invalid rectangle coordinates detected. Ensure min_lat ≤ max_lat and min_lon ≤ max_lon, with values within valid ranges (-90 to 90 for lat, -180 to 180 for lon).")
+                    st.warning(f"Invalid rectangle coordinates detected. Ensure min_lat ≤ max_lat and min_lon ≤ max_lon, with values within valid ranges (-90 to 90 for lat, {LON_RANGE_START} to {LON_RANGE_END} for lon).")
                     return  
 
             else:

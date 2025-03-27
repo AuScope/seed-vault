@@ -57,11 +57,11 @@ def create_map(map_center=[-20 ,180.0], zoom_start=2, map_id=None):
     ]
 
     active_area_hole = [
-        [-90, 0],
-        [-90, 360],
-        [90, 360],
-        [90, 0],
-        [-90, 0]
+        [-90, LON_RANGE_START],
+        [-90, LON_RANGE_END],
+        [90, LON_RANGE_END],
+        [90, LON_RANGE_START],
+        [-90, LON_RANGE_START]
     ]
 
     folium.Polygon(
@@ -74,7 +74,7 @@ def create_map(map_center=[-20 ,180.0], zoom_start=2, map_id=None):
     ).add_to(m)
 
     folium.Rectangle(
-        bounds=[[-90, 0], [90, 360]],
+        bounds=[[-90, LON_RANGE_START], [90, LON_RANGE_END]],
         color="dodgerblue",
         weight=1,
         dash_array="5,5",
@@ -197,7 +197,6 @@ def add_circle_area(feature_group, coords):
             dash_array='2, 4',
             weight=2,
         ))
-
 
 def add_data_points(df, cols_to_disp, step: Steps, selected_idx=[], col_color=None, col_size=None):
     """
@@ -338,28 +337,6 @@ def add_marker_to_cluster(fg, latitude, longitude, color, edge_color, size, fill
             fill_opacity=fill_opacity,
         ))
 
-
-    # if step == Steps.STATION:
-    #     folium.RegularPolygonMarker(
-    #         location=[latitude, longitude],
-    #         number_of_sides=5,  # Change this for different shapes (3 for triangle, 4 for square, etc.)
-    #         rotation=0,
-    #         radius=size,
-    #         popup=popup,
-    #         color=edge_color,
-    #         fill=True,
-    #         fill_color=color,
-    #         fill_opacity=fill_opacity,
-    #     ).add_to(fg)
-    #     # fg.add_child(folium.Marker(
-    #     #     location=[latitude, longitude],
-    #     #     icon=icon,
-    #     #     popup=popup,
-    #     #     # color=edge_color,
-    #     #     # fill=True,
-    #     #     # fill_color=color,
-    #     #     # fill_opacity=fill_opacity,
-    #     # ))
                    
 def clear_map_layers(map_object):
     """
@@ -513,35 +490,6 @@ class AddMapDraw(MacroElement):
         // More cases for other types like circles, polylines, etc., can be added here
         {% endmacro %}
         """)
-
-
-class DrawEventHandler(MacroElement):
-    def __init__(self):
-        super().__init__()
-        self._template = jinja2.Template("""
-        {% macro script(this, kwargs) %}
-        console.log("JavaScript is running to detect drawn layers.");
-
-        // Access the map using the dynamic name provided by Folium
-        var map = {{ this._parent.get_name() }};
-        console.log("Map instance:", map);
-
-        // Ensure map exists before attaching event listeners
-        if (map) {
-            console.log('Map instance found:', map);
-
-            // Listen for the draw:created event
-            map.on(L.Draw.Event.CREATED, function (e) {
-                var layer = e.layer;  // Get the drawn layer (circle, rectangle, etc.)
-                var geojsonData = layer.toGeoJSON();
-                console.log("Sending data to backend:", geojsonData);
-            });
-        } else {
-            console.log("Map instance not found.");
-        }
-        {% endmacro %}
-        """)
-
 
 
 def normalize_bounds(geometry_constraint: GeometryConstraint) -> List[GeometryConstraint]:
