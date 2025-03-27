@@ -29,7 +29,7 @@ icon = folium.DivIcon(html="""
     </svg>
 """)
 
-def create_map(map_center=[0,180.0], zoom_start=2, map_id=None):
+def create_map(map_center=[-20 ,180.0], zoom_start=2, map_id=None):
     """
     Create a base map with controls but without dynamic layers.
     """
