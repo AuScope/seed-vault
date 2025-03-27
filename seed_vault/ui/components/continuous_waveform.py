@@ -21,7 +21,25 @@ stop_event = threading.Event()
 log_queue = queue.Queue()
 
 class ContinuousFilterMenu:
+    """A menu component for filtering and controlling continuous waveform data.
+
+    This class provides a user interface for managing continuous waveform data
+    retrieval, including time range selection and station filtering.
+
+    Attributes:
+        settings (SeismoLoaderSettings): Configuration settings for seismic data processing.
+        old_settings (SeismoLoaderSettings): Previous state of settings for change detection.
+        old_time_state (dict): Previous time range state for change detection.
+        last_button_pressed (str): Last button interaction for UI state management.
+        todo_nets (List[str]): List of networks to process.
+    """
+
     def __init__(self, settings: SeismoLoaderSettings):
+        """Initialize the ContinuousFilterMenu.
+
+        Args:
+            settings (SeismoLoaderSettings): Configuration settings for seismic data processing.
+        """
         self.settings = settings
         self.old_settings = deepcopy(settings)
         # Track previous time state
@@ -36,7 +54,14 @@ class ContinuousFilterMenu:
         self.validate_date_range()
 
     def validate_date_range(self):
-        """Validate that end time is not earlier than start time"""
+        """Validate that the selected date range is valid.
+
+        This method checks that the end time is not earlier than the start time
+        and updates the session state accordingly.
+
+        Note:
+            The validation result is stored in st.session_state["date_range_valid"].
+        """
         start_time = self.settings.station.date_config.start_time
         end_time = self.settings.station.date_config.end_time
         
@@ -69,7 +94,15 @@ class ContinuousFilterMenu:
 
 
     def refresh_filters(self):
-        """Check for changes and trigger updates"""
+        """Check for changes in time range and settings, trigger UI updates.
+
+        This method compares current settings with previous state and triggers
+        a UI refresh if changes are detected. It also handles saving of settings.
+
+        Note:
+            The method uses Streamlit's rerun mechanism to update the UI
+            when changes are detected.
+        """
         current_time_state = {
             'start_time': self.settings.station.date_config.start_time,
             'end_time': self.settings.station.date_config.end_time
@@ -118,6 +151,22 @@ class ContinuousFilterMenu:
             st.rerun()
 
     def render(self):
+        """Render the continuous waveform filter menu interface.
+
+        This method creates the UI for continuous waveform data management, including:
+        - Time range selection with year/month/week controls
+        - Date and time input fields
+        - Quick selection buttons for common time ranges
+        - Network/station/location/channel information display
+
+        The interface is organized in expandable sections:
+        - Time Range Adjustment
+        - Submitted NSLCs Information
+
+        Note:
+            The interface provides both manual input and quick selection options
+            for time range management.
+        """
         st.sidebar.title("Download Parameters")
 
         ## Get the list of items about to be downloaded
@@ -318,14 +367,36 @@ class ContinuousFilterMenu:
 
 
 class ContinuousDisplay:
+    """A component for displaying and managing continuous waveform data.
+
+    This class handles the display and processing of continuous waveform data,
+    including data retrieval, logging, and UI updates.
+
+    Attributes:
+        settings (SeismoLoaderSettings): Configuration settings for seismic data processing.
+        filter_menu (ContinuousFilterMenu): Menu component for filtering waveforms.
+        console (ConsoleDisplay): Console for logging output.
+    """
+
     def __init__(self, settings: SeismoLoaderSettings, filter_menu: ContinuousFilterMenu):
+        """Initialize the ContinuousDisplay component.
+
+        Args:
+            settings (SeismoLoaderSettings): Configuration settings for seismic data processing.
+            filter_menu (ContinuousFilterMenu): Menu component for filtering waveforms.
+        """
         self.settings = settings
         self.filter_menu = filter_menu
         self.console = ConsoleDisplay()
         
     def process_continuous_data(self):
-        """
-        Fetches continuous waveform data in a background thread with logging.
+        """Process continuous waveform data in a background thread with logging.
+
+        This method sets up a custom logging system, retrieves continuous waveform data,
+        and handles any errors or cancellations during the process.
+
+        Note:
+            The method updates the session state with processing status and logs.
         """
         # Custom stdout/stderr handler that writes to both the original streams and our queue
         class QueueLogger:
@@ -391,6 +462,14 @@ class ContinuousDisplay:
         })
         
     def render(self):
+        """Render the continuous waveform display interface.
+
+        This method creates the main UI for continuous waveform visualization, including:
+        - Download controls
+        - Status indicators
+        - Real-time log display
+        - Progress tracking
+        """
         st.title("Continuous Waveform Archiving")
         
         # Create three columns for the controls
@@ -485,8 +564,13 @@ class ContinuousDisplay:
             status_container.success("Continuous data processing completed successfully!")
 
     def retrieve_waveforms(self):
-        """
-        Initiates waveform retrieval in a background thread with cancellation support
+        """Initiate continuous waveform retrieval in a background thread.
+
+        This method starts a new thread for continuous waveform data retrieval and
+        updates the UI state accordingly.
+
+        Note:
+            The method handles thread creation, state management, and UI updates.
         """
         stop_event.clear()  # Reset cancellation flag
         st.session_state["query_thread"] = threading.Thread(target=self.process_continuous_data, daemon=True)
@@ -502,7 +586,24 @@ class ContinuousDisplay:
         st.rerun()
 
 class ContinuousComponents:
+    """A component for managing continuous waveform data processing.
+
+    This class coordinates the interaction between the filter menu, display,
+    and logging components for continuous waveform data processing.
+
+    Attributes:
+        settings (SeismoLoaderSettings): Configuration settings for seismic data processing.
+        filter_menu (ContinuousFilterMenu): Menu component for filtering waveforms.
+        display (ContinuousDisplay): Display component for waveform visualization.
+        console (ConsoleDisplay): Console for logging output.
+    """
+
     def __init__(self, settings: SeismoLoaderSettings):
+        """Initialize the ContinuousComponents.
+
+        Args:
+            settings (SeismoLoaderSettings): Configuration settings for seismic data processing.
+        """
         self.settings = settings
         self.filter_menu = ContinuousFilterMenu(settings)
         self.display = ContinuousDisplay(settings, self.filter_menu)
@@ -530,8 +631,14 @@ class ContinuousComponents:
                 st.session_state[key] = val
     
     def render_polling_ui(self):
-        """
-        Handles UI updates while monitoring background thread status
+        """Handle UI updates while monitoring background thread status.
+
+        This method processes log entries from the queue and updates the UI
+        based on the background thread's status.
+
+        Note:
+            The method uses Streamlit's rerun mechanism to update the UI
+            when new logs are available or when the thread status changes.
         """
         if st.session_state.get("is_downloading", False):
             query_thread = st.session_state.get("query_thread")
@@ -579,6 +686,14 @@ class ContinuousComponents:
                 st.rerun()
         
     def render(self):
+        """Render the complete continuous waveform interface.
+
+        This method creates the main UI for continuous waveform processing, including:
+        - Download and log view tabs
+        - Filter menu in sidebar
+        - Real-time status updates
+        - Log display and management
+        """
         # Initialize tab selection in session state if not exists
         if "continuous_active_tab" not in st.session_state:
             st.session_state["continuous_active_tab"] = 0  # Default to download tab

@@ -6,8 +6,6 @@ import sys
 import time
 import queue
 from pathlib import Path
-from io import StringIO
-from contextlib import redirect_stdout, redirect_stderr
 from html import escape
 
 from seed_vault.models.config import SeismoLoaderSettings
@@ -22,12 +20,30 @@ stop_event = threading.Event()
 log_queue = queue.Queue()
 
 class RunFromConfigComponent:
+    """A component for running seismic data processing from a configuration file.
+
+    This component provides a user interface for loading, editing, and executing
+    seismic data processing configurations. It supports real-time logging and
+    background processing with cancellation capabilities.
+
+    Attributes:
+        settings (SeismoLoaderSettings): Configuration settings for seismic data processing.
+        is_editing (bool): Flag indicating if the configuration is being edited.
+        edited_config_str (str): The current edited configuration string.
+        config_str (str): The original configuration string.
+    """
+
     settings: SeismoLoaderSettings
     is_editing: bool = False
     edited_config_str: str = None
     config_str: str = None
 
     def __init__(self, settings: SeismoLoaderSettings):
+        """Initialize the RunFromConfigComponent.
+
+        Args:
+            settings (SeismoLoaderSettings): Configuration settings for seismic data processing.
+        """
         self.settings = settings
         self.console = ConsoleDisplay()
         
@@ -40,7 +56,18 @@ class RunFromConfigComponent:
             st.session_state.config_log_entries = []
 
     def process_config_in_background(self, from_file: Path):
-        """Process the config file in a background thread with logging to queue"""
+        """Process the configuration file in a background thread with logging.
+
+        This method sets up a custom logging system that captures both stdout and stderr,
+        processes the configuration file, and handles any errors or cancellations.
+
+        Args:
+            from_file (Path): Path to the configuration file to process.
+
+        Note:
+            This method runs in a background thread and updates the session state
+            with processing status and logs.
+        """
         # Custom stdout/stderr handler that writes to both the original streams and our queue
         class QueueLogger:
             def __init__(self, original_stream, queue):
@@ -109,7 +136,18 @@ class RunFromConfigComponent:
             st.session_state.config_is_running = False
 
     def start_background_process(self, from_file: Path):
-        """Start the background processing thread"""
+        """Start the background processing thread for configuration execution.
+
+        This method initializes and starts a new thread to process the configuration
+        file, handling state management and thread lifecycle.
+
+        Args:
+            from_file (Path): Path to the configuration file to process.
+
+        Note:
+            The thread is created as a daemon thread and will be terminated when
+            the main program exits.
+        """
         # Reset the stop event
         stop_event.clear()
         
@@ -132,7 +170,18 @@ class RunFromConfigComponent:
         st.session_state.config_is_running = True
 
     def render_logs(self, container):
-        """Render logs in the provided container"""
+        """Render logs in the provided Streamlit container.
+
+        This method processes any new log entries from the queue and displays them
+        in a terminal-style format with auto-scrolling.
+
+        Args:
+            container: A Streamlit container object where logs will be displayed.
+
+        Note:
+            The logs are displayed in a terminal-style format with custom styling
+            and auto-scrolling functionality.
+        """
         # Process any new log entries from the queue
         new_logs = False
         while not log_queue.empty():
@@ -173,7 +222,15 @@ class RunFromConfigComponent:
             container.info("No logs available yet.")
 
     def check_process_status(self):
-        """Check the status of the background process and update UI accordingly"""
+        """Check the status of the background process and update UI accordingly.
+
+        This method monitors the background processing thread and updates the UI
+        based on the process status, handling completion, errors, and cancellations.
+
+        Note:
+            The method triggers UI updates through Streamlit's rerun mechanism
+            and manages the session state for process status.
+        """
         if st.session_state.config_is_running:
             process_thread = st.session_state.config_process_thread
             
@@ -212,6 +269,18 @@ class RunFromConfigComponent:
         pass
 
     def render_config(self):
+        """Render the configuration interface with editing capabilities.
+
+        This method creates the main UI for configuration management, including:
+        - Configuration file display and editing
+        - Validation messages
+        - Process controls (run, cancel, edit)
+        - Real-time log display
+
+        The interface is split into two columns:
+        - Left column: Configuration display and editing
+        - Right column: Log display and process status
+        """
         current_directory = os.path.dirname(os.path.abspath(__file__))
         target_file = os.path.join(current_directory, '../../service')
         target_file = os.path.abspath(target_file)       
