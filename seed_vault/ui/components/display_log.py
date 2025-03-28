@@ -3,7 +3,7 @@ import streamlit as st
 import threading
 import time
 from contextlib import redirect_stdout, redirect_stderr
-from typing import Callable, List
+from typing import Callable
 from queue import Queue
 from html import escape
 
