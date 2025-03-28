@@ -1096,10 +1096,13 @@ class BaseComponent:
     # WATCHER
     # ===================
     def watch_all_drawings(self, all_drawings):
+        print("watch_all_drawings")        
         if self.all_current_drawings != all_drawings:
+            print("Watching all")
             self.all_current_drawings = all_drawings
-            self.refresh_map(rerun=True, get_data=True)
-
+            if not st.session_state.get("run_fetch"):
+                self.refresh_map(rerun=False, get_data=False)
+                st.session_state["run_fetch"] = True
 
 
     # ===================
@@ -1564,7 +1567,9 @@ class BaseComponent:
         
         if 'loading' not in st.session_state:
             st.session_state['loading'] = False
-                
+        if "run_fetch" not in st.session_state:
+            st.session_state["run_fetch"] = False
+
         with st.sidebar:
             self.render_map_handles()
             self.render_map_right_menu()
@@ -1599,3 +1604,8 @@ class BaseComponent:
             self.render_marker_select()
             with st.expander(self.TXT.SELECT_DATA_TABLE_TITLE, expanded = not self.df_markers.empty):
                 self.render_data_table(c2_export)
+
+        if st.session_state.get("run_fetch") :
+            self.fetch_data_with_loading(fetch_func=self.handle_get_data)
+            st.session_state["run_fetch"] = False
+            st.rerun()
