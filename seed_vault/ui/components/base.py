@@ -1,3 +1,4 @@
+import copy
 import io
 import os
 import re
@@ -26,8 +27,15 @@ from seed_vault.enums.ui import Steps
 
 from seed_vault.service.utils import convert_to_datetime, check_client_services, get_time_interval
 
-if 'loading' not in st.session_state:
-    st.session_state['loading'] = False
+from enum import Enum
+
+class FetchStatus(Enum):
+    IDLE = "idle"
+    SHOULD_FETCH = "should_fetch"
+    FETCHING = "fetching"
+    SUCCESS = "success"
+    ERROR = "error"
+    RERUN = "rerun"
 
 class BaseComponentTexts:
     """Defines text constants for UI components in different configuration steps."""
@@ -722,16 +730,20 @@ class BaseComponent:
     # ====================
 
     def fetch_data_with_loading(self, fetch_func, *args, spinner_message="🔄 Fetching data...", success_message="✅ Data loaded successfully.", **kwargs):
-        st.session_state['loading'] = True
-        self.add_loading_overlay()
-        with st.spinner(spinner_message):
-            try:
+        if st.session_state["fetch_status"] != FetchStatus.SHOULD_FETCH:
+            return
+
+        try:
+            st.session_state["fetch_status"] = FetchStatus.FETCHING
+            self.add_loading_overlay()
+            with st.spinner(spinner_message):
                 fetch_func(*args, **kwargs)
                 st.success(success_message)
-            except Exception as e:
-                st.error(f"⚠️ An unexpected error occurred: {str(e)}")
-            finally:
-                st.session_state['loading'] = False
+            st.session_state["fetch_status"] = FetchStatus.RERUN
+        except Exception as e:
+            st.session_state["fetch_status"] = FetchStatus.ERROR
+            st.error(f"⚠️ An unexpected error occurred: {str(e)}")
+
 
     def add_loading_overlay(self):
         st.markdown("""
@@ -751,7 +763,7 @@ class BaseComponent:
             <div class="loading-overlay">🔄 Loading... Please wait.</div>
         """, unsafe_allow_html=True)
 
-    def handle_get_data(self, is_import: bool = False, uploaded_file = None):
+    def handle_get_data(self, is_import: bool = False, uploaded_file = None):     
         http_error = {
             204: "No data found",
             400: "Malformed input or unrecognized search parameter",
@@ -817,7 +829,6 @@ class BaseComponent:
 
 
             print(self.error)  # Logging for debugging
-        
     def clear_all_data(self):
         self.map_fg_marker= None
         self.map_fg_area= None
@@ -1096,14 +1107,17 @@ class BaseComponent:
     # WATCHER
     # ===================
     def watch_all_drawings(self, all_drawings):
-        print("watch_all_drawings")        
-        if self.all_current_drawings != all_drawings:
-            print("Watching all")
-            self.all_current_drawings = all_drawings
-            if not st.session_state.get("run_fetch"):
-                self.refresh_map(rerun=False, get_data=False)
-                st.session_state["run_fetch"] = True
+        if "last_fetched_drawings" not in st.session_state:
+            st.session_state["last_fetched_drawings"] = []
 
+        if st.session_state["fetch_status"] in [FetchStatus.FETCHING, FetchStatus.RERUN]:
+            return
+
+        if all_drawings != st.session_state["last_fetched_drawings"]:
+            st.session_state["last_fetched_drawings"] = all_drawings
+            self.all_current_drawings = all_drawings
+            self.refresh_map(rerun=False, get_data=False)
+            st.session_state["fetch_status"] = FetchStatus.SHOULD_FETCH
 
     # ===================
     #  ERROR HANDLES
@@ -1565,10 +1579,8 @@ class BaseComponent:
 
     def render(self):
         
-        if 'loading' not in st.session_state:
-            st.session_state['loading'] = False
-        if "run_fetch" not in st.session_state:
-            st.session_state["run_fetch"] = False
+        if "fetch_status" not in st.session_state:
+            st.session_state["fetch_status"] = FetchStatus.IDLE
 
         with st.sidebar:
             self.render_map_handles()
@@ -1605,7 +1617,9 @@ class BaseComponent:
             with st.expander(self.TXT.SELECT_DATA_TABLE_TITLE, expanded = not self.df_markers.empty):
                 self.render_data_table(c2_export)
 
-        if st.session_state.get("run_fetch") :
+        if st.session_state["fetch_status"] == FetchStatus.SHOULD_FETCH:
             self.fetch_data_with_loading(fetch_func=self.handle_get_data)
-            st.session_state["run_fetch"] = False
+
+        if st.session_state["fetch_status"] == FetchStatus.RERUN:
+            st.session_state["fetch_status"] = FetchStatus.IDLE
             st.rerun()
