@@ -167,7 +167,8 @@ def collect_requests(inv, time0, time1, days_per_request=3,
     sub_inv = inv.select(time=time0)
     current_start = time0
     while current_start < time1:
-        current_end = min(current_start + timedelta(days=days_per_request), time1)
+        current_end = min(current_start \
+            + timedelta(days=days_per_request, microseconds=-1), time1)
         
         if cha_pref or loc_pref:
             sub_inv = get_preferred_channels(inv, cha_pref, loc_pref, current_start)
@@ -184,7 +185,7 @@ def collect_requests(inv, time0, time1, days_per_request=3,
                         current_start.isoformat() + "Z",
                         current_end.isoformat() + "Z" ))
         
-        current_start = current_end
+        current_start = current_end + timedelta(microseconds=1)
     
     return requests
 
@@ -745,7 +746,7 @@ def prune_requests(
     Remove overlapping requests where data already exists in the archive.
 
     Checks both the database and filesystem for existing data and removes or
-    splits requests to avoid re-downloading data that's already available.
+    splits requests to avoid re-downloading data that should be there already.
 
     Args:
         requests: List of request tuples containing:
@@ -753,7 +754,7 @@ def prune_requests(
         db_manager: DatabaseManager instance for querying existing data.
         sds_path: Root path of the SDS archive.
         min_request_window: Minimum time window in seconds to keep a request.
-            Requests shorter than this are discarded.
+            Requests shorter than this are discarded. Default is 3 seconds.
 
     Returns:
         List of pruned request tuples, sorted by start time, network, and station.
@@ -766,86 +767,117 @@ def prune_requests(
         >>> requests = [("IU", "ANMO", "00", "BHZ", "2020-01-01", "2020-01-02")]
         >>> pruned = prune_requests(requests, db_manager, "/data/SDS")
     """
-    pruned_requests = []
     if not requests:
-        return pruned_requests
+        return []
 
-
+    # Group requests by network for batch processing
+    requests_by_network = {}
+    for req in requests:
+        network = req[0]
+        if network not in requests_by_network:
+            requests_by_network[network] = []
+        requests_by_network[network].append(req)
+    
+    pruned_requests = []
+    
     with db_manager.connection() as conn:
         cursor = conn.cursor()
         
-        for req in requests:
-            network, station, location, channel, start_time, end_time = req
-            start_time = UTCDateTime(start_time)
-            end_time = UTCDateTime(end_time)
-
-            if end_time - start_time < min_request_window:
-                continue
-
-            # Check filesystem for existing files
-            existing_filenames = get_sds_filenames(
-                network, station, location, channel,
-                start_time, end_time, sds_path
-            )
+        # Process each network as a batch
+        for network, network_requests in requests_by_network.items():
+            # Find min and max times for this batch to reduce query range
+            min_start = min(UTCDateTime(req[4]) for req in network_requests)
+            max_end = max(UTCDateTime(req[5]) for req in network_requests)
             
-            # Query database for existing data
+            # Get all relevant data in one query
             cursor.execute('''
-                SELECT starttime, endtime FROM archive_data
-                WHERE network = ? AND station = ? AND location = ? AND channel = ?
-                AND endtime >= ? AND starttime <= ?
-                ORDER BY starttime
-            ''', (network, station, location, channel,
-                 start_time.isoformat(), end_time.isoformat()))
+                SELECT network, station, location, channel, starttime, endtime 
+                FROM archive_data
+                WHERE network = ? AND endtime >= ? AND starttime <= ?
+            ''', (network, min_start.isoformat(), max_end.isoformat()))
             
-            existing_data = cursor.fetchall()
-
-
-            # Update database if files exist but aren't recorded (probably continuous) OR there are multiple items in one file (probably events)
-            if existing_filenames and ( len(existing_data) < len(existing_filenames) or len(existing_data) > len(existing_filenames)):
-                populate_database_from_files(cursor, file_paths=existing_filenames)
+            # Organize existing data by (station, location, channel)
+            existing_data = {}
+            for row in cursor.fetchall():
+                key = (row[1], row[2], row[3])  # station, location, channel
+                if key not in existing_data:
+                    existing_data[key] = []
+                existing_data[key].append((UTCDateTime(row[4]), UTCDateTime(row[5])))
+            
+            # Process each request with the pre-fetched data
+            for req in network_requests:
+                network, station, location, channel, start_str, end_str = req
+                start_time = UTCDateTime(start_str)
+                end_time = UTCDateTime(end_str)
                 
-                cursor.execute('''
-                    SELECT starttime, endtime FROM archive_data
-                    WHERE network = ? AND station = ? AND location = ? AND channel = ?
-                    AND endtime >= ? AND starttime <= ?
-                    ORDER BY starttime
-                ''', (network, station, location, channel,
-                     start_time.isoformat(), end_time.isoformat()))
+                if end_time - start_time < min_request_window:
+                    continue
                 
-                existing_data = cursor.fetchall()
-
-            if not existing_data and not existing_filenames:
-                # Keep entire request if no existing data found
-                pruned_requests.append(req)
-            else:
-                # Process gaps in existing data
+                key = (station, location, channel)
+                
+                # Check if we need to look at the filesystem
+                if key not in existing_data or not existing_data[key]:
+                    # Get files only when necessary
+                    file_paths = get_sds_filenames(
+                        network, station, location, channel, 
+                        start_time, end_time, sds_path
+                    )
+                    
+                    if file_paths:
+                        # Update database and our cached data
+                        populate_database_from_files(cursor, file_paths=file_paths)
+                        
+                        cursor.execute('''
+                            SELECT starttime, endtime FROM archive_data
+                            WHERE network = ? AND station = ? AND location = ? AND channel = ?
+                            AND endtime >= ? AND starttime <= ?
+                            ORDER BY starttime
+                        ''', (network, station, location, channel,
+                             start_time.isoformat(), end_time.isoformat()))
+                        
+                        existing_data[key] = [(UTCDateTime(r[0]), UTCDateTime(r[1])) 
+                                              for r in cursor.fetchall()]
+                    else:
+                        pruned_requests.append(req)
+                        continue
+                
+                # Check if this specific request is fully covered by existing data
+                relevant_intervals = [
+                    (db_start, db_end) for db_start, db_end in existing_data.get(key, [])
+                    if not (db_end <= start_time or db_start >= end_time)
+                ]
+                
+                if not relevant_intervals:
+                    pruned_requests.append(req)
+                    continue
+                
+                # Sort intervals by start time
+                relevant_intervals.sort(key=lambda x: x[0])
+                
+                # Find gaps in coverage
                 current_time = start_time
-                for db_start, db_end in existing_data:
-                    db_start = UTCDateTime(db_start)
-                    db_end = UTCDateTime(db_end)
-                    
-                    if current_time < db_start - min_request_window:
-                        # Add request for gap before existing data
-                        pruned_requests.append((
-                            network, station, location, channel,
-                            current_time.isoformat(),
-                            db_start.isoformat()
-                        ))
-                    
+                gaps = []
+                
+                for db_start, db_end in relevant_intervals:
+                    if current_time < db_start:
+                        gaps.append((current_time, db_start))
                     current_time = max(current_time, db_end)
                 
-                if current_time < end_time - min_request_window:
-                    # Add request for gap after last existing data
-                    pruned_requests.append((
-                        network, station, location, channel,
-                        current_time.isoformat(),
-                        end_time.isoformat()
-                    ))
-
-    # Sort by start time, network, station
+                if current_time < end_time:
+                    gaps.append((current_time, end_time))
+                
+                # Add requests for each gap that's large enough
+                for gap_start, gap_end in gaps:
+                    if gap_end - gap_start >= min_request_window:
+                        pruned_requests.append((
+                            network, station, location, channel,
+                            gap_start.isoformat(),
+                            gap_end.isoformat()
+                        ))
+    
     if pruned_requests:
         pruned_requests.sort(key=lambda x: (x[4], x[0], x[1]))
-
+    
     return pruned_requests
 
 
@@ -962,9 +994,9 @@ def archive_request(
             doy = current_time.julday
             
             next_day = current_time + 86400
-            day_end = min(next_day - tr.stats.delta, endtime)
+            day_end = min(next_day - tr.stats.delta/3, endtime)
             
-            day_tr = tr.slice(current_time, day_end, nearest_sample=True)
+            day_tr = tr.slice(current_time, day_end, nearest_sample=False)
             day_key = (year, doy, net, sta, loc, cha)
             traces_by_day[day_key] += day_tr
             
@@ -995,7 +1027,7 @@ def archive_request(
             if existing_st:
                 print(f"  ... Writing {full_path}")
 
-        existing_st = Stream([tr for tr in existing_st if len(tr.data) > 0])
+        existing_st = Stream([tr for tr in existing_st if len(tr.data) > 1]) # assume 1-sample traces are artifacts
 
         if existing_st:
             try:
@@ -1452,7 +1484,7 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
         except FDSNNoDataException:
             print(f"No events found for constraint: {geo.geo_type}")
             continue
-    
+
     # Remove duplicates (*now done below)
     #catalog = remove_duplicate_events(catalog)
 
@@ -1520,11 +1552,10 @@ def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event =
         return True
 
     # Collect requests
-    print("Collecting, combining, and pruning requests against database...")
+    print("Collecting, combining, and pruning requests against database... ")
     requests = collect_requests(settings.station.selected_invs, 
         starttime, endtime, days_per_request=settings.waveform.days_per_request,
         cha_pref=settings.waveform.channel_pref,loc_pref=settings.waveform.location_pref)
-
 
     # Remove any for data we already have (requires updated db)
     # If force_redownload is flagged, then ignore request pruning
@@ -1537,7 +1568,7 @@ def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event =
 
     # Break if nothing to do
     if not pruned_requests:
-        print(f"          ... Data already archived!")
+        print(f"          ... All data already archived!\n")
         return True
 
     # Check for cancellation after request pruning
@@ -1714,7 +1745,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
                 print(f"Issue with run_event > prune_requests:\n",{e})
         
         if len(requests) > 0 and not pruned_requests:
-            print(f"    All data already in archive")
+            print(f"          ... All data already archived!\n")
 
         # Download new data if needed
         if pruned_requests:
