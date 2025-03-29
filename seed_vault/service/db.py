@@ -371,6 +371,12 @@ class DatabaseManager:
         while retry_count < max_retries:
             try:
                 conn = sqlite3.connect(self.db_path, timeout=20)
+                # Wise to increase cache_size if your database grows very large / can afford it. mmap seems to be less important
+                conn.execute('PRAGMA journal_mode = WAL')
+                conn.execute('PRAGMA synchronous = NORMAL')
+                conn.execute('PRAGMA cache_size = -128000')  # 128MB
+                conn.execute('PRAGMA mmap_size = 256000000')  # 256MB
+                conn.execute('PRAGMA temp_store = MEMORY')
                 yield conn
                 conn.commit()
                 return
@@ -443,6 +449,12 @@ class DatabaseManager:
                 )
             ''')
 
+            # For quicker arrival data lookups
+            cursor.execute('''
+                CREATE INDEX IF NOT EXISTS idx_arrival_by_station_event
+                ON arrival_data (resource_id, s_netcode, s_stacode)
+            ''')
+
     def display_contents(
         self, table_name: str, start_time: Union[int, float, datetime, UTCDateTime] = 0,
         end_time: Union[int, float, datetime, UTCDateTime] = 4102444799, limit: int = 100):
@@ -488,11 +500,12 @@ class DatabaseManager:
             
             print(f"\nTotal rows: {len(results)}")
 
-    def reindex_archive_data(self):
-        """Rebuild the index on archive_data table."""
+    def reindex_tables(self):
+        """Reindex both of the tables in our DB"""
         with self.connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("REINDEX idx_archive_data")
+            cursor.execute("REINDEX TABLE archive_data")
+            cursor.execute("REINDEX TABLE arrival_data")
 
     def vacuum_database(self):
         """Rebuild the database file to reclaim unused space."""
@@ -810,34 +823,6 @@ class DatabaseManager:
                 columns = [description[0] for description in cursor.description]
                 return [dict(zip(columns, result)) for result in results]
         return []
-
-    # this function may be redundant now, only using fetch_arrivals_distances (?)
-    def fetch_arrivals(
-    self, resource_id: str, netcode: str, stacode: str
-    ) -> Optional[Tuple[float, float]]:
-        """
-        Retrieve P and S wave arrival times for a specific event and station.
-
-        Args:
-            resource_id: Unique identifier for the seismic event.
-            netcode: Network code for the station.
-            stacode: Station code.
-
-        Returns:
-            Optional[Tuple[float, float]]: Tuple containing (p_arrival, s_arrival) times
-                as timestamps, or None if no matching record is found.
-        """
-        with self.connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute('''
-                SELECT p_arrival, s_arrival 
-                FROM arrival_data 
-                WHERE resource_id = ? AND s_netcode = ? AND s_stacode = ?
-            ''', (resource_id, netcode, stacode))
-            result = cursor.fetchone()
-            if result:
-                return (result[0], result[1])
-        return None
 
     def fetch_arrivals_distances(
     self, resource_id: str, netcode: str, stacode: str
