@@ -17,7 +17,7 @@ import threading
 import random
 from typing import Any, Dict, List, Tuple, Optional, Union
 from collections import defaultdict
-
+import warnings
 
 from obspy import UTCDateTime
 from obspy.core.stream import Stream
@@ -29,11 +29,13 @@ from obspy.clients.fdsn import Client
 from obspy.taup import TauPyModel
 from obspy.geodetics.base import locations2degrees,gps2dist_azimuth
 from obspy.clients.fdsn.header import URL_MAPPINGS, FDSNNoDataException
+from obspy.io.mseed.headers import InternalMSEEDWarning
+warnings.filterwarnings("ignore", category=InternalMSEEDWarning)
 
 from seed_vault.models.config import SeismoLoaderSettings, SeismoQuery
 from seed_vault.enums.config import DownloadType, GeoConstraintType
 from seed_vault.service.utils import is_in_enum,get_sds_filenames,to_timestamp,\
-    filter_inventory_by_geo_constraints,filter_catalog_by_geo_constraints
+    filter_inventory_by_geo_constraints,filter_catalog_by_geo_constraints,format_error
 from seed_vault.service.db import DatabaseManager,stream_to_db_elements,miniseed_to_db_elements,\
     populate_database_from_sds,populate_database_from_files,populate_database_from_files_dumb
 from seed_vault.service.waveform import get_local_waveform, stream_to_dataframe
@@ -956,7 +958,7 @@ def archive_request(
                     if 'code: 204' in str(e):
                         print(f"\n        No data for station {s}")
                     else:
-                        print(f"Unusual error fetching data for station {s}:\n {str(e)}")
+                        print(format_error(s,e))
         else:
             st = wc.get_waveforms(**kwargs)
 
@@ -969,7 +971,7 @@ def archive_request(
         if 'code: 204' in str(e):
             print(f"      ~ No data available")
         else:
-            print(f"{str(e)}")
+            print(format_error(request[1].upper(),e))
         return
 
     # Group traces by day

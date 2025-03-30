@@ -440,3 +440,14 @@ def filter_inventory_by_geo_constraints(inventory: Inventory, constraints) -> In
     
     # Create new inventory with only the networks that had matching stations
     return Inventory(networks=networks, source=inventory.source, sender=inventory.sender)
+
+
+def format_error(station, error):
+    indent = " " * 13
+    border = indent + "-" * 74
+    
+    # Format the error message
+    error_lines = str(error).split('\n')
+    formatted_error = "\n".join(f"{indent}{line}" for line in error_lines)
+    
+    return f"\n{indent}Station {station} Error:\n{formatted_error}\n"
