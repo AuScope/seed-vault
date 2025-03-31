@@ -94,6 +94,7 @@ Key Features
 * Detailed logging of processing steps
 * Support for both event-based and continuous data retrieval 
 
+.. _parameter-reference:
 
 Parameter Reference
 -------------------
