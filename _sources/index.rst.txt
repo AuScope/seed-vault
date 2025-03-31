@@ -58,6 +58,7 @@ Runs on:
    :caption: Contents:
 
    introduction
+   usage
    app
    cli
    modules
