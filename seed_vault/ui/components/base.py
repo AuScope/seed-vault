@@ -10,6 +10,7 @@ from datetime import datetime, time
 from obspy.core.event import Catalog, read_events
 from obspy.core.inventory import Inventory, read_inventory
 import time
+import tempfile
 
 
 from seed_vault.ui.components.map import create_map, add_area_overlays, add_data_points, clear_map_layers, clear_map_draw,add_map_draw
@@ -212,6 +213,7 @@ class BaseComponent:
         self.set_map_view(init_map_center, init_map_zoom)
         self.map_view_center = init_map_center
         self.map_view_zoom   = init_map_zoom
+        self.export_as_alternate = False
 
 
     def get_key_element(self, name):
@@ -931,10 +933,13 @@ class BaseComponent:
         c1, c2 = st.columns([1, 1])
 
         with c1:
-            self.settings.event.min_radius = st.number_input("Minimum radius (degree)", value=self.settings.event.min_radius)
+            self.settings.event.min_radius = st.number_input("Minimum radius (degree)", 
+                value=self.settings.event.min_radius or 0.0,
+                step=0.5,min_value=0.0,max_value=180.0)
         with c2:
-            self.settings.event.max_radius = st.number_input("Maximum radius (degree)", value=self.settings.event.max_radius)
-
+            self.settings.event.max_radius = st.number_input("Maximum radius (degree)",
+                value=self.settings.event.max_radius or 0.0,
+                step=0.5,min_value=0.0,max_value=180.0)
         try:
             min_radius = float(self.settings.event.min_radius)
             max_radius = float(self.settings.event.max_radius)
@@ -1019,20 +1024,45 @@ class BaseComponent:
     # FILES
     # ===================
     def exp_imp_events_stations(self):
-        st.write(f"#### Export/Import {self.TXT.STEP.title()}s")
+        st.write(f"#### Export/Import {self.TXT.STEP.title()}s (XML)")
 
         c11, c22 = st.columns([1,1])
+        self.export_as_alternate = st.checkbox(
+            "Export as " + ("TXT" if self.step_type == Steps.STATION else "KML"), 
+            key=self.get_key_element("export_alternate_format")
+        )
         with c11:
-            # @NOTE: Download Selected had to be with the table.
-            # if (len(self.catalogs.events) > 0 or len(self.inventories.get_contents().get('stations')) > 0):
+
+            if self.export_as_alternate:
+                export_data = self.export_txt_tmpfile(export_selected=False)
+                file_extension = ".txt" if self.step_type == Steps.STATION else ".kml"
+                file_name = f"{self.TXT.STEP}s{file_extension}"
+                mime_type = "text/plain" if self.step_type == Steps.STATION else "application/vnd.google-earth.kml+xml"
+            else:
+                export_data = self.export_xml_bytes(export_selected=False)
+                file_name = f"{self.TXT.STEP}s.xml"
+                mime_type = "application/xml"
+
             st.download_button(
                 f"Download All", 
                 key=self.get_key_element(f"Download All {self.TXT.STEP.title()}s"),
-                data=self.export_xml_bytes(export_selected=False),
-                file_name = f"{self.TXT.STEP}s.xml",
-                mime="application/xml",
+                data=export_data,
+                file_name=file_name,
+                mime=mime_type,
                 disabled=(len(self.catalogs.events) == 0 and (self.inventories is None or len(self.inventories.get_contents().get('stations')) == 0))
             )
+
+            
+            ## @NOTE: Download Selected had to be with the table.
+            ## if (len(self.catalogs.events) > 0 or len(self.inventories.get_contents().get('stations')) > 0):
+            #st.download_button(
+            #    f"Download All", 
+            #    key=self.get_key_element(f"Download All {self.TXT.STEP.title()}s"),
+            #    data=self.export_xml_bytes(export_selected=False),
+            #    file_name = f"{self.TXT.STEP}s.xml",
+            #    mime="application/xml",
+            #    disabled=(len(self.catalogs.events) == 0 and (self.inventories is None or len(self.inventories.get_contents().get('stations')) == 0))
+            #)
 
         def reset_uploaded_file_processed():
             st.session_state['uploaded_file_processed'] = False
@@ -1057,8 +1087,8 @@ class BaseComponent:
                 if export_selected:
                 # self.sync_df_markers_with_df_edit()
                     self.update_selected_data()
-            
-                if self.step_type == Steps.STATION:                
+                
+                if self.step_type == Steps.STATION:
                     inv = self.settings.station.selected_invs if export_selected else self.inventories
                     if inv:
                         inv.write(f, format='STATIONXML')
@@ -1066,13 +1096,40 @@ class BaseComponent:
                 if self.step_type == Steps.EVENT:
                     cat = self.settings.event.selected_catalogs if export_selected else self.catalogs
                     if cat:
-                        cat.write(f, format="QUAKEML")
+                        cat.write(f, format='QUAKEML')
 
             # if f.getbuffer().nbytes == 0:
-            #     f.write(b"No Data")     
+            #     f.write(b"No Data")
 
             return f.getvalue()
+
+    def export_txt_tmpfile(self, export_selected: bool = True):
+        extension = ".txt" if self.step_type == Steps.STATION else ".kml"
         
+        # Create temporary file with the correct extension
+        with tempfile.NamedTemporaryFile(suffix=extension, delete=False) as temp_file:
+            temp_path = temp_file.name
+        
+        try:
+            if not self.df_markers.empty and len(self.df_markers) > 0:
+                if export_selected:
+                    self.update_selected_data()
+                
+                if self.step_type == Steps.STATION:
+                    inv = self.settings.station.selected_invs if export_selected else self.inventories
+                    if inv:
+                        inv.write(temp_path, format='STATIONTXT')
+                if self.step_type == Steps.EVENT:
+                    cat = self.settings.event.selected_catalogs if export_selected else self.catalogs
+                    if cat:
+                        cat.write(temp_path, format='KML')
+            
+            with open(temp_path, 'rb') as f:
+                return f.read()
+        finally:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+
 
     def import_xml(self, uploaded_file):
         st.session_state["show_error_workflow_combined"] = False
@@ -1362,12 +1419,23 @@ class BaseComponent:
         is_disabled = 'is_selected' not in self.df_markers or self.df_markers['is_selected'].sum() == 0
 
         with c5_map:
+
+            if self.export_as_alternate:
+                export_data = self.export_txt_tmpfile(export_selected=True)
+                file_extension = ".txt" if self.step_type == Steps.STATION else ".kml"
+                file_name = f"{self.TXT.STEP}s_selected{file_extension}"
+                mime_type = "text/plain" if self.step_type == Steps.STATION else "application/vnd.google-earth.kml+xml"
+            else:
+                export_data = self.export_xml_bytes(export_selected=True)
+                file_name = f"{self.TXT.STEP}s_selected.xml"
+                mime_type = "application/xml"
+
             st.download_button(
                 f"Download Selected",
                 key=self.get_key_element(f"Download Selected {self.TXT.STEP.title()}s"),
-                data=self.export_xml_bytes(export_selected=True),
-                file_name=f"{self.TXT.STEP}s_selected.xml",
-                mime="application/xml",
+                data=export_data,
+                file_name=file_name,
+                mime=mime_type,
                 disabled=is_disabled
             )
 
