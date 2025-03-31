@@ -57,6 +57,7 @@ Runs on:
    :maxdepth: 2
    :caption: Contents:
 
+   introduction
    app
    cli
    modules
