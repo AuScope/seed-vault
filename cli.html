@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CLI commands &mdash; Seed Vault 0.1.2 documentation</title>
+  <title>CLI Commands &mdash; Seed Vault 0.1.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
@@ -150,7 +150,12 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">CLI commands</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">CLI Commands</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#run-the-web-server">Run the Web Server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#run-from-a-configuration-file">Run from a Configuration File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sync-local-database">Sync Local Database</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="modules.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="seed_vault.html">seed_vault package</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="seed_vault.html#subpackages">Subpackages</a><ul>
@@ -190,7 +195,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">CLI commands</li>
+      <li class="breadcrumb-item active">CLI Commands</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/cli.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -201,8 +206,48 @@
            <div itemprop="articleBody">
              
   <section id="cli-commands">
-<h1>CLI commands<a class="headerlink" href="#cli-commands" title="Link to this heading"></a></h1>
-<p>Hello</p>
+<h1>CLI Commands<a class="headerlink" href="#cli-commands" title="Link to this heading"></a></h1>
+<p>In addition to its web interface, <cite>seed-vault</cite> also supports several operations via command-line interface (CLI) commands. This feature is especially useful if you prefer automating tasks or bypassing the UI when configuring your downloads.</p>
+<p>Using a base configuration file, you can easily adapt settings for different use cases. The CLI behavior is similar to the “Run from Parameters” mode, where users configure their inputs through a <cite>.cfg</cite> file (e.g., <cite>input.cfg</cite>). The full list of supported parameters can be found in the <a class="reference internal" href="flows/run_from_parameters.html#parameter-reference"><span class="std std-ref">Parameter Reference</span></a> section.</p>
+<p>Available CLI commands are outlined below:</p>
+<section id="run-the-web-server">
+<h2>Run the Web Server<a class="headerlink" href="#run-the-web-server" title="Link to this heading"></a></h2>
+<p>To launch the Streamlit web server on <cite>localhost</cite>, use the following command:</p>
+<dl class="simple">
+<dt>::</dt><dd><p>seed-vault</p>
+</dd>
+</dl>
+</section>
+<section id="run-from-a-configuration-file">
+<h2>Run from a Configuration File<a class="headerlink" href="#run-from-a-configuration-file" title="Link to this heading"></a></h2>
+<p>Use this command to download seismic data directly to your local drive using a <cite>.cfg</cite> configuration file.</p>
+<p>As mentioned earlier, this file follows the same format as the parameter definitions used in “Run from Parameters.” Example configuration files are available in the [examples directory](<a class="reference external" href="https://github.com/AuScope/seed-vault/tree/main/examples">https://github.com/AuScope/seed-vault/tree/main/examples</a>).</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">seed</span><span class="o">-</span><span class="n">vault</span> <span class="o">-</span><span class="n">f</span> <span class="nb">input</span><span class="o">.</span><span class="n">cfg</span>
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">seed</span><span class="o">-</span><span class="n">vault</span> <span class="o">--</span><span class="n">file</span> <span class="nb">input</span><span class="o">.</span><span class="n">cfg</span>
+</pre></div>
+</div>
+</section>
+<section id="sync-local-database">
+<h2>Sync Local Database<a class="headerlink" href="#sync-local-database" title="Link to this heading"></a></h2>
+<p>If you’ve already downloaded seismic data and want to avoid re-downloading it, you need to sync its metadata with the local <cite>seed-vault</cite> database. This can be done either via the UI or with the CLI:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">seed</span><span class="o">-</span><span class="n">vault</span> <span class="n">sync</span><span class="o">-</span><span class="n">db</span> <span class="n">sds_path</span><span class="o">=</span><span class="s2">&quot;/path/to/your/downloaded data&quot;</span> <span class="n">db_path</span><span class="o">=</span><span class="s2">&quot;/path/to/seed-vault db&quot;</span>
+</pre></div>
+</div>
+<p>Optional parameters for <cite>sync-db</cite> include:</p>
+<ul class="simple">
+<li><p><cite>-sp</cite>, <cite>–search-patterns</cite>: <em>(default: “??.</em>.*.???.?.????.???”)*
+Comma-separated list of search patterns to include in the inventory search.</p></li>
+<li><p><cite>-nt</cite>, <cite>–newer-than</cite>:
+Date in <cite>YYYY-MM-DD</cite> format. Only includes time series newer than this date.</p></li>
+<li><p><cite>-c</cite>, <cite>–cpu</cite>: <em>(default: 0)</em>
+Number of processes to use. Set to <cite>0</cite> to use all available cores.</p></li>
+<li><p><cite>-g</cite>, <cite>–gap-tolerance</cite>: <em>(default: 60)</em>
+Tolerance for gaps in time series data, in seconds.</p></li>
+</ul>
+</section>
 </section>
 
 
