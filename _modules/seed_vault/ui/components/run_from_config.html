@@ -206,8 +206,6 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">queue</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">io</span><span class="w"> </span><span class="kn">import</span> <span class="n">StringIO</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">redirect_stdout</span><span class="p">,</span> <span class="n">redirect_stderr</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">html</span><span class="w"> </span><span class="kn">import</span> <span class="n">escape</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.models.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">SeismoLoaderSettings</span>
@@ -224,12 +222,30 @@
 <div class="viewcode-block" id="RunFromConfigComponent">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.run_from_config.RunFromConfigComponent">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">RunFromConfigComponent</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A component for running seismic data processing from a configuration file.</span>
+
+<span class="sd">    This component provides a user interface for loading, editing, and executing</span>
+<span class="sd">    seismic data processing configurations. It supports real-time logging and</span>
+<span class="sd">    background processing with cancellation capabilities.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        settings (SeismoLoaderSettings): Configuration settings for seismic data processing.</span>
+<span class="sd">        is_editing (bool): Flag indicating if the configuration is being edited.</span>
+<span class="sd">        edited_config_str (str): The current edited configuration string.</span>
+<span class="sd">        config_str (str): The original configuration string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">settings</span><span class="p">:</span> <span class="n">SeismoLoaderSettings</span>
     <span class="n">is_editing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">edited_config_str</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">config_str</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">:</span> <span class="n">SeismoLoaderSettings</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the RunFromConfigComponent.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            settings (SeismoLoaderSettings): Configuration settings for seismic data processing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">settings</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">console</span> <span class="o">=</span> <span class="n">ConsoleDisplay</span><span class="p">()</span>
         
@@ -244,7 +260,18 @@
 <div class="viewcode-block" id="RunFromConfigComponent.process_config_in_background">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.run_from_config.RunFromConfigComponent.process_config_in_background">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">process_config_in_background</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">from_file</span><span class="p">:</span> <span class="n">Path</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Process the config file in a background thread with logging to queue&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Process the configuration file in a background thread with logging.</span>
+
+<span class="sd">        This method sets up a custom logging system that captures both stdout and stderr,</span>
+<span class="sd">        processes the configuration file, and handles any errors or cancellations.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            from_file (Path): Path to the configuration file to process.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            This method runs in a background thread and updates the session state</span>
+<span class="sd">            with processing status and logs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Custom stdout/stderr handler that writes to both the original streams and our queue</span>
         <span class="k">class</span><span class="w"> </span><span class="nc">QueueLogger</span><span class="p">:</span>
             <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">original_stream</span><span class="p">,</span> <span class="n">queue</span><span class="p">):</span>
@@ -316,7 +343,18 @@
 <div class="viewcode-block" id="RunFromConfigComponent.start_background_process">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.run_from_config.RunFromConfigComponent.start_background_process">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">start_background_process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">from_file</span><span class="p">:</span> <span class="n">Path</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Start the background processing thread&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Start the background processing thread for configuration execution.</span>
+
+<span class="sd">        This method initializes and starts a new thread to process the configuration</span>
+<span class="sd">        file, handling state management and thread lifecycle.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            from_file (Path): Path to the configuration file to process.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            The thread is created as a daemon thread and will be terminated when</span>
+<span class="sd">            the main program exits.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Reset the stop event</span>
         <span class="n">stop_event</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
         
@@ -342,7 +380,18 @@
 <div class="viewcode-block" id="RunFromConfigComponent.render_logs">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.run_from_config.RunFromConfigComponent.render_logs">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">render_logs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">container</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Render logs in the provided container&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Render logs in the provided Streamlit container.</span>
+
+<span class="sd">        This method processes any new log entries from the queue and displays them</span>
+<span class="sd">        in a terminal-style format with auto-scrolling.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            container: A Streamlit container object where logs will be displayed.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            The logs are displayed in a terminal-style format with custom styling</span>
+<span class="sd">            and auto-scrolling functionality.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Process any new log entries from the queue</span>
         <span class="n">new_logs</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">while</span> <span class="ow">not</span> <span class="n">log_queue</span><span class="o">.</span><span class="n">empty</span><span class="p">():</span>
@@ -386,7 +435,15 @@
 <div class="viewcode-block" id="RunFromConfigComponent.check_process_status">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.run_from_config.RunFromConfigComponent.check_process_status">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">check_process_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check the status of the background process and update UI accordingly&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check the status of the background process and update UI accordingly.</span>
+
+<span class="sd">        This method monitors the background processing thread and updates the UI</span>
+<span class="sd">        based on the process status, handling completion, errors, and cancellations.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            The method triggers UI updates through Streamlit&#39;s rerun mechanism</span>
+<span class="sd">            and manages the session state for process status.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">config_is_running</span><span class="p">:</span>
             <span class="n">process_thread</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">config_process_thread</span>
             
@@ -428,6 +485,18 @@
 <div class="viewcode-block" id="RunFromConfigComponent.render_config">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.run_from_config.RunFromConfigComponent.render_config">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">render_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Render the configuration interface with editing capabilities.</span>
+
+<span class="sd">        This method creates the main UI for configuration management, including:</span>
+<span class="sd">        - Configuration file display and editing</span>
+<span class="sd">        - Validation messages</span>
+<span class="sd">        - Process controls (run, cancel, edit)</span>
+<span class="sd">        - Real-time log display</span>
+
+<span class="sd">        The interface is split into two columns:</span>
+<span class="sd">        - Left column: Configuration display and editing</span>
+<span class="sd">        - Right column: Log display and process status</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">current_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
         <span class="n">target_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">current_directory</span><span class="p">,</span> <span class="s1">&#39;../../service&#39;</span><span class="p">)</span>
         <span class="n">target_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">target_file</span><span class="p">)</span>       

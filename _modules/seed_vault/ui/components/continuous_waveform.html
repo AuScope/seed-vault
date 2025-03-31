@@ -223,7 +223,25 @@
 <div class="viewcode-block" id="ContinuousFilterMenu">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ContinuousFilterMenu</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A menu component for filtering and controlling continuous waveform data.</span>
+
+<span class="sd">    This class provides a user interface for managing continuous waveform data</span>
+<span class="sd">    retrieval, including time range selection and station filtering.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        settings (SeismoLoaderSettings): Configuration settings for seismic data processing.</span>
+<span class="sd">        old_settings (SeismoLoaderSettings): Previous state of settings for change detection.</span>
+<span class="sd">        old_time_state (dict): Previous time range state for change detection.</span>
+<span class="sd">        last_button_pressed (str): Last button interaction for UI state management.</span>
+<span class="sd">        todo_nets (List[str]): List of networks to process.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">:</span> <span class="n">SeismoLoaderSettings</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the ContinuousFilterMenu.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            settings (SeismoLoaderSettings): Configuration settings for seismic data processing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">settings</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">old_settings</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
         <span class="c1"># Track previous time state</span>
@@ -240,7 +258,14 @@
 <div class="viewcode-block" id="ContinuousFilterMenu.validate_date_range">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu.validate_date_range">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">validate_date_range</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate that end time is not earlier than start time&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate that the selected date range is valid.</span>
+
+<span class="sd">        This method checks that the end time is not earlier than the start time</span>
+<span class="sd">        and updates the session state accordingly.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            The validation result is stored in st.session_state[&quot;date_range_valid&quot;].</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">start_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span>
         <span class="n">end_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span>
         
@@ -276,7 +301,15 @@
 <div class="viewcode-block" id="ContinuousFilterMenu.refresh_filters">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu.refresh_filters">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">refresh_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check for changes and trigger updates&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check for changes in time range and settings, trigger UI updates.</span>
+
+<span class="sd">        This method compares current settings with previous state and triggers</span>
+<span class="sd">        a UI refresh if changes are detected. It also handles saving of settings.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            The method uses Streamlit&#39;s rerun mechanism to update the UI</span>
+<span class="sd">            when changes are detected.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">current_time_state</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s1">&#39;start_time&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">start_time</span><span class="p">,</span>
             <span class="s1">&#39;end_time&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span>
@@ -331,6 +364,22 @@
 <div class="viewcode-block" id="ContinuousFilterMenu.render">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu.render">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Render the continuous waveform filter menu interface.</span>
+
+<span class="sd">        This method creates the UI for continuous waveform data management, including:</span>
+<span class="sd">        - Time range selection with year/month/week controls</span>
+<span class="sd">        - Date and time input fields</span>
+<span class="sd">        - Quick selection buttons for common time ranges</span>
+<span class="sd">        - Network/station/location/channel information display</span>
+
+<span class="sd">        The interface is organized in expandable sections:</span>
+<span class="sd">        - Time Range Adjustment</span>
+<span class="sd">        - Submitted NSLCs Information</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            The interface provides both manual input and quick selection options</span>
+<span class="sd">            for time range management.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Download Parameters&quot;</span><span class="p">)</span>
 
         <span class="c1">## Get the list of items about to be downloaded</span>
@@ -535,7 +584,24 @@
 <div class="viewcode-block" id="ContinuousDisplay">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.continuous_waveform.ContinuousDisplay">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ContinuousDisplay</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A component for displaying and managing continuous waveform data.</span>
+
+<span class="sd">    This class handles the display and processing of continuous waveform data,</span>
+<span class="sd">    including data retrieval, logging, and UI updates.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        settings (SeismoLoaderSettings): Configuration settings for seismic data processing.</span>
+<span class="sd">        filter_menu (ContinuousFilterMenu): Menu component for filtering waveforms.</span>
+<span class="sd">        console (ConsoleDisplay): Console for logging output.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">:</span> <span class="n">SeismoLoaderSettings</span><span class="p">,</span> <span class="n">filter_menu</span><span class="p">:</span> <span class="n">ContinuousFilterMenu</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the ContinuousDisplay component.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            settings (SeismoLoaderSettings): Configuration settings for seismic data processing.</span>
+<span class="sd">            filter_menu (ContinuousFilterMenu): Menu component for filtering waveforms.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">settings</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">filter_menu</span> <span class="o">=</span> <span class="n">filter_menu</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">console</span> <span class="o">=</span> <span class="n">ConsoleDisplay</span><span class="p">()</span>
@@ -543,8 +609,13 @@
 <div class="viewcode-block" id="ContinuousDisplay.process_continuous_data">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.continuous_waveform.ContinuousDisplay.process_continuous_data">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">process_continuous_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Fetches continuous waveform data in a background thread with logging.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Process continuous waveform data in a background thread with logging.</span>
+
+<span class="sd">        This method sets up a custom logging system, retrieves continuous waveform data,</span>
+<span class="sd">        and handles any errors or cancellations during the process.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            The method updates the session state with processing status and logs.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Custom stdout/stderr handler that writes to both the original streams and our queue</span>
         <span class="k">class</span><span class="w"> </span><span class="nc">QueueLogger</span><span class="p">:</span>
@@ -613,6 +684,14 @@
 <div class="viewcode-block" id="ContinuousDisplay.render">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.continuous_waveform.ContinuousDisplay.render">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Render the continuous waveform display interface.</span>
+
+<span class="sd">        This method creates the main UI for continuous waveform visualization, including:</span>
+<span class="sd">        - Download controls</span>
+<span class="sd">        - Status indicators</span>
+<span class="sd">        - Real-time log display</span>
+<span class="sd">        - Progress tracking</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">st</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Continuous Waveform Archiving&quot;</span><span class="p">)</span>
         
         <span class="c1"># Create three columns for the controls</span>
@@ -710,8 +789,13 @@
 <div class="viewcode-block" id="ContinuousDisplay.retrieve_waveforms">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.continuous_waveform.ContinuousDisplay.retrieve_waveforms">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">retrieve_waveforms</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initiates waveform retrieval in a background thread with cancellation support</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initiate continuous waveform retrieval in a background thread.</span>
+
+<span class="sd">        This method starts a new thread for continuous waveform data retrieval and</span>
+<span class="sd">        updates the UI state accordingly.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            The method handles thread creation, state management, and UI updates.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">stop_event</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>  <span class="c1"># Reset cancellation flag</span>
         <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;query_thread&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">process_continuous_data</span><span class="p">,</span> <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -731,7 +815,24 @@
 <div class="viewcode-block" id="ContinuousComponents">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.continuous_waveform.ContinuousComponents">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ContinuousComponents</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A component for managing continuous waveform data processing.</span>
+
+<span class="sd">    This class coordinates the interaction between the filter menu, display,</span>
+<span class="sd">    and logging components for continuous waveform data processing.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        settings (SeismoLoaderSettings): Configuration settings for seismic data processing.</span>
+<span class="sd">        filter_menu (ContinuousFilterMenu): Menu component for filtering waveforms.</span>
+<span class="sd">        display (ContinuousDisplay): Display component for waveform visualization.</span>
+<span class="sd">        console (ConsoleDisplay): Console for logging output.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">:</span> <span class="n">SeismoLoaderSettings</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the ContinuousComponents.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            settings (SeismoLoaderSettings): Configuration settings for seismic data processing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">settings</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">filter_menu</span> <span class="o">=</span> <span class="n">ContinuousFilterMenu</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">display</span> <span class="o">=</span> <span class="n">ContinuousDisplay</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_menu</span><span class="p">)</span>
@@ -761,8 +862,14 @@
 <div class="viewcode-block" id="ContinuousComponents.render_polling_ui">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.continuous_waveform.ContinuousComponents.render_polling_ui">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">render_polling_ui</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Handles UI updates while monitoring background thread status</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Handle UI updates while monitoring background thread status.</span>
+
+<span class="sd">        This method processes log entries from the queue and updates the UI</span>
+<span class="sd">        based on the background thread&#39;s status.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            The method uses Streamlit&#39;s rerun mechanism to update the UI</span>
+<span class="sd">            when new logs are available or when the thread status changes.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;is_downloading&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
             <span class="n">query_thread</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;query_thread&quot;</span><span class="p">)</span>
@@ -813,6 +920,14 @@
 <div class="viewcode-block" id="ContinuousComponents.render">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.continuous_waveform.ContinuousComponents.render">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Render the complete continuous waveform interface.</span>
+
+<span class="sd">        This method creates the main UI for continuous waveform processing, including:</span>
+<span class="sd">        - Download and log view tabs</span>
+<span class="sd">        - Filter menu in sidebar</span>
+<span class="sd">        - Real-time status updates</span>
+<span class="sd">        - Log display and management</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Initialize tab selection in session state if not exists</span>
         <span class="k">if</span> <span class="s2">&quot;continuous_active_tab&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">:</span>
             <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;continuous_active_tab&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Default to download tab</span>

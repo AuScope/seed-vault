@@ -217,7 +217,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
-
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">obspy</span><span class="w"> </span><span class="kn">import</span> <span class="n">UTCDateTime</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">obspy.core.stream</span><span class="w"> </span><span class="kn">import</span> <span class="n">Stream</span>
@@ -229,11 +229,13 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">obspy.taup</span><span class="w"> </span><span class="kn">import</span> <span class="n">TauPyModel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">obspy.geodetics.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">locations2degrees</span><span class="p">,</span><span class="n">gps2dist_azimuth</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">obspy.clients.fdsn.header</span><span class="w"> </span><span class="kn">import</span> <span class="n">URL_MAPPINGS</span><span class="p">,</span> <span class="n">FDSNNoDataException</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">obspy.io.mseed.headers</span><span class="w"> </span><span class="kn">import</span> <span class="n">InternalMSEEDWarning</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="n">InternalMSEEDWarning</span><span class="p">)</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.models.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">SeismoLoaderSettings</span><span class="p">,</span> <span class="n">SeismoQuery</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.enums.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">DownloadType</span><span class="p">,</span> <span class="n">GeoConstraintType</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.service.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_in_enum</span><span class="p">,</span><span class="n">get_sds_filenames</span><span class="p">,</span><span class="n">to_timestamp</span><span class="p">,</span>\
-    <span class="n">filter_inventory_by_geo_constraints</span><span class="p">,</span><span class="n">filter_catalog_by_geo_constraints</span>
+    <span class="n">filter_inventory_by_geo_constraints</span><span class="p">,</span><span class="n">filter_catalog_by_geo_constraints</span><span class="p">,</span><span class="n">format_error</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.service.db</span><span class="w"> </span><span class="kn">import</span> <span class="n">DatabaseManager</span><span class="p">,</span><span class="n">stream_to_db_elements</span><span class="p">,</span><span class="n">miniseed_to_db_elements</span><span class="p">,</span>\
     <span class="n">populate_database_from_sds</span><span class="p">,</span><span class="n">populate_database_from_files</span><span class="p">,</span><span class="n">populate_database_from_files_dumb</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.service.waveform</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_local_waveform</span><span class="p">,</span> <span class="n">stream_to_dataframe</span>
@@ -378,7 +380,8 @@
     <span class="n">sub_inv</span> <span class="o">=</span> <span class="n">inv</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">time0</span><span class="p">)</span>
     <span class="n">current_start</span> <span class="o">=</span> <span class="n">time0</span>
     <span class="k">while</span> <span class="n">current_start</span> <span class="o">&lt;</span> <span class="n">time1</span><span class="p">:</span>
-        <span class="n">current_end</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">current_start</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">days_per_request</span><span class="p">),</span> <span class="n">time1</span><span class="p">)</span>
+        <span class="n">current_end</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">current_start</span> \
+            <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">days_per_request</span><span class="p">,</span> <span class="n">microseconds</span><span class="o">=-</span><span class="mi">1</span><span class="p">),</span> <span class="n">time1</span><span class="p">)</span>
         
         <span class="k">if</span> <span class="n">cha_pref</span> <span class="ow">or</span> <span class="n">loc_pref</span><span class="p">:</span>
             <span class="n">sub_inv</span> <span class="o">=</span> <span class="n">get_preferred_channels</span><span class="p">(</span><span class="n">inv</span><span class="p">,</span> <span class="n">cha_pref</span><span class="p">,</span> <span class="n">loc_pref</span><span class="p">,</span> <span class="n">current_start</span><span class="p">)</span>
@@ -395,7 +398,7 @@
                         <span class="n">current_start</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;Z&quot;</span><span class="p">,</span>
                         <span class="n">current_end</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;Z&quot;</span> <span class="p">))</span>
         
-        <span class="n">current_start</span> <span class="o">=</span> <span class="n">current_end</span>
+        <span class="n">current_start</span> <span class="o">=</span> <span class="n">current_end</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">microseconds</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     
     <span class="k">return</span> <span class="n">requests</span></div>
 
@@ -977,7 +980,7 @@
 <span class="sd">    Remove overlapping requests where data already exists in the archive.</span>
 
 <span class="sd">    Checks both the database and filesystem for existing data and removes or</span>
-<span class="sd">    splits requests to avoid re-downloading data that&#39;s already available.</span>
+<span class="sd">    splits requests to avoid re-downloading data that should be there already.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        requests: List of request tuples containing:</span>
@@ -985,7 +988,7 @@
 <span class="sd">        db_manager: DatabaseManager instance for querying existing data.</span>
 <span class="sd">        sds_path: Root path of the SDS archive.</span>
 <span class="sd">        min_request_window: Minimum time window in seconds to keep a request.</span>
-<span class="sd">            Requests shorter than this are discarded.</span>
+<span class="sd">            Requests shorter than this are discarded. Default is 3 seconds.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        List of pruned request tuples, sorted by start time, network, and station.</span>
@@ -998,86 +1001,117 @@
 <span class="sd">        &gt;&gt;&gt; requests = [(&quot;IU&quot;, &quot;ANMO&quot;, &quot;00&quot;, &quot;BHZ&quot;, &quot;2020-01-01&quot;, &quot;2020-01-02&quot;)]</span>
 <span class="sd">        &gt;&gt;&gt; pruned = prune_requests(requests, db_manager, &quot;/data/SDS&quot;)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">pruned_requests</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">requests</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">pruned_requests</span>
+        <span class="k">return</span> <span class="p">[]</span>
 
-
+    <span class="c1"># Group requests by network for batch processing</span>
+    <span class="n">requests_by_network</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">req</span> <span class="ow">in</span> <span class="n">requests</span><span class="p">:</span>
+        <span class="n">network</span> <span class="o">=</span> <span class="n">req</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">network</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">requests_by_network</span><span class="p">:</span>
+            <span class="n">requests_by_network</span><span class="p">[</span><span class="n">network</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">requests_by_network</span><span class="p">[</span><span class="n">network</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
+    
+    <span class="n">pruned_requests</span> <span class="o">=</span> <span class="p">[]</span>
+    
     <span class="k">with</span> <span class="n">db_manager</span><span class="o">.</span><span class="n">connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
         <span class="n">cursor</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
         
-        <span class="k">for</span> <span class="n">req</span> <span class="ow">in</span> <span class="n">requests</span><span class="p">:</span>
-            <span class="n">network</span><span class="p">,</span> <span class="n">station</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span> <span class="n">start_time</span><span class="p">,</span> <span class="n">end_time</span> <span class="o">=</span> <span class="n">req</span>
-            <span class="n">start_time</span> <span class="o">=</span> <span class="n">UTCDateTime</span><span class="p">(</span><span class="n">start_time</span><span class="p">)</span>
-            <span class="n">end_time</span> <span class="o">=</span> <span class="n">UTCDateTime</span><span class="p">(</span><span class="n">end_time</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="n">end_time</span> <span class="o">-</span> <span class="n">start_time</span> <span class="o">&lt;</span> <span class="n">min_request_window</span><span class="p">:</span>
-                <span class="k">continue</span>
-
-            <span class="c1"># Check filesystem for existing files</span>
-            <span class="n">existing_filenames</span> <span class="o">=</span> <span class="n">get_sds_filenames</span><span class="p">(</span>
-                <span class="n">network</span><span class="p">,</span> <span class="n">station</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span>
-                <span class="n">start_time</span><span class="p">,</span> <span class="n">end_time</span><span class="p">,</span> <span class="n">sds_path</span>
-            <span class="p">)</span>
+        <span class="c1"># Process each network as a batch</span>
+        <span class="k">for</span> <span class="n">network</span><span class="p">,</span> <span class="n">network_requests</span> <span class="ow">in</span> <span class="n">requests_by_network</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># Find min and max times for this batch to reduce query range</span>
+            <span class="n">min_start</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">UTCDateTime</span><span class="p">(</span><span class="n">req</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span> <span class="k">for</span> <span class="n">req</span> <span class="ow">in</span> <span class="n">network_requests</span><span class="p">)</span>
+            <span class="n">max_end</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">UTCDateTime</span><span class="p">(</span><span class="n">req</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span> <span class="k">for</span> <span class="n">req</span> <span class="ow">in</span> <span class="n">network_requests</span><span class="p">)</span>
             
-            <span class="c1"># Query database for existing data</span>
+            <span class="c1"># Get all relevant data in one query</span>
             <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
-<span class="s1">                SELECT starttime, endtime FROM archive_data</span>
-<span class="s1">                WHERE network = ? AND station = ? AND location = ? AND channel = ?</span>
-<span class="s1">                AND endtime &gt;= ? AND starttime &lt;= ?</span>
-<span class="s1">                ORDER BY starttime</span>
-<span class="s1">            &#39;&#39;&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="n">station</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span>
-                 <span class="n">start_time</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span> <span class="n">end_time</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()))</span>
+<span class="s1">                SELECT network, station, location, channel, starttime, endtime </span>
+<span class="s1">                FROM archive_data</span>
+<span class="s1">                WHERE network = ? AND endtime &gt;= ? AND starttime &lt;= ?</span>
+<span class="s1">            &#39;&#39;&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="n">min_start</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span> <span class="n">max_end</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()))</span>
             
-            <span class="n">existing_data</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
-
-
-            <span class="c1"># Update database if files exist but aren&#39;t recorded (probably continuous) OR there are multiple items in one file (probably events)</span>
-            <span class="k">if</span> <span class="n">existing_filenames</span> <span class="ow">and</span> <span class="p">(</span> <span class="nb">len</span><span class="p">(</span><span class="n">existing_data</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">existing_filenames</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">existing_data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">existing_filenames</span><span class="p">)):</span>
-                <span class="n">populate_database_from_files</span><span class="p">(</span><span class="n">cursor</span><span class="p">,</span> <span class="n">file_paths</span><span class="o">=</span><span class="n">existing_filenames</span><span class="p">)</span>
+            <span class="c1"># Organize existing data by (station, location, channel)</span>
+            <span class="n">existing_data</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">():</span>
+                <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>  <span class="c1"># station, location, channel</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">existing_data</span><span class="p">:</span>
+                    <span class="n">existing_data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">existing_data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">UTCDateTime</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">4</span><span class="p">]),</span> <span class="n">UTCDateTime</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">5</span><span class="p">])))</span>
+            
+            <span class="c1"># Process each request with the pre-fetched data</span>
+            <span class="k">for</span> <span class="n">req</span> <span class="ow">in</span> <span class="n">network_requests</span><span class="p">:</span>
+                <span class="n">network</span><span class="p">,</span> <span class="n">station</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span> <span class="n">start_str</span><span class="p">,</span> <span class="n">end_str</span> <span class="o">=</span> <span class="n">req</span>
+                <span class="n">start_time</span> <span class="o">=</span> <span class="n">UTCDateTime</span><span class="p">(</span><span class="n">start_str</span><span class="p">)</span>
+                <span class="n">end_time</span> <span class="o">=</span> <span class="n">UTCDateTime</span><span class="p">(</span><span class="n">end_str</span><span class="p">)</span>
                 
-                <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
-<span class="s1">                    SELECT starttime, endtime FROM archive_data</span>
-<span class="s1">                    WHERE network = ? AND station = ? AND location = ? AND channel = ?</span>
-<span class="s1">                    AND endtime &gt;= ? AND starttime &lt;= ?</span>
-<span class="s1">                    ORDER BY starttime</span>
-<span class="s1">                &#39;&#39;&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="n">station</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span>
-                     <span class="n">start_time</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span> <span class="n">end_time</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()))</span>
+                <span class="k">if</span> <span class="n">end_time</span> <span class="o">-</span> <span class="n">start_time</span> <span class="o">&lt;</span> <span class="n">min_request_window</span><span class="p">:</span>
+                    <span class="k">continue</span>
                 
-                <span class="n">existing_data</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
-
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">existing_data</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">existing_filenames</span><span class="p">:</span>
-                <span class="c1"># Keep entire request if no existing data found</span>
-                <span class="n">pruned_requests</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># Process gaps in existing data</span>
+                <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">station</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">channel</span><span class="p">)</span>
+                
+                <span class="c1"># Check if we need to look at the filesystem</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">existing_data</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">existing_data</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
+                    <span class="c1"># Get files only when necessary</span>
+                    <span class="n">file_paths</span> <span class="o">=</span> <span class="n">get_sds_filenames</span><span class="p">(</span>
+                        <span class="n">network</span><span class="p">,</span> <span class="n">station</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span> 
+                        <span class="n">start_time</span><span class="p">,</span> <span class="n">end_time</span><span class="p">,</span> <span class="n">sds_path</span>
+                    <span class="p">)</span>
+                    
+                    <span class="k">if</span> <span class="n">file_paths</span><span class="p">:</span>
+                        <span class="c1"># Update database and our cached data</span>
+                        <span class="n">populate_database_from_files</span><span class="p">(</span><span class="n">cursor</span><span class="p">,</span> <span class="n">file_paths</span><span class="o">=</span><span class="n">file_paths</span><span class="p">)</span>
+                        
+                        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">                            SELECT starttime, endtime FROM archive_data</span>
+<span class="s1">                            WHERE network = ? AND station = ? AND location = ? AND channel = ?</span>
+<span class="s1">                            AND endtime &gt;= ? AND starttime &lt;= ?</span>
+<span class="s1">                            ORDER BY starttime</span>
+<span class="s1">                        &#39;&#39;&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="n">station</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span>
+                             <span class="n">start_time</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span> <span class="n">end_time</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()))</span>
+                        
+                        <span class="n">existing_data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[(</span><span class="n">UTCDateTime</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">UTCDateTime</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span> 
+                                              <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">pruned_requests</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
+                        <span class="k">continue</span>
+                
+                <span class="c1"># Check if this specific request is fully covered by existing data</span>
+                <span class="n">relevant_intervals</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="p">(</span><span class="n">db_start</span><span class="p">,</span> <span class="n">db_end</span><span class="p">)</span> <span class="k">for</span> <span class="n">db_start</span><span class="p">,</span> <span class="n">db_end</span> <span class="ow">in</span> <span class="n">existing_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">[])</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">db_end</span> <span class="o">&lt;=</span> <span class="n">start_time</span> <span class="ow">or</span> <span class="n">db_start</span> <span class="o">&gt;=</span> <span class="n">end_time</span><span class="p">)</span>
+                <span class="p">]</span>
+                
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">relevant_intervals</span><span class="p">:</span>
+                    <span class="n">pruned_requests</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
+                    <span class="k">continue</span>
+                
+                <span class="c1"># Sort intervals by start time</span>
+                <span class="n">relevant_intervals</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                
+                <span class="c1"># Find gaps in coverage</span>
                 <span class="n">current_time</span> <span class="o">=</span> <span class="n">start_time</span>
-                <span class="k">for</span> <span class="n">db_start</span><span class="p">,</span> <span class="n">db_end</span> <span class="ow">in</span> <span class="n">existing_data</span><span class="p">:</span>
-                    <span class="n">db_start</span> <span class="o">=</span> <span class="n">UTCDateTime</span><span class="p">(</span><span class="n">db_start</span><span class="p">)</span>
-                    <span class="n">db_end</span> <span class="o">=</span> <span class="n">UTCDateTime</span><span class="p">(</span><span class="n">db_end</span><span class="p">)</span>
-                    
-                    <span class="k">if</span> <span class="n">current_time</span> <span class="o">&lt;</span> <span class="n">db_start</span> <span class="o">-</span> <span class="n">min_request_window</span><span class="p">:</span>
-                        <span class="c1"># Add request for gap before existing data</span>
-                        <span class="n">pruned_requests</span><span class="o">.</span><span class="n">append</span><span class="p">((</span>
-                            <span class="n">network</span><span class="p">,</span> <span class="n">station</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span>
-                            <span class="n">current_time</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
-                            <span class="n">db_start</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
-                        <span class="p">))</span>
-                    
+                <span class="n">gaps</span> <span class="o">=</span> <span class="p">[]</span>
+                
+                <span class="k">for</span> <span class="n">db_start</span><span class="p">,</span> <span class="n">db_end</span> <span class="ow">in</span> <span class="n">relevant_intervals</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">current_time</span> <span class="o">&lt;</span> <span class="n">db_start</span><span class="p">:</span>
+                        <span class="n">gaps</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">current_time</span><span class="p">,</span> <span class="n">db_start</span><span class="p">))</span>
                     <span class="n">current_time</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">current_time</span><span class="p">,</span> <span class="n">db_end</span><span class="p">)</span>
                 
-                <span class="k">if</span> <span class="n">current_time</span> <span class="o">&lt;</span> <span class="n">end_time</span> <span class="o">-</span> <span class="n">min_request_window</span><span class="p">:</span>
-                    <span class="c1"># Add request for gap after last existing data</span>
-                    <span class="n">pruned_requests</span><span class="o">.</span><span class="n">append</span><span class="p">((</span>
-                        <span class="n">network</span><span class="p">,</span> <span class="n">station</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span>
-                        <span class="n">current_time</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
-                        <span class="n">end_time</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
-                    <span class="p">))</span>
-
-    <span class="c1"># Sort by start time, network, station</span>
+                <span class="k">if</span> <span class="n">current_time</span> <span class="o">&lt;</span> <span class="n">end_time</span><span class="p">:</span>
+                    <span class="n">gaps</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">current_time</span><span class="p">,</span> <span class="n">end_time</span><span class="p">))</span>
+                
+                <span class="c1"># Add requests for each gap that&#39;s large enough</span>
+                <span class="k">for</span> <span class="n">gap_start</span><span class="p">,</span> <span class="n">gap_end</span> <span class="ow">in</span> <span class="n">gaps</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">gap_end</span> <span class="o">-</span> <span class="n">gap_start</span> <span class="o">&gt;=</span> <span class="n">min_request_window</span><span class="p">:</span>
+                        <span class="n">pruned_requests</span><span class="o">.</span><span class="n">append</span><span class="p">((</span>
+                            <span class="n">network</span><span class="p">,</span> <span class="n">station</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span>
+                            <span class="n">gap_start</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+                            <span class="n">gap_end</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+                        <span class="p">))</span>
+    
     <span class="k">if</span> <span class="n">pruned_requests</span><span class="p">:</span>
         <span class="n">pruned_requests</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
-
+    
     <span class="k">return</span> <span class="n">pruned_requests</span></div>
 
 
@@ -1159,7 +1193,7 @@
                     <span class="k">if</span> <span class="s1">&#39;code: 204&#39;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">):</span>
                         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">        No data for station </span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                     <span class="k">else</span><span class="p">:</span>
-                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unusual error fetching data for station </span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="s2"> </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="n">format_error</span><span class="p">(</span><span class="n">s</span><span class="p">,</span><span class="n">e</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">st</span> <span class="o">=</span> <span class="n">wc</span><span class="o">.</span><span class="n">get_waveforms</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
@@ -1172,7 +1206,7 @@
         <span class="k">if</span> <span class="s1">&#39;code: 204&#39;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">):</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;      ~ No data available&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">format_error</span><span class="p">(</span><span class="n">request</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span><span class="n">e</span><span class="p">))</span>
         <span class="k">return</span>
 
     <span class="c1"># Group traces by day</span>
@@ -1197,9 +1231,9 @@
             <span class="n">doy</span> <span class="o">=</span> <span class="n">current_time</span><span class="o">.</span><span class="n">julday</span>
             
             <span class="n">next_day</span> <span class="o">=</span> <span class="n">current_time</span> <span class="o">+</span> <span class="mi">86400</span>
-            <span class="n">day_end</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">next_day</span> <span class="o">-</span> <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">delta</span><span class="p">,</span> <span class="n">endtime</span><span class="p">)</span>
+            <span class="n">day_end</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">next_day</span> <span class="o">-</span> <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">delta</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span> <span class="n">endtime</span><span class="p">)</span>
             
-            <span class="n">day_tr</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">current_time</span><span class="p">,</span> <span class="n">day_end</span><span class="p">,</span> <span class="n">nearest_sample</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">day_tr</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">current_time</span><span class="p">,</span> <span class="n">day_end</span><span class="p">,</span> <span class="n">nearest_sample</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
             <span class="n">day_key</span> <span class="o">=</span> <span class="p">(</span><span class="n">year</span><span class="p">,</span> <span class="n">doy</span><span class="p">,</span> <span class="n">net</span><span class="p">,</span> <span class="n">sta</span><span class="p">,</span> <span class="n">loc</span><span class="p">,</span> <span class="n">cha</span><span class="p">)</span>
             <span class="n">traces_by_day</span><span class="p">[</span><span class="n">day_key</span><span class="p">]</span> <span class="o">+=</span> <span class="n">day_tr</span>
             
@@ -1230,7 +1264,7 @@
             <span class="k">if</span> <span class="n">existing_st</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  ... Writing </span><span class="si">{</span><span class="n">full_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-        <span class="n">existing_st</span> <span class="o">=</span> <span class="n">Stream</span><span class="p">([</span><span class="n">tr</span> <span class="k">for</span> <span class="n">tr</span> <span class="ow">in</span> <span class="n">existing_st</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tr</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="n">existing_st</span> <span class="o">=</span> <span class="n">Stream</span><span class="p">([</span><span class="n">tr</span> <span class="k">for</span> <span class="n">tr</span> <span class="ow">in</span> <span class="n">existing_st</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tr</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">])</span> <span class="c1"># assume 1-sample traces are artifacts</span>
 
         <span class="k">if</span> <span class="n">existing_st</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
@@ -1699,7 +1733,7 @@
         <span class="k">except</span> <span class="n">FDSNNoDataException</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No events found for constraint: </span><span class="si">{</span><span class="n">geo</span><span class="o">.</span><span class="n">geo_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">continue</span>
-    
+
     <span class="c1"># Remove duplicates (*now done below)</span>
     <span class="c1">#catalog = remove_duplicate_events(catalog)</span>
 
@@ -1770,10 +1804,10 @@
         <span class="k">return</span> <span class="kc">True</span>
 
     <span class="c1"># Collect requests</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Collecting, combining, and pruning requests against database... &quot;</span><span class="p">)</span>
     <span class="n">requests</span> <span class="o">=</span> <span class="n">collect_requests</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">selected_invs</span><span class="p">,</span> 
         <span class="n">starttime</span><span class="p">,</span> <span class="n">endtime</span><span class="p">,</span> <span class="n">days_per_request</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">waveform</span><span class="o">.</span><span class="n">days_per_request</span><span class="p">,</span>
         <span class="n">cha_pref</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">waveform</span><span class="o">.</span><span class="n">channel_pref</span><span class="p">,</span><span class="n">loc_pref</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">waveform</span><span class="o">.</span><span class="n">location_pref</span><span class="p">)</span>
-
 
     <span class="c1"># Remove any for data we already have (requires updated db)</span>
     <span class="c1"># If force_redownload is flagged, then ignore request pruning</span>
@@ -1786,7 +1820,7 @@
 
     <span class="c1"># Break if nothing to do</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">pruned_requests</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;          ... Data already archived!&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;          ... All data already archived!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">True</span>
 
     <span class="c1"># Check for cancellation after request pruning</span>
@@ -1938,6 +1972,7 @@
         <span class="p">)</span>
 
         <span class="c1"># Collect requests for this event</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Collecting, combining, and pruning requests against database...&quot;</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">requests</span><span class="p">,</span> <span class="n">new_arrivals</span><span class="p">,</span> <span class="n">p_arrivals</span> <span class="o">=</span> <span class="n">collect_requests_event</span><span class="p">(</span>
                 <span class="n">eq</span><span class="p">,</span> <span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">selected_invs</span><span class="p">,</span>
@@ -1965,7 +2000,7 @@
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Issue with run_event &gt; prune_requests:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,{</span><span class="n">e</span><span class="p">})</span>
         
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">requests</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">pruned_requests</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    All data already in archive&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;          ... All data already archived!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="c1"># Download new data if needed</span>
         <span class="k">if</span> <span class="n">pruned_requests</span><span class="p">:</span>

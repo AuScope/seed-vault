@@ -673,6 +673,20 @@
     <span class="c1"># Create new inventory with only the networks that had matching stations</span>
     <span class="k">return</span> <span class="n">Inventory</span><span class="p">(</span><span class="n">networks</span><span class="o">=</span><span class="n">networks</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">inventory</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">inventory</span><span class="o">.</span><span class="n">sender</span><span class="p">)</span></div>
 
+
+
+<div class="viewcode-block" id="format_error">
+<a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.utils.format_error">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">format_error</span><span class="p">(</span><span class="n">station</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>
+    <span class="n">indent</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="mi">13</span>
+    <span class="n">border</span> <span class="o">=</span> <span class="n">indent</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="mi">74</span>
+    
+    <span class="c1"># Format the error message</span>
+    <span class="n">error_lines</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">formatted_error</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">indent</span><span class="si">}{</span><span class="n">line</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">error_lines</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="n">indent</span><span class="si">}</span><span class="s2">Station </span><span class="si">{</span><span class="n">station</span><span class="si">}</span><span class="s2"> Error:</span><span class="se">\n</span><span class="si">{</span><span class="n">formatted_error</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span></div>
+
 </pre></div>
 
            </div>

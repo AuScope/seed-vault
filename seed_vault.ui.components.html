@@ -538,6 +538,11 @@
 <span class="sig-name descname"><span class="pre">TXT</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#seed_vault.ui.components.base.BaseComponentTexts" title="seed_vault.ui.components.base.BaseComponentTexts"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseComponentTexts</span></code></a></em><a class="headerlink" href="#id0" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.add_loading_overlay">
+<span class="sig-name descname"><span class="pre">add_loading_overlay</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.add_loading_overlay"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.add_loading_overlay" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id1">
 <span class="sig-name descname"><span class="pre">all_current_drawings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code><span class="pre">[</span><a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.GeometryConstraint" title="seed_vault.models.config.GeometryConstraint"><code class="xref py py-class docutils literal notranslate"><span class="pre">GeometryConstraint</span></code></a><span class="pre">]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#id1" title="Link to this definition"></a></dt>
@@ -660,8 +665,18 @@
 <dd></dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.export_txt_tmpfile">
+<span class="sig-name descname"><span class="pre">export_txt_tmpfile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">export_selected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.export_txt_tmpfile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.export_txt_tmpfile" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.export_xml_bytes">
 <span class="sig-name descname"><span class="pre">export_xml_bytes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">export_selected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.export_xml_bytes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.export_xml_bytes" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.base.BaseComponent.fetch_data_with_loading">
+<span class="sig-name descname"><span class="pre">fetch_data_with_loading</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fetch_func</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spinner_message</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'🔄</span> <span class="pre">Fetching</span> <span class="pre">data...'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">success_message</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'✅</span> <span class="pre">Data</span> <span class="pre">loaded</span> <span class="pre">successfully.'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/base.html#BaseComponent.fetch_data_with_loading"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.base.BaseComponent.fetch_data_with_loading" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -1130,15 +1145,81 @@ enforce_padding: puts the content in columns to enforce artificial padding.</p>
 <dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousComponents">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.continuous_waveform.</span></span><span class="sig-name descname"><span class="pre">ContinuousComponents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/continuous_waveform.html#ContinuousComponents"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousComponents" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A component for managing continuous waveform data processing.</p>
+<p>This class coordinates the interaction between the filter menu, display,
+and logging components for continuous waveform data processing.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousComponents.settings">
+<span class="sig-name descname"><span class="pre">settings</span></span><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousComponents.settings" title="Link to this definition"></a></dt>
+<dd><p>Configuration settings for seismic data processing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings">SeismoLoaderSettings</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousComponents.filter_menu">
+<span class="sig-name descname"><span class="pre">filter_menu</span></span><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousComponents.filter_menu" title="Link to this definition"></a></dt>
+<dd><p>Menu component for filtering waveforms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu" title="seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu">ContinuousFilterMenu</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousComponents.display">
+<span class="sig-name descname"><span class="pre">display</span></span><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousComponents.display" title="Link to this definition"></a></dt>
+<dd><p>Display component for waveform visualization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#seed_vault.ui.components.continuous_waveform.ContinuousDisplay" title="seed_vault.ui.components.continuous_waveform.ContinuousDisplay">ContinuousDisplay</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousComponents.console">
+<span class="sig-name descname"><span class="pre">console</span></span><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousComponents.console" title="Link to this definition"></a></dt>
+<dd><p>Console for logging output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#seed_vault.ui.components.display_log.ConsoleDisplay" title="seed_vault.ui.components.display_log.ConsoleDisplay">ConsoleDisplay</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Initialize the ContinuousComponents.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>settings</strong> (<a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings"><em>SeismoLoaderSettings</em></a>) – Configuration settings for seismic data processing.</p>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousComponents.render">
 <span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/continuous_waveform.html#ContinuousComponents.render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousComponents.render" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Render the complete continuous waveform interface.</p>
+<p>This method creates the main UI for continuous waveform processing, including:
+- Download and log view tabs
+- Filter menu in sidebar
+- Real-time status updates
+- Log display and management</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousComponents.render_polling_ui">
 <span class="sig-name descname"><span class="pre">render_polling_ui</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/continuous_waveform.html#ContinuousComponents.render_polling_ui"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousComponents.render_polling_ui" title="Link to this definition"></a></dt>
-<dd><p>Handles UI updates while monitoring background thread status</p>
+<dd><p>Handle UI updates while monitoring background thread status.</p>
+<p>This method processes log entries from the queue and updates the UI
+based on the background thread’s status.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The method uses Streamlit’s rerun mechanism to update the UI
+when new logs are available or when the thread status changes.</p>
+</div>
 </dd></dl>
 
 </dd></dl>
@@ -1147,21 +1228,84 @@ enforce_padding: puts the content in columns to enforce artificial padding.</p>
 <dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousDisplay">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.continuous_waveform.</span></span><span class="sig-name descname"><span class="pre">ContinuousDisplay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_menu</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/continuous_waveform.html#ContinuousDisplay"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousDisplay" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A component for displaying and managing continuous waveform data.</p>
+<p>This class handles the display and processing of continuous waveform data,
+including data retrieval, logging, and UI updates.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousDisplay.settings">
+<span class="sig-name descname"><span class="pre">settings</span></span><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousDisplay.settings" title="Link to this definition"></a></dt>
+<dd><p>Configuration settings for seismic data processing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings">SeismoLoaderSettings</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousDisplay.filter_menu">
+<span class="sig-name descname"><span class="pre">filter_menu</span></span><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousDisplay.filter_menu" title="Link to this definition"></a></dt>
+<dd><p>Menu component for filtering waveforms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu" title="seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu">ContinuousFilterMenu</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousDisplay.console">
+<span class="sig-name descname"><span class="pre">console</span></span><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousDisplay.console" title="Link to this definition"></a></dt>
+<dd><p>Console for logging output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#seed_vault.ui.components.display_log.ConsoleDisplay" title="seed_vault.ui.components.display_log.ConsoleDisplay">ConsoleDisplay</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Initialize the ContinuousDisplay component.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>settings</strong> (<a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings"><em>SeismoLoaderSettings</em></a>) – Configuration settings for seismic data processing.</p></li>
+<li><p><strong>filter_menu</strong> (<a class="reference internal" href="#seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu" title="seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu"><em>ContinuousFilterMenu</em></a>) – Menu component for filtering waveforms.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousDisplay.process_continuous_data">
 <span class="sig-name descname"><span class="pre">process_continuous_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/continuous_waveform.html#ContinuousDisplay.process_continuous_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousDisplay.process_continuous_data" title="Link to this definition"></a></dt>
-<dd><p>Fetches continuous waveform data in a background thread with logging.</p>
+<dd><p>Process continuous waveform data in a background thread with logging.</p>
+<p>This method sets up a custom logging system, retrieves continuous waveform data,
+and handles any errors or cancellations during the process.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The method updates the session state with processing status and logs.</p>
+</div>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousDisplay.render">
 <span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/continuous_waveform.html#ContinuousDisplay.render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousDisplay.render" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Render the continuous waveform display interface.</p>
+<p>This method creates the main UI for continuous waveform visualization, including:
+- Download controls
+- Status indicators
+- Real-time log display
+- Progress tracking</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousDisplay.retrieve_waveforms">
 <span class="sig-name descname"><span class="pre">retrieve_waveforms</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/continuous_waveform.html#ContinuousDisplay.retrieve_waveforms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousDisplay.retrieve_waveforms" title="Link to this definition"></a></dt>
-<dd><p>Initiates waveform retrieval in a background thread with cancellation support</p>
+<dd><p>Initiate continuous waveform retrieval in a background thread.</p>
+<p>This method starts a new thread for continuous waveform data retrieval and
+updates the UI state accordingly.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The method handles thread creation, state management, and UI updates.</p>
+</div>
 </dd></dl>
 
 </dd></dl>
@@ -1170,10 +1314,81 @@ enforce_padding: puts the content in columns to enforce artificial padding.</p>
 <dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.continuous_waveform.</span></span><span class="sig-name descname"><span class="pre">ContinuousFilterMenu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/continuous_waveform.html#ContinuousFilterMenu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A menu component for filtering and controlling continuous waveform data.</p>
+<p>This class provides a user interface for managing continuous waveform data
+retrieval, including time range selection and station filtering.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu.settings">
+<span class="sig-name descname"><span class="pre">settings</span></span><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu.settings" title="Link to this definition"></a></dt>
+<dd><p>Configuration settings for seismic data processing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings">SeismoLoaderSettings</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu.old_settings">
+<span class="sig-name descname"><span class="pre">old_settings</span></span><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu.old_settings" title="Link to this definition"></a></dt>
+<dd><p>Previous state of settings for change detection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings">SeismoLoaderSettings</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu.old_time_state">
+<span class="sig-name descname"><span class="pre">old_time_state</span></span><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu.old_time_state" title="Link to this definition"></a></dt>
+<dd><p>Previous time range state for change detection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu.last_button_pressed">
+<span class="sig-name descname"><span class="pre">last_button_pressed</span></span><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu.last_button_pressed" title="Link to this definition"></a></dt>
+<dd><p>Last button interaction for UI state management.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu.todo_nets">
+<span class="sig-name descname"><span class="pre">todo_nets</span></span><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu.todo_nets" title="Link to this definition"></a></dt>
+<dd><p>List of networks to process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Initialize the ContinuousFilterMenu.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>settings</strong> (<a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings"><em>SeismoLoaderSettings</em></a>) – Configuration settings for seismic data processing.</p>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu.refresh_filters">
 <span class="sig-name descname"><span class="pre">refresh_filters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/continuous_waveform.html#ContinuousFilterMenu.refresh_filters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu.refresh_filters" title="Link to this definition"></a></dt>
-<dd><p>Check for changes and trigger updates</p>
+<dd><p>Check for changes in time range and settings, trigger UI updates.</p>
+<p>This method compares current settings with previous state and triggers
+a UI refresh if changes are detected. It also handles saving of settings.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The method uses Streamlit’s rerun mechanism to update the UI
+when changes are detected.</p>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -1185,12 +1400,32 @@ enforce_padding: puts the content in columns to enforce artificial padding.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu.render">
 <span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/continuous_waveform.html#ContinuousFilterMenu.render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu.render" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Render the continuous waveform filter menu interface.</p>
+<p>This method creates the UI for continuous waveform data management, including:
+- Time range selection with year/month/week controls
+- Date and time input fields
+- Quick selection buttons for common time ranges
+- Network/station/location/channel information display</p>
+<p>The interface is organized in expandable sections:
+- Time Range Adjustment
+- Submitted NSLCs Information</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The interface provides both manual input and quick selection options
+for time range management.</p>
+</div>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu.validate_date_range">
 <span class="sig-name descname"><span class="pre">validate_date_range</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/continuous_waveform.html#ContinuousFilterMenu.validate_date_range"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.continuous_waveform.ContinuousFilterMenu.validate_date_range" title="Link to this definition"></a></dt>
-<dd><p>Validate that end time is not earlier than start time</p>
+<dd><p>Validate that the selected date range is valid.</p>
+<p>This method checks that the end time is not earlier than the start time
+and updates the session state accordingly.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The validation result is stored in st.session_state[“date_range_valid”].</p>
+</div>
 </dd></dl>
 
 </dd></dl>
@@ -1454,31 +1689,104 @@ enforce_padding: puts the content in columns to enforce artificial padding.</p>
 <dt class="sig sig-object py" id="seed_vault.ui.components.run_from_config.RunFromConfigComponent">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.run_from_config.</span></span><span class="sig-name descname"><span class="pre">RunFromConfigComponent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/run_from_config.html#RunFromConfigComponent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.run_from_config.RunFromConfigComponent" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="seed_vault.ui.components.run_from_config.RunFromConfigComponent.check_process_status">
-<span class="sig-name descname"><span class="pre">check_process_status</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/run_from_config.html#RunFromConfigComponent.check_process_status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.run_from_config.RunFromConfigComponent.check_process_status" title="Link to this definition"></a></dt>
-<dd><p>Check the status of the background process and update UI accordingly</p>
+<p>A component for running seismic data processing from a configuration file.</p>
+<p>This component provides a user interface for loading, editing, and executing
+seismic data processing configurations. It supports real-time logging and
+background processing with cancellation capabilities.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.run_from_config.RunFromConfigComponent.settings">
+<span class="sig-name descname"><span class="pre">settings</span></span><a class="headerlink" href="#seed_vault.ui.components.run_from_config.RunFromConfigComponent.settings" title="Link to this definition"></a></dt>
+<dd><p>Configuration settings for seismic data processing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings">SeismoLoaderSettings</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.run_from_config.RunFromConfigComponent.is_editing">
+<span class="sig-name descname"><span class="pre">is_editing</span></span><a class="headerlink" href="#seed_vault.ui.components.run_from_config.RunFromConfigComponent.is_editing" title="Link to this definition"></a></dt>
+<dd><p>Flag indicating if the configuration is being edited.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.run_from_config.RunFromConfigComponent.edited_config_str">
+<span class="sig-name descname"><span class="pre">edited_config_str</span></span><a class="headerlink" href="#seed_vault.ui.components.run_from_config.RunFromConfigComponent.edited_config_str" title="Link to this definition"></a></dt>
+<dd><p>The current edited configuration string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="seed_vault.ui.components.run_from_config.RunFromConfigComponent.config_str">
-<span class="sig-name descname"><span class="pre">config_str</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#seed_vault.ui.components.run_from_config.RunFromConfigComponent.config_str" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">config_str</span></span><a class="headerlink" href="#seed_vault.ui.components.run_from_config.RunFromConfigComponent.config_str" title="Link to this definition"></a></dt>
+<dd><p>The original configuration string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Initialize the RunFromConfigComponent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>settings</strong> (<a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings"><em>SeismoLoaderSettings</em></a>) – Configuration settings for seismic data processing.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.run_from_config.RunFromConfigComponent.check_process_status">
+<span class="sig-name descname"><span class="pre">check_process_status</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/run_from_config.html#RunFromConfigComponent.check_process_status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.run_from_config.RunFromConfigComponent.check_process_status" title="Link to this definition"></a></dt>
+<dd><p>Check the status of the background process and update UI accordingly.</p>
+<p>This method monitors the background processing thread and updates the UI
+based on the process status, handling completion, errors, and cancellations.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The method triggers UI updates through Streamlit’s rerun mechanism
+and manages the session state for process status.</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id34">
+<span class="sig-name descname"><span class="pre">config_str</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#id34" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="seed_vault.ui.components.run_from_config.RunFromConfigComponent.edited_config_str">
-<span class="sig-name descname"><span class="pre">edited_config_str</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#seed_vault.ui.components.run_from_config.RunFromConfigComponent.edited_config_str" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="id35">
+<span class="sig-name descname"><span class="pre">edited_config_str</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#id35" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="seed_vault.ui.components.run_from_config.RunFromConfigComponent.is_editing">
-<span class="sig-name descname"><span class="pre">is_editing</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#seed_vault.ui.components.run_from_config.RunFromConfigComponent.is_editing" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="id36">
+<span class="sig-name descname"><span class="pre">is_editing</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#id36" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.run_from_config.RunFromConfigComponent.process_config_in_background">
 <span class="sig-name descname"><span class="pre">process_config_in_background</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">from_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/run_from_config.html#RunFromConfigComponent.process_config_in_background"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.run_from_config.RunFromConfigComponent.process_config_in_background" title="Link to this definition"></a></dt>
-<dd><p>Process the config file in a background thread with logging to queue</p>
+<dd><p>Process the configuration file in a background thread with logging.</p>
+<p>This method sets up a custom logging system that captures both stdout and stderr,
+processes the configuration file, and handles any errors or cancellations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>from_file</strong> (<em>Path</em>) – Path to the configuration file to process.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method runs in a background thread and updates the session state
+with processing status and logs.</p>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -1489,23 +1797,56 @@ enforce_padding: puts the content in columns to enforce artificial padding.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.run_from_config.RunFromConfigComponent.render_config">
 <span class="sig-name descname"><span class="pre">render_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/run_from_config.html#RunFromConfigComponent.render_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.run_from_config.RunFromConfigComponent.render_config" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Render the configuration interface with editing capabilities.</p>
+<p>This method creates the main UI for configuration management, including:
+- Configuration file display and editing
+- Validation messages
+- Process controls (run, cancel, edit)
+- Real-time log display</p>
+<p>The interface is split into two columns:
+- Left column: Configuration display and editing
+- Right column: Log display and process status</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.run_from_config.RunFromConfigComponent.render_logs">
 <span class="sig-name descname"><span class="pre">render_logs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">container</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/run_from_config.html#RunFromConfigComponent.render_logs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.run_from_config.RunFromConfigComponent.render_logs" title="Link to this definition"></a></dt>
-<dd><p>Render logs in the provided container</p>
+<dd><p>Render logs in the provided Streamlit container.</p>
+<p>This method processes any new log entries from the queue and displays them
+in a terminal-style format with auto-scrolling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>container</strong> – A Streamlit container object where logs will be displayed.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The logs are displayed in a terminal-style format with custom styling
+and auto-scrolling functionality.</p>
+</div>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="seed_vault.ui.components.run_from_config.RunFromConfigComponent.settings">
-<span class="sig-name descname"><span class="pre">settings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings"><code class="xref py py-class docutils literal notranslate"><span class="pre">SeismoLoaderSettings</span></code></a></em><a class="headerlink" href="#seed_vault.ui.components.run_from_config.RunFromConfigComponent.settings" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="id37">
+<span class="sig-name descname"><span class="pre">settings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings"><code class="xref py py-class docutils literal notranslate"><span class="pre">SeismoLoaderSettings</span></code></a></em><a class="headerlink" href="#id37" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.run_from_config.RunFromConfigComponent.start_background_process">
 <span class="sig-name descname"><span class="pre">start_background_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">from_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/run_from_config.html#RunFromConfigComponent.start_background_process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.run_from_config.RunFromConfigComponent.start_background_process" title="Link to this definition"></a></dt>
-<dd><p>Start the background processing thread</p>
+<dd><p>Start the background processing thread for configuration execution.</p>
+<p>This method initializes and starts a new thread to process the configuration
+file, handling state management and thread lifecycle.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>from_file</strong> (<em>Path</em>) – Path to the configuration file to process.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The thread is created as a daemon thread and will be terminated when
+the main program exits.</p>
+</div>
 </dd></dl>
 
 </dd></dl>
@@ -1563,6 +1904,11 @@ enforce_padding: puts the content in columns to enforce artificial padding.</p>
 <dd></dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="seed_vault.ui.components.settings.SettingsComponent.render_license">
+<span class="sig-name descname"><span class="pre">render_license</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/settings.html#SettingsComponent.render_license"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.settings.SettingsComponent.render_license" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.settings.SettingsComponent.reset_config">
 <span class="sig-name descname"><span class="pre">reset_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/settings.html#SettingsComponent.reset_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.settings.SettingsComponent.reset_config" title="Link to this definition"></a></dt>
 <dd></dd></dl>
@@ -1586,10 +1932,60 @@ enforce_padding: puts the content in columns to enforce artificial padding.</p>
 <dt class="sig sig-object py" id="seed_vault.ui.components.waveform.MissingDataDisplay">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.waveform.</span></span><span class="sig-name descname"><span class="pre">MissingDataDisplay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stream</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">missing_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#MissingDataDisplay"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.MissingDataDisplay" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A component for displaying information about missing waveform data.</p>
+<p>This class provides a user interface for showing which events or stations
+have missing data and what specific channels are missing.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.MissingDataDisplay.stream">
+<span class="sig-name descname"><span class="pre">stream</span></span><a class="headerlink" href="#seed_vault.ui.components.waveform.MissingDataDisplay.stream" title="Link to this definition"></a></dt>
+<dd><p>List of waveform streams.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[Stream]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.MissingDataDisplay.missing_data">
+<span class="sig-name descname"><span class="pre">missing_data</span></span><a class="headerlink" href="#seed_vault.ui.components.waveform.MissingDataDisplay.missing_data" title="Link to this definition"></a></dt>
+<dd><p>Dictionary tracking missing data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.MissingDataDisplay.settings">
+<span class="sig-name descname"><span class="pre">settings</span></span><a class="headerlink" href="#seed_vault.ui.components.waveform.MissingDataDisplay.settings" title="Link to this definition"></a></dt>
+<dd><p>Configuration settings for seismic data processing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings">SeismoLoaderSettings</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Initialize the MissingDataDisplay component.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>stream</strong> (<em>List</em><em>[</em><em>Stream</em><em>]</em>) – List of waveform streams.</p></li>
+<li><p><strong>missing_data</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Union</em><em>[</em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Dictionary mapping event IDs to missing data information.</p></li>
+<li><p><strong>settings</strong> (<a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings"><em>SeismoLoaderSettings</em></a>) – Configuration settings for seismic data processing.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.waveform.MissingDataDisplay.render">
 <span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#MissingDataDisplay.render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.MissingDataDisplay.render" title="Link to this definition"></a></dt>
-<dd><p>Display missing event information in a table format</p>
+<dd><p>Render the missing data display interface.</p>
+<p>This method creates a table showing events with missing data, including:
+- Event information (time, magnitude, region)
+- Missing channel information
+- Dynamic height adjustment based on number of entries</p>
 </dd></dl>
 
 </dd></dl>
@@ -1640,13 +2036,112 @@ enforce_padding: puts the content in columns to enforce artificial padding.</p>
 <dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformDisplay">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.waveform.</span></span><span class="sig-name descname"><span class="pre">WaveformDisplay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_menu</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#WaveformDisplay"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformDisplay" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A component for displaying and managing waveform data visualization.</p>
+<p>This class handles the display of seismic waveform data, including both
+event-based and station-based views, with support for filtering and pagination.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformDisplay.settings">
+<span class="sig-name descname"><span class="pre">settings</span></span><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformDisplay.settings" title="Link to this definition"></a></dt>
+<dd><p>Configuration settings for seismic data processing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings">SeismoLoaderSettings</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformDisplay.filter_menu">
+<span class="sig-name descname"><span class="pre">filter_menu</span></span><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformDisplay.filter_menu" title="Link to this definition"></a></dt>
+<dd><p>Menu component for filtering waveforms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#seed_vault.ui.components.waveform.WaveformFilterMenu" title="seed_vault.ui.components.waveform.WaveformFilterMenu">WaveformFilterMenu</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformDisplay.client">
+<span class="sig-name descname"><span class="pre">client</span></span><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformDisplay.client" title="Link to this definition"></a></dt>
+<dd><p>FDSN client for waveform data retrieval.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Client</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformDisplay.ttmodel">
+<span class="sig-name descname"><span class="pre">ttmodel</span></span><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformDisplay.ttmodel" title="Link to this definition"></a></dt>
+<dd><p>Travel-time model for seismic phases.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>TauPyModel</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformDisplay.stream">
+<span class="sig-name descname"><span class="pre">stream</span></span><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformDisplay.stream" title="Link to this definition"></a></dt>
+<dd><p>List of waveform streams.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[Stream]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformDisplay.missing_data">
+<span class="sig-name descname"><span class="pre">missing_data</span></span><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformDisplay.missing_data" title="Link to this definition"></a></dt>
+<dd><p>Dictionary tracking missing data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformDisplay.console">
+<span class="sig-name descname"><span class="pre">console</span></span><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformDisplay.console" title="Link to this definition"></a></dt>
+<dd><p>Console for logging output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#seed_vault.ui.components.display_log.ConsoleDisplay" title="seed_vault.ui.components.display_log.ConsoleDisplay">ConsoleDisplay</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Initialize the WaveformDisplay component.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>settings</strong> (<a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings"><em>SeismoLoaderSettings</em></a>) – Configuration settings for seismic data processing.</p></li>
+<li><p><strong>filter_menu</strong> (<a class="reference internal" href="#seed_vault.ui.components.waveform.WaveformFilterMenu" title="seed_vault.ui.components.waveform.WaveformFilterMenu"><em>WaveformFilterMenu</em></a>) – Menu component for filtering waveforms.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformDisplay.apply_filters">
 <span class="sig-name descname"><span class="pre">apply_filters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stream</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#WaveformDisplay.apply_filters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformDisplay.apply_filters" title="Link to this definition"></a></dt>
-<dd><p>Filter stream based on user selection</p>
+<dd><p>Apply filters to the waveform stream based on user selections.</p>
 <dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>stream</strong> (<em>Stream</em>) – Input ObsPy Stream object to filter.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Filtered stream containing only traces matching the selected</dt><dd><p>network, station, and channel filters.</p>
+</dd>
+</dl>
+</p>
+</dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Stream</span></code></span></p>
+<dd class="field-odd"><p>Stream</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1654,30 +2149,79 @@ enforce_padding: puts the content in columns to enforce artificial padding.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformDisplay.fetch_data">
 <span class="sig-name descname"><span class="pre">fetch_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#WaveformDisplay.fetch_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformDisplay.fetch_data" title="Link to this definition"></a></dt>
-<dd><p>Fetches waveform data in a background thread with logging.</p>
+<dd><p>Fetch waveform data in a background thread with logging.</p>
+<p>This method sets up a custom logging system, retrieves waveform data,
+and handles any errors or cancellations during the process.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The method updates the session state with processing status and logs.</p>
+</div>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformDisplay.plot_event_view">
 <span class="sig-name descname"><span class="pre">plot_event_view</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stream</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_pages</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#WaveformDisplay.plot_event_view"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformDisplay.plot_event_view" title="Link to this definition"></a></dt>
-<dd><p>Plot event view with proper time alignment and improved layout</p>
+<dd><p>Plot event view with proper time alignment and improved layout.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>event</strong> – Event object containing event information.</p></li>
+<li><p><strong>stream</strong> (<em>Stream</em>) – ObsPy Stream object containing waveform data.</p></li>
+<li><p><strong>page</strong> (<em>int</em>) – Current page number for pagination.</p></li>
+<li><p><strong>num_pages</strong> (<em>int</em>) – Total number of pages.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Matplotlib figure object containing the plot.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Figure</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformDisplay.plot_station_view">
 <span class="sig-name descname"><span class="pre">plot_station_view</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">station_code</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stream</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_pages</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#WaveformDisplay.plot_station_view"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformDisplay.plot_station_view" title="Link to this definition"></a></dt>
-<dd><p>Plot station view with event information</p>
+<dd><p>Plot station view with event information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>station_code</strong> (<em>str</em>) – Code of the station to display.</p></li>
+<li><p><strong>stream</strong> (<em>Stream</em>) – ObsPy Stream object containing waveform data.</p></li>
+<li><p><strong>page</strong> (<em>int</em>) – Current page number for pagination.</p></li>
+<li><p><strong>num_pages</strong> (<em>int</em>) – Total number of pages.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Matplotlib figure object containing the plot.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Figure</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformDisplay.render">
 <span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#WaveformDisplay.render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformDisplay.render" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Render the waveform display interface.</p>
+<p>This method creates the main UI for waveform visualization, including:
+- View type selection (Event/Station view)
+- Waveform display
+- Missing data information</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformDisplay.retrieve_waveforms">
 <span class="sig-name descname"><span class="pre">retrieve_waveforms</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#WaveformDisplay.retrieve_waveforms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformDisplay.retrieve_waveforms" title="Link to this definition"></a></dt>
-<dd><p>Initiates waveform retrieval in a background thread with cancellation support</p>
+<dd><p>Initiate waveform retrieval in a background thread.</p>
+<p>This method starts a new thread for waveform data retrieval and updates
+the UI state accordingly.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The method handles thread creation, state management, and UI updates.</p>
+</div>
 </dd></dl>
 
 </dd></dl>
@@ -1686,6 +2230,12 @@ enforce_padding: puts the content in columns to enforce artificial padding.</p>
 <dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformFilterMenu">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.waveform.</span></span><span class="sig-name descname"><span class="pre">WaveformFilterMenu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#WaveformFilterMenu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformFilterMenu" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Initialize the WaveformFilterMenu.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>settings</strong> (<a class="reference internal" href="seed_vault.models.html#seed_vault.models.config.SeismoLoaderSettings" title="seed_vault.models.config.SeismoLoaderSettings"><em>SeismoLoaderSettings</em></a>) – Configuration settings for seismic data processing.</p>
+</dd>
+</dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformFilterMenu.available_channels">
 <span class="sig-name descname"><span class="pre">available_channels</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformFilterMenu.available_channels" title="Link to this definition"></a></dt>
@@ -1709,13 +2259,38 @@ enforce_padding: puts the content in columns to enforce artificial padding.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformFilterMenu.refresh_filters">
 <span class="sig-name descname"><span class="pre">refresh_filters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#WaveformFilterMenu.refresh_filters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformFilterMenu.refresh_filters" title="Link to this definition"></a></dt>
-<dd><p>Check for changes and trigger updates</p>
+<dd><p>Check for changes in filter settings and trigger UI updates.</p>
+<p>This method compares current filter settings with previous state and
+triggers a UI refresh if changes are detected. It also handles saving
+of filter settings.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The method uses Streamlit’s rerun mechanism to update the UI
+when changes are detected.</p>
+</div>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformFilterMenu.render">
 <span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stream</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#WaveformFilterMenu.render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformFilterMenu.render" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Render the waveform filter menu interface.</p>
+<p>This method creates the UI for waveform filtering and control, including:
+- Network, station, and channel filters
+- Display limit controls
+- Status information
+- Reset functionality</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>stream</strong> (<em>Stream</em><em>, </em><em>optional</em>) – Current waveform stream to filter.
+If None, only basic controls are shown.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The interface is organized in expandable sections for better
+user experience and space management.</p>
+</div>
+</dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformFilterMenu.settings">
@@ -1730,14 +2305,62 @@ enforce_padding: puts the content in columns to enforce artificial padding.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.ui.components.waveform.WaveformFilterMenu.update_available_channels">
 <span class="sig-name descname"><span class="pre">update_available_channels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stream</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#WaveformFilterMenu.update_available_channels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.WaveformFilterMenu.update_available_channels" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Update the list of available channels based on the current stream.</p>
+<p>This method extracts unique channel codes from the provided stream
+and updates the available_channels list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>stream</strong> (<em>Stream</em>) – ObsPy Stream object containing waveform data.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The method handles different types of stream objects and ensures
+“All channels” remains as the first option in the list.</p>
+</div>
+</dd></dl>
 
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="seed_vault.ui.components.waveform.get_tele_filter">
 <span class="sig-prename descclassname"><span class="pre">seed_vault.ui.components.waveform.</span></span><span class="sig-name descname"><span class="pre">get_tele_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seed_vault/ui/components/waveform.html#get_tele_filter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.ui.components.waveform.get_tele_filter" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Calculate appropriate filter band for teleseismic data based on distance.</p>
+<p>This function determines the optimal frequency band for filtering teleseismic
+data based on the distance from the source and the sensor type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tr</strong> (<em>Trace</em>) – ObsPy Trace object containing waveform data.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl>
+<dt>A tuple of (f0, f1) where:</dt><dd><ul class="simple">
+<li><p>f0 (float): Lower frequency bound in Hz</p></li>
+<li><p>f1 (float): Upper frequency bound in Hz</p></li>
+</ul>
+<p>Returns (0, 0) for non-seismic sensors.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The filter bands are optimized for different distance ranges:
+- &lt; 50 km: 2.0-15 Hz
+- 50-100 km: 1.8-12 Hz
+- 100-250 km: 1.7-10 Hz
+- 250-500 km: 1.6-8 Hz
+- 500-1000 km: 1.5-6 Hz
+- 1000-2500 km: 1.4-5 Hz
+- 2500-5000 km: 1.2-4 Hz
+- 5000-10000 km: 1.0-3 Hz
+- &gt; 10000 km: 0.7-2 Hz</p>
+</div>
+</dd></dl>
 
 </section>
 <section id="module-seed_vault.ui.components.workflows_combined">

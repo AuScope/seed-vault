@@ -237,7 +237,32 @@
 <div class="viewcode-block" id="get_tele_filter">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.waveform.get_tele_filter">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_tele_filter</span><span class="p">(</span><span class="n">tr</span><span class="p">):</span>
-    <span class="c1"># get a generic teleseismic filter band</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate appropriate filter band for teleseismic data based on distance.</span>
+
+<span class="sd">    This function determines the optimal frequency band for filtering teleseismic</span>
+<span class="sd">    data based on the distance from the source and the sensor type.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        tr (Trace): ObsPy Trace object containing waveform data.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: A tuple of (f0, f1) where:</span>
+<span class="sd">            - f0 (float): Lower frequency bound in Hz</span>
+<span class="sd">            - f1 (float): Upper frequency bound in Hz</span>
+<span class="sd">            Returns (0, 0) for non-seismic sensors.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        The filter bands are optimized for different distance ranges:</span>
+<span class="sd">        - &lt; 50 km: 2.0-15 Hz</span>
+<span class="sd">        - 50-100 km: 1.8-12 Hz</span>
+<span class="sd">        - 100-250 km: 1.7-10 Hz</span>
+<span class="sd">        - 250-500 km: 1.6-8 Hz</span>
+<span class="sd">        - 500-1000 km: 1.5-6 Hz</span>
+<span class="sd">        - 1000-2500 km: 1.4-5 Hz</span>
+<span class="sd">        - 2500-5000 km: 1.2-4 Hz</span>
+<span class="sd">        - 5000-10000 km: 1.0-3 Hz</span>
+<span class="sd">        - &gt; 10000 km: 0.7-2 Hz</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">distance_km</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">distance_km</span>
     <span class="n">nyq</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">sampling_rate</span><span class="o">/</span><span class="mi">2</span> <span class="o">-</span> <span class="mf">0.1</span>
     <span class="n">senstype</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">channel</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
@@ -278,6 +303,11 @@
     <span class="n">display_limit</span><span class="p">:</span> <span class="nb">int</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">:</span> <span class="n">SeismoLoaderSettings</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the WaveformFilterMenu.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            settings (SeismoLoaderSettings): Configuration settings for seismic data processing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">settings</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">old_settings</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>  <span class="c1"># Track previous state</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">network_filter</span> <span class="o">=</span> <span class="s2">&quot;All networks&quot;</span>
@@ -296,7 +326,16 @@
 <div class="viewcode-block" id="WaveformFilterMenu.refresh_filters">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.waveform.WaveformFilterMenu.refresh_filters">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">refresh_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check for changes and trigger updates&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check for changes in filter settings and trigger UI updates.</span>
+
+<span class="sd">        This method compares current filter settings with previous state and</span>
+<span class="sd">        triggers a UI refresh if changes are detected. It also handles saving</span>
+<span class="sd">        of filter settings.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            The method uses Streamlit&#39;s rerun mechanism to update the UI</span>
+<span class="sd">            when changes are detected.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">current_state</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s1">&#39;network_filter&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">network_filter</span><span class="p">,</span>
             <span class="s1">&#39;station_filter&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">station_filter</span><span class="p">,</span>
@@ -320,6 +359,18 @@
 <div class="viewcode-block" id="WaveformFilterMenu.update_available_channels">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.waveform.WaveformFilterMenu.update_available_channels">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">update_available_channels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">:</span> <span class="n">Stream</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update the list of available channels based on the current stream.</span>
+
+<span class="sd">        This method extracts unique channel codes from the provided stream</span>
+<span class="sd">        and updates the available_channels list.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            stream (Stream): ObsPy Stream object containing waveform data.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            The method handles different types of stream objects and ensures</span>
+<span class="sd">            &quot;All channels&quot; remains as the first option in the list.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">stream</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">available_channels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;All channels&quot;</span><span class="p">]</span>
             <span class="k">return</span>
@@ -368,6 +419,22 @@
 <div class="viewcode-block" id="WaveformFilterMenu.render">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.waveform.WaveformFilterMenu.render">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Render the waveform filter menu interface.</span>
+
+<span class="sd">        This method creates the UI for waveform filtering and control, including:</span>
+<span class="sd">        - Network, station, and channel filters</span>
+<span class="sd">        - Display limit controls</span>
+<span class="sd">        - Status information</span>
+<span class="sd">        - Reset functionality</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            stream (Stream, optional): Current waveform stream to filter.</span>
+<span class="sd">                If None, only basic controls are shown.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            The interface is organized in expandable sections for better</span>
+<span class="sd">            user experience and space management.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Waveform Controls&quot;</span><span class="p">)</span>
         
 
@@ -554,7 +621,28 @@
 <div class="viewcode-block" id="WaveformDisplay">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.waveform.WaveformDisplay">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">WaveformDisplay</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A component for displaying and managing waveform data visualization.</span>
+
+<span class="sd">    This class handles the display of seismic waveform data, including both</span>
+<span class="sd">    event-based and station-based views, with support for filtering and pagination.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        settings (SeismoLoaderSettings): Configuration settings for seismic data processing.</span>
+<span class="sd">        filter_menu (WaveformFilterMenu): Menu component for filtering waveforms.</span>
+<span class="sd">        client (Client): FDSN client for waveform data retrieval.</span>
+<span class="sd">        ttmodel (TauPyModel): Travel-time model for seismic phases.</span>
+<span class="sd">        stream (List[Stream]): List of waveform streams.</span>
+<span class="sd">        missing_data (Dict): Dictionary tracking missing data.</span>
+<span class="sd">        console (ConsoleDisplay): Console for logging output.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">:</span> <span class="n">SeismoLoaderSettings</span><span class="p">,</span> <span class="n">filter_menu</span><span class="p">:</span> <span class="n">WaveformFilterMenu</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the WaveformDisplay component.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            settings (SeismoLoaderSettings): Configuration settings for seismic data processing.</span>
+<span class="sd">            filter_menu (WaveformFilterMenu): Menu component for filtering waveforms.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">settings</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">filter_menu</span> <span class="o">=</span> <span class="n">filter_menu</span>
         
@@ -570,7 +658,15 @@
 <div class="viewcode-block" id="WaveformDisplay.apply_filters">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.waveform.WaveformDisplay.apply_filters">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">apply_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Stream</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Filter stream based on user selection&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply filters to the waveform stream based on user selections.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            stream (Stream): Input ObsPy Stream object to filter.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Stream: Filtered stream containing only traces matching the selected</span>
+<span class="sd">                network, station, and channel filters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">filtered_stream</span> <span class="o">=</span> <span class="n">Stream</span><span class="p">()</span>
         
         <span class="c1"># Handle case where stream is a list of traces</span>
@@ -598,8 +694,13 @@
 <div class="viewcode-block" id="WaveformDisplay.fetch_data">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.waveform.WaveformDisplay.fetch_data">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">fetch_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Fetches waveform data in a background thread with logging.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fetch waveform data in a background thread with logging.</span>
+
+<span class="sd">        This method sets up a custom logging system, retrieves waveform data,</span>
+<span class="sd">        and handles any errors or cancellations during the process.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            The method updates the session state with processing status and logs.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Custom stdout/stderr handler that writes to both the original traces and our queue</span>
         <span class="k">class</span><span class="w"> </span><span class="nc">QueueLogger</span><span class="p">:</span>
@@ -687,8 +788,13 @@
 <div class="viewcode-block" id="WaveformDisplay.retrieve_waveforms">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.waveform.WaveformDisplay.retrieve_waveforms">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">retrieve_waveforms</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initiates waveform retrieval in a background thread with cancellation support</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initiate waveform retrieval in a background thread.</span>
+
+<span class="sd">        This method starts a new thread for waveform data retrieval and updates</span>
+<span class="sd">        the UI state accordingly.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            The method handles thread creation, state management, and UI updates.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">selected_catalogs</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">selected_invs</span><span class="p">:</span>
             <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Please select events and stations before downloading waveforms.&quot;</span><span class="p">)</span>
@@ -709,7 +815,19 @@
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_trace_color</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tr</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get color based on channel component&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get color for a trace based on its channel component.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            tr (Trace): ObsPy Trace object.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: Color code for the trace based on its component:</span>
+<span class="sd">                - &#39;Z&#39;: black</span>
+<span class="sd">                - &#39;N&#39; or &#39;1&#39;: blue</span>
+<span class="sd">                - &#39;E&#39; or &#39;2&#39;: green</span>
+<span class="sd">                - others: gray</span>
+<span class="sd">                - non-seismic sensors: tomato</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Extract last character of channel code</span>
         <span class="n">component</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">channel</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
         <span class="n">sensortype</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">channel</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
@@ -729,7 +847,16 @@
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_calculate_figure_dimensions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_traces</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate figure dimensions based on number of traces&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate figure dimensions based on number of traces.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            num_traces (int): Number of traces to display.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple: A tuple of (width, height) in inches for the figure.</span>
+<span class="sd">                Width is fixed at 12 inches, height is calculated based on</span>
+<span class="sd">                number of traces with a minimum of 4 inches.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">width</span> <span class="o">=</span> <span class="mi">12</span>  <span class="c1"># Slightly wider for better readability</span>
         <span class="n">height_per_trace</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="c1"># Reduced slightly to fit more traces</span>
         
@@ -742,7 +869,17 @@
 <div class="viewcode-block" id="WaveformDisplay.plot_event_view">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.waveform.WaveformDisplay.plot_event_view">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot_event_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">stream</span><span class="p">:</span> <span class="n">Stream</span><span class="p">,</span> <span class="n">page</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">num_pages</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Plot event view with proper time alignment and improved layout&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Plot event view with proper time alignment and improved layout.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            event: Event object containing event information.</span>
+<span class="sd">            stream (Stream): ObsPy Stream object containing waveform data.</span>
+<span class="sd">            page (int): Current page number for pagination.</span>
+<span class="sd">            num_pages (int): Total number of pages.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Figure: Matplotlib figure object containing the plot.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">stream</span><span class="p">:</span>
             <span class="k">return</span>
 
@@ -858,7 +995,17 @@
 <div class="viewcode-block" id="WaveformDisplay.plot_station_view">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.waveform.WaveformDisplay.plot_station_view">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot_station_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">station_code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">stream</span><span class="p">:</span> <span class="n">Stream</span><span class="p">,</span> <span class="n">page</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">num_pages</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Plot station view with event information&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Plot station view with event information.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            station_code (str): Code of the station to display.</span>
+<span class="sd">            stream (Stream): ObsPy Stream object containing waveform data.</span>
+<span class="sd">            page (int): Current page number for pagination.</span>
+<span class="sd">            num_pages (int): Total number of pages.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Figure: Matplotlib figure object containing the plot.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">stream</span><span class="p">:</span>
             <span class="k">return</span>
         
@@ -986,6 +1133,13 @@
 <div class="viewcode-block" id="WaveformDisplay.render">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.waveform.WaveformDisplay.render">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Render the waveform display interface.</span>
+
+<span class="sd">        This method creates the main UI for waveform visualization, including:</span>
+<span class="sd">        - View type selection (Event/Station view)</span>
+<span class="sd">        - Waveform display</span>
+<span class="sd">        - Missing data information</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">view_type</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">radio</span><span class="p">(</span>
             <span class="s2">&quot;Select View Type&quot;</span><span class="p">,</span>
             <span class="p">[</span><span class="s2">&quot;Single Event - Multiple Stations&quot;</span><span class="p">,</span> <span class="s2">&quot;Single Station - Multiple Events&quot;</span><span class="p">],</span>
@@ -1444,17 +1598,48 @@
 <div class="viewcode-block" id="MissingDataDisplay">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.waveform.MissingDataDisplay">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">MissingDataDisplay</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A component for displaying information about missing waveform data.</span>
+
+<span class="sd">    This class provides a user interface for showing which events or stations</span>
+<span class="sd">    have missing data and what specific channels are missing.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        stream (List[Stream]): List of waveform streams.</span>
+<span class="sd">        missing_data (Dict): Dictionary tracking missing data.</span>
+<span class="sd">        settings (SeismoLoaderSettings): Configuration settings for seismic data processing.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Stream</span><span class="p">],</span> <span class="n">missing_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]],</span> <span class="n">settings</span><span class="p">:</span> <span class="n">SeismoLoaderSettings</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the MissingDataDisplay component.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            stream (List[Stream]): List of waveform streams.</span>
+<span class="sd">            missing_data (Dict[str, Union[List[str], str]]): Dictionary mapping event IDs to missing data information.</span>
+<span class="sd">            settings (SeismoLoaderSettings): Configuration settings for seismic data processing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">stream</span> <span class="o">=</span> <span class="n">stream</span> <span class="c1">#is this needed? i think we can drop it TODO</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">missing_data</span> <span class="o">=</span> <span class="n">missing_data</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">settings</span>
     
     <span class="k">def</span><span class="w"> </span><span class="nf">_format_event_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Format event time in a readable way&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Format event time in a readable way.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            event: Event object containing event information.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: Formatted event time string.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">event</span><span class="o">.</span><span class="n">origins</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">)</span>
     
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_missing_events</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Identify events with no data and their missing channels&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Identify events with no data and their missing channels.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            List[Dict]: List of dictionaries containing information about events</span>
+<span class="sd">                with missing data, including event ID, time, magnitude, region,</span>
+<span class="sd">                and missing channels.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">missing_events</span> <span class="o">=</span> <span class="p">[]</span>
         
         <span class="c1"># sort events by time</span>
@@ -1507,7 +1692,13 @@
 <div class="viewcode-block" id="MissingDataDisplay.render">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.waveform.MissingDataDisplay.render">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Display missing event information in a table format&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Render the missing data display interface.</span>
+
+<span class="sd">        This method creates a table showing events with missing data, including:</span>
+<span class="sd">        - Event information (time, magnitude, region)</span>
+<span class="sd">        - Missing channel information</span>
+<span class="sd">        - Dynamic height adjustment based on number of entries</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">missing_events</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_missing_events</span><span class="p">()</span>
         
         <span class="k">if</span> <span class="n">missing_events</span><span class="p">:</span>

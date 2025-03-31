@@ -590,6 +590,12 @@
         <span class="k">while</span> <span class="n">retry_count</span> <span class="o">&lt;</span> <span class="n">max_retries</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">conn</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db_path</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+                <span class="c1"># Wise to increase cache_size if your database grows very large / can afford it. mmap seems to be less important</span>
+                <span class="n">conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;PRAGMA journal_mode = WAL&#39;</span><span class="p">)</span>
+                <span class="n">conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;PRAGMA synchronous = NORMAL&#39;</span><span class="p">)</span>
+                <span class="n">conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;PRAGMA cache_size = -128000&#39;</span><span class="p">)</span>  <span class="c1"># 128MB</span>
+                <span class="n">conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;PRAGMA mmap_size = 256000000&#39;</span><span class="p">)</span>  <span class="c1"># 256MB</span>
+                <span class="n">conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;PRAGMA temp_store = MEMORY&#39;</span><span class="p">)</span>
                 <span class="k">yield</span> <span class="n">conn</span>
                 <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
                 <span class="k">return</span>
@@ -663,6 +669,12 @@
 <span class="s1">                    importtime REAL,</span>
 <span class="s1">                    PRIMARY KEY (resource_id, s_netcode, s_stacode, s_start)</span>
 <span class="s1">                )</span>
+<span class="s1">            &#39;&#39;&#39;</span><span class="p">)</span>
+
+            <span class="c1"># For quicker arrival data lookups</span>
+            <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">                CREATE INDEX IF NOT EXISTS idx_arrival_by_station_event</span>
+<span class="s1">                ON arrival_data (resource_id, s_netcode, s_stacode)</span>
 <span class="s1">            &#39;&#39;&#39;</span><span class="p">)</span></div>
 
 
@@ -714,13 +726,14 @@
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Total rows: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="DatabaseManager.reindex_archive_data">
-<a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.DatabaseManager.reindex_archive_data">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">reindex_archive_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Rebuild the index on archive_data table.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="DatabaseManager.reindex_tables">
+<a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.DatabaseManager.reindex_tables">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reindex_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reindex both of the tables in our DB&quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
             <span class="n">cursor</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
-            <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;REINDEX idx_archive_data&quot;</span><span class="p">)</span></div>
+            <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;REINDEX TABLE archive_data&quot;</span><span class="p">)</span>
+            <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;REINDEX TABLE arrival_data&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="DatabaseManager.vacuum_database">
@@ -1071,37 +1084,6 @@
                 <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">description</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">description</span> <span class="ow">in</span> <span class="n">cursor</span><span class="o">.</span><span class="n">description</span><span class="p">]</span>
                 <span class="k">return</span> <span class="p">[</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">columns</span><span class="p">,</span> <span class="n">result</span><span class="p">))</span> <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">results</span><span class="p">]</span>
         <span class="k">return</span> <span class="p">[]</span></div>
-
-
-    <span class="c1"># this function may be redundant now, only using fetch_arrivals_distances (?)</span>
-<div class="viewcode-block" id="DatabaseManager.fetch_arrivals">
-<a class="viewcode-back" href="../../../seed_vault.service.html#seed_vault.service.db.DatabaseManager.fetch_arrivals">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">fetch_arrivals</span><span class="p">(</span>
-    <span class="bp">self</span><span class="p">,</span> <span class="n">resource_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">netcode</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">stacode</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Retrieve P and S wave arrival times for a specific event and station.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            resource_id: Unique identifier for the seismic event.</span>
-<span class="sd">            netcode: Network code for the station.</span>
-<span class="sd">            stacode: Station code.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            Optional[Tuple[float, float]]: Tuple containing (p_arrival, s_arrival) times</span>
-<span class="sd">                as timestamps, or None if no matching record is found.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
-            <span class="n">cursor</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
-            <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
-<span class="s1">                SELECT p_arrival, s_arrival </span>
-<span class="s1">                FROM arrival_data </span>
-<span class="s1">                WHERE resource_id = ? AND s_netcode = ? AND s_stacode = ?</span>
-<span class="s1">            &#39;&#39;&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">resource_id</span><span class="p">,</span> <span class="n">netcode</span><span class="p">,</span> <span class="n">stacode</span><span class="p">))</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
-                <span class="k">return</span> <span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-        <span class="k">return</span> <span class="kc">None</span></div>
 
 
 <div class="viewcode-block" id="DatabaseManager.fetch_arrivals_distances">

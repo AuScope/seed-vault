@@ -385,31 +385,6 @@ and querying for seismic archive and arrival data.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.fetch_arrivals">
-<span class="sig-name descname"><span class="pre">fetch_arrivals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resource_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">netcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stacode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/db.html#DatabaseManager.fetch_arrivals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.fetch_arrivals" title="Link to this definition"></a></dt>
-<dd><p>Retrieve P and S wave arrival times for a specific event and station.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>resource_id</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Unique identifier for the seismic event.</p></li>
-<li><p><strong>netcode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Network code for the station.</p></li>
-<li><p><strong>stacode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Station code.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>Tuple containing (p_arrival, s_arrival) times</dt><dd><p>as timestamps, or None if no matching record is found.</p>
-</dd>
-</dl>
-</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Optional[Tuple[float, float]]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.fetch_arrivals_distances">
 <span class="sig-name descname"><span class="pre">fetch_arrivals_distances</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resource_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">netcode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stacode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/db.html#DatabaseManager.fetch_arrivals_distances"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.fetch_arrivals_distances" title="Link to this definition"></a></dt>
 <dd><p>Retrieve arrival times and distance metrics for a specific event and station.</p>
@@ -522,9 +497,9 @@ Returns None if no matching record is found.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.reindex_archive_data">
-<span class="sig-name descname"><span class="pre">reindex_archive_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/db.html#DatabaseManager.reindex_archive_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.reindex_archive_data" title="Link to this definition"></a></dt>
-<dd><p>Rebuild the index on archive_data table.</p>
+<dt class="sig sig-object py" id="seed_vault.service.db.DatabaseManager.reindex_tables">
+<span class="sig-name descname"><span class="pre">reindex_tables</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/db.html#DatabaseManager.reindex_tables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.db.DatabaseManager.reindex_tables" title="Link to this definition"></a></dt>
+<dd><p>Reindex both of the tables in our DB</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1200,7 +1175,7 @@ or if station service is unavailable.</p>
 <span class="sig-prename descclassname"><span class="pre">seed_vault.service.seismoloader.</span></span><span class="sig-name descname"><span class="pre">prune_requests</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">requests</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_manager</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sds_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_request_window</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/seismoloader.html#prune_requests"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.seismoloader.prune_requests" title="Link to this definition"></a></dt>
 <dd><p>Remove overlapping requests where data already exists in the archive.</p>
 <p>Checks both the database and filesystem for existing data and removes or
-splits requests to avoid re-downloading data that’s already available.</p>
+splits requests to avoid re-downloading data that should be there already.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1209,7 +1184,7 @@ splits requests to avoid re-downloading data that’s already available.</p>
 <li><p><strong>db_manager</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../seed_vault.service.html#seed_vault.service.db.DatabaseManager" title="seed_vault.service.db.DatabaseManager"><code class="xref py py-class docutils literal notranslate"><span class="pre">DatabaseManager</span></code></a></span>) – DatabaseManager instance for querying existing data.</p></li>
 <li><p><strong>sds_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Root path of the SDS archive.</p></li>
 <li><p><strong>min_request_window</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Minimum time window in seconds to keep a request.
-Requests shorter than this are discarded.</p></li>
+Requests shorter than this are discarded. Default is 3 seconds.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -1574,6 +1549,11 @@ obspy.Inventory</p>
 </div></blockquote>
 </section>
 </dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="seed_vault.service.utils.format_error">
+<span class="sig-prename descclassname"><span class="pre">seed_vault.service.utils.</span></span><span class="sig-name descname"><span class="pre">format_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">station</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/seed_vault/service/utils.html#format_error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seed_vault.service.utils.format_error" title="Link to this definition"></a></dt>
+<dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="seed_vault.service.utils.get_sds_filenames">

@@ -317,7 +317,19 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">waveform_components</span> <span class="o">=</span> <span class="n">WaveformComponents</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">next_stage</span><span class="p">()</span>
 
-        <span class="n">st</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">selected_workflow</span><span class="o">.</span><span class="n">description</span><span class="p">)</span></div>
+        <span class="n">st</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">selected_workflow</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
+
+        <span class="n">st</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;For further information about the flows, please visit the documentation:&quot;</span><span class="p">)</span>
+
+        <span class="n">doc_links</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;Workflow Overview&quot;</span><span class="p">:</span> <span class="s2">&quot;https://auscope.github.io/seed-vault/app_main_flows.html#&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Event-based workflow&quot;</span><span class="p">:</span> <span class="s2">&quot;https://auscope.github.io/seed-vault/flows/events_based.html&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Station-based workflow&quot;</span><span class="p">:</span> <span class="s2">&quot;https://auscope.github.io/seed-vault/flows/station_based.html&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Download continuous data&quot;</span><span class="p">:</span> <span class="s2">&quot;https://auscope.github.io/seed-vault/flows/continuous_based.html&quot;</span>
+        <span class="p">}</span>
+
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">url</span> <span class="ow">in</span> <span class="n">doc_links</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- [</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">](</span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="CombinedBasedWorkflow.trigger_error">

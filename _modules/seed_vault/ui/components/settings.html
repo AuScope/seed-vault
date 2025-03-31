@@ -394,6 +394,76 @@
         <span class="n">st</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s2">&quot;Settings have been reset to default.&quot;</span><span class="p">)</span></div>
 
 
+    
+<div class="viewcode-block" id="SettingsComponent.render_license">
+<a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.settings.SettingsComponent.render_license">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">render_license</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        CSIRO Open Source Software License Agreement (variation of the BSD/MIT License)</span>
+
+<span class="sd">        Copyright (c) 2013, Commonwealth Scientific and Industrial Research Organisation</span>
+<span class="sd">        (CSIRO) ABN 41 687 119 230.</span>
+
+<span class="sd">        All rights reserved. CSIRO is willing to grant you a license to this software</span>
+<span class="sd">        product on the following terms, except where otherwise indicated for third</span>
+<span class="sd">        party material.</span>
+
+<span class="sd">        Redistribution and use of this software in source and binary forms, with or</span>
+<span class="sd">        without modification, are permitted provided that the following conditions are</span>
+<span class="sd">        met:</span>
+
+<span class="sd">        1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="sd">        list of conditions and the following disclaimer.</span>
+<span class="sd">        2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="sd">        this list of conditions and the following disclaimer in the documentation</span>
+<span class="sd">        and/or other materials provided with the distribution.</span>
+<span class="sd">        3. Neither the name of CSIRO nor the names of its contributors may be used to</span>
+<span class="sd">        endorse or promote products derived from this software without specific prior</span>
+<span class="sd">        written permission of CSIRO.</span>
+
+<span class="sd">        EXCEPT AS EXPRESSLY STATED IN THIS LICENCE AND TO THE FULL EXTENT PERMITTED BY</span>
+<span class="sd">        APPLICABLE LAW, THE SOFTWARE IS PROVIDED &quot;AS-IS&quot;. CSIRO AND ITS CONTRIBUTORS</span>
+<span class="sd">        MAKE NO REPRESENTATIONS, WARRANTIES OR CONDITIONS OF ANY KIND, EXPRESS OR</span>
+<span class="sd">        IMPLIED, INCLUDING BUT NOT LIMITED TO ANY REPRESENTATIONS, WARRANTIES OR</span>
+<span class="sd">        CONDITIONS REGARDING THE CONTENTS OR ACCURACY OF THE SOFTWARE, OR OF TITLE,</span>
+<span class="sd">        MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, THE ABSENCE</span>
+<span class="sd">        OF LATENT OR OTHER DEFECTS, OR THE PRESENCE OR ABSENCE OF ERRORS, WHETHER OR NOT</span>
+<span class="sd">        DISCOVERABLE.</span>
+
+<span class="sd">        TO THE FULL EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL CSIRO OR ITS</span>
+<span class="sd">        CONTRIBUTORS BE LIABLE ON ANY LEGAL THEORY (INCLUDING, WITHOUT LIMITATION, IN AN</span>
+<span class="sd">        ACTION FOR BREACH OF CONTRACT, NEGLIGENCE OR OTHERWISE) FOR ANY CLAIM, LOSS,</span>
+<span class="sd">        DAMAGES OR OTHER LIABILITY HOWSOEVER INCURRED. WITHOUT LIMITING THE SCOPE OF THE</span>
+<span class="sd">        PREVIOUS SENTENCE THE EXCLUSION OF LIABILITY SHALL INCLUDE: LOSS OF PRODUCTION</span>
+<span class="sd">        OR OPERATION TIME, LOSS, DAMAGE OR CORRUPTION OF DATA OR RECORDS; OR LOSS OF</span>
+<span class="sd">        ANTICIPATED SAVINGS, OPPORTUNITY, REVENUE, PROFIT OR GOODWILL, OR OTHER ECONOMIC</span>
+<span class="sd">        LOSS; OR ANY SPECIAL, INCIDENTAL, INDIRECT, CONSEQUENTIAL, PUNITIVE OR EXEMPLARY</span>
+<span class="sd">        DAMAGES, ARISING OUT OF OR IN CONNECTION WITH THIS LICENCE, THE USE OF THE</span>
+<span class="sd">        SOFTWARE OR THE USE OF OR OTHER DEALINGS WITH THE SOFTWARE, EVEN IF CSIRO OR ITS</span>
+<span class="sd">        CONTRIBUTORS HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH CLAIM, LOSS, DAMAGES</span>
+<span class="sd">        OR OTHER LIABILITY.</span>
+
+<span class="sd">        APPLICABLE LEGISLATION SUCH AS THE AUSTRALIAN CONSUMER LAW MAY IMPLY</span>
+<span class="sd">        REPRESENTATIONS, WARRANTIES, OR CONDITIONS, OR IMPOSES OBLIGATIONS OR LIABILITY</span>
+<span class="sd">        ON CSIRO OR ONE OF ITS CONTRIBUTORS IN RESPECT OF THE SOFTWARE THAT CANNOT BE</span>
+<span class="sd">        WHOLLY OR PARTLY EXCLUDED, RESTRICTED OR MODIFIED &quot;CONSUMER GUARANTEES&quot;. IF SUCH</span>
+<span class="sd">        CONSUMER GUARANTEES APPLY THEN THE LIABILITY OF CSIRO AND ITS CONTRIBUTORS IS</span>
+<span class="sd">        LIMITED, TO THE FULL EXTENT PERMITTED BY THE APPLICABLE LEGISLATION. WHERE THE</span>
+<span class="sd">        APPLICABLE LEGISLATION PERMITS THE FOLLOWING REMEDIES TO BE PROVIDED FOR BREACH</span>
+<span class="sd">        OF THE CONSUMER GUARANTEES THEN, AT ITS OPTION, CSIRO&#39;S LIABILITY IS LIMITED TO</span>
+<span class="sd">        ANY ONE OR MORE OF THEM:</span>
+
+<span class="sd">        1. THE REPLACEMENT OF THE SOFTWARE, THE SUPPLY OF EQUIVALENT SOFTWARE, OR</span>
+<span class="sd">        SUPPLYING RELEVANT SERVICES AGAIN;</span>
+<span class="sd">        2. THE REPAIR OF THE SOFTWARE;</span>
+<span class="sd">        3. THE PAYMENT OF THE COST OF REPLACING THE SOFTWARE, OF ACQUIRING EQUIVALENT</span>
+<span class="sd">        SOFTWARE, HAVING THE RELEVANT SERVICES SUPPLIED AGAIN, OR HAVING THE SOFTWARE</span>
+<span class="sd">        REPAIRED.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">)</span></div>
+
+
 <div class="viewcode-block" id="SettingsComponent.render">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.settings.SettingsComponent.render">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -428,15 +498,19 @@
             <span class="n">st</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
             <span class="n">st</span><span class="o">.</span><span class="n">link_button</span><span class="p">(</span><span class="s2">&quot;Help&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">DOC_BASE_URL</span><span class="si">}</span><span class="s2">/app_settings.html&quot;</span><span class="p">)</span>
 
-        <span class="n">tab1</span><span class="p">,</span> <span class="n">tab2</span><span class="p">,</span> <span class="n">tab3</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">tabs</span><span class="p">([</span><span class="s2">&quot;Data&quot;</span><span class="p">,</span> <span class="s2">&quot;Credentials&quot;</span><span class="p">,</span> <span class="s2">&quot;Clients&quot;</span><span class="p">])</span>
+        <span class="n">tab1</span><span class="p">,</span> <span class="n">tab2</span><span class="p">,</span> <span class="n">tab3</span><span class="p">,</span> <span class="n">tab4</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">tabs</span><span class="p">([</span><span class="s2">&quot;🛠️ Data&quot;</span><span class="p">,</span> <span class="s2">&quot;🔑 Credentials&quot;</span><span class="p">,</span> <span class="s2">&quot;📡 Clients&quot;</span><span class="p">,</span> <span class="s2">&quot;📜 License&quot;</span><span class="p">])</span>
         <span class="k">with</span> <span class="n">tab1</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">render_db</span><span class="p">()</span>
         <span class="k">with</span> <span class="n">tab2</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">render_auth</span><span class="p">()</span>
         <span class="k">with</span> <span class="n">tab3</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">render_clients</span><span class="p">()</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">render_clients</span><span class="p">()</span>
+        <span class="k">with</span> <span class="n">tab4</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">render_license</span><span class="p">()</span></div>
 </div>
 
+
+        
 
         
 </pre></div>

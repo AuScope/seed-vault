@@ -210,6 +210,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">obspy.core.event</span><span class="w"> </span><span class="kn">import</span> <span class="n">Catalog</span><span class="p">,</span> <span class="n">read_events</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">obspy.core.inventory</span><span class="w"> </span><span class="kn">import</span> <span class="n">Inventory</span><span class="p">,</span> <span class="n">read_inventory</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
 
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.ui.components.map</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_map</span><span class="p">,</span> <span class="n">add_area_overlays</span><span class="p">,</span> <span class="n">add_data_points</span><span class="p">,</span> <span class="n">clear_map_layers</span><span class="p">,</span> <span class="n">clear_map_draw</span><span class="p">,</span><span class="n">add_map_draw</span>
@@ -226,6 +227,8 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">seed_vault.service.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">convert_to_datetime</span><span class="p">,</span> <span class="n">check_client_services</span><span class="p">,</span> <span class="n">get_time_interval</span>
 
+<span class="k">if</span> <span class="s1">&#39;loading&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">:</span>
+    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s1">&#39;loading&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
 
 <div class="viewcode-block" id="BaseComponentTexts">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponentTexts">[docs]</a>
@@ -415,6 +418,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">set_map_view</span><span class="p">(</span><span class="n">init_map_center</span><span class="p">,</span> <span class="n">init_map_zoom</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">map_view_center</span> <span class="o">=</span> <span class="n">init_map_center</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">map_view_zoom</span>   <span class="o">=</span> <span class="n">init_map_zoom</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">export_as_alternate</span> <span class="o">=</span> <span class="kc">False</span>
 
 
 <div class="viewcode-block" id="BaseComponent.get_key_element">
@@ -509,7 +513,7 @@
         <span class="n">end_date</span><span class="p">,</span> <span class="n">end_time</span>     <span class="o">=</span> <span class="n">convert_to_datetime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">date_config</span><span class="o">.</span><span class="n">end_time</span><span class="p">)</span>
 
         <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="p">:</span>
-            <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;### Filters&quot;</span><span class="p">,</span> <span class="n">expanded</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Filters&quot;</span><span class="p">,</span> <span class="n">expanded</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
                 <span class="n">client_options</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">client_url_mapping</span><span class="o">.</span><span class="n">get_clients</span><span class="p">())</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
                     <span class="s1">&#39;Choose a client:&#39;</span><span class="p">,</span>
@@ -608,7 +612,7 @@
             <span class="n">end_time</span>   <span class="o">=</span> <span class="n">time</span><span class="p">(</span><span class="n">hour</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">minute</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">second</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
         <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="p">:</span>
-            <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;### Filters&quot;</span><span class="p">,</span> <span class="n">expanded</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Filters&quot;</span><span class="p">,</span> <span class="n">expanded</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
                 <span class="n">client_options</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">client_url_mapping</span><span class="o">.</span><span class="n">get_clients</span><span class="p">())</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
                     <span class="s1">&#39;Choose a client:&#39;</span><span class="p">,</span> 
@@ -914,7 +918,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">get_data_globally</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">clear_all_data</span><span class="p">()</span>
         <span class="n">clear_map_draw</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">map_disp</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">handle_get_data</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fetch_data_with_loading</span><span class="p">(</span><span class="n">fetch_func</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">handle_get_data</span><span class="p">)</span>
         <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span></div>
 
 
@@ -958,8 +962,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">all_feature_drawings</span> <span class="o">=</span> <span class="n">geo_constraint</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">map_fg_area</span><span class="o">=</span> <span class="n">add_area_overlays</span><span class="p">(</span><span class="n">areas</span><span class="o">=</span><span class="n">geo_constraint</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">get_data</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">handle_get_data</span><span class="p">()</span>
-
+                <span class="bp">self</span><span class="o">.</span><span class="n">fetch_data_with_loading</span><span class="p">(</span><span class="n">fetch_func</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">handle_get_data</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">rerun</span><span class="p">:</span>
             <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span></div>
@@ -974,6 +977,41 @@
     <span class="c1"># ====================</span>
     <span class="c1"># GET DATA</span>
     <span class="c1"># ====================</span>
+
+<div class="viewcode-block" id="BaseComponent.fetch_data_with_loading">
+<a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.fetch_data_with_loading">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fetch_data_with_loading</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fetch_func</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">spinner_message</span><span class="o">=</span><span class="s2">&quot;🔄 Fetching data...&quot;</span><span class="p">,</span> <span class="n">success_message</span><span class="o">=</span><span class="s2">&quot;✅ Data loaded successfully.&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s1">&#39;loading&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_loading_overlay</span><span class="p">()</span>
+        <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">spinner</span><span class="p">(</span><span class="n">spinner_message</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">fetch_func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="n">success_message</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;⚠️ An unexpected error occurred: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s1">&#39;loading&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="BaseComponent.add_loading_overlay">
+<a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.add_loading_overlay">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_loading_overlay</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            &lt;style&gt;</span>
+<span class="s2">            .loading-overlay {</span>
+<span class="s2">                position: fixed;</span>
+<span class="s2">                top: 0; left: 0; width: 100%; height: 100%;</span>
+<span class="s2">                background-color: rgba(255, 255, 255, 0.5);</span>
+<span class="s2">                z-index: 9999;</span>
+<span class="s2">                display: flex;</span>
+<span class="s2">                align-items: center;</span>
+<span class="s2">                justify-content: center;</span>
+<span class="s2">                font-size: 24px;</span>
+<span class="s2">                color: black;</span>
+<span class="s2">            }</span>
+<span class="s2">            &lt;/style&gt;</span>
+<span class="s2">            &lt;div class=&quot;loading-overlay&quot;&gt;🔄 Loading... Please wait.&lt;/div&gt;</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">,</span> <span class="n">unsafe_allow_html</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="BaseComponent.handle_get_data">
@@ -1045,8 +1083,7 @@
 
             <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">)</span>  <span class="c1"># Logging for debugging</span></div>
 
-
-
+        
 <div class="viewcode-block" id="BaseComponent.clear_all_data">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.clear_all_data">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">clear_all_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1187,10 +1224,13 @@
         <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
 
         <span class="k">with</span> <span class="n">c1</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">min_radius</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span><span class="s2">&quot;Minimum radius (degree)&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">min_radius</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">min_radius</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span><span class="s2">&quot;Minimum radius (degree)&quot;</span><span class="p">,</span> 
+                <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">min_radius</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">,</span>
+                <span class="n">step</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span><span class="n">min_value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">max_value</span><span class="o">=</span><span class="mf">180.0</span><span class="p">)</span>
         <span class="k">with</span> <span class="n">c2</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">max_radius</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span><span class="s2">&quot;Maximum radius (degree)&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">max_radius</span><span class="p">)</span>
-
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">max_radius</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">number_input</span><span class="p">(</span><span class="s2">&quot;Maximum radius (degree)&quot;</span><span class="p">,</span>
+                <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">max_radius</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">,</span>
+                <span class="n">step</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span><span class="n">min_value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">max_value</span><span class="o">=</span><span class="mf">180.0</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">min_radius</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">min_radius</span><span class="p">)</span>
             <span class="n">max_radius</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">max_radius</span><span class="p">)</span>
@@ -1281,20 +1321,45 @@
 <div class="viewcode-block" id="BaseComponent.exp_imp_events_stations">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.exp_imp_events_stations">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">exp_imp_events_stations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;#### Export/Import </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;#### Export/Import </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="si">}</span><span class="s2">s (XML)&quot;</span><span class="p">)</span>
 
         <span class="n">c11</span><span class="p">,</span> <span class="n">c22</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">export_as_alternate</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">checkbox</span><span class="p">(</span>
+            <span class="s2">&quot;Export as &quot;</span> <span class="o">+</span> <span class="p">(</span><span class="s2">&quot;TXT&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">STATION</span> <span class="k">else</span> <span class="s2">&quot;KML&quot;</span><span class="p">),</span> 
+            <span class="n">key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_key_element</span><span class="p">(</span><span class="s2">&quot;export_alternate_format&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
         <span class="k">with</span> <span class="n">c11</span><span class="p">:</span>
-            <span class="c1"># @NOTE: Download Selected had to be with the table.</span>
-            <span class="c1"># if (len(self.catalogs.events) &gt; 0 or len(self.inventories.get_contents().get(&#39;stations&#39;)) &gt; 0):</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">export_as_alternate</span><span class="p">:</span>
+                <span class="n">export_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">export_txt_tmpfile</span><span class="p">(</span><span class="n">export_selected</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="n">file_extension</span> <span class="o">=</span> <span class="s2">&quot;.txt&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">STATION</span> <span class="k">else</span> <span class="s2">&quot;.kml&quot;</span>
+                <span class="n">file_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="si">}</span><span class="s2">s</span><span class="si">{</span><span class="n">file_extension</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="n">mime_type</span> <span class="o">=</span> <span class="s2">&quot;text/plain&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">STATION</span> <span class="k">else</span> <span class="s2">&quot;application/vnd.google-earth.kml+xml&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">export_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">export_xml_bytes</span><span class="p">(</span><span class="n">export_selected</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="n">file_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="si">}</span><span class="s2">s.xml&quot;</span>
+                <span class="n">mime_type</span> <span class="o">=</span> <span class="s2">&quot;application/xml&quot;</span>
+
             <span class="n">st</span><span class="o">.</span><span class="n">download_button</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Download All&quot;</span><span class="p">,</span> 
                 <span class="n">key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_key_element</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Download All </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">),</span>
-                <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">export_xml_bytes</span><span class="p">(</span><span class="n">export_selected</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
-                <span class="n">file_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="si">}</span><span class="s2">s.xml&quot;</span><span class="p">,</span>
-                <span class="n">mime</span><span class="o">=</span><span class="s2">&quot;application/xml&quot;</span><span class="p">,</span>
+                <span class="n">data</span><span class="o">=</span><span class="n">export_data</span><span class="p">,</span>
+                <span class="n">file_name</span><span class="o">=</span><span class="n">file_name</span><span class="p">,</span>
+                <span class="n">mime</span><span class="o">=</span><span class="n">mime_type</span><span class="p">,</span>
                 <span class="n">disabled</span><span class="o">=</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">catalogs</span><span class="o">.</span><span class="n">events</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inventories</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inventories</span><span class="o">.</span><span class="n">get_contents</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;stations&#39;</span><span class="p">))</span> <span class="o">==</span> <span class="mi">0</span><span class="p">))</span>
             <span class="p">)</span>
+
+            
+            <span class="c1">## @NOTE: Download Selected had to be with the table.</span>
+            <span class="c1">## if (len(self.catalogs.events) &gt; 0 or len(self.inventories.get_contents().get(&#39;stations&#39;)) &gt; 0):</span>
+            <span class="c1">#st.download_button(</span>
+            <span class="c1">#    f&quot;Download All&quot;, </span>
+            <span class="c1">#    key=self.get_key_element(f&quot;Download All {self.TXT.STEP.title()}s&quot;),</span>
+            <span class="c1">#    data=self.export_xml_bytes(export_selected=False),</span>
+            <span class="c1">#    file_name = f&quot;{self.TXT.STEP}s.xml&quot;,</span>
+            <span class="c1">#    mime=&quot;application/xml&quot;,</span>
+            <span class="c1">#    disabled=(len(self.catalogs.events) == 0 and (self.inventories is None or len(self.inventories.get_contents().get(&#39;stations&#39;)) == 0))</span>
+            <span class="c1">#)</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">reset_uploaded_file_processed</span><span class="p">():</span>
             <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s1">&#39;uploaded_file_processed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
@@ -1303,7 +1368,9 @@
         <span class="k">if</span> <span class="n">uploaded_file</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s1">&#39;uploaded_file_processed&#39;</span><span class="p">]:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">clear_all_data</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">refresh_map</span><span class="p">(</span><span class="n">reset_areas</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">clear_draw</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">handle_get_data</span><span class="p">(</span><span class="n">is_import</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">uploaded_file</span><span class="o">=</span><span class="n">uploaded_file</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">fetch_data_with_loading</span><span class="p">(</span><span class="n">fetch_func</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">handle_get_data</span><span class="p">,</span> <span class="n">is_import</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">uploaded_file</span><span class="o">=</span><span class="n">uploaded_file</span><span class="p">)</span>
+
             <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s1">&#39;uploaded_file_processed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_error</span> <span class="ow">and</span> <span class="s2">&quot;Import Error&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">:</span>
@@ -1320,8 +1387,8 @@
                 <span class="k">if</span> <span class="n">export_selected</span><span class="p">:</span>
                 <span class="c1"># self.sync_df_markers_with_df_edit()</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">update_selected_data</span><span class="p">()</span>
-            
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">STATION</span><span class="p">:</span>                
+                
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">STATION</span><span class="p">:</span>
                     <span class="n">inv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">selected_invs</span> <span class="k">if</span> <span class="n">export_selected</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">inventories</span>
                     <span class="k">if</span> <span class="n">inv</span><span class="p">:</span>
                         <span class="n">inv</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;STATIONXML&#39;</span><span class="p">)</span>
@@ -1329,14 +1396,44 @@
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">EVENT</span><span class="p">:</span>
                     <span class="n">cat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">selected_catalogs</span> <span class="k">if</span> <span class="n">export_selected</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">catalogs</span>
                     <span class="k">if</span> <span class="n">cat</span><span class="p">:</span>
-                        <span class="n">cat</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;QUAKEML&quot;</span><span class="p">)</span>
+                        <span class="n">cat</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;QUAKEML&#39;</span><span class="p">)</span>
 
             <span class="c1"># if f.getbuffer().nbytes == 0:</span>
-            <span class="c1">#     f.write(b&quot;No Data&quot;)     </span>
+            <span class="c1">#     f.write(b&quot;No Data&quot;)</span>
 
             <span class="k">return</span> <span class="n">f</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span></div>
 
+
+<div class="viewcode-block" id="BaseComponent.export_txt_tmpfile">
+<a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.export_txt_tmpfile">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export_txt_tmpfile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">export_selected</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="n">extension</span> <span class="o">=</span> <span class="s2">&quot;.txt&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">STATION</span> <span class="k">else</span> <span class="s2">&quot;.kml&quot;</span>
         
+        <span class="c1"># Create temporary file with the correct extension</span>
+        <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="n">extension</span><span class="p">,</span> <span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">as</span> <span class="n">temp_file</span><span class="p">:</span>
+            <span class="n">temp_path</span> <span class="o">=</span> <span class="n">temp_file</span><span class="o">.</span><span class="n">name</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="o">.</span><span class="n">empty</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">export_selected</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">update_selected_data</span><span class="p">()</span>
+                
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">STATION</span><span class="p">:</span>
+                    <span class="n">inv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">selected_invs</span> <span class="k">if</span> <span class="n">export_selected</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">inventories</span>
+                    <span class="k">if</span> <span class="n">inv</span><span class="p">:</span>
+                        <span class="n">inv</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">temp_path</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;STATIONTXT&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">EVENT</span><span class="p">:</span>
+                    <span class="n">cat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">selected_catalogs</span> <span class="k">if</span> <span class="n">export_selected</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">catalogs</span>
+                    <span class="k">if</span> <span class="n">cat</span><span class="p">:</span>
+                        <span class="n">cat</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">temp_path</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;KML&#39;</span><span class="p">)</span>
+            
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">temp_path</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">temp_path</span><span class="p">):</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">temp_path</span><span class="p">)</span></div>
+
+
 
 <div class="viewcode-block" id="BaseComponent.import_xml">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.import_xml">[docs]</a>
@@ -1655,12 +1752,23 @@
         <span class="n">is_disabled</span> <span class="o">=</span> <span class="s1">&#39;is_selected&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_markers</span><span class="p">[</span><span class="s1">&#39;is_selected&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span>
 
         <span class="k">with</span> <span class="n">c5_map</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">export_as_alternate</span><span class="p">:</span>
+                <span class="n">export_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">export_txt_tmpfile</span><span class="p">(</span><span class="n">export_selected</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">file_extension</span> <span class="o">=</span> <span class="s2">&quot;.txt&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">STATION</span> <span class="k">else</span> <span class="s2">&quot;.kml&quot;</span>
+                <span class="n">file_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="si">}</span><span class="s2">s_selected</span><span class="si">{</span><span class="n">file_extension</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="n">mime_type</span> <span class="o">=</span> <span class="s2">&quot;text/plain&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="n">Steps</span><span class="o">.</span><span class="n">STATION</span> <span class="k">else</span> <span class="s2">&quot;application/vnd.google-earth.kml+xml&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">export_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">export_xml_bytes</span><span class="p">(</span><span class="n">export_selected</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">file_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="si">}</span><span class="s2">s_selected.xml&quot;</span>
+                <span class="n">mime_type</span> <span class="o">=</span> <span class="s2">&quot;application/xml&quot;</span>
+
             <span class="n">st</span><span class="o">.</span><span class="n">download_button</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Download Selected&quot;</span><span class="p">,</span>
                 <span class="n">key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_key_element</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Download Selected </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">),</span>
-                <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">export_xml_bytes</span><span class="p">(</span><span class="n">export_selected</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-                <span class="n">file_name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TXT</span><span class="o">.</span><span class="n">STEP</span><span class="si">}</span><span class="s2">s_selected.xml&quot;</span><span class="p">,</span>
-                <span class="n">mime</span><span class="o">=</span><span class="s2">&quot;application/xml&quot;</span><span class="p">,</span>
+                <span class="n">data</span><span class="o">=</span><span class="n">export_data</span><span class="p">,</span>
+                <span class="n">file_name</span><span class="o">=</span><span class="n">file_name</span><span class="p">,</span>
+                <span class="n">mime</span><span class="o">=</span><span class="n">mime_type</span><span class="p">,</span>
                 <span class="n">disabled</span><span class="o">=</span><span class="n">is_disabled</span>
             <span class="p">)</span></div>
 
@@ -1866,6 +1974,9 @@
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.base.BaseComponent.render">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         
+        <span class="k">if</span> <span class="s1">&#39;loading&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s1">&#39;loading&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+                
         <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">render_map_handles</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">render_map_right_menu</span><span class="p">()</span>

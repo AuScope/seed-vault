@@ -378,6 +378,7 @@
 <div class="viewcode-block" id="DataExplorerComponent.render">
 <a class="viewcode-back" href="../../../../seed_vault.ui.components.html#seed_vault.ui.components.data_explorer.DataExplorerComponent.render">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="s2">&quot;[DB Explorer Documentation](https://auscope.github.io/seed-vault/app_db_explorer.html)&quot;</span><span class="p">)</span>
         <span class="n">tab1</span><span class="p">,</span> <span class="n">tab2</span><span class="p">,</span> <span class="n">tab3</span><span class="p">,</span> <span class="n">tab4</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">tabs</span><span class="p">([</span><span class="s1">&#39;Execute SQL&#39;</span><span class="p">,</span> <span class="s1">&#39;Query History&#39;</span><span class="p">,</span> <span class="s1">&#39;DB Schema&#39;</span><span class="p">,</span> <span class="s1">&#39;Example Queries&#39;</span><span class="p">])</span>
         <span class="k">with</span> <span class="n">tab1</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">render_query</span><span class="p">()</span>
