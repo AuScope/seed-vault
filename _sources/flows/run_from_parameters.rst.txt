@@ -433,7 +433,7 @@ Parameter Reference
             </td>
             <td style="border: 1px solid black; padding: 8px"><code>2024-09-20</code></td>
          </tr>
-         <tr style="background-color: orange;">
+         <tr style="">
             <td style="border: 1px solid black; padding: 8px">startbefore</td>
             <td
                style="border: 1px solid black; padding: 8px; word-wrap: break-word"
@@ -442,7 +442,7 @@ Parameter Reference
             </td>
             <td style="border: 1px solid black; padding: 8px"><code>1990-01-20</code></td>
          </tr>
-         <tr style="background-color: orange;">
+         <tr style="">
             <td style="border: 1px solid black; padding: 8px">startafter</td>
             <td
                style="border: 1px solid black; padding: 8px; word-wrap: break-word"
@@ -451,7 +451,7 @@ Parameter Reference
             </td>
             <td style="border: 1px solid black; padding: 8px"><code>1990-01-20</code></td>
          </tr>
-         <tr style="background-color: orange;">
+         <tr style="">
             <td style="border: 1px solid black; padding: 8px">endbefore</td>
             <td
                style="border: 1px solid black; padding: 8px; word-wrap: break-word"
@@ -460,7 +460,7 @@ Parameter Reference
             </td>
             <td style="border: 1px solid black; padding: 8px"><code>1990-01-20</code></td>
          </tr>
-         <tr style="background-color: orange;">
+         <tr style="">
             <td style="border: 1px solid black; padding: 8px">endafter</td>
             <td
                style="border: 1px solid black; padding: 8px; word-wrap: break-word"
@@ -601,7 +601,7 @@ Parameter Reference
             </td>
             <td style="border: 1px solid black; padding: 8px"></code>140.0</code></td>
          </tr>
-         <tr style="background-color: orange;">
+         <tr style="">
             <td style="border: 1px solid black; padding: 8px">includerestricted</td>
             <td
                style="border: 1px solid black; padding: 8px; word-wrap: break-word"
@@ -642,7 +642,7 @@ Parameter Reference
             </td>
             <td style="border: 1px solid black; padding: 8px"><code>USGS</code></td>
          </tr>
-         <tr style="background-color: orange;">
+         <tr style="">
             <td style="border: 1px solid black; padding: 8px">model</td>
             <td
                style="border: 1px solid black; padding: 8px; word-wrap: break-word"
@@ -652,7 +652,7 @@ Parameter Reference
             <td style="border: 1px solid black; padding: 8px"><code>ak135</code></td>
          </tr>
 
-         <tr style="background-color: orange;">
+         <tr style="">
             <td style="border: 1px solid black; padding: 8px">before_p_sec</td>
             <td
                style="border: 1px solid black; padding: 8px; word-wrap: break-word"
@@ -661,7 +661,7 @@ Parameter Reference
             </td>
             <td style="border: 1px solid black; padding: 8px"><code>20</code></td>
          </tr>
-         <tr style="background-color: orange;">
+         <tr style="">
             <td style="border: 1px solid black; padding: 8px">after_p_sec</td>
             <td
                style="border: 1px solid black; padding: 8px; word-wrap: break-word"
@@ -850,7 +850,7 @@ Parameter Reference
             <td style="border: 1px solid black; padding: 8px"></code>140.0</code></td>
          </tr>
 
-         <tr style="background-color: orange;">
+         <tr style="">
             <td style="border: 1px solid black; padding: 8px">includeallorigins</td>
             <td
                style="border: 1px solid black; padding: 8px; word-wrap: break-word"
@@ -859,7 +859,7 @@ Parameter Reference
             </td>
             <td style="border: 1px solid black; padding: 8px"><code>True</code></td>
          </tr>
-         <tr style="background-color: orange;">
+         <tr style="">
             <td style="border: 1px solid black; padding: 8px">includeallmagnitudes</td>
             <td
                style="border: 1px solid black; padding: 8px; word-wrap: break-word"
@@ -868,7 +868,7 @@ Parameter Reference
             </td>
             <td style="border: 1px solid black; padding: 8px"><code>True</code></td>
          </tr>
-         <tr style="background-color: orange;">
+         <tr style="">
             <td style="border: 1px solid black; padding: 8px">includearrivals</td>
             <td
                style="border: 1px solid black; padding: 8px; word-wrap: break-word"
@@ -877,7 +877,7 @@ Parameter Reference
             </td>
             <td style="border: 1px solid black; padding: 8px"><code>True</code></td>
          </tr>
-         <tr style="background-color: orange;">
+         <tr style="">
             <td style="border: 1px solid black; padding: 8px">limit</td>
             <td
                style="border: 1px solid black; padding: 8px; word-wrap: break-word"
@@ -886,7 +886,7 @@ Parameter Reference
             </td>
             <td style="border: 1px solid black; padding: 8px"><code>100</code></td>
          </tr>
-         <tr style="background-color: orange;">
+         <tr style="">
             <td style="border: 1px solid black; padding: 8px">offset</td>
             <td
                style="border: 1px solid black; padding: 8px; word-wrap: break-word"
@@ -895,7 +895,7 @@ Parameter Reference
             </td>
             <td style="border: 1px solid black; padding: 8px"><code>1</code></td>
          </tr>
-         <tr style="background-color: orange;">
+         <tr style="">
             <td style="border: 1px solid black; padding: 8px">contributor</td>
             <td
                style="border: 1px solid black; padding: 8px; word-wrap: break-word"
@@ -904,7 +904,7 @@ Parameter Reference
             </td>
             <td style="border: 1px solid black; padding: 8px"><code>USGS</code></td>
          </tr>
-         <tr style="background-color: orange;">
+         <tr style="">
             <td style="border: 1px solid black; padding: 8px">updatedafter</td>
             <td
                style="border: 1px solid black; padding: 8px; word-wrap: break-word"
@@ -915,7 +915,7 @@ Parameter Reference
             </td>
             <td style="border: 1px solid black; padding: 8px"><code>2023-01-01T00:00:00</code></td>
          </tr>
-         <tr style="background-color: orange;">
+         <tr style="">
             <td style="border: 1px solid black; padding: 8px">eventtype</td>
             <td
                style="border: 1px solid black; padding: 8px; word-wrap: break-word"
@@ -924,7 +924,7 @@ Parameter Reference
             </td>
             <td style="border: 1px solid black; padding: 8px"><code>earthquake</code></td>
          </tr>
-         <tr style="background-color: orange;">
+         <tr style="">
             <td style="border: 1px solid black; padding: 8px">catalog</td>
             <td
                style="border: 1px solid black; padding: 8px; word-wrap: break-word"
