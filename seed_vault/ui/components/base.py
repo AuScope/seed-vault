@@ -153,6 +153,7 @@ class BaseComponent:
     cols_to_exclude             = ['detail', 'is_selected']
 
     has_error: bool = False
+    has_fetch_new_data: bool = False
     error: str = ""
 
     @property
@@ -1154,7 +1155,12 @@ class BaseComponent:
     def watch_all_drawings(self, all_drawings):
         if self.all_current_drawings != all_drawings:
             self.all_current_drawings = all_drawings
-            self.refresh_map(rerun=True, get_data=True)
+            if not self.has_fetch_new_data:
+                self.has_fetch_new_data = True
+                self.refresh_map(rerun=False, get_data=True)
+        else:
+            if self.has_fetch_new_data:
+                self.has_fetch_new_data = False
 
 
 
