@@ -711,7 +711,8 @@ class BaseComponent:
                 self.all_feature_drawings = geo_constraint
                 self.map_fg_area= add_area_overlays(areas=geo_constraint)
             if get_data:
-                self.fetch_data_with_loading(fetch_func=self.handle_get_data)
+                self.handle_get_data()                
+                # self.fetch_data_with_loading(fetch_func=self.handle_get_data)
 
         if rerun:
             st.rerun()
@@ -1155,12 +1156,16 @@ class BaseComponent:
     def watch_all_drawings(self, all_drawings):
         if self.all_current_drawings != all_drawings:
             self.all_current_drawings = all_drawings
-            if not self.has_fetch_new_data:
-                self.has_fetch_new_data = True
-                self.refresh_map(rerun=False, get_data=True)
-        else:
-            if self.has_fetch_new_data:
-                self.has_fetch_new_data = False
+            self.refresh_map(rerun=True, get_data=True)
+
+        # if self.all_current_drawings != all_drawings:
+        #     self.all_current_drawings = all_drawings
+        #     if not self.has_fetch_new_data:
+        #         self.has_fetch_new_data = True
+        #         self.refresh_map(rerun=False, get_data=True)
+        # else:
+        #     if self.has_fetch_new_data:
+        #         self.has_fetch_new_data = False
 
 
 
