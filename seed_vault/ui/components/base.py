@@ -1,4 +1,3 @@
-import copy
 import io
 import os
 import re
@@ -10,7 +9,8 @@ import pandas as pd
 from datetime import datetime, time
 from obspy.core.event import Catalog, read_events
 from obspy.core.inventory import Inventory, read_inventory
-import time
+from time import sleep
+import tempfile
 
 
 from seed_vault.ui.components.map import LON_RANGE_END, LON_RANGE_START, create_map, add_area_overlays, add_data_points, clear_map_layers, clear_map_draw,add_map_draw
@@ -27,15 +27,8 @@ from seed_vault.enums.ui import Steps
 
 from seed_vault.service.utils import convert_to_datetime, check_client_services, get_time_interval
 
-from enum import Enum
-
-class FetchStatus(Enum):
-    IDLE = "idle"
-    SHOULD_FETCH = "should_fetch"
-    FETCHING = "fetching"
-    SUCCESS = "success"
-    ERROR = "error"
-    RERUN = "rerun"
+if 'loading' not in st.session_state:
+    st.session_state['loading'] = False
 
 class BaseComponentTexts:
     """Defines text constants for UI components in different configuration steps."""
@@ -160,6 +153,7 @@ class BaseComponent:
     cols_to_exclude             = ['detail', 'is_selected']
 
     has_error: bool = False
+    has_fetch_new_data: bool = False
     error: str = ""
 
     @property
@@ -220,6 +214,7 @@ class BaseComponent:
         self.set_map_view(init_map_center, init_map_zoom)
         self.map_view_center = init_map_center
         self.map_view_zoom   = init_map_zoom
+        self.export_as_alternate = False
 
 
     def get_key_element(self, name):
@@ -529,7 +524,6 @@ class BaseComponent:
         Returns:
             bool: `True` if the rectangle is valid, `False` otherwise.
         """
-        
         return (-90 <= min_lat <= 90 and -90 <= max_lat <= 90 and
                 LON_RANGE_START <= min_lon <= LON_RANGE_END and LON_RANGE_START <= max_lon <= LON_RANGE_END and
                 min_lat <= max_lat and min_lon <= max_lon)
@@ -730,20 +724,16 @@ class BaseComponent:
     # ====================
 
     def fetch_data_with_loading(self, fetch_func, *args, spinner_message="🔄 Fetching data...", success_message="✅ Data loaded successfully.", **kwargs):
-        if st.session_state["fetch_status"] != FetchStatus.SHOULD_FETCH:
-            return
-
-        try:
-            st.session_state["fetch_status"] = FetchStatus.FETCHING
-            self.add_loading_overlay()
-            with st.spinner(spinner_message):
+        st.session_state['loading'] = True
+        self.add_loading_overlay()
+        with st.spinner(spinner_message):
+            try:
                 fetch_func(*args, **kwargs)
                 st.success(success_message)
-            st.session_state["fetch_status"] = FetchStatus.RERUN
-        except Exception as e:
-            st.session_state["fetch_status"] = FetchStatus.ERROR
-            st.error(f"⚠️ An unexpected error occurred: {str(e)}")
-
+            except Exception as e:
+                st.error(f"⚠️ An unexpected error occurred: {str(e)}")
+            finally:
+                st.session_state['loading'] = False
 
     def add_loading_overlay(self):
         st.markdown("""
@@ -763,7 +753,7 @@ class BaseComponent:
             <div class="loading-overlay">🔄 Loading... Please wait.</div>
         """, unsafe_allow_html=True)
 
-    def handle_get_data(self, is_import: bool = False, uploaded_file = None):     
+    def handle_get_data(self, is_import: bool = False, uploaded_file = None):
         http_error = {
             204: "No data found",
             400: "Malformed input or unrecognized search parameter",
@@ -829,6 +819,7 @@ class BaseComponent:
 
 
             print(self.error)  # Logging for debugging
+        
     def clear_all_data(self):
         self.map_fg_marker= None
         self.map_fg_area= None
@@ -943,10 +934,13 @@ class BaseComponent:
         c1, c2 = st.columns([1, 1])
 
         with c1:
-            self.settings.event.min_radius = st.number_input("Minimum radius (degree)", value=self.settings.event.min_radius)
+            self.settings.event.min_radius = st.number_input("Minimum radius (degree)", 
+                value=self.settings.event.min_radius or 0.0,
+                step=0.5,min_value=0.0,max_value=180.0)
         with c2:
-            self.settings.event.max_radius = st.number_input("Maximum radius (degree)", value=self.settings.event.max_radius)
-
+            self.settings.event.max_radius = st.number_input("Maximum radius (degree)",
+                value=self.settings.event.max_radius or 0.0,
+                step=0.5,min_value=0.0,max_value=180.0)
         try:
             min_radius = float(self.settings.event.min_radius)
             max_radius = float(self.settings.event.max_radius)
@@ -1031,20 +1025,45 @@ class BaseComponent:
     # FILES
     # ===================
     def exp_imp_events_stations(self):
-        st.write(f"#### Export/Import {self.TXT.STEP.title()}s")
+        st.write(f"#### Export/Import {self.TXT.STEP.title()}s (XML)")
 
         c11, c22 = st.columns([1,1])
+        self.export_as_alternate = st.checkbox(
+            "Export as " + ("TXT" if self.step_type == Steps.STATION else "KML"), 
+            key=self.get_key_element("export_alternate_format")
+        )
         with c11:
-            # @NOTE: Download Selected had to be with the table.
-            # if (len(self.catalogs.events) > 0 or len(self.inventories.get_contents().get('stations')) > 0):
+
+            if self.export_as_alternate:
+                export_data = self.export_txt_tmpfile(export_selected=False)
+                file_extension = ".txt" if self.step_type == Steps.STATION else ".kml"
+                file_name = f"{self.TXT.STEP}s{file_extension}"
+                mime_type = "text/plain" if self.step_type == Steps.STATION else "application/vnd.google-earth.kml+xml"
+            else:
+                export_data = self.export_xml_bytes(export_selected=False)
+                file_name = f"{self.TXT.STEP}s.xml"
+                mime_type = "application/xml"
+
             st.download_button(
                 f"Download All", 
                 key=self.get_key_element(f"Download All {self.TXT.STEP.title()}s"),
-                data=self.export_xml_bytes(export_selected=False),
-                file_name = f"{self.TXT.STEP}s.xml",
-                mime="application/xml",
+                data=export_data,
+                file_name=file_name,
+                mime=mime_type,
                 disabled=(len(self.catalogs.events) == 0 and (self.inventories is None or len(self.inventories.get_contents().get('stations')) == 0))
             )
+
+            
+            ## @NOTE: Download Selected had to be with the table.
+            ## if (len(self.catalogs.events) > 0 or len(self.inventories.get_contents().get('stations')) > 0):
+            #st.download_button(
+            #    f"Download All", 
+            #    key=self.get_key_element(f"Download All {self.TXT.STEP.title()}s"),
+            #    data=self.export_xml_bytes(export_selected=False),
+            #    file_name = f"{self.TXT.STEP}s.xml",
+            #    mime="application/xml",
+            #    disabled=(len(self.catalogs.events) == 0 and (self.inventories is None or len(self.inventories.get_contents().get('stations')) == 0))
+            #)
 
         def reset_uploaded_file_processed():
             st.session_state['uploaded_file_processed'] = False
@@ -1069,8 +1088,8 @@ class BaseComponent:
                 if export_selected:
                 # self.sync_df_markers_with_df_edit()
                     self.update_selected_data()
-            
-                if self.step_type == Steps.STATION:                
+                
+                if self.step_type == Steps.STATION:
                     inv = self.settings.station.selected_invs if export_selected else self.inventories
                     if inv:
                         inv.write(f, format='STATIONXML')
@@ -1078,13 +1097,40 @@ class BaseComponent:
                 if self.step_type == Steps.EVENT:
                     cat = self.settings.event.selected_catalogs if export_selected else self.catalogs
                     if cat:
-                        cat.write(f, format="QUAKEML")
+                        cat.write(f, format='QUAKEML')
 
             # if f.getbuffer().nbytes == 0:
-            #     f.write(b"No Data")     
+            #     f.write(b"No Data")
 
             return f.getvalue()
+
+    def export_txt_tmpfile(self, export_selected: bool = True):
+        extension = ".txt" if self.step_type == Steps.STATION else ".kml"
         
+        # Create temporary file with the correct extension
+        with tempfile.NamedTemporaryFile(suffix=extension, delete=False) as temp_file:
+            temp_path = temp_file.name
+        
+        try:
+            if not self.df_markers.empty and len(self.df_markers) > 0:
+                if export_selected:
+                    self.update_selected_data()
+                
+                if self.step_type == Steps.STATION:
+                    inv = self.settings.station.selected_invs if export_selected else self.inventories
+                    if inv:
+                        inv.write(temp_path, format='STATIONTXT')
+                if self.step_type == Steps.EVENT:
+                    cat = self.settings.event.selected_catalogs if export_selected else self.catalogs
+                    if cat:
+                        cat.write(temp_path, format='KML')
+            
+            with open(temp_path, 'rb') as f:
+                return f.read()
+        finally:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+
 
     def import_xml(self, uploaded_file):
         st.session_state["show_error_workflow_combined"] = False
@@ -1107,17 +1153,16 @@ class BaseComponent:
     # WATCHER
     # ===================
     def watch_all_drawings(self, all_drawings):
-        if "last_fetched_drawings" not in st.session_state:
-            st.session_state["last_fetched_drawings"] = []
-
-        if st.session_state["fetch_status"] in [FetchStatus.FETCHING, FetchStatus.RERUN]:
-            return
-
-        if all_drawings != st.session_state["last_fetched_drawings"]:
-            st.session_state["last_fetched_drawings"] = all_drawings
+        if self.all_current_drawings != all_drawings:
             self.all_current_drawings = all_drawings
-            self.refresh_map(rerun=False, get_data=False)
-            st.session_state["fetch_status"] = FetchStatus.SHOULD_FETCH
+            if not self.has_fetch_new_data:
+                self.has_fetch_new_data = True
+                self.refresh_map(rerun=False, get_data=True)
+        else:
+            if self.has_fetch_new_data:
+                self.has_fetch_new_data = False
+
+
 
     # ===================
     #  ERROR HANDLES
@@ -1380,12 +1425,23 @@ class BaseComponent:
         is_disabled = 'is_selected' not in self.df_markers or self.df_markers['is_selected'].sum() == 0
 
         with c5_map:
+
+            if self.export_as_alternate:
+                export_data = self.export_txt_tmpfile(export_selected=True)
+                file_extension = ".txt" if self.step_type == Steps.STATION else ".kml"
+                file_name = f"{self.TXT.STEP}s_selected{file_extension}"
+                mime_type = "text/plain" if self.step_type == Steps.STATION else "application/vnd.google-earth.kml+xml"
+            else:
+                export_data = self.export_xml_bytes(export_selected=True)
+                file_name = f"{self.TXT.STEP}s_selected.xml"
+                mime_type = "application/xml"
+
             st.download_button(
                 f"Download Selected",
                 key=self.get_key_element(f"Download Selected {self.TXT.STEP.title()}s"),
-                data=self.export_xml_bytes(export_selected=True),
-                file_name=f"{self.TXT.STEP}s_selected.xml",
-                mime="application/xml",
+                data=export_data,
+                file_name=file_name,
+                mime=mime_type,
                 disabled=is_disabled
             )
 
@@ -1501,7 +1557,7 @@ class BaseComponent:
             has_changed = not self.df_data_edit.equals(st.session_state[state_key])
             
         if has_changed:
-            time.sleep(self.delay_selection)
+            sleep(self.delay_selection)
             st.session_state[state_key] = self.df_data_edit.copy()  # Save the unsorted version to preserve user sorting
             self.sync_df_markers_with_df_edit()
             self.refresh_map_selection()
@@ -1579,9 +1635,9 @@ class BaseComponent:
 
     def render(self):
         
-        if "fetch_status" not in st.session_state:
-            st.session_state["fetch_status"] = FetchStatus.IDLE
-
+        if 'loading' not in st.session_state:
+            st.session_state['loading'] = False
+                
         with st.sidebar:
             self.render_map_handles()
             self.render_map_right_menu()
@@ -1616,10 +1672,3 @@ class BaseComponent:
             self.render_marker_select()
             with st.expander(self.TXT.SELECT_DATA_TABLE_TITLE, expanded = not self.df_markers.empty):
                 self.render_data_table(c2_export)
-
-        if st.session_state["fetch_status"] == FetchStatus.SHOULD_FETCH:
-            self.fetch_data_with_loading(fetch_func=self.handle_get_data)
-
-        if st.session_state["fetch_status"] == FetchStatus.RERUN:
-            st.session_state["fetch_status"] = FetchStatus.IDLE
-            st.rerun()
