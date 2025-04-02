@@ -9,7 +9,7 @@ import pandas as pd
 from datetime import datetime, time
 from obspy.core.event import Catalog, read_events
 from obspy.core.inventory import Inventory, read_inventory
-import time
+from time import sleep
 import tempfile
 
 
@@ -1557,7 +1557,7 @@ class BaseComponent:
             has_changed = not self.df_data_edit.equals(st.session_state[state_key])
             
         if has_changed:
-            time.sleep(self.delay_selection)
+            sleep(self.delay_selection)
             st.session_state[state_key] = self.df_data_edit.copy()  # Save the unsorted version to preserve user sorting
             self.sync_df_markers_with_df_edit()
             self.refresh_map_selection()
