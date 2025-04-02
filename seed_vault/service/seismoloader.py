@@ -1719,7 +1719,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
         )
 
         # Collect requests for this event
-        print("Collecting, combining, and pruning requests against database...")
+        # print("Collecting, combining, and pruning requests against database...") # too cluttered / runs quickly anyway
         try:
             requests, new_arrivals, p_arrivals = collect_requests_event(
                 eq, settings.station.selected_invs,
