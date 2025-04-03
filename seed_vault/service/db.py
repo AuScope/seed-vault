@@ -9,10 +9,10 @@ querying, and database maintenance operations.
 import os
 import sqlite3
 import contextlib
-import time
 import random
 import fnmatch
 import multiprocessing
+from time import sleep
 from tqdm import tqdm
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -387,7 +387,7 @@ class DatabaseManager:
                         print(f"Failed to connect to database after {max_retries} retries.")
                         raise
                     print(f"Database is locked. Retrying in {delay} seconds...")
-                    time.sleep(delay)
+                    sleep(delay)
                     delay *= 2  # Exponential backoff
                     delay += random.uniform(0, 1)  # Add jitter
                 else:

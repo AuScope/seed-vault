@@ -6,7 +6,7 @@ from datetime import datetime, date, timezone
 from copy import deepcopy
 import threading
 import sys
-import time
+from time import sleep
 import queue
 from html import escape
 from seed_vault.models.config import SeismoLoaderSettings
@@ -682,7 +682,7 @@ class ContinuousComponents:
 
             # Always trigger a rerun while polling is active to check for new logs
             if st.session_state.get("polling_active"):
-                time.sleep(0.2)  # Shorter pause for more frequent updates
+                sleep(0.2)  # Shorter pause for more frequent updates
                 st.rerun()
         
     def render(self):

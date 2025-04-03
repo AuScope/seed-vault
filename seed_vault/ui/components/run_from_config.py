@@ -3,10 +3,10 @@ import os
 import jinja2
 import threading
 import sys
-import time
 import queue
 from pathlib import Path
 from html import escape
+from time import sleep
 
 from seed_vault.models.config import SeismoLoaderSettings
 from seed_vault.service.seismoloader import run_main
@@ -262,7 +262,7 @@ class RunFromConfigComponent:
             
             # If still running, trigger a rerun after a short delay to check again
             if st.session_state.config_is_running:
-                time.sleep(0.2)
+                sleep(0.2)
                 st.rerun()
 
     def _copy_from_main_config(self):

@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import time
+from time import sleep
 
 from copy import deepcopy
 from seed_vault.enums.common import ClientType
@@ -36,7 +36,7 @@ class SettingsComponent:
     
     
     def reset_is_new_cred_added(self):
-        # time.sleep(5)
+        # sleep(5)
         self.is_new_cred_added = None
         # st.rerun()
 
@@ -279,7 +279,3 @@ class SettingsComponent:
             self.render_clients()
         with tab4:
             self.render_license()
-
-        
-
-        

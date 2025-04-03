@@ -1,7 +1,7 @@
 from io import StringIO
 import streamlit as st
 import threading
-import time
+from time import sleep
 from contextlib import redirect_stdout, redirect_stderr
 from typing import Callable
 from queue import Queue
@@ -152,7 +152,7 @@ class ConsoleDisplay:
                     
                     while process_thread.is_alive():
                         self._update_logs(output_buffer, log_container)
-                        time.sleep(0.05)
+                        sleep(0.05)
                     
                     process_thread.join()
                     self._update_logs(output_buffer, log_container)

@@ -6,7 +6,7 @@ The main functions for SEED-vault, from original CLI-only version (Pickle 2024)
 import os
 import sys
 import copy
-import time
+from time import sleep,time
 import fnmatch
 import sqlite3
 from datetime import datetime,timedelta,timezone
@@ -925,7 +925,7 @@ def archive_request(
         if t1 - t0 < 1:
             return
 
-        time0 = time.time()
+        time0 = time()
         
         # Select appropriate client
         if request[0] in waveform_clients:
@@ -963,7 +963,7 @@ def archive_request(
             st = wc.get_waveforms(**kwargs)
 
         # Log download statistics
-        download_time = time.time() - time0
+        download_time = time() - time0
         download_size = sum(tr.data.nbytes for tr in st) / 1024**2  # MB
         print(f"      > Downloaded {download_size:.2f} MB @ {download_size/download_time:.2f} MB/s")
 
@@ -1416,6 +1416,7 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
 
         # Sort by origin time
         catalog.events.sort(key=lambda event: event.origins[0].time)
+
         return catalog
 
     # Handle geographic constraints
@@ -1499,6 +1500,7 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
 
     # Sort by origin time
     catalog.events.sort(key=lambda event: event.origins[0].time)
+
     return catalog
 
 
@@ -1607,7 +1609,7 @@ def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event =
     for request in combined_requests:
         print(" ")    
         print("Requesting: ", request)
-        time.sleep(0.05) # to help ctrl-C out if needed
+        sleep(0.05) # to help ctrl-C out if needed
         try:
             archive_request(request, waveform_clients, settings.sds_path, db_manager)
         except Exception as e:
@@ -1696,7 +1698,6 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
 
         if stop_event and stop_event.is_set():
             print("\nCancelling run_event!")
-            # stop_event.clear() # i don't think these are needed / REVIEW
             try:
                 print("\n~~ Cleaning up database ~~")
                 db_manager.join_continuous_segments(settings.processing.gap_tolerance)
@@ -1722,7 +1723,6 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
         )
 
         # Collect requests for this event
-        # print("Collecting, combining, and pruning requests against database...") # too cluttered / runs quickly anyway
         try:
             requests, new_arrivals, p_arrivals = collect_requests_event(
                 eq, settings.station.selected_invs,
@@ -1795,20 +1795,6 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
                 except Exception as e:
                     print(f"Error archiving request {request}:\n {str(e)}")
                     continue
-
-                if stop_event and stop_event.is_set():
-                    print("\nCancelling run_event!")
-                    # ? stop_event.clear()
-                    try:
-                        print("\n~~ Cleaning up database ~~")
-                        db_manager.join_continuous_segments(settings.processing.gap_tolerance)
-                    except Exception as e:
-                        print(f"! Error with join_continuous_segments: {str(e)}")
-
-                    if all_event_traces:
-                        return all_event_traces, all_missing
-                    else:
-                        return None
 
         # Now load everything in from our archive
         event_stream = Stream()

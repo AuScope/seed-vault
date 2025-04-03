@@ -17,7 +17,7 @@ from seed_vault.ui.components.continuous_waveform import ContinuousComponents
 from seed_vault.service.utils import check_client_services
 from copy import deepcopy
 from seed_vault.ui.app_pages.helpers.common import save_filter
-import time
+from time import sleep
 import sys
 import queue
 
@@ -1109,7 +1109,7 @@ class WaveformComponents:
 
             # Always trigger a rerun while polling is active to check for new logs
             if st.session_state.get("polling_active"):
-                time.sleep(0.2)  # Shorter pause for more frequent updates
+                sleep(0.2)  # Shorter pause for more frequent updates
                 st.rerun()
 
     def render(self):
