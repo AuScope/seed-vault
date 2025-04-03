@@ -27,9 +27,6 @@ from seed_vault.enums.ui import Steps
 
 from seed_vault.service.utils import convert_to_datetime, check_client_services, get_time_interval
 
-if 'loading' not in st.session_state:
-    st.session_state['loading'] = False
-
 class BaseComponentTexts:
     """Defines text constants for UI components in different configuration steps."""
     CLEAR_ALL_MAP_DATA = "Clear All"
@@ -670,7 +667,7 @@ class BaseComponent:
     def get_data_globally(self):
         self.clear_all_data()
         clear_map_draw(self.map_disp)
-        self.fetch_data_with_loading(fetch_func=self.handle_get_data)
+        self.handle_get_data()        
         st.rerun()
 
 
@@ -712,7 +709,6 @@ class BaseComponent:
                 self.map_fg_area= add_area_overlays(areas=geo_constraint)
             if get_data:
                 self.handle_get_data()                
-                # self.fetch_data_with_loading(fetch_func=self.handle_get_data)
 
         if rerun:
             st.rerun()
@@ -723,36 +719,6 @@ class BaseComponent:
     # ====================
     # GET DATA
     # ====================
-
-    def fetch_data_with_loading(self, fetch_func, *args, spinner_message="🔄 Fetching data...", success_message="✅ Data loaded successfully.", **kwargs):
-        st.session_state['loading'] = True
-        self.add_loading_overlay()
-        with st.spinner(spinner_message):
-            try:
-                fetch_func(*args, **kwargs)
-                st.success(success_message)
-            except Exception as e:
-                st.error(f"⚠️ An unexpected error occurred: {str(e)}")
-            finally:
-                st.session_state['loading'] = False
-
-    def add_loading_overlay(self):
-        st.markdown("""
-            <style>
-            .loading-overlay {
-                position: fixed;
-                top: 0; left: 0; width: 100%; height: 100%;
-                background-color: rgba(255, 255, 255, 0.5);
-                z-index: 9999;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 24px;
-                color: black;
-            }
-            </style>
-            <div class="loading-overlay">🔄 Loading... Please wait.</div>
-        """, unsafe_allow_html=True)
 
     def handle_get_data(self, is_import: bool = False, uploaded_file = None):
         http_error = {
@@ -1073,8 +1039,7 @@ class BaseComponent:
         if uploaded_file and not st.session_state['uploaded_file_processed']:
             self.clear_all_data()
             self.refresh_map(reset_areas=True, clear_draw=True)
-
-            self.fetch_data_with_loading(fetch_func=self.handle_get_data, is_import=True,uploaded_file=uploaded_file)
+            self.handle_get_data(is_import=True, uploaded_file=uploaded_file)
 
             st.session_state['uploaded_file_processed'] = True
 
@@ -1640,8 +1605,6 @@ class BaseComponent:
 
     def render(self):
         
-        if 'loading' not in st.session_state:
-            st.session_state['loading'] = False
                 
         with st.sidebar:
             self.render_map_handles()
