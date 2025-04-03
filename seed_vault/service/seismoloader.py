@@ -1416,6 +1416,8 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
         except FDSNNoDataException:
             print("No events found in global search")
 
+        # Sort by origin time
+        catalog.events.sort(key=lambda event: event.origins[0].time)
         return catalog
 
     # Handle geographic constraints
@@ -1459,7 +1461,6 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
                     new_circle_searches.append(cs)
             circle_searches = new_circle_searches
 
-
     for geo in bound_searches + circle_searches: 
         try:
             if geo.geo_type == GeoConstraintType.CIRCLE:
@@ -1500,6 +1501,8 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
     except Exception as e:
         print("filter_catalog_by_geo_constraints issue:",e)
 
+    # Sort by origin time
+    catalog.events.sort(key=lambda event: event.origins[0].time)
     return catalog
 
 
