@@ -221,6 +221,25 @@
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>seed-vault
 </pre></div>
 </div>
+<p>NB:</p>
+<ol class="arabic">
+<li><p>If you get an “error: externally-managed-environment” error, you will need to install and activate a new Python environment</p>
+<p>e.g.</p>
+</li>
+</ol>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>./venv
+.<span class="w"> </span>./venv/bin/activate
+</pre></div>
+</div>
+<ol class="arabic" start="2">
+<li><p>Assumes python &amp; ‘pip’, ‘venv’ packages are installed</p>
+<p>e.g. for Ubuntu, as root:</p>
+</li>
+</ol>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>apt<span class="w"> </span>update
+apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>python3<span class="w"> </span>python3-dev<span class="w"> </span>python3-pip<span class="w"> </span>python3-venv
+</pre></div>
+</div>
 </section>
 <section id="install-from-source-if-you-insist">
 <h3>Install from source (if you insist!)<a class="headerlink" href="#install-from-source-if-you-insist" title="Link to this heading"></a></h3>
@@ -251,11 +270,14 @@
 </pre></div>
 </div>
 <p><strong>NOTES:</strong></p>
-<ol class="arabic simple">
-<li><p>May require python3 venv software package e.g. For python v10 on Ubuntu you may need to:</p></li>
+<ol class="arabic">
+<li><p>May require python3 venv software package</p>
+<p>e.g. for Ubuntu you may need to install (as root):</p>
+</li>
 </ol>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt<span class="w"> </span>update
-sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>python3.10-venv
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>apt<span class="w"> </span>update
+apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>git<span class="w"> </span>sudo
+apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>python3<span class="w"> </span>python3-dev<span class="w"> </span>python3-pip<span class="w"> </span>python3-venv
 </pre></div>
 </div>
 </section>
