@@ -41,15 +41,33 @@ https://auscope.github.io/seed-vault
 # Install via pip (easy way)
 
 ```
-$ python3 -m pip install seed-vault
+python3 -m pip install seed-vault
 ```
+
+NB:
+
+1. If you get an *"error: externally-managed-environment"* error, you will need to install and activate a new Python environment
+   
+    e.g.
+    ```
+    python3 -m venv ./venv
+    . ./venv/bin/activate
+    ```
+
+4. Assumes python & 'pip', 'venv' packages are installed
+
+    e.g. for Ubuntu, as root:
+    ```
+    apt update
+    apt install -y python3 python3-dev python3-pip python3-venv
+    ```
 
 # Install from source (if you insist!)
 
 ### Step 1: Clone repository
 
 ```bash
-$ git clone https://github.com/AuScope/seed-vault.git
+git clone https://github.com/AuScope/seed-vault.git
 ```
 
 ### Step 2: Setup and run
@@ -57,7 +75,7 @@ $ git clone https://github.com/AuScope/seed-vault.git
 Then can build via pip:
 
 ```
-$ python3 -m pip install ./seed-vault
+python3 -m pip install ./seed-vault
 ```
 
 Or,
@@ -82,10 +100,13 @@ cd seed-vault
 **NOTES:**
 
 1. For Win OS, you would need to convert the shell scripts to PowerShell. Or simply follow the steps in the shell scripts to set up the app.
-2. Requires python3 venv software package e.g. For python v10 on Ubuntu you may need to:
+2. Requires get, sudo & python3 software packages
+
+   e.g. for Ubuntu you may need install (as root):
    ```
-   sudo apt update
-   sudo apt install python3.10-venv
+   apt update
+   apt install -y git sudo
+   apt install -y python3 python3-dev python3-pip python3-venv
    ```
 
 ## Project Folder structure
