@@ -99,8 +99,7 @@ cd seed-vault
 
 **NOTES:**
 
-1. For Win OS, you would need to convert the shell scripts to PowerShell. Or simply follow the steps in the shell scripts to set up the app.
-2. Requires get, sudo & python3 software packages
+1. Requires get, sudo & python3 software packages
 
    e.g. for Ubuntu you may need install (as root):
    ```
