@@ -2,7 +2,7 @@
 
 from typing import List
 import streamlit as st
-from streamlit.runtime import Runtime
+from streamlit.runtime.scriptrunner import get_script_run_ctx, enqueue_message
 from datetime import datetime, date, timezone
 from copy import deepcopy
 import threading
@@ -400,6 +400,10 @@ class ContinuousDisplay:
             The method updates the session state with processing status and logs.
         """
         # Custom stdout/stderr handler that writes to both the original streams and our queue
+
+        # Get the current script run context
+        ctx = get_script_run_ctx()
+
         class QueueLogger:
             def __init__(self, original_stream, queue):
                 self.original_stream = original_stream
@@ -463,7 +467,8 @@ class ContinuousDisplay:
                     "trigger_rerun": True
                 })
             
-            Runtime.instance().enqueue(update_session)
+            if ctx is not None:
+                enqueue_message(update_session, ctx)
         
     def render(self):
         """Render the continuous waveform display interface.

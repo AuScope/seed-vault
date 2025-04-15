@@ -9,7 +9,7 @@ from obspy.clients.fdsn import Client
 from obspy.taup import TauPyModel
 from seed_vault.ui.components.display_log import ConsoleDisplay
 import streamlit as st
-from streamlit.runtime import Runtime
+from streamlit.runtime.scriptrunner import get_script_run_ctx, enqueue_message
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -570,7 +570,8 @@ class WaveformDisplay:
                     
                 st.session_state.update(updates)
 
-            Runtime.instance().enqueue(update_session)
+            if ctx is not None:
+                enqueue_message(update_session, ctx)
 
     def retrieve_waveforms(self):
         """Initiate waveform retrieval in a background thread.
