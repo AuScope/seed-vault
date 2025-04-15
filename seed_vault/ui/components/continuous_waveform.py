@@ -2,6 +2,7 @@
 
 from typing import List
 import streamlit as st
+from streamlit.runtime import Runtime
 from datetime import datetime, date, timezone
 from copy import deepcopy
 import threading
@@ -455,11 +456,14 @@ class ContinuousDisplay:
             sys.stdout = original_stdout
             sys.stderr = original_stderr
 
-        st.session_state.update({
-            "query_done": True,
-            "is_downloading": False,
-            "trigger_rerun": True
-        })
+            def update_session():
+                st.session_state.update({
+                    "query_done": True,
+                    "is_downloading": False, 
+                    "trigger_rerun": True
+                })
+            
+            Runtime.instance().enqueue(update_session)
         
     def render(self):
         """Render the continuous waveform display interface.

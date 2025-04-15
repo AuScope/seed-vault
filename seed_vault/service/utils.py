@@ -183,11 +183,11 @@ def to_timestamp(time_obj: Union[int, float, datetime, date, UTCDateTime]) -> fl
         return float(time_obj)
     elif isinstance(time_obj, datetime):
         return time_obj.timestamp()
+    elif isinstance(time_obj, UTCDateTime):
+        return time_obj.timestamp
     elif isinstance(time_obj, date):
         dt = datetime.combine(time_obj, datetime.min.time())
         return dt.timestamp()
-    elif isinstance(time_obj, UTCDateTime):
-        return time_obj.timestamp
     else:
         raise ValueError(f"Unsupported time type: {type(time_obj)}")
 

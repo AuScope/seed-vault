@@ -9,6 +9,7 @@ from obspy.clients.fdsn import Client
 from obspy.taup import TauPyModel
 from seed_vault.ui.components.display_log import ConsoleDisplay
 import streamlit as st
+from streamlit.runtime import Runtime
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -556,11 +557,20 @@ class WaveformDisplay:
             sys.stdout = original_stdout
             sys.stderr = original_stderr
 
-        st.session_state.update({
-            "query_done": True,
-            "is_downloading": False,
-            "trigger_rerun": True
-        })
+            # Use Runtime.instance() to safely update session state
+            def update_session():
+                updates = {
+                    "query_done": True,
+                    "is_downloading": False,
+                    "trigger_rerun": True
+                }
+                # Only update download_cancelled if it was set in the try block
+                if 'download_cancelled' in locals() and download_cancelled:
+                    updates["download_cancelled"] = True
+                    
+                st.session_state.update(updates)
+
+            Runtime.instance().enqueue(update_session)
 
     def retrieve_waveforms(self):
         """Initiate waveform retrieval in a background thread.

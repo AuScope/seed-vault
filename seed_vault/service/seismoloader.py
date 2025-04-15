@@ -166,31 +166,45 @@ def collect_requests(inv, time0, time1, days_per_request=3,
     time1 = min(time1, UTCDateTime.now()-120)
     if time0 >= time1:
         return None
-    sub_inv = inv.select(time=time0)
-    current_start = time0
-    while current_start < time1:
-        current_end = min(current_start \
-            + timedelta(days=days_per_request, microseconds=-1), time1)
-        
-        if cha_pref or loc_pref:
-            sub_inv = get_preferred_channels(inv, cha_pref, loc_pref, current_start)
-        
-        # Collect requests for the best channels
-        for net in sub_inv:
-            for sta in net:
-                for cha in sta:
+
+    # Select inventory within the overall time window
+    sub_inv = inv.select(starttime=time0, endtime=time1)
+
+    # Filter by preferred channels if specified
+    if cha_pref or loc_pref:
+        sub_inv = get_preferred_channels(sub_inv, cha_pref, loc_pref, time0)
+
+    # Process each network, station, and channel
+    for net in sub_inv:
+        for sta in net:
+            for cha in sta:
+                # Determine effective time range for this channel
+                channel_start = max(time0, cha.start_date if cha.start_date else time0)
+                channel_end = min(time1, cha.end_date if cha.end_date else time1)
+
+                if channel_start >= channel_end:
+                    continue
+
+                # Break into smaller requests based on days_per_request
+                current_start = channel_start
+                while current_start < channel_end:
+                    window_end = min(
+                        current_start + timedelta(days=days_per_request, microseconds=-1),
+                        channel_end
+                    )
+
                     requests.append((
                         net.code,
                         sta.code,
                         cha.location_code,
                         cha.code,
                         current_start.isoformat() + "Z",
-                        current_end.isoformat() + "Z" ))
-        
-        current_start = current_end + timedelta(microseconds=1)
-    
-    return requests
+                        window_end.isoformat() + "Z"
+                    ))
 
+                    current_start = window_end + timedelta(microseconds=1)
+
+    return requests
 
 def get_p_s_times(eq, dist_deg, ttmodel):
     """
