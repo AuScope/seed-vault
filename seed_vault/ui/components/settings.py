@@ -108,7 +108,7 @@ class SettingsComponent:
             st.write("## Sync database with existing archive")
             c1, c2, c3, c4 = st.columns([1,1,1,2])
             with c1:
-                search_patterns = st.text_input("Search Patterns", value="??.*.*.???.?.????.???", help="To input multiple values, separate your entries with comma.").strip().split(",")
+                search_patterns = st.text_input("Search Patterns", value="??.*.*.?H?.D.202?.???", help="To input multiple values, separate your entries with comma.").strip().split(",")
             with c4:
                 c11, c22 = st.columns([1,1])
                 with c11:

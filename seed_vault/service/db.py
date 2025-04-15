@@ -186,6 +186,7 @@ def populate_database_from_sds(sds_path, db_path,
     # Collect all file paths
     file_paths = []
 
+    print("Scanning archive... ")
     for root, dirs, files in os.walk(sds_path,followlinks=True):
         for f in files:
             if any(fnmatch.fnmatch(f, pattern) for pattern in search_patterns):
