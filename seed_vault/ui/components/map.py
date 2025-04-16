@@ -574,36 +574,20 @@ def normalize_bounds(geometry_constraint: GeometryConstraint) -> List[GeometryCo
 
 def normalize_circle(geometry_constraint: GeometryConstraint) -> List[GeometryConstraint]:
     """
-    Normalize circle bounds so that center longitudes are between LON_RANGE_START and LON_RANGE_END.
+    Normalize circle center longitude into [0, 360) range.
     """
     circle = geometry_constraint.coords
     center_lat, center_lon, radius = circle.lat, circle.lon, circle.max_radius
-    start_lon = LON_RANGE_START
-    end_lon = LON_RANGE_END
 
-    if start_lon <= center_lon <= end_lon:
-        return [geometry_constraint]
+    norm_lon = center_lon % 360
 
-    elif center_lon < start_lon:
-        normalized_circle = GeometryConstraint(
-            coords=CircleArea(
-                lat=center_lat,
-                lon=center_lon + end_lon,
-                max_radius=radius,
-                min_radius=circle.min_radius,
-                color=circle.color,
-            )
+    normalized_circle = GeometryConstraint(
+        coords=CircleArea(
+            lat=center_lat,
+            lon=norm_lon,
+            max_radius=radius,
+            min_radius=circle.min_radius,
+            color=circle.color,
         )
-        return [normalized_circle]
-
-    elif center_lon > end_lon:
-        normalized_circle = GeometryConstraint(
-            coords=CircleArea(
-                lat=center_lat,
-                lon=center_lon - end_lon,
-                max_radius=radius,
-                min_radius=circle.min_radius,
-                color=circle.color,
-            )
-        )
-        return [normalized_circle]
+    )
+    return [normalized_circle]

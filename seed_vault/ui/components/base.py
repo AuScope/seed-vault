@@ -1005,36 +1005,49 @@ class BaseComponent:
 
         updated_constraints = []
 
+        # Normalize df_markers_prev to 0–360 longitudes for consistent comparison
+        df_markers_normalized = self.df_markers_prev.copy()
+        df_markers_normalized['longitude'] = df_markers_normalized['longitude'] % 360
+
         geo_constraints = self.get_geo_constraint()
 
+        # Update existing circle constraints
         for geo in geo_constraints:
             if geo.geo_type == GeoConstraintType.CIRCLE:
-                lat, lon = geo.coords.lat, geo.coords.lon
-                matching_event = self.df_markers_prev[(self.df_markers_prev['latitude'] == lat) & (self.df_markers_prev['longitude'] == lon)]
+                lat, lon = geo.coords.lat, geo.coords.lon % 360  # Normalize for comparison
+                matching_event = df_markers_normalized[
+                    (df_markers_normalized['latitude'] == lat) &
+                    (df_markers_normalized['longitude'] == lon)
+                ]
 
                 if not matching_event.empty:
                     geo.coords.min_radius = min_radius_value
                     geo.coords.max_radius = max_radius_value
+                    geo.coords.lon = lon  # Ensure normalized
             updated_constraints.append(geo)
 
-        for _, row in self.df_markers_prev.iterrows():
-            lat, lon = row['latitude'], row['longitude']
+        # Add missing circles for markers not already covered
+        for _, row in df_markers_normalized.iterrows():
+            lat, lon = row['latitude'], row['longitude']  # already normalized above
             if not any(
-                geo.geo_type == GeoConstraintType.CIRCLE and geo.coords.lat == lat and geo.coords.lon == lon
+                geo.geo_type == GeoConstraintType.CIRCLE and
+                geo.coords.lat == lat and geo.coords.lon == lon
                 for geo in updated_constraints
             ):
                 new_donut = CircleArea(lat=lat, lon=lon, min_radius=min_radius_value, max_radius=max_radius_value)
                 geo = GeometryConstraint(geo_type=GeoConstraintType.CIRCLE, coords=new_donut)
                 updated_constraints.append(geo)
 
+        # Remove any constraints whose markers no longer exist
         updated_constraints = [
             geo for geo in updated_constraints
             if not (geo.geo_type == GeoConstraintType.CIRCLE and
-                    self.df_markers_prev[
-                        (self.df_markers_prev['latitude'] == geo.coords.lat) &
-                        (self.df_markers_prev['longitude'] == geo.coords.lon)
+                    df_markers_normalized[
+                        (df_markers_normalized['latitude'] == geo.coords.lat) &
+                        (df_markers_normalized['longitude'] == geo.coords.lon)
                     ].empty)
         ]
+
         self.set_geo_constraint(updated_constraints)
 
     # ===================
