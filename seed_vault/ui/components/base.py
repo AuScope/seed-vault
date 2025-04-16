@@ -254,11 +254,12 @@ class BaseComponent:
             geo_constraint (List[GeometryConstraint]): A list of geographic constraints 
             (boxes or circles) to be applied to the current step.
         """
+        geo_constraint = self.get_unique_geo_constraints(geo_constraint) 
+
         if self.step_type == Steps.EVENT and self.settings.event is not None:
             self.settings.event.geo_constraint = geo_constraint
         if self.step_type == Steps.STATION and self.settings.station is not None:
             self.settings.station.geo_constraint = geo_constraint
-
 
     # ====================
     # FILTERS
@@ -556,8 +557,22 @@ class BaseComponent:
         )
 
 
+    def get_unique_geo_constraints(self, geo_constraint_list):
+        seen = set()
+        unique = []
+        for gc in geo_constraint_list:
+            try:
+                key = tuple(sorted(gc.coords.model_dump().items()))
+            except Exception as e:
+                print(f"Failed to serialize geo constraint: {e}")
+                continue
+            if key not in seen:
+                seen.add(key)
+                unique.append(gc)
+        return unique
+
     def update_circle_areas(self):
-        geo_constraint = self.get_geo_constraint()
+        geo_constraint = self.get_geo_constraint() 
         lst_circ = [area.coords.model_dump() for area in geo_constraint
                     if area.geo_type == GeoConstraintType.CIRCLE ]
 
@@ -592,7 +607,7 @@ class BaseComponent:
                 self.refresh_map(reset_areas=False, clear_draw=True)
 
     def update_rectangle_areas(self):
-        geo_constraint = self.get_geo_constraint()
+        geo_constraint = self.get_geo_constraint() 
         lst_rect = [area.coords.model_dump() for area in geo_constraint
                     if isinstance(area.coords, RectangleArea) ]
 
@@ -730,7 +745,7 @@ class BaseComponent:
         with st.spinner(spinner_message):
             try:
                 fetch_func(*args, **kwargs)
-                st.success(success_message)
+                # st.success(success_message)
             except Exception as e:
                 st.error(f"⚠️ An unexpected error occurred: {str(e)}")
             finally:
@@ -1154,18 +1169,18 @@ class BaseComponent:
     # WATCHER
     # ===================
     def watch_all_drawings(self, all_drawings):
-        if self.all_current_drawings != all_drawings:
-            self.all_current_drawings = all_drawings
-            self.refresh_map(rerun=True, get_data=True)
-
         # if self.all_current_drawings != all_drawings:
         #     self.all_current_drawings = all_drawings
-        #     if not self.has_fetch_new_data:
-        #         self.has_fetch_new_data = True
-        #         self.refresh_map(rerun=False, get_data=True)
-        # else:
-        #     if self.has_fetch_new_data:
-        #         self.has_fetch_new_data = False
+        #     self.refresh_map(rerun=True, get_data=True)
+
+        if self.all_current_drawings != all_drawings:
+            self.all_current_drawings = all_drawings
+            if not self.has_fetch_new_data:
+                self.has_fetch_new_data = True
+                self.refresh_map(rerun=False, get_data=True)
+        else:
+            if self.has_fetch_new_data:
+                self.has_fetch_new_data = False
 
 
 
