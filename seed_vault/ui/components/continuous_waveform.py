@@ -2,7 +2,6 @@
 
 from typing import List
 import streamlit as st
-from streamlit.runtime.scriptrunner import get_script_run_ctx, enqueue_message
 from datetime import datetime, date, timezone
 from copy import deepcopy
 import threading
@@ -20,6 +19,9 @@ from seed_vault.ui.app_pages.helpers.common import save_filter
 stop_event = threading.Event()
 # Create a global queue for logs
 log_queue = queue.Queue()
+# Track threading task status
+task_completed = threading.Event()
+task_result = {"success": False}
 
 class ContinuousFilterMenu:
     """A menu component for filtering and controlling continuous waveform data.
@@ -400,16 +402,12 @@ class ContinuousDisplay:
             The method updates the session state with processing status and logs.
         """
         # Custom stdout/stderr handler that writes to both the original streams and our queue
-
-        # Get the current script run context
-        ctx = get_script_run_ctx()
-
         class QueueLogger:
             def __init__(self, original_stream, queue):
                 self.original_stream = original_stream
                 self.queue = queue
                 self.buffer = ""
-            
+
             def write(self, text):
                 self.original_stream.write(text)
                 self.buffer += text
@@ -423,13 +421,13 @@ class ContinuousDisplay:
                 elif text and len(self.buffer) > 80:  # Buffer getting long, flush it
                     self.queue.put(self.buffer)
                     self.buffer = ""
-            
+
             def flush(self):
                 self.original_stream.flush()
                 if self.buffer:  # Flush any remaining content in buffer
                     self.queue.put(self.buffer)
                     self.buffer = ""
-        
+
         # Set up queue loggers
         original_stdout = sys.stdout
         original_stderr = sys.stderr
@@ -439,7 +437,7 @@ class ContinuousDisplay:
         try:
             # Print initial message to show logging is working
             print("Starting continuous waveform download process...")
-            
+
             # Run the continuous download with stop_event for cancellation
             result = run_continuous(self.settings, stop_event)
             if result:
@@ -448,27 +446,22 @@ class ContinuousDisplay:
             else:
                 success = False
                 print("Download failed or was cancelled.")
+
+            task_result["success"] = success
+
         except Exception as e:
-            success = False
             print(f"Error: {str(e)}")  # This will be captured in the output
+            task_result["success"] = False         
         finally:
             # Flush any remaining content
             sys.stdout.flush()
             sys.stderr.flush()
-            
+
             # Restore original stdout/stderr
             sys.stdout = original_stdout
             sys.stderr = original_stderr
-
-            def update_session():
-                st.session_state.update({
-                    "query_done": True,
-                    "is_downloading": False, 
-                    "trigger_rerun": True
-                })
             
-            if ctx is not None:
-                enqueue_message(update_session, ctx)
+            task_completed.set()
         
     def render(self):
         """Render the continuous waveform display interface.
@@ -582,16 +575,22 @@ class ContinuousDisplay:
             The method handles thread creation, state management, and UI updates.
         """
         stop_event.clear()  # Reset cancellation flag
-        st.session_state["query_thread"] = threading.Thread(target=self.process_continuous_data, daemon=True)
-        st.session_state["query_thread"].start()
+        task_completed.clear() # Reset completion flag
 
+        # Start thread with the wrapper function
+        st.session_state["query_thread"] = threading.Thread(
+            target=self.process_continuous_data,
+            daemon=True
+        )
+        st.session_state["query_thread"].start()
+        
         st.session_state.update({
             "is_downloading": True,
             "query_done": False,
             "polling_active": True,
-            "download_cancelled": False  # Reset cancellation flag when starting new download
+            "download_cancelled": False
         })
-
+        
         st.rerun()
 
 class ContinuousComponents:
@@ -650,6 +649,20 @@ class ContinuousComponents:
             when new logs are available or when the thread status changes.
         """
         if st.session_state.get("is_downloading", False):
+            # Check if the task has completed
+            if task_completed.is_set():
+                # Update session state from the main thread
+                st.session_state.update({
+                    "is_downloading": False,
+                    "query_done": True,
+                    "query_thread": None,
+                    "polling_active": False,
+                    "success": task_result.get("success", False)
+                })
+                task_completed.clear()  # Reset for next time
+                st.rerun()
+                return
+
             query_thread = st.session_state.get("query_thread")
             
             # Process any new log entries from the queue

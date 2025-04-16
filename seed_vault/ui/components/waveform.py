@@ -9,7 +9,6 @@ from obspy.clients.fdsn import Client
 from obspy.taup import TauPyModel
 from seed_vault.ui.components.display_log import ConsoleDisplay
 import streamlit as st
-from streamlit.runtime.scriptrunner import get_script_run_ctx, enqueue_message
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -22,11 +21,14 @@ from time import sleep
 import sys
 import queue
 
-
+# Create a global stop event for cancellation
 query_thread = None
 stop_event = threading.Event()
+# Create a global queue for logs
 log_queue = queue.Queue()
-
+# Track threading task status
+task_completed = threading.Event()
+task_result = {"success": False}
 
 if "query_done" not in st.session_state:
     st.session_state["query_done"] = False
@@ -497,23 +499,6 @@ class WaveformDisplay:
                     self.queue.put(self.buffer)
                     self.buffer = ""
 
-            """
-            def write(self, text):
-                self.original_stream.write(text)
-                self.buffer += text
-                if '\n' in text:  ### this may be bad
-                    lines = self.buffer.split('\n')
-                    for line in lines[:-1]:  # All complete lines
-                        if line:  # Skip empty lines
-                            self.queue.put(line)
-                    self.buffer = lines[-1]  # Keep any partial line
-                # Also handle case where no newline but we have content
-                elif text and len(self.buffer) > 80:  # Buffer getting long, flush it
-                    self.queue.put(self.buffer)
-                    self.buffer = ""
-            """
-            
-
             def flush(self):
                 self.original_stream.flush()
                 if self.buffer:  # Flush any remaining content in buffer
@@ -542,9 +527,12 @@ class WaveformDisplay:
                     st.session_state["download_cancelled"] = True
                 else:
                     print("Download failed.")
+            
+            task_result["success"] = success
+
         except Exception as e:
-            success = False
-            print(f"Error: {str(e)}") 
+            print(f"Error: {str(e)}")
+            task_result["success"] = False
         finally:
             # Flush any remaining content
             sys.stdout.flush()
@@ -557,21 +545,7 @@ class WaveformDisplay:
             sys.stdout = original_stdout
             sys.stderr = original_stderr
 
-            # Use Runtime.instance() to safely update session state
-            def update_session():
-                updates = {
-                    "query_done": True,
-                    "is_downloading": False,
-                    "trigger_rerun": True
-                }
-                # Only update download_cancelled if it was set in the try block
-                if 'download_cancelled' in locals() and download_cancelled:
-                    updates["download_cancelled"] = True
-                    
-                st.session_state.update(updates)
-
-            if ctx is not None:
-                enqueue_message(update_session, ctx)
+            task_completed.set()
 
     def retrieve_waveforms(self):
         """Initiate waveform retrieval in a background thread.
@@ -587,14 +561,26 @@ class WaveformDisplay:
             return
 
         stop_event.clear()  # Reset cancellation flag
+        task_completed.clear() # Reset completion flag
+
         st.session_state["query_thread"] = threading.Thread(target=self.fetch_data, daemon=True)
+        st.session_state["query_thread"].start()
+
+        def fetch_with_context():
+            # Add the context to this thread
+            if ctx is not None:
+                add_script_run_ctx(ctx)
+            # Call the actual processing function
+            self.fetch_data()        
+
+        st.session_state["query_thread"] = threading.Thread(target=fetch_with_context, daemon=True)
         st.session_state["query_thread"].start()
 
         st.session_state.update({
             "is_downloading": True,
             "query_done": False,
             "polling_active": True,
-            "download_cancelled": False  # Initialize cancellation flag
+            "download_cancelled": False
         })
 
         st.rerun()
@@ -1079,8 +1065,20 @@ class WaveformComponents:
         Handles UI updates while monitoring background thread status
         """
         if st.session_state.get("is_downloading", False):
-            query_thread = st.session_state.get("query_thread")
-            
+            if task_completed.is_set():
+                # Update session state from the main thread
+                st.session_state.update({
+                    "is_downloading": False,
+                    "query_done": True,
+                    "query_thread": None,
+                    "polling_active": False,
+                    "success": task_result.get("success", False),
+                    "download_cancelled": st.session_state.get("download_cancelled", False)
+                })
+                task_completed.clear()  # Reset for next time
+                st.rerun()
+                return
+
             # Process any new log entries from the queue
             new_logs = False
             while not log_queue.empty():
@@ -1116,6 +1114,7 @@ class WaveformComponents:
                     "query_thread": None,
                     "polling_active": False
                 })
+
                 st.rerun()
 
             # Always trigger a rerun while polling is active to check for new logs
