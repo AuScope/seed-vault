@@ -996,9 +996,12 @@ def archive_request(
             'location': request[2].upper(),
             'channel': request[3].upper(),
             'starttime': t0,
-            'endtime': t1,
-            'minimumlength': 3 # do not request anything under three seconds 
+            'endtime': t1
         }
+
+        # if possible, do not request anything under three seconds
+        if 'minimumlength' in wc.services['dataselect'].keys():
+            kwargs['minimumlength'] = 3.0
 
         # Handle long station lists
         if len(request[1]) > 24:
@@ -1021,7 +1024,10 @@ def archive_request(
         # Log download statistics
         download_time = time() - time0
         download_size = sum(tr.data.nbytes for tr in st) / 1024**2  # MB
-        print(f"      > Downloaded {download_size:.3f} MB @ {download_size/download_time:.2f} MB/s")
+        if download_size > 0.001:
+            print(f"      > Downloaded {download_size:.3f} MB @ {download_size/download_time:.2f} MB/s")
+        else:
+            print(f"      ! Data missing on the server, presumably a gap...")
 
         # Remove any widowing artifacts
         st.traces = [tr for tr in st if len(tr.data) > 1]
@@ -1038,7 +1044,7 @@ def archive_request(
 
     # Create a Stream-based dictionary to group traces by day
     traces_by_day = defaultdict(Stream)
-    
+
     for tr in st:
         net = tr.stats.network
         sta = tr.stats.station
@@ -1051,7 +1057,7 @@ def archive_request(
         day_boundary = UTCDateTime(starttime.date + timedelta(days=1))
         if (day_boundary - starttime) <= tr.stats.delta:
             starttime = day_boundary
-        
+
         current_time = UTCDateTime(starttime.date)
         while current_time < endtime:
             year = current_time.year
@@ -1641,7 +1647,7 @@ def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event =
 
     # Break if nothing to do
     if not pruned_requests:
-        print(f"          ... All data already archived!\n")
+        print(f"          ... All data already archived!")
         return True
 
     # Check for cancellation after request pruning
@@ -1816,7 +1822,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
                 print(f"Issue with run_event > prune_requests:\n",{e})
         
         if len(requests) > 0 and not pruned_requests:
-            print(f"          ... All data already archived!\n")
+            print(f"          ... All data already archived!")
 
         # Download new data if needed
         if pruned_requests:

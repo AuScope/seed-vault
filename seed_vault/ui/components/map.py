@@ -133,7 +133,7 @@ def add_area_overlays(areas):
             add_circle_area(feature_group, coords)
     
     return feature_group
-        
+
 def add_circle_area(feature_group, coords):
     """
     Add circle area (inner and outer) to the feature group.

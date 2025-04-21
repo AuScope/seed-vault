@@ -1,7 +1,7 @@
 [project]
 name = "seed-vault"
-version = "1.0.6"
-description = "Seismic FDSN data search, view and download tool."
+version = "1.0.7"
+description = "GUI and CLI utility to interface with FDSN seismic data centers to search, download, and archive event and continuous waveform data."
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
@@ -23,7 +23,7 @@ authors = [
            {name = "Neda Taherifar", email = "neda.taherifar@csiro.au"},
            {name = "Robert Pickle", email = "robert.pickle@anu.edu.au"}
 ]
-keywords = ["seismic", "FDSN", "obspy", "earthquakes", "miniseed"] 
+keywords = ["seismology", "earthquakes", "seismometers", "FDSN", "ObsPy", "miniseed"] 
 
 [tool.poetry]
 package-mode = true

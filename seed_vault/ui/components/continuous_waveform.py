@@ -509,7 +509,7 @@ class ContinuousDisplay:
             status_container.info("Starting continuous waveform download...")
             self.retrieve_waveforms()
         elif st.session_state.get("is_downloading"):
-            st.spinner("Downloading continuous waveforms... (this may take several minutes)")
+            st.spinner("Downloading continuous waveforms... (this may take a long time!)")
             
             # Display real-time logs in the waveform view during download
             log_container = st.empty()
@@ -525,7 +525,7 @@ class ContinuousDisplay:
                     new_logs = True
                 except queue.Empty:
                     break
-            
+
             # Save logs to session state if updated
             if new_logs or self.console.accumulated_output:
                 st.session_state["log_entries"] = self.console.accumulated_output
@@ -536,15 +536,15 @@ class ContinuousDisplay:
                     if not any("Running run_continuous" in line for line in self.console.accumulated_output):
                         self.console.accumulated_output.insert(0, "Running run_continuous\n-----------------------")
                         st.session_state["log_entries"] = self.console.accumulated_output
-                    
+
                     # Initialize terminal styling
                     self.console._init_terminal_style()
-                    
-                    escaped_content = escape('\n'.join(self.console.accumulated_output))
-                    
+
+                    content = self.console._preserve_whitespace('\n'.join(self.console.accumulated_output))
+
                     log_text = (
                         '<div class="terminal" id="log-terminal" style="max-height: 700px; background-color: black; color: #ffffff; padding: 10px; border-radius: 5px; overflow-y: auto;">'
-                        f'<pre style="margin: 0; white-space: pre; tab-size: 4; font-family: \'Courier New\', Courier, monospace; font-size: 14px; line-height: 1.4;">{escaped_content}</pre>'
+                        f'<pre style="margin: 0; white-space: pre; tab-size: 4; font-family: \'Courier New\', Courier, monospace; font-size: 14px; line-height: 1.4;">{content}</pre>'
                         '</div>'
                         '<script>'
                         'if (window.terminal_scroll === undefined) {'
@@ -558,12 +558,12 @@ class ContinuousDisplay:
                         'window.terminal_scroll();'
                         '</script>'
                     )
-                    
+
                     log_container.markdown(log_text, unsafe_allow_html=True)
         elif st.session_state.get("download_cancelled"):
             status_container.warning("Download was cancelled by user.")
         elif st.session_state.get("query_done"):
-            status_container.success("Continuous data processing completed successfully!")
+            status_container.success("Continuous data downloading completed successfully!")
 
     def retrieve_waveforms(self):
         """Initiate continuous waveform retrieval in a background thread.
@@ -763,11 +763,11 @@ class ContinuousComponents:
                 self.console._init_terminal_style()
                 
                 # Display logs
-                escaped_content = escape('\n'.join(self.console.accumulated_output))
+                content = self.console._preserve_whitespace('\n'.join(self.console.accumulated_output))
                 
                 log_text = (
                     '<div class="terminal" id="log-terminal">'
-                    f'<pre style="margin: 0; white-space: pre; tab-size: 4; font-family: \'Courier New\', Courier, monospace; font-size: 14px; line-height: 1.4;">{escaped_content}</pre>'
+                    f'<pre style="margin: 0; white-space: pre; tab-size: 4; font-family: \'Courier New\', Courier, monospace; font-size: 14px; line-height: 1.4;">{content}</pre>'
                     '</div>'
                     '<script>'
                     'if (window.terminal_scroll === undefined) {'

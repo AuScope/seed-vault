@@ -566,16 +566,6 @@ class WaveformDisplay:
         st.session_state["query_thread"] = threading.Thread(target=self.fetch_data, daemon=True)
         st.session_state["query_thread"].start()
 
-        def fetch_with_context():
-            # Add the context to this thread
-            if ctx is not None:
-                add_script_run_ctx(ctx)
-            # Call the actual processing function
-            self.fetch_data()        
-
-        st.session_state["query_thread"] = threading.Thread(target=fetch_with_context, daemon=True)
-        st.session_state["query_thread"].start()
-
         st.session_state.update({
             "is_downloading": True,
             "query_done": False,
@@ -1251,13 +1241,13 @@ class WaveformComponents:
                         self.console.accumulated_output.insert(0, "Running run_event\n-----------------")
                         st.session_state["log_entries"] = self.console.accumulated_output
                     
-                    raw_content = "".join(self.console.accumulated_output)
-                    escaped_content = escape(raw_content)
-
+                    #raw_content = "".join(self.console.accumulated_output)
+                    #escaped_content = escape(raw_content)
+                    content = self.console._preserve_whitespace(''.join(self.console.accumulated_output))
 
                     log_text = (
-                        '<div class="terminal" id="log-terminal" style="max-height: 700px;">'
-                        f'<pre style="margin: 0; white-space: pre; tab-size: 4;">{escaped_content}</pre>'
+                        '<div class="terminal" id="log-terminal" style="max-height: 700px; background-color: black; color: #ffffff; padding: 10px; border-radius: 5px; overflow-y: auto;">'
+                        f'<pre style="margin: 0; white-space: pre; tab-size: 4; font-family: \'Courier New\', Courier, monospace; font-size: 14px; line-height: 1.4;">{content}</pre>'
                         '</div>'
                         '<script>'
                         'if (window.terminal_scroll === undefined) {'
@@ -1335,13 +1325,12 @@ class WaveformComponents:
             if not any("Running run_event" in line for line in self.console.accumulated_output):
                 self.console.accumulated_output.insert(0, "Running run_event\n-----------------")
                 st.session_state["log_entries"] = self.console.accumulated_output
-            
-            raw_content = "".join(self.console.accumulated_output)
-            escaped_content = escape(raw_content)
+
+            content = self.console._preserve_whitespace(''.join(self.console.accumulated_output))
 
             log_text = (
-                '<div class="terminal" id="log-terminal">'
-                f'<pre style="margin: 0; white-space: pre; tab-size: 4;">{escaped_content}</pre>'
+                '<div class="terminal" id="log-terminal" style="max-height: 700px; background-color: black; color: #ffffff; padding: 10px; border-radius: 5px; overflow-y: auto;">'
+                f'<pre style="margin: 0; white-space: pre; tab-size: 4; font-family: \'Courier New\', Courier, monospace; font-size: 14px; line-height: 1.4;">{content}</pre>'
                 '</div>'
                 '<script>'
                 'if (window.terminal_scroll === undefined) {'

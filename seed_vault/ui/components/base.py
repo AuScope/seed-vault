@@ -151,6 +151,7 @@ class BaseComponent:
 
     has_error: bool = False
     has_fetch_new_data: bool = False
+    auto_refresh_enabled: bool = True
     error: str = ""
 
     @property
@@ -457,8 +458,6 @@ class BaseComponent:
                     key="event-pg-include-restricted-station"
                 )
 
-                
-
                 self.settings.station.level = Levels.CHANNEL
 
                 self.render_map_buttons()
@@ -621,37 +620,47 @@ class BaseComponent:
                 self.update_filter_geometry(self.df_rect, GeoConstraintType.BOUNDING, geo_constraint)
                 self.refresh_map(reset_areas=False, clear_draw=True)
 
-
     def update_selected_data(self):
         if self.df_data_edit is None or self.df_data_edit.empty:
             if 'is_selected' not in self.df_markers.columns:
                 self.df_markers['is_selected'] = False
             return
-                                  
-        if self.step_type == Steps.EVENT:
-            self.settings.event.selected_catalogs = Catalog(events=None)
-            for i, event in enumerate(self.catalogs):
-                if self.df_markers.loc[i, 'is_selected']:
-                    if 'place' in self.df_markers.columns:
-                        event.extra = {
-                            'region': {
-                                'value': self.df_markers.loc[i, 'place'],
-                                'namespace': 'SEEDVAULT'
-                            }
-                        }
-                    self.settings.event.selected_catalogs.append(event)
 
+        if self.step_type == Steps.EVENT:
+
+            selected_indices = self.df_markers[self.df_markers['is_selected']].index.tolist()
+
+            self.settings.event.selected_catalogs = Catalog(events=None)
+
+            selected_events = []
+            for i in selected_indices:
+                event = self.catalogs[i]
+                if 'place' in self.df_markers.columns:
+                    event.extra = {
+                        'region': {
+                            'value': self.df_markers.loc[i, 'place'],
+                            'namespace': 'SEEDVAULT'
+                        }
+                    }
+                selected_events.append(event)
+
+            self.settings.event.selected_catalogs.extend(selected_events)
             return
+
         if self.step_type == Steps.STATION:
             self.settings.station.selected_invs = None
-            is_init = False
+            
             if not self.df_markers.empty and 'is_selected' in list(self.df_markers.columns):
-                for idx, row in self.df_markers[self.df_markers['is_selected']].iterrows():
-                    if not is_init:
-                        self.settings.station.selected_invs = self.inventories.select(station=row["station"])
-                        is_init = True
-                    else:
-                        self.settings.station.selected_invs += self.inventories.select(station=row["station"]) # may need to review for efficiency
+                # Get all selected stations at once
+                selected_stations = self.df_markers[self.df_markers['is_selected']]['station'].tolist()
+                
+                if selected_stations:
+                    self.settings.station.selected_invs = None
+                    for i, station in enumerate(selected_stations):
+                        if i == 0:
+                            self.settings.station.selected_invs = self.inventories.select(station=station)
+                        else:
+                            self.settings.station.selected_invs += self.inventories.select(station=station)
             return
 
 
@@ -684,7 +693,7 @@ class BaseComponent:
                     self.map_view_center.get("lng", 0.0),
                 ]
             )
-        
+
         if clear_draw:
             clear_map_draw(self.map_disp)
             self.all_feature_drawings = geo_constraint
@@ -712,7 +721,7 @@ class BaseComponent:
 
         if rerun:
             st.rerun()
-    
+
     def reset_markers(self):
         self.map_fg_marker = None
         self.df_markers    = pd.DataFrame()
@@ -784,9 +793,8 @@ class BaseComponent:
             if http_status_code:
                 self.error += f"**Technical details:**\n\nError {http_status_code}: {error_message}"
 
-
             print(self.error)  # Logging for debugging
-        
+
     def clear_all_data(self):
         self.map_fg_marker= None
         self.map_fg_area= None
@@ -834,12 +842,11 @@ class BaseComponent:
             return
 
         self.df_markers['is_selected'] = self.df_data_edit['is_selected']
-    
+
     def refresh_map_selection(self, rerun=True, recreate=False):
         selected_idx = self.get_selected_idx()
         self.update_selected_data()
         self.refresh_map(reset_areas=False, selected_idx=selected_idx, rerun=rerun, recreate_map=recreate)
-
 
     # ===================
     # PREV SELECTION
@@ -872,7 +879,7 @@ class BaseComponent:
                 selected_idx = self.df_markers_prev.index.tolist()
                 self.map_fg_prev_selected_marker, _, _ = add_data_points( self.df_markers_prev, cols_to_disp, step=self.prev_step_type,selected_idx=selected_idx, col_color=col_color, col_size=col_size)
 
-        
+
     def display_prev_step_selection_table(self):
         if self.stage > 1:
             if self.df_markers_prev.empty:
@@ -883,7 +890,7 @@ class BaseComponent:
                 # st.write(f"Total Number of Selected {self.TXT.PREV_STEP.title()}s: {len(self.df_markers_prev)}")
                 # st.dataframe(self.df_markers_prev, use_container_width=True)
 
-    
+
     def area_around_prev_step_selections(self):
 
         st.markdown(
@@ -930,7 +937,6 @@ class BaseComponent:
             self.df_markers_prev.shape[0] != self.prev_marker.shape[0] or 
             not self.df_markers_prev.equals(self.prev_marker) 
         )
-
 
         # with c3:
         if st.button("Draw Area", key=self.get_key_element("Draw Area")):
@@ -1020,7 +1026,7 @@ class BaseComponent:
                 disabled=(len(self.catalogs.events) == 0 and (self.inventories is None or len(self.inventories.get_contents().get('stations')) == 0))
             )
 
-            
+
             ## @NOTE: Download Selected had to be with the table.
             ## if (len(self.catalogs.events) > 0 or len(self.inventories.get_contents().get('stations')) > 0):
             #st.download_button(
@@ -1047,7 +1053,7 @@ class BaseComponent:
             st.error(self.error)
 
         return c22
-    
+
     def export_xml_bytes(self, export_selected: bool = True):
         with io.BytesIO() as f:
             if not self.df_markers.empty and len(self.df_markers) > 0:
@@ -1072,16 +1078,16 @@ class BaseComponent:
 
     def export_txt_tmpfile(self, export_selected: bool = True):
         extension = ".txt" if self.step_type == Steps.STATION else ".kml"
-        
+
         # Create temporary file with the correct extension
         with tempfile.NamedTemporaryFile(suffix=extension, delete=False) as temp_file:
             temp_path = temp_file.name
-        
+
         try:
             if not self.df_markers.empty and len(self.df_markers) > 0:
                 if export_selected:
                     self.update_selected_data()
-                
+
                 if self.step_type == Steps.STATION:
                     inv = self.settings.station.selected_invs if export_selected else self.inventories
                     if inv:
@@ -1090,7 +1096,7 @@ class BaseComponent:
                     cat = self.settings.event.selected_catalogs if export_selected else self.catalogs
                     if cat:
                         cat.write(temp_path, format='KML')
-            
+
             with open(temp_path, 'rb') as f:
                 return f.read()
         finally:
@@ -1121,8 +1127,8 @@ class BaseComponent:
     def watch_all_drawings(self, all_drawings):
         if self.all_current_drawings != all_drawings:
             self.all_current_drawings = all_drawings
-            self.refresh_map(rerun=True, get_data=True)
-
+            if self.auto_refresh_enabled:
+                self.refresh_map(rerun=True, get_data=True)
         # if self.all_current_drawings != all_drawings:
         #     self.all_current_drawings = all_drawings
         #     if not self.has_fetch_new_data:
@@ -1131,7 +1137,6 @@ class BaseComponent:
         # else:
         #     if self.has_fetch_new_data:
         #         self.has_fetch_new_data = False
-
 
 
     # ===================
@@ -1146,7 +1151,9 @@ class BaseComponent:
     # RENDER
     # ===================
     def render_map_buttons(self):
+
         cc1, cc2, cc3 = st.columns([1,1,1])
+
         with cc1:
             if st.button(
                 f"Load {self.TXT.STEP.title()}s", 
@@ -1154,30 +1161,25 @@ class BaseComponent:
             ):
                 self.refresh_map(reset_areas=False, clear_draw=False, rerun=False)
 
-
         with cc2:
             if st.button(self.TXT.CLEAR_ALL_MAP_DATA, key=self.get_key_element(self.TXT.CLEAR_ALL_MAP_DATA)):
                 self.clear_all_data()
                 self.refresh_map(reset_areas=True, clear_draw=True, rerun=True, get_data=False)
 
-        
         with cc3:
             if st.button(
                 "Reload Map", 
-                # help="Use Reload button if the map is collapsed or some layers are missing.",
                 key=self.get_key_element(f"ReLoad {self.TXT.STEP}s")
             ):
                 self.refresh_map(get_data=False, clear_draw=True, rerun=True, recreate_map=True)
 
-        
 
-    
     def render_map_handles(self):
         # not sure if plotting these area tables is useful
         with st.expander("Shape tools - edit areas", expanded=True):
             self.update_rectangle_areas()
             self.update_circle_areas()
-        
+
 
     def render_import_export(self):
         def reset_import_setting_processed():
@@ -1188,13 +1190,13 @@ class BaseComponent:
                     st.session_state['uploaded_file_info'] = uploaded_file_info  
 
         # st.sidebar.markdown("### Import/Export Settings")
-        
+
         with st.expander("Import & Export", expanded=True):
             tab1, tab2 = st.tabs([f"{self.TXT.STEP.title()}s", "Settings"])
             with tab2:
                 config_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../service/config.cfg')
                 config_file_path = os.path.abspath(config_file_path)
-                
+
                 st.markdown("#### ⬇️ Export Settings")
 
                 if os.path.exists(config_file_path):
@@ -1248,7 +1250,7 @@ class BaseComponent:
                                 self.df_markers_prev= pd.DataFrame()
                                 self.refresh_map(reset_areas=True, clear_draw=True)
                                 st.session_state['import_setting_processed'] = True   
-                                
+
                                 if(settings.status_handler.has_warnings()):
                                     warning = settings.status_handler.generate_status_report("warnings")
                                     st.warning(warning) 
@@ -1258,8 +1260,8 @@ class BaseComponent:
                 c2_export = self.exp_imp_events_stations()
 
             return c2_export
-    
-        
+
+
 
     def render_map_right_menu(self):
         if self.prev_step_type and len(self.df_markers_prev) < 6:
@@ -1326,7 +1328,7 @@ class BaseComponent:
                     if self.selected_marker_map_idx is None or idx != self.selected_marker_map_idx:
                         self.selected_marker_map_idx = idx
                         self.clicked_marker_info = self.marker_info[self.selected_marker_map_idx]
-                
+
             else:
                 self.clicked_marker_info = None
 
@@ -1347,11 +1349,11 @@ class BaseComponent:
                         self.sync_df_markers_with_df_edit()
                         self.df_markers.loc[self.clicked_marker_info['id'] - 1, 'is_selected'] = True
                         self.clicked_marker_info = None
-                        self.refresh_map_selection()
+                        if self.auto_refresh_enabled:
+                            self.refresh_map_selection()
                     # else:
                     #     self.df_markers.loc[self.clicked_marker_info['id'] - 1, 'is_selected'] = False
-                    #     self.refresh_map_selection()     
-                        
+                    #     self.refresh_map_selection()
 
             except KeyError:
                 print("Selected map marker not found")
@@ -1364,7 +1366,7 @@ class BaseComponent:
     def render_data_table(self, c5_map):
         if self.df_markers.empty:
             st.warning("No data available for the selected settings.")
-            return            
+            return
 
         # Ensure `is_selected` column exists
         if 'is_selected' not in self.df_markers.columns:
@@ -1385,7 +1387,7 @@ class BaseComponent:
         state_key = f'initial_df_markers_{self.stage}'
 
         # Store the initial state in the session if not already stored
-        if  state_key not in st.session_state:
+        if state_key not in st.session_state:
             st.session_state[state_key] = self.df_markers.copy()
 
         self.data_table_view(ordered_col, config, state_key)
@@ -1415,13 +1417,39 @@ class BaseComponent:
                 disabled=is_disabled
             )
 
-
     def on_change_df_table(self):
-        self.delay_selection = 1
-    
+        if self.auto_refresh_enabled:
+            self.delay_selection = 0.2
+        else:
+            self.update_selected_data()
+            self.delay_selection = 0
+
+    def render_auto_refresh_toggle(self):
+        """Renders the auto-refresh toggle between the map and data table."""
+
+        # Initialize the toggle state if not already in session state
+        if 'auto_refresh_toggle' not in st.session_state:
+            st.session_state['auto_refresh_toggle'] = self.auto_refresh_enabled
+
+        # Create columns for the toggle and refresh button
+        col1, col2 = st.columns([3, 1])
+
+        with col1:
+            # Add the toggle switch
+            st.toggle(
+                "Auto-Refresh Enabled",
+                key='auto_refresh_toggle',
+                help="Toggle automatic refresh when making selections or drawing areas (helpful when table is large)",
+                on_change=lambda: self.update_auto_refresh_state()
+            )
+
+        self.update_auto_refresh_state()            
+
+    def update_auto_refresh_state(self):
+        self.auto_refresh_enabled = st.session_state['auto_refresh_toggle']
     
     def data_table_view(self, ordered_col, config, state_key):
-        """Displays the full data table, allowing selection."""  
+        """Displays the full data table, allowing selection."""
 
         def _get_column_width(column):
             max_length = max(self.df_markers[column].astype(str).apply(len))  # Get max string length            
@@ -1455,7 +1483,7 @@ class BaseComponent:
                     "latitude": st.column_config.NumberColumn("lat", format="%.3f", width=8, disabled=True),
                     "depth (km)": st.column_config.NumberColumn("dep (km)", format="%.1f", width=6, disabled=True),
                 }
-            
+
             if self.step_type == Steps.STATION:
                 column_map = {
                         "is_selected": st.column_config.Column("", width=4, disabled=False),
@@ -1478,29 +1506,42 @@ class BaseComponent:
                     config[col] = st.column_config.Column(col)
 
             return config
-                
+
 
         c1, c2, c3 = st.columns([1,1,1])
         with c1:
             st.write(f"Total Number of {self.TXT.STEP.title()}s: {len(self.df_markers)}")
-                
+
         with c2:
             if st.button("Select All", key=self.get_key_element("Select All")):
                 self.df_markers['is_selected'] = True
+                self.update_selected_data()
+                self.refresh_map_selection(rerun=True)
 
         with c3:
             if st.button("Unselect All", key=self.get_key_element("Unselect All")):
                 self.df_markers['is_selected'] = False
                 self.clicked_marker_info = None
+                self.update_selected_data()
+                self.refresh_map_selection(rerun=True)
 
-        self.selected_items_view(state_key) 
-        
+        # Add a manual refresh button if auto-refresh is disabled
+        # BUG: if Un/Select All only operates with auto_refresh, 
+        #      first click doesn't register / have to click twice for Select All and Unselect All
+        #      for now we just have Un/Select All just work regardless of auto_refresh_state
+        #      ...which sort of makes sense anyway
+        if not self.auto_refresh_enabled:
+            if st.button("Apply Selections", key=self.get_key_element("Apply Selections")):
+                self.sync_df_markers_with_df_edit()
+                self.refresh_map_selection(rerun=True)
+
+        #OFF for now / self.selected_items_view(state_key) #this adds the red icons above the table.. possibly not worth the lag
 
         height = (len(self.df_markers) + 1) * 35 + 2
 
         height = min(100*35, height)
 
-        # These create "bubble icons" for the codes.. but take up extra space
+        # These create "bubble icons" for the individual channel codes in the table.. but take up extra space
         #df_markers_view = None
         #if self.step_type == Steps.STATION:
         #    df_markers_view = deepcopy(self.df_markers)
@@ -1519,7 +1560,6 @@ class BaseComponent:
             height=height,
             on_change=self.on_change_df_table
         )
-        
 
         if len(self.df_data_edit) != len(st.session_state[state_key]):
             has_changed = True
@@ -1527,12 +1567,18 @@ class BaseComponent:
             has_changed = not self.df_data_edit.equals(st.session_state[state_key])
             
         if has_changed:
-            sleep(self.delay_selection)
+            if self.delay_selection > 0:
+                sleep(self.delay_selection)
             st.session_state[state_key] = self.df_data_edit.copy()  # Save the unsorted version to preserve user sorting
-            self.sync_df_markers_with_df_edit()
-            self.refresh_map_selection()
-            self.delay_selection = 0
 
+            if self.auto_refresh_enabled:
+                self.sync_df_markers_with_df_edit()
+                self.refresh_map_selection()
+                self.delay_selection = 0.2
+            #else: (seems to work better with this commented...?)
+            #    self.sync_df_markers_with_df_edit()
+
+    # This function pertains to the red icons above the table.. currently disabled
     def selected_items_view(self, state_key):
         """Displays selected items using an actual `st.multiselect`, controlled by table selection."""
 
@@ -1604,8 +1650,6 @@ class BaseComponent:
         #     self.refresh_map_selection(recreate=False)
 
     def render(self):
-        
-                
         with st.sidebar:
             self.render_map_handles()
             self.render_map_right_menu()
@@ -1625,7 +1669,6 @@ class BaseComponent:
         if self.step_type == Steps.EVENT:
             self.event_filter()
         
-
         if self.step_type == Steps.STATION:
             self.station_filter()
 
@@ -1635,6 +1678,9 @@ class BaseComponent:
         self.get_prev_step_df()
 
         self.render_map()
+        
+        # Add the auto-refresh toggle between map and table
+        self.render_auto_refresh_toggle()
 
         if not self.df_markers.empty:
             self.render_marker_select()
