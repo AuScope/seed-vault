@@ -25,21 +25,18 @@ class SettingsComponent:
         self.settings  = settings
         self.old_settings   = deepcopy(settings)
 
-    
     def add_credential(self):
         for item in self.settings.auths:
             if item.nslc_code == "new":
                 return False
-        self.settings.auths.append(AuthConfig(nslc_code="new", username="new", password="new"))
+        self.settings.auths.append(AuthConfig(nslc_code="XX", username="user", password="password"))
         save_filter(self.settings)
         return True
-    
-    
+
     def reset_is_new_cred_added(self):
         # sleep(5)
         self.is_new_cred_added = None
         # st.rerun()
-
 
     def refresh_filters(self):
         changes = self.settings.has_changed(self.old_settings)
@@ -47,7 +44,6 @@ class SettingsComponent:
             self.old_settings      = deepcopy(self.settings)
             save_filter(self.settings)
             st.rerun()
-
     
     def render_auth(self):
         st.write("## Auth Records")
@@ -59,7 +55,7 @@ class SettingsComponent:
             # st.write(f"### Credential Set {index + 1}")
 
             with c1:
-                nslc_code = st.text_input(f"N.S.L.C. code", help="NSLC Code for (Network.Station.Location.Channel)", value=auth.nslc_code, key=f"nslc_{index}")
+                nslc_code = st.text_input(f"Network Code", help="Probably the userauth is per-network so just enter the 2 digit network code. Can also put NN.STA if auth is per-station.", value=auth.nslc_code, key=f"nslc_{index}")
             with c2:
                 username = st.text_input(f"Username", value=auth.username, key=f"username_{index}")
             with c3:
@@ -96,7 +92,7 @@ class SettingsComponent:
 
             # self.reset_is_new_cred_added()
 
-        
+
     def render_db(self):
         try:
             c1, c2 = st.columns([1,1])
@@ -132,7 +128,7 @@ class SettingsComponent:
                     value=self.settings.processing.gap_tolerance, 
                     min_value=0
                 ))
-                
+
 
             if st.button("Sync Database", help="Synchronizes your SDS archive given the above parameters."):
                 self.reset_is_new_cred_added()
@@ -149,7 +145,6 @@ class SettingsComponent:
             self.refresh_filters()
         except Exception as e:
             st.error(str(e))
-
 
     def render_clients(self):
         c1, c2 = st.columns([1,1])
@@ -171,7 +166,6 @@ class SettingsComponent:
         save_filter(self.settings)
         st.success("Settings have been reset to default.")
 
-    
     def render_license(self):
         st.text(
         """
