@@ -726,8 +726,8 @@ class BaseComponent:
                 self.all_feature_drawings = geo_constraint
                 self.map_fg_area= add_area_overlays(areas=geo_constraint)
             if get_data:
-                self.handle_get_data()                
-                # self.fetch_data_with_loading(fetch_func=self.handle_get_data)
+                # self.handle_get_data()        
+                self.fetch_data_with_loading(fetch_func=self.handle_get_data)
 
         if rerun:
             st.rerun()
@@ -1410,10 +1410,7 @@ class BaseComponent:
                         self.sync_df_markers_with_df_edit()
                         self.df_markers.loc[self.clicked_marker_info['id'] - 1, 'is_selected'] = True
                         self.clicked_marker_info = None
-                        self.refresh_map_selection()
-                    # else:
-                    #     self.df_markers.loc[self.clicked_marker_info['id'] - 1, 'is_selected'] = False
-                    #     self.refresh_map_selection()     
+                        self.refresh_map_selection()    
                         
 
             except KeyError:
@@ -1649,22 +1646,6 @@ class BaseComponent:
             st.session_state[state_key] = self.df_markers.copy()
             self.refresh_map_selection(recreate=False)
 
-        # if removed_items:
-        #     for item in removed_items:
-        #         place_name, magnitude = item.rsplit(" (", 1)
-        #         magnitude = magnitude.rstrip(")")  # Remove closing bracket
-
-        #         item_index = self.df_markers[
-        #             (self.df_markers[preferred_column] == place_name) & 
-        #             (self.df_markers[unique_column].astype(str) == magnitude)
-        #         ].index.tolist()
-
-        #         if item_index:
-        #             self.df_markers.at[item_index[0], 'is_selected'] = False  
-        #             # self.sync_df_markers_with_df_edit()
-
-        #     st.session_state[state_key] = self.df_markers.copy()
-        #     self.refresh_map_selection(recreate=False)
 
     def render(self):
         
