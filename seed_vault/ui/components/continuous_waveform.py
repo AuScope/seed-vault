@@ -6,7 +6,7 @@ from datetime import datetime, date, timezone
 from copy import deepcopy
 import threading
 import sys
-import time
+from time import sleep
 import queue
 from html import escape
 from seed_vault.models.config import SeismoLoaderSettings
@@ -19,6 +19,9 @@ from seed_vault.ui.app_pages.helpers.common import save_filter
 stop_event = threading.Event()
 # Create a global queue for logs
 log_queue = queue.Queue()
+# Track threading task status
+task_completed = threading.Event()
+task_result = {"success": False}
 
 class ContinuousFilterMenu:
     """A menu component for filtering and controlling continuous waveform data.
@@ -404,7 +407,7 @@ class ContinuousDisplay:
                 self.original_stream = original_stream
                 self.queue = queue
                 self.buffer = ""
-            
+
             def write(self, text):
                 self.original_stream.write(text)
                 self.buffer += text
@@ -418,13 +421,13 @@ class ContinuousDisplay:
                 elif text and len(self.buffer) > 80:  # Buffer getting long, flush it
                     self.queue.put(self.buffer)
                     self.buffer = ""
-            
+
             def flush(self):
                 self.original_stream.flush()
                 if self.buffer:  # Flush any remaining content in buffer
                     self.queue.put(self.buffer)
                     self.buffer = ""
-        
+
         # Set up queue loggers
         original_stdout = sys.stdout
         original_stderr = sys.stderr
@@ -434,7 +437,7 @@ class ContinuousDisplay:
         try:
             # Print initial message to show logging is working
             print("Starting continuous waveform download process...")
-            
+
             # Run the continuous download with stop_event for cancellation
             result = run_continuous(self.settings, stop_event)
             if result:
@@ -443,23 +446,22 @@ class ContinuousDisplay:
             else:
                 success = False
                 print("Download failed or was cancelled.")
+
+            task_result["success"] = success
+
         except Exception as e:
-            success = False
             print(f"Error: {str(e)}")  # This will be captured in the output
+            task_result["success"] = False         
         finally:
             # Flush any remaining content
             sys.stdout.flush()
             sys.stderr.flush()
-            
+
             # Restore original stdout/stderr
             sys.stdout = original_stdout
             sys.stderr = original_stderr
-
-        st.session_state.update({
-            "query_done": True,
-            "is_downloading": False,
-            "trigger_rerun": True
-        })
+            
+            task_completed.set()
         
     def render(self):
         """Render the continuous waveform display interface.
@@ -507,7 +509,7 @@ class ContinuousDisplay:
             status_container.info("Starting continuous waveform download...")
             self.retrieve_waveforms()
         elif st.session_state.get("is_downloading"):
-            st.spinner("Downloading continuous waveforms... (this may take several minutes)")
+            st.spinner("Downloading continuous waveforms... (this may take a long time!)")
             
             # Display real-time logs in the waveform view during download
             log_container = st.empty()
@@ -523,7 +525,7 @@ class ContinuousDisplay:
                     new_logs = True
                 except queue.Empty:
                     break
-            
+
             # Save logs to session state if updated
             if new_logs or self.console.accumulated_output:
                 st.session_state["log_entries"] = self.console.accumulated_output
@@ -534,15 +536,15 @@ class ContinuousDisplay:
                     if not any("Running run_continuous" in line for line in self.console.accumulated_output):
                         self.console.accumulated_output.insert(0, "Running run_continuous\n-----------------------")
                         st.session_state["log_entries"] = self.console.accumulated_output
-                    
+
                     # Initialize terminal styling
                     self.console._init_terminal_style()
-                    
-                    escaped_content = escape('\n'.join(self.console.accumulated_output))
-                    
+
+                    content = self.console._preserve_whitespace('\n'.join(self.console.accumulated_output))
+
                     log_text = (
                         '<div class="terminal" id="log-terminal" style="max-height: 700px; background-color: black; color: #ffffff; padding: 10px; border-radius: 5px; overflow-y: auto;">'
-                        f'<pre style="margin: 0; white-space: pre; tab-size: 4; font-family: \'Courier New\', Courier, monospace; font-size: 14px; line-height: 1.4;">{escaped_content}</pre>'
+                        f'<pre style="margin: 0; white-space: pre; tab-size: 4; font-family: \'Courier New\', Courier, monospace; font-size: 14px; line-height: 1.4;">{content}</pre>'
                         '</div>'
                         '<script>'
                         'if (window.terminal_scroll === undefined) {'
@@ -556,12 +558,12 @@ class ContinuousDisplay:
                         'window.terminal_scroll();'
                         '</script>'
                     )
-                    
+
                     log_container.markdown(log_text, unsafe_allow_html=True)
         elif st.session_state.get("download_cancelled"):
             status_container.warning("Download was cancelled by user.")
         elif st.session_state.get("query_done"):
-            status_container.success("Continuous data processing completed successfully!")
+            status_container.success("Continuous data downloading completed successfully!")
 
     def retrieve_waveforms(self):
         """Initiate continuous waveform retrieval in a background thread.
@@ -573,16 +575,22 @@ class ContinuousDisplay:
             The method handles thread creation, state management, and UI updates.
         """
         stop_event.clear()  # Reset cancellation flag
-        st.session_state["query_thread"] = threading.Thread(target=self.process_continuous_data, daemon=True)
-        st.session_state["query_thread"].start()
+        task_completed.clear() # Reset completion flag
 
+        # Start thread with the wrapper function
+        st.session_state["query_thread"] = threading.Thread(
+            target=self.process_continuous_data,
+            daemon=True
+        )
+        st.session_state["query_thread"].start()
+        
         st.session_state.update({
             "is_downloading": True,
             "query_done": False,
             "polling_active": True,
-            "download_cancelled": False  # Reset cancellation flag when starting new download
+            "download_cancelled": False
         })
-
+        
         st.rerun()
 
 class ContinuousComponents:
@@ -641,6 +649,20 @@ class ContinuousComponents:
             when new logs are available or when the thread status changes.
         """
         if st.session_state.get("is_downloading", False):
+            # Check if the task has completed
+            if task_completed.is_set():
+                # Update session state from the main thread
+                st.session_state.update({
+                    "is_downloading": False,
+                    "query_done": True,
+                    "query_thread": None,
+                    "polling_active": False,
+                    "success": task_result.get("success", False)
+                })
+                task_completed.clear()  # Reset for next time
+                st.rerun()
+                return
+
             query_thread = st.session_state.get("query_thread")
             
             # Process any new log entries from the queue
@@ -682,7 +704,7 @@ class ContinuousComponents:
 
             # Always trigger a rerun while polling is active to check for new logs
             if st.session_state.get("polling_active"):
-                time.sleep(0.2)  # Shorter pause for more frequent updates
+                sleep(0.2)  # Shorter pause for more frequent updates
                 st.rerun()
         
     def render(self):
@@ -741,11 +763,11 @@ class ContinuousComponents:
                 self.console._init_terminal_style()
                 
                 # Display logs
-                escaped_content = escape('\n'.join(self.console.accumulated_output))
+                content = self.console._preserve_whitespace('\n'.join(self.console.accumulated_output))
                 
                 log_text = (
                     '<div class="terminal" id="log-terminal">'
-                    f'<pre style="margin: 0; white-space: pre; tab-size: 4; font-family: \'Courier New\', Courier, monospace; font-size: 14px; line-height: 1.4;">{escaped_content}</pre>'
+                    f'<pre style="margin: 0; white-space: pre; tab-size: 4; font-family: \'Courier New\', Courier, monospace; font-size: 14px; line-height: 1.4;">{content}</pre>'
                     '</div>'
                     '<script>'
                     'if (window.terminal_scroll === undefined) {'

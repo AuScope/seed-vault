@@ -158,7 +158,7 @@ def convert_to_datetime(value):
     return date.today(), time(0, 0, 0)
 
 
-def to_timestamp(time_obj: Union[int, float, datetime, UTCDateTime]) -> float:
+def to_timestamp(time_obj: Union[int, float, datetime, date, UTCDateTime]) -> float:
     """
     Convert various time objects to Unix timestamp.
 
@@ -185,6 +185,9 @@ def to_timestamp(time_obj: Union[int, float, datetime, UTCDateTime]) -> float:
         return time_obj.timestamp()
     elif isinstance(time_obj, UTCDateTime):
         return time_obj.timestamp
+    elif isinstance(time_obj, date):
+        dt = datetime.combine(time_obj, datetime.min.time())
+        return dt.timestamp()
     else:
         raise ValueError(f"Unsupported time type: {type(time_obj)}")
 

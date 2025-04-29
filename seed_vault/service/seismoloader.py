@@ -6,7 +6,7 @@ The main functions for SEED-vault, from original CLI-only version (Pickle 2024)
 import os
 import sys
 import copy
-import time
+from time import sleep,time
 import fnmatch
 import sqlite3
 from datetime import datetime,timedelta,timezone
@@ -166,31 +166,45 @@ def collect_requests(inv, time0, time1, days_per_request=3,
     time1 = min(time1, UTCDateTime.now()-120)
     if time0 >= time1:
         return None
-    sub_inv = inv.select(time=time0)
-    current_start = time0
-    while current_start < time1:
-        current_end = min(current_start \
-            + timedelta(days=days_per_request, microseconds=-1), time1)
-        
-        if cha_pref or loc_pref:
-            sub_inv = get_preferred_channels(inv, cha_pref, loc_pref, current_start)
-        
-        # Collect requests for the best channels
-        for net in sub_inv:
-            for sta in net:
-                for cha in sta:
+
+    # Select inventory within the overall time window
+    sub_inv = inv.select(starttime=time0, endtime=time1)
+
+    # Filter by preferred channels if specified
+    if cha_pref or loc_pref:
+        sub_inv = get_preferred_channels(sub_inv, cha_pref, loc_pref, time0)
+
+    # Process each network, station, and channel
+    for net in sub_inv:
+        for sta in net:
+            for cha in sta:
+                # Determine effective time range for this channel
+                channel_start = max(time0, cha.start_date if cha.start_date else time0)
+                channel_end = min(time1, cha.end_date if cha.end_date else time1)
+
+                if channel_start >= channel_end:
+                    continue
+
+                # Break into smaller requests based on days_per_request
+                current_start = channel_start
+                while current_start < channel_end:
+                    window_end = min(
+                        current_start + timedelta(days=days_per_request, microseconds=-1),
+                        channel_end
+                    )
+
                     requests.append((
                         net.code,
                         sta.code,
                         cha.location_code,
                         cha.code,
                         current_start.isoformat() + "Z",
-                        current_end.isoformat() + "Z" ))
-        
-        current_start = current_end + timedelta(microseconds=1)
-    
-    return requests
+                        window_end.isoformat() + "Z"
+                    ))
 
+                    current_start = window_end + timedelta(microseconds=1)
+
+    return requests
 
 def get_p_s_times(eq, dist_deg, ttmodel):
     """
@@ -626,7 +640,7 @@ def combine_requests(
     groups = defaultdict(list)
     for net, sta, loc, chan, t0, t1 in requests:
         groups[(net, t0, t1)].append((sta, loc, chan))
-    
+
     # Combine requests within each group
     combined_requests = []
     for (net, t0, t1), items in groups.items():
@@ -644,7 +658,7 @@ def combine_requests(
             t0,
             t1
         ))
-    
+
     return combined_requests
 
 
@@ -679,22 +693,22 @@ def get_missing_from_request(db_manager, eq_id: str, requests: List[Tuple], st: 
     """
     if not requests:
         return {}
-    
+
     result = {eq_id: {}}
-    
+
     # Process each request
     for request in requests:
         net, sta, loc, cha, t0, t1 = request #only using t0 really
         station_key = f"{net}.{sta}"
-        
+
         # Split location and channel if comma-separated
         locations = loc.split(',') if ',' in loc else [loc]
         channels = cha.split(',') if ',' in cha else [cha]
-        
+
         missing_channels = []
         total_combinations = 0
         missing_combinations = 0
-        
+
         # Check all combinations
         for location in locations:
             for channel in channels:
@@ -720,13 +734,13 @@ def get_missing_from_request(db_manager, eq_id: str, requests: List[Tuple], st: 
                                                     t0,t1):
                         found_match = True
                         break
-                
+
                 if not found_match:
                     missing_combinations += 1
                     missing_channels.append(
                         f"{net}.{sta}.{location}.{channel}"
                     )
-        
+
         # Determine value for this station
         if missing_combinations == total_combinations:  # nothing returned
             result[eq_id][station_key] = "ALL"
@@ -734,7 +748,7 @@ def get_missing_from_request(db_manager, eq_id: str, requests: List[Tuple], st: 
             result[eq_id][station_key] = []
         else:  # partial return
             result[eq_id][station_key] = missing_channels
-    
+
     return result
 
 
@@ -779,25 +793,25 @@ def prune_requests(
         if network not in requests_by_network:
             requests_by_network[network] = []
         requests_by_network[network].append(req)
-    
+
     pruned_requests = []
-    
+
     with db_manager.connection() as conn:
         cursor = conn.cursor()
-        
+
         # Process each network as a batch
         for network, network_requests in requests_by_network.items():
             # Find min and max times for this batch to reduce query range
             min_start = min(UTCDateTime(req[4]) for req in network_requests)
             max_end = max(UTCDateTime(req[5]) for req in network_requests)
-            
+
             # Get all relevant data in one query
             cursor.execute('''
                 SELECT network, station, location, channel, starttime, endtime 
                 FROM archive_data
                 WHERE network = ? AND endtime >= ? AND starttime <= ?
             ''', (network, min_start.isoformat(), max_end.isoformat()))
-            
+
             # Organize existing data by (station, location, channel)
             existing_data = {}
             for row in cursor.fetchall():
@@ -805,30 +819,71 @@ def prune_requests(
                 if key not in existing_data:
                     existing_data[key] = []
                 existing_data[key].append((UTCDateTime(row[4]), UTCDateTime(row[5])))
-            
+
             # Process each request with the pre-fetched data
             for req in network_requests:
                 network, station, location, channel, start_str, end_str = req
                 start_time = UTCDateTime(start_str)
                 end_time = UTCDateTime(end_str)
-                
+
                 if end_time - start_time < min_request_window:
                     continue
-                
+
                 key = (station, location, channel)
-                
-                # Check if we need to look at the filesystem
-                if key not in existing_data or not existing_data[key]:
-                    # Get files only when necessary
+
+                # First check if we need to look at the filesystem
+                # We'll do this regardless of whether the key exists or not in existing_data
+                need_to_check_files = True
+
+                # If we have data for this key, check if it fully covers our request
+                if key in existing_data and existing_data[key]:
+                    # Check if this request is fully covered by existing data
+                    relevant_intervals = [
+                        (db_start, db_end) for db_start, db_end in existing_data[key]
+                        if not (db_end <= start_time or db_start >= end_time)
+                    ]
+
+                    # If we have complete coverage, we don't need to look for files
+                    if relevant_intervals:
+                        relevant_intervals.sort(key=lambda x: x[0])
+
+                        # Analyze coverage by merging overlapping intervals
+                        full_coverage = False
+                        merged_intervals = []
+                        for interval in relevant_intervals:
+                            if not merged_intervals:
+                                merged_intervals.append(interval)
+                            else:
+                                last_end = merged_intervals[-1][1]
+                                if interval[0] <= last_end:
+                                    # Overlap found, merge intervals
+                                    merged_intervals[-1] = (merged_intervals[-1][0], max(last_end, interval[1]))
+                                else:
+                                    # No overlap, add as new interval
+                                    merged_intervals.append(interval)
+
+                        # Check if a single merged interval covers our entire request
+                        for merged_start, merged_end in merged_intervals:
+                            if merged_start <= start_time and merged_end >= end_time:
+                                full_coverage = True
+                                break
+
+                        if full_coverage:
+                            need_to_check_files = False
+
+                # Look for files in the SDS archive if necessary
+                if need_to_check_files:
                     file_paths = get_sds_filenames(
                         network, station, location, channel, 
                         start_time, end_time, sds_path
                     )
-                    
+
+                    # If files exist, update the database and our in-memory cache
                     if file_paths:
-                        # Update database and our cached data
+                        # Update database with newly found files
                         populate_database_from_files(cursor, file_paths=file_paths)
-                        
+
+                        # Refresh our data for this key from the database
                         cursor.execute('''
                             SELECT starttime, endtime FROM archive_data
                             WHERE network = ? AND station = ? AND location = ? AND channel = ?
@@ -836,50 +891,50 @@ def prune_requests(
                             ORDER BY starttime
                         ''', (network, station, location, channel,
                              start_time.isoformat(), end_time.isoformat()))
-                        
+
+                        # Update our in-memory cache
                         existing_data[key] = [(UTCDateTime(r[0]), UTCDateTime(r[1])) 
                                               for r in cursor.fetchall()]
-                    else:
+
+                # Now that database is updated, identify gaps
+                if key in existing_data and existing_data[key]:
+                    relevant_intervals = [
+                        (db_start, db_end) for db_start, db_end in existing_data[key]
+                        if not (db_end <= start_time or db_start >= end_time)
+                    ]
+
+                    if not relevant_intervals:
+                        # No coverage at all, add the full request
                         pruned_requests.append(req)
-                        continue
-                
-                # Check if this specific request is fully covered by existing data
-                relevant_intervals = [
-                    (db_start, db_end) for db_start, db_end in existing_data.get(key, [])
-                    if not (db_end <= start_time or db_start >= end_time)
-                ]
-                
-                if not relevant_intervals:
+                    else:
+                        relevant_intervals.sort(key=lambda x: x[0])
+
+                        # Find gaps in coverage
+                        current_time = start_time
+                        gaps = []
+                        for db_start, db_end in relevant_intervals:
+                            if current_time < db_start:
+                                gaps.append((current_time, db_start))
+                            current_time = max(current_time, db_end)
+
+                        if current_time < end_time:
+                            gaps.append((current_time, end_time))
+
+                        # Add requests per appropriate gap
+                        for gap_start, gap_end in gaps:
+                            if gap_end - gap_start >= min_request_window:
+                                pruned_requests.append((
+                                    network, station, location, channel,
+                                    gap_start.isoformat(),
+                                    gap_end.isoformat()
+                                ))
+                else:
+                    # No data found in database or files, add the entire request
                     pruned_requests.append(req)
-                    continue
-                
-                # Sort intervals by start time
-                relevant_intervals.sort(key=lambda x: x[0])
-                
-                # Find gaps in coverage
-                current_time = start_time
-                gaps = []
-                
-                for db_start, db_end in relevant_intervals:
-                    if current_time < db_start:
-                        gaps.append((current_time, db_start))
-                    current_time = max(current_time, db_end)
-                
-                if current_time < end_time:
-                    gaps.append((current_time, end_time))
-                
-                # Add requests for each gap that's large enough
-                for gap_start, gap_end in gaps:
-                    if gap_end - gap_start >= min_request_window:
-                        pruned_requests.append((
-                            network, station, location, channel,
-                            gap_start.isoformat(),
-                            gap_end.isoformat()
-                        ))
-    
+
     if pruned_requests:
         pruned_requests.sort(key=lambda x: (x[4], x[0], x[1]))
-    
+
     return pruned_requests
 
 
@@ -922,10 +977,10 @@ def archive_request(
         t1 = UTCDateTime(request[5])
 
         # Double check that the request range is real and not some db artifact
-        if t1 - t0 < 1:
+        if t1 - t0 < 3:
             return
 
-        time0 = time.time()
+        time0 = time()
         
         # Select appropriate client
         if request[0] in waveform_clients:
@@ -943,6 +998,10 @@ def archive_request(
             'starttime': t0,
             'endtime': t1
         }
+
+        # if possible, do not request anything under three seconds
+        if 'minimumlength' in wc.services['dataselect'].keys():
+            kwargs['minimumlength'] = 3.0
 
         # Handle long station lists
         if len(request[1]) > 24:
@@ -963,9 +1022,15 @@ def archive_request(
             st = wc.get_waveforms(**kwargs)
 
         # Log download statistics
-        download_time = time.time() - time0
+        download_time = time() - time0
         download_size = sum(tr.data.nbytes for tr in st) / 1024**2  # MB
-        print(f"      > Downloaded {download_size:.2f} MB @ {download_size/download_time:.2f} MB/s")
+        if download_size > 0.001:
+            print(f"      > Downloaded {download_size:.3f} MB @ {download_size/download_time:.2f} MB/s")
+        else:
+            print(f"      ! Data missing on the server, presumably a gap...")
+
+        # Remove any widowing artifacts
+        st.traces = [tr for tr in st if len(tr.data) > 1]
 
     except Exception as e:
         if 'code: 204' in str(e):
@@ -974,9 +1039,12 @@ def archive_request(
             print(format_error(request[1].upper(),e))
         return
 
-    # Group traces by day
+    if not st:
+        return
+
+    # Create a Stream-based dictionary to group traces by day
     traces_by_day = defaultdict(Stream)
-    
+
     for tr in st:
         net = tr.stats.network
         sta = tr.stats.station
@@ -989,7 +1057,7 @@ def archive_request(
         day_boundary = UTCDateTime(starttime.date + timedelta(days=1))
         if (day_boundary - starttime) <= tr.stats.delta:
             starttime = day_boundary
-        
+
         current_time = UTCDateTime(starttime.date)
         while current_time < endtime:
             year = current_time.year
@@ -1285,7 +1353,7 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
 
         # Remove any events that may have been added by loosening geo searches. Also removes duplicates. 
         try:
-            inv = filter_inventory_by_geo_constraints(inv,geo_constraints_for_obspy)
+            inv = filter_inventory_by_geo_constraints(inv,geo_constraints_for_obspy)            
         except Exception as e:
             print("filter_inventory_by_geo_constraits issue:",e)
 
@@ -1416,11 +1484,13 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
         except FDSNNoDataException:
             print("No events found in global search")
 
+        # Sort by origin time
+        catalog.events.sort(key=lambda event: event.origins[0].time)
+
         return catalog
 
     # Handle geographic constraints
     # But first.. reduce number of circular constraints to reduce excessive client calls
-
     geo_constraints_for_obspy = convert_geo_to_minus180_180(settings.event.geo_constraint)
 
     bound_searches = [ele for ele in geo_constraints_for_obspy 
@@ -1458,7 +1528,6 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
                 if circ_distances[i] >= 15:  # add any outliers
                     new_circle_searches.append(cs)
             circle_searches = new_circle_searches
-
 
     for geo in bound_searches + circle_searches: 
         try:
@@ -1499,6 +1568,9 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
         catalog = filter_catalog_by_geo_constraints(catalog,geo_constraints_for_obspy)
     except Exception as e:
         print("filter_catalog_by_geo_constraints issue:",e)
+
+    # Sort by origin time
+    catalog.events.sort(key=lambda event: event.origins[0].time)
 
     return catalog
 
@@ -1563,6 +1635,10 @@ def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event =
         starttime, endtime, days_per_request=settings.waveform.days_per_request,
         cha_pref=settings.waveform.channel_pref,loc_pref=settings.waveform.location_pref)
 
+    if not requests:
+        print("ERROR: No requests returned! This shouldn't happen, likely issue in collect_requests.")
+        return True
+
     # Remove any for data we already have (requires updated db)
     # If force_redownload is flagged, then ignore request pruning
     if settings.waveform.force_redownload:
@@ -1574,7 +1650,7 @@ def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event =
 
     # Break if nothing to do
     if not pruned_requests:
-        print(f"          ... All data already archived!\n")
+        print(f"          ... All data already archived!")
         return True
 
     # Check for cancellation after request pruning
@@ -1608,7 +1684,7 @@ def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event =
     for request in combined_requests:
         print(" ")    
         print("Requesting: ", request)
-        time.sleep(0.05) # to help ctrl-C out if needed
+        sleep(0.05) # to help ctrl-C out if needed
         try:
             archive_request(request, waveform_clients, settings.sds_path, db_manager)
         except Exception as e:
@@ -1697,7 +1773,6 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
 
         if stop_event and stop_event.is_set():
             print("\nCancelling run_event!")
-            # stop_event.clear() # i don't think these are needed / REVIEW
             try:
                 print("\n~~ Cleaning up database ~~")
                 db_manager.join_continuous_segments(settings.processing.gap_tolerance)
@@ -1723,7 +1798,6 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
         )
 
         # Collect requests for this event
-        # print("Collecting, combining, and pruning requests against database...") # too cluttered / runs quickly anyway
         try:
             requests, new_arrivals, p_arrivals = collect_requests_event(
                 eq, settings.station.selected_invs,
@@ -1751,7 +1825,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
                 print(f"Issue with run_event > prune_requests:\n",{e})
         
         if len(requests) > 0 and not pruned_requests:
-            print(f"          ... All data already archived!\n")
+            print(f"          ... All data already archived!")
 
         # Download new data if needed
         if pruned_requests:
@@ -1796,20 +1870,6 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
                 except Exception as e:
                     print(f"Error archiving request {request}:\n {str(e)}")
                     continue
-
-                if stop_event and stop_event.is_set():
-                    print("\nCancelling run_event!")
-                    # ? stop_event.clear()
-                    try:
-                        print("\n~~ Cleaning up database ~~")
-                        db_manager.join_continuous_segments(settings.processing.gap_tolerance)
-                    except Exception as e:
-                        print(f"! Error with join_continuous_segments: {str(e)}")
-
-                    if all_event_traces:
-                        return all_event_traces, all_missing
-                    else:
-                        return None
 
         # Now load everything in from our archive
         event_stream = Stream()

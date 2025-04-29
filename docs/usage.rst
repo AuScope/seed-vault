@@ -17,7 +17,27 @@ Install via pip (easy way)
 
 .. code-block:: sh
 
-   python3 pip install seed-vault
+   python3 -m pip install seed-vault
+
+NB:
+
+1. If you get an "error: externally-managed-environment" error, you will need to install and activate a new Python environment
+   
+   e.g.
+
+.. code-block:: sh
+
+    python3 -m venv ./venv
+    . ./venv/bin/activate
+
+2. Assumes python & 'pip', 'venv' packages are installed
+
+   e.g. for Ubuntu, as root:
+
+.. code-block:: sh
+
+    apt update
+    apt install -y python3 python3-dev python3-pip python3-venv
 
 
 Install from source (if you insist!)
@@ -64,12 +84,15 @@ Open a powershell and run following commands:
 
 **NOTES:**
 
-1. May require python3 venv software package e.g. For python v10 on Ubuntu you may need to:
+1. Requires get, sudo & python3 software packages:
+
+   e.g. for Ubuntu you may need install (as root):
 
 .. code-block:: sh
 
-   sudo apt update
-   sudo apt install python3.10-venv
+   apt update
+   apt install -y git sudo
+   apt install -y python3 python3-dev python3-pip python3-venv
 
 Starting the Application
 ========================

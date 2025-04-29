@@ -1,7 +1,7 @@
 client,url,is_original
 AUSPASS,http://auspass.edu.au,True
 BGR,http://eida.bgr.de,True
-EARTHSCOPE,http://service.iris.edu,False
+EARTHSCOPE,https://service.iris.edu,False
 EIDA,http://eida-federator.ethz.ch,True
 EMSC,http://www.seismicportal.eu,True
 ETH,http://eida.ethz.ch,True

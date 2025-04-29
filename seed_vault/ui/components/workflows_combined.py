@@ -106,7 +106,7 @@ class CombinedBasedWorkflow:
 
         st.info(self.settings.selected_workflow.description)
 
-        st.text("For further information about the flows, please visit the documentation:")
+        st.text("For further information please see the documentation:")
 
         doc_links = {
             "Workflow Overview": "https://auscope.github.io/seed-vault/app_main_flows.html#",
