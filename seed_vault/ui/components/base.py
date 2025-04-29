@@ -152,6 +152,8 @@ class BaseComponent:
     has_error: bool = False
     has_fetch_new_data: bool = False
     auto_refresh_enabled: bool = True
+    has_new_drawings: bool = False
+    is_load_clicked: bool = False
     error: str = ""
 
     @property
@@ -575,7 +577,7 @@ class BaseComponent:
         if lst_circ:
             st.write(f"Circle Areas (Degree)")
             original_df_circ = pd.DataFrame(lst_circ, columns=CircleArea.model_fields)
-            self.df_circ = st.data_editor(original_df_circ, key=f"circ_area", hide_index=True)
+            self.df_circ = st.data_editor(original_df_circ, hide_index=True)
 
             # Validate column names before applying validation
             if {"lat", "lon", "max_radius", "min_radius"}.issubset(self.df_circ.columns):
@@ -610,7 +612,7 @@ class BaseComponent:
         if lst_rect:
             st.write(f"Rectangle Areas")
             original_df_rect = pd.DataFrame(lst_rect, columns=RectangleArea.model_fields)
-            self.df_rect = st.data_editor(original_df_rect, key=f"rect_area", hide_index=True)
+            self.df_rect = st.data_editor(original_df_rect, hide_index=True)
 
             # Validate column names before applying validation
             if {"min_lat", "max_lat", "min_lon", "max_lon"}.issubset(self.df_rect.columns):
@@ -732,8 +734,8 @@ class BaseComponent:
                 self.all_feature_drawings = geo_constraint
                 self.map_fg_area= add_area_overlays(areas=geo_constraint)
             if get_data:
-                self.handle_get_data()
-                # self.fetch_data_with_loading(fetch_func=self.handle_get_data)
+                # self.handle_get_data()
+                self.fetch_data_with_loading(fetch_func=self.handle_get_data)
 
         if rerun:
             st.rerun()
@@ -789,6 +791,7 @@ class BaseComponent:
         self.warning = None
         self.error   = None
         self.has_error = False
+        self.is_load_clicked = True
         try:
             if self.step_type == Steps.EVENT:
                 self.catalogs = Catalog()
@@ -844,8 +847,9 @@ class BaseComponent:
     def clear_all_data(self):
         self.map_fg_marker= None
         self.map_fg_area= None
+        self.is_load_clicked = False
         self.df_markers = pd.DataFrame()
-        self.all_current_drawings = []
+        # self.all_current_drawings = []
 
         if self.step_type == Steps.EVENT:
             self.catalogs=Catalog()
@@ -1184,18 +1188,22 @@ class BaseComponent:
     # WATCHER
     # ===================
     def watch_all_drawings(self, all_drawings):
-        # if self.all_current_drawings != all_drawings:
-        #     self.all_current_drawings = all_drawings
-        #     self.refresh_map(rerun=True, get_data=True)
 
         if self.all_current_drawings != all_drawings:
             self.all_current_drawings = all_drawings
-            if not self.has_fetch_new_data:
-                self.has_fetch_new_data = True
-                self.refresh_map(rerun=False, get_data=True)
-        else:
-            if self.has_fetch_new_data:
-                self.has_fetch_new_data = False
+            if not self.has_new_drawings:
+                self.has_new_drawings = True
+                geo_constraint = self.all_current_drawings + self.all_feature_drawings
+                self.set_geo_constraint(geo_constraint)
+                # self.update_rectangle_areas()
+                # self.update_circle_areas()            
+                st.rerun()
+        #     if not self.has_fetch_new_data:
+        #         self.has_fetch_new_data = True
+        #         self.refresh_map(rerun=False, get_data=True)
+        # else:
+        #     if self.has_fetch_new_data:
+        #         self.has_fetch_new_data = False
 
 
     # ===================
@@ -1338,9 +1346,14 @@ class BaseComponent:
 
         # feature_groups = [fg for fg in [self.map_fg_area, self.map_fg_marker] if fg is not None]
         feature_groups = [fg for fg in [self.map_fg_area, self.map_fg_marker , self.map_fg_prev_selected_marker] if fg is not None]
-        
 
-        info_display = f"ℹ️ Use **shape tools** to search **{self.TXT.STEP}s** in confined areas   "
+        if not self.is_load_clicked and not self.has_new_drawings:
+            info_display = f"ℹ️ To start, draw an area on the map, then use **Load {self.TXT.STEP}s**. Or simply click **Load {self.TXT.STEP}s** to load globally.  "
+        elif self.has_new_drawings:
+            info_display = f"⚠️ There is a new drawing on the map. Use **Load {self.TXT.STEP}s** to load data.  "
+        else:
+            info_display = f"✅ All **{self.TXT.STEP}s** is loaded!  "
+        # info_display = f"ℹ️ Use **shape tools** to search **{self.TXT.STEP}s** in confined areas   "
         info_display += "\nℹ️ Use **Reload** button to refresh map if needed   "
 
         if self.step_type == Steps.EVENT:
@@ -1363,7 +1376,10 @@ class BaseComponent:
             if self.fig_color_bar:
                 st.pyplot(self.fig_color_bar)
 
-        self.watch_all_drawings(get_selected_areas(self.map_output))
+        if self.has_new_drawings:
+            self.has_new_drawings = False
+        else:
+            self.watch_all_drawings(get_selected_areas(self.map_output))
 
         # @IMPORTANT NOTE: Streamlit-Folium does not provide a direct way to tag a Marker with
         #                  some metadata, including adding an id. The options are using PopUp
@@ -1408,8 +1424,8 @@ class BaseComponent:
                         self.sync_df_markers_with_df_edit()
                         self.df_markers.loc[self.clicked_marker_info['id'] - 1, 'is_selected'] = True
                         self.clicked_marker_info = None
-                        if self.auto_refresh_enabled:
-                            self.refresh_map_selection()
+                        # if self.auto_refresh_enabled:
+                        self.refresh_map_selection()
                     # else:
                     #     self.df_markers.loc[self.clicked_marker_info['id'] - 1, 'is_selected'] = False
                     #     self.refresh_map_selection()
@@ -1477,11 +1493,12 @@ class BaseComponent:
             )
 
     def on_change_df_table(self):
-        if self.auto_refresh_enabled:
-            self.delay_selection = 0.2
-        else:
-            self.update_selected_data()
-            self.delay_selection = 0
+        self.delay_selection = 1
+        # if self.auto_refresh_enabled:
+        #     self.delay_selection = 0.2
+        # else:
+        #     self.update_selected_data()
+        #     self.delay_selection = 0
 
     def render_auto_refresh_toggle(self):
         """Renders the auto-refresh toggle between the map and data table."""
@@ -1589,10 +1606,10 @@ class BaseComponent:
         #      first click doesn't register / have to click twice for Select All and Unselect All
         #      for now we just have Un/Select All just work regardless of auto_refresh_state
         #      ...which sort of makes sense anyway
-        if not self.auto_refresh_enabled:
-            if st.button("Apply Selections", key=self.get_key_element("Apply Selections")):
-                self.sync_df_markers_with_df_edit()
-                self.refresh_map_selection(rerun=True)
+        # if not self.auto_refresh_enabled:
+        # if st.button("Apply Selections", key=self.get_key_element("Apply Selections")):
+        #     self.sync_df_markers_with_df_edit()
+        #     self.refresh_map_selection(rerun=True)
 
         #OFF for now / self.selected_items_view(state_key) #this adds the red icons above the table.. possibly not worth the lag
 
@@ -1630,10 +1647,10 @@ class BaseComponent:
                 sleep(self.delay_selection)
             st.session_state[state_key] = self.df_data_edit.copy()  # Save the unsorted version to preserve user sorting
 
-            if self.auto_refresh_enabled:
-                self.sync_df_markers_with_df_edit()
-                self.refresh_map_selection()
-                self.delay_selection = 0.2
+            # if self.auto_refresh_enabled:
+            self.sync_df_markers_with_df_edit()
+            self.refresh_map_selection()
+            self.delay_selection = 0
             #else: (seems to work better with this commented...?)
             #    self.sync_df_markers_with_df_edit()
 
@@ -1723,7 +1740,7 @@ class BaseComponent:
         self.render_map()
         
         # Add the auto-refresh toggle between map and table
-        self.render_auto_refresh_toggle()
+        # self.render_auto_refresh_toggle()
 
         if not self.df_markers.empty:
             self.render_marker_select()
