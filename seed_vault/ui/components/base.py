@@ -666,16 +666,16 @@ class BaseComponent:
             self.settings.station.selected_invs = None
             
             if not self.df_markers.empty and 'is_selected' in list(self.df_markers.columns):
-                # Get all selected stations at once
-                selected_stations = self.df_markers[self.df_markers['is_selected']]['station'].tolist()
+                # Get all selected (network,station) pairs at once
+                selected_stations = self.df_markers[self.df_markers['is_selected']][['network', 'station']].drop_duplicates().apply(tuple, axis=1).tolist()
                 
                 if selected_stations:
                     self.settings.station.selected_invs = None
-                    for i, station in enumerate(selected_stations):
+                    for i, ns in enumerate(selected_stations):
                         if i == 0:
-                            self.settings.station.selected_invs = self.inventories.select(station=station)
+                            self.settings.station.selected_invs = self.inventories.select(network=ns[0],station=ns[1])
                         else:
-                            self.settings.station.selected_invs += self.inventories.select(station=station)
+                            self.settings.station.selected_invs += self.inventories.select(network=ns[0],station=ns[1])
             return
 
 
@@ -1538,8 +1538,8 @@ class BaseComponent:
                     #"magnitude": st.column_config.NumberColumn("mag", format="%.1f",width=6, disabled=True),
                     #"magnitude type": st.column_config.Column("type", width=6, disabled=True),
                     "time": st.column_config.DatetimeColumn("origin time", width=18, disabled=True),
-                    "longitude": st.column_config.NumberColumn("lon", format="%.3f", width=8, disabled=True),
-                    "latitude": st.column_config.NumberColumn("lat", format="%.3f", width=8, disabled=True),
+                    "longitude": st.column_config.NumberColumn("lon", format="%.4f", width=8, disabled=True),
+                    "latitude": st.column_config.NumberColumn("lat", format="%.4f", width=8, disabled=True),
                     "depth (km)": st.column_config.NumberColumn("dep (km)", format="%.1f", width=6, disabled=True),
                 }
 
@@ -1549,8 +1549,8 @@ class BaseComponent:
                         "network": st.column_config.TextColumn("net", width=2, disabled=True),
                         "station": st.column_config.TextColumn("sta", width=5, disabled=True),
                         "description": st.column_config.TextColumn("description", width=38, disabled=True),
-                        "latitude": st.column_config.NumberColumn("lat", format="%.3f", width=8, disabled=True),
-                        "longitude": st.column_config.NumberColumn("lon", format="%.3f", width=8, disabled=True),
+                        "latitude": st.column_config.NumberColumn("lat", format="%.4f", width=8, disabled=True),
+                        "longitude": st.column_config.NumberColumn("lon", format="%.4f", width=8, disabled=True),
                         "elevation": st.column_config.NumberColumn("elev", format="%d", width=6, disabled=True),
                         "loc. codes": st.column_config.TextColumn("loc", width=None),
                         "channels": st.column_config.TextColumn("cha", width=None),
@@ -1597,7 +1597,6 @@ class BaseComponent:
         #OFF for now / self.selected_items_view(state_key) #this adds the red icons above the table.. possibly not worth the lag
 
         height = (len(self.df_markers) + 1) * 35 + 2
-
         height = min(100*35, height)
 
         # These create "bubble icons" for the individual channel codes in the table.. but take up extra space
@@ -1624,7 +1623,7 @@ class BaseComponent:
             has_changed = True
         else:
             has_changed = not self.df_data_edit.equals(st.session_state[state_key])
-            
+
         if has_changed:
             if self.delay_selection > 0:
                 sleep(self.delay_selection)
@@ -1660,7 +1659,7 @@ class BaseComponent:
 
 
         df_selected["display_label"] = df_selected[unique_columns].astype(str).agg(".".join, axis=1)
-        
+
         selected_items = df_selected["display_label"].tolist()
 
         updated_selection = st.multiselect(
@@ -1711,7 +1710,7 @@ class BaseComponent:
 
         if self.step_type == Steps.EVENT:
             self.event_filter()
-        
+
         if self.step_type == Steps.STATION:
             self.station_filter()
 
@@ -1721,7 +1720,7 @@ class BaseComponent:
         self.get_prev_step_df()
 
         self.render_map()
-        
+
         # Add the auto-refresh toggle between map and table
         self.render_auto_refresh_toggle()
 
