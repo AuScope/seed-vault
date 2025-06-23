@@ -6,7 +6,7 @@ from copy import deepcopy
 import streamlit as st
 from streamlit_folium import st_folium
 import pandas as pd
-from datetime import datetime, time
+from datetime import datetime, time, date, timedelta
 from obspy.core.event import Catalog, read_events
 from obspy.core.inventory import Inventory, read_inventory
 from time import sleep
@@ -290,8 +290,32 @@ class BaseComponent:
         - Refreshes filters upon changes.
         """
 
-        start_date, start_time = convert_to_datetime(self.settings.event.date_config.start_time)
-        end_date, end_time     = convert_to_datetime(self.settings.event.date_config.end_time)
+        min_date = date(1800,1,1)
+        max_date = date(2100,1,1)
+
+        # Trim start and end times to whatever we just returned
+        if self.prev_step_type == Steps.STATION:
+            start_dates = [
+                station.start_date 
+                for network in self.settings.station.selected_invs 
+                for station in network 
+                if station.start_date is not None
+            ]
+
+            end_dates = [
+                station.end_date if station.end_date is not None else datetime.now()
+                for network in self.settings.station.selected_invs 
+                for station in network
+            ]
+
+            start_date, start_time = convert_to_datetime(min(start_dates))
+            end_date, end_time     = convert_to_datetime(max(end_dates))
+            end_date = end_date + timedelta(days=1) # add an extra day for that last station
+
+        else:
+            start_date, start_time = convert_to_datetime(self.settings.event.date_config.start_time)
+            end_date, end_time     = convert_to_datetime(self.settings.event.date_config.end_time)
+
 
         with st.sidebar:
             with st.expander("Filters", expanded=True):
@@ -329,11 +353,11 @@ class BaseComponent:
                 c1, c2 = st.columns([1,1])
 
                 with c1:
-                    start_date  = st.date_input("Start Date", start_date, key="event-pg-start-date-event")
+                    start_date  = st.date_input("Start Date", min_value=min_date, max_value=max_date, value=start_date, key="event-pg-start-date-event")
                     start_time  = st.time_input("Start Time (UTC)", start_time)
                     self.settings.event.date_config.start_time = datetime.combine(start_date, start_time)
                 with c2:
-                    end_date  = st.date_input("End Date", end_date, key="event-pg-end-date-event")
+                    end_date  = st.date_input("End Date", min_value=min_date, max_value=max_date, value=end_date, key="event-pg-end-date-event")
                     end_time  = st.time_input("End Time (UTC)", end_time)
                     self.settings.event.date_config.end_time = datetime.combine(end_date, end_time)
 
@@ -349,7 +373,7 @@ class BaseComponent:
 
                 self.settings.event.min_depth, self.settings.event.max_depth = st.slider(
                     "Min Depth (km)", 
-                    min_value=-5.0, max_value=800.0, 
+                    min_value=-5.0, max_value=1000.0, 
                     value=(self.settings.event.min_depth, self.settings.event.max_depth), 
                     step=1.0, key="event-pg-depth"
                 )
@@ -357,7 +381,6 @@ class BaseComponent:
                 self.render_map_buttons()
 
         self.refresh_filters()
-
 
 
     def station_filter(self):
@@ -381,8 +404,27 @@ class BaseComponent:
         - Map interaction buttons are rendered.
         - Refreshes filters upon changes.
         """
-        start_date, start_time = convert_to_datetime(self.settings.station.date_config.start_time)
-        end_date, end_time = convert_to_datetime(self.settings.station.date_config.end_time)
+
+        min_date = date(1800,1,1)
+        max_date = date(2100,1,1)
+
+        # Trim start and end times to whatever we just returned
+        if self.prev_step_type == Steps.EVENT:
+            origin_times = []
+
+            for event in self.settings.event.selected_catalogs:
+                if event.preferred_origin():
+                    origin_times.append(event.preferred_origin().time)
+                elif event.origins:
+                    origin_times.append(event.origins[0].time)
+
+                start_date, start_time = convert_to_datetime(min(origin_times))
+                end_date, end_time     = convert_to_datetime(max(origin_times))
+                end_date = end_date + timedelta(days=1) # add an extra day for that last event
+
+        else:
+            start_date, start_time = convert_to_datetime(self.settings.station.date_config.start_time)
+            end_date, end_time = convert_to_datetime(self.settings.station.date_config.end_time)
 
         # One hour shift
         if (start_date == end_date and start_time >= end_time):
@@ -424,11 +466,11 @@ class BaseComponent:
 
                 c11, c12 = st.columns([1,1])
                 with c11:
-                    start_date = st.date_input("Start Date", value=start_date)
+                    start_date = st.date_input("Start Date", min_value=min_date, max_value=max_date, value=start_date)
                     # start_time = st.time_input("Start Time (UTC)", value=start_time)
                     self.settings.station.date_config.start_time = datetime.combine(start_date, start_time)
                 with c12:
-                    end_date = st.date_input("End Date", value=end_date)
+                    end_date = st.date_input("End Date", min_value=min_date, max_value=max_date, value=end_date)
                     # end_time = st.time_input("End Time (UTC)", value=end_time)
                     self.settings.station.date_config.end_time = datetime.combine(end_date, end_time)
 

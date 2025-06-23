@@ -182,7 +182,8 @@ class ContinuousFilterMenu:
         with st.sidebar.expander("Adjust Time Range?", expanded=True):
             start_date, start_time = convert_to_datetime(self.settings.station.date_config.start_time)
             end_date, end_time = convert_to_datetime(self.settings.station.date_config.end_time)
-
+            min_date = date(1800,1,1)
+            max_date = date(2100,1,1)
 
             # Row 1: Year controls
             col1, col2, col3, col4 = st.columns(4)
@@ -306,7 +307,7 @@ class ContinuousFilterMenu:
 
             c1, c2 = st.columns([1,1])
             with c1:
-                new_start_date = st.date_input("Start Date", value=start_date)
+                new_start_date = st.date_input("Start Date", min_value=min_date, max_value=max_date, value=start_date)
                 new_start_time = st.time_input("Start Time (UTC)", value=start_time)
                 
                 # Handle cases where only date or only time has changed
@@ -321,7 +322,7 @@ class ContinuousFilterMenu:
                     self.refresh_filters()
 
             with c2:
-                new_end_date = st.date_input("End Date", value=end_date)                
+                new_end_date = st.date_input("End Date", min_value=min_date, max_value=max_date, value=end_date)                
                 new_end_time = st.time_input("End Time (UTC)", value=end_time)
                 
                 # Handle cases where only date or only time has changed

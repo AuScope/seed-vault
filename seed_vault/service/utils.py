@@ -154,6 +154,8 @@ def convert_to_datetime(value):
             except ValueError:
                 st.error(f"Invalid datetime format: {value}. Expected ISO format 'YYYY-MM-DD' or 'YYYY-MM-DDTHH:MM:SS'.")
                 return date.today(), time(0, 0, 0)  # Default fallback
+    elif isinstance(value,UTCDateTime):
+        return value.date,value.time
     
     return date.today(), time(0, 0, 0)
 
