@@ -12,7 +12,6 @@ import pandas as pd
 import streamlit as st
 import requests
 
-
 from obspy.core.event import Catalog
 
 from seed_vault.models.config import SeismoLoaderSettings
@@ -42,7 +41,6 @@ def remove_duplicate_events(events):
 def get_event_data(settings: SeismoLoaderSettings):
     return remove_duplicate_events(get_events(settings))
 
-
 def event_response_to_df(data):
     """
     @TODO: base on response from FSDN, below should be re-written
@@ -61,20 +59,20 @@ def event_response_to_df(data):
         # Extract the time and place
         time = origin.time.datetime
         place = event.event_descriptions[0].text if event.event_descriptions else "Unknown place"
-        
+
         # Extract the magnitude
         mag = magnitude.mag if magnitude.mag is not None else 0.99999
         mag_type = magnitude.magnitude_type if magnitude.magnitude_type is not None else "[-]"
         # Create the record dictionary
         record = {
             'place': place,
-            'magnitude': mag,            
+            'magnitude': mag,
             'magnitude type': mag_type,
             'time': pd.to_datetime(time),  # Convert to pandas datetime
             'longitude': longitude,
             'latitude': latitude,
             'depth (km)': depth,  # in kilometers
         }
-        
+
         records.append(record)
     return pd.DataFrame(records)

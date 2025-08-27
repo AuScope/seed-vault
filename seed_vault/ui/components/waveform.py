@@ -1,6 +1,5 @@
 from typing import List, Dict, Union
-from obspy import Stream, Trace
-from obspy import UTCDateTime
+from obspy import Stream, Trace, UTCDateTime
 import threading
 from seed_vault.enums.config import WorkflowType
 from seed_vault.models.config import SeismoLoaderSettings
@@ -55,12 +54,12 @@ def get_tele_filter(tr):
     Note:
         The filter bands are optimized for different distance ranges:
         - < 50 km: 2.0-15 Hz
-        - 50-100 km: 1.8-12 Hz
-        - 100-250 km: 1.7-10 Hz
-        - 250-500 km: 1.6-8 Hz
-        - 500-1000 km: 1.5-6 Hz
-        - 1000-2500 km: 1.4-5 Hz
-        - 2500-5000 km: 1.2-4 Hz
+        - 50-100 km: 1.7-12 Hz
+        - 100-250 km: 1.5-10 Hz
+        - 250-500 km: 1.4-8 Hz
+        - 500-1000 km: 1.3-6 Hz
+        - 1000-2500 km: 1.2-5 Hz
+        - 2500-5000 km: 1.1-4 Hz
         - 5000-10000 km: 1.0-3 Hz
         - > 10000 km: 0.7-2 Hz
     """
@@ -74,22 +73,22 @@ def get_tele_filter(tr):
     if distance_km < 50:
         f0,f1 = 2.0,15
     elif distance_km < 100:
-        f0,f1 = 1.8,12
+        f0,f1 = 1.7,12
     elif distance_km < 250:
-        f0,f1 = 1.7,10
+        f0,f1 = 1.5,10
     elif distance_km < 500:
-        f0,f1 = 1.6,8
+        f0,f1 = 1.4,8
     elif distance_km < 1000:
-        f0,f1 = 1.5,6
+        f0,f1 = 1.3,6
     elif distance_km < 2500:
-        f0,f1 = 1.4,5
+        f0,f1 = 1.2,5
     elif distance_km < 5000:
-        f0,f1 = 1.2,4        
+        f0,f1 = 1.1,4     
     elif distance_km < 10000:
         f0,f1 = 1.0,3
     else:
         f0,f1 = 0.7,2
-    
+
     return min(f0,nyq),min(f1,nyq)
 
 class WaveformFilterMenu:
@@ -138,7 +137,7 @@ class WaveformFilterMenu:
             'channel_filter': self.channel_filter,
             'display_limit': self.display_limit
         }
-        
+
         # Check if filter state changed
         if current_state != self.old_filter_state:
             self.old_filter_state = current_state.copy()
@@ -167,9 +166,9 @@ class WaveformFilterMenu:
         if not stream:
             self.available_channels = ["All channels"]
             return
-            
+
         channels = set()
-        
+
         # Handle different types of stream objects
         if isinstance(stream, Stream):
             # Case 1: ObsPy Stream object
@@ -195,7 +194,7 @@ class WaveformFilterMenu:
                             channels.add(item.stats.channel)
                     except:
                         pass
-        
+
         # If we found any channels, update the available_channels list
         # Ensure "All channels" is always at the top by separating it from the sorted list
         if channels:
@@ -203,11 +202,11 @@ class WaveformFilterMenu:
             self.available_channels = ["All channels"] + sorted_channels
         else:
             self.available_channels = ["All channels"]
-        
+
         # Reset channel filter if current selection is invalid
         if self.channel_filter not in self.available_channels:
             self.channel_filter = "All channels"
-    
+
     def render(self, stream=None):
         """Render the waveform filter menu interface.
 
@@ -226,7 +225,6 @@ class WaveformFilterMenu:
             user experience and space management.
         """
         st.sidebar.title("Waveform Controls")
-        
 
         # Step 1: Data Retrieval Settings
         with st.sidebar.expander("Step 1: Data Source", expanded=True):
@@ -292,7 +290,7 @@ class WaveformFilterMenu:
 
             # Add Download Preferences section
             st.subheader("📊 Download Preferences")
-            
+
             # Channel Priority Input
             channel_pref = st.text_input(
                 "Channel Priority",
@@ -300,7 +298,7 @@ class WaveformFilterMenu:
                 help="Order of preferred channels (e.g., HH,BH,EH). Only the first existing channel in this list will be downloaded.",
                 key="channel_pref"
             )
-            
+
             # Validate and update channel preferences
             if channel_pref:
                 # Remove spaces and convert to uppercase
@@ -320,7 +318,7 @@ class WaveformFilterMenu:
                 help="Order of preferred location codes (e.g., 00,--,10,20). Only the first existing location code in this list will be downloaded.. Use -- or '' for blank location.",
                 key="location_pref"
             )
-            
+
             # Validate and update location preferences
             if location_pref:
                 # Remove spaces
@@ -338,7 +336,7 @@ class WaveformFilterMenu:
                 network_codes = list(set([inv.code for inv in self.settings.station.selected_invs]))
                 network_codes.sort()  # Sort alphabetically
                 networks = ["All networks"] + network_codes  # Ensure "All networks" is at the top
-                
+
                 selected_network = st.selectbox(
                     "Network:",
                     networks,
@@ -358,7 +356,7 @@ class WaveformFilterMenu:
                 station_codes = list(dict.fromkeys(station_codes))  # Remove duplicates
                 station_codes.sort()  # Sort alphabetically
                 stations = ["All stations"] + station_codes  # Ensure "All stations" is at the top
-                
+
                 selected_station = st.selectbox(
                     "Station:",
                     stations,
@@ -393,11 +391,11 @@ class WaveformFilterMenu:
                 if display_limit != self.display_limit:
                     self.display_limit = display_limit
                     self.refresh_filters()
-                
+
                 # Add status information
                 if stream:
                     st.sidebar.info(f"Total waveforms: {len(stream)}")
-                    
+
                 # Add reset filters button
                 if st.sidebar.button("Reset Filters"):
                     self.network_filter = "All networks"
@@ -411,6 +409,7 @@ class WaveformDisplay:
 
     This class handles the display of seismic waveform data, including both
     event-based and station-based views, with support for filtering and pagination.
+    IMAGES are cached to minimize re-processing.
 
     Attributes:
         settings (SeismoLoaderSettings): Configuration settings for seismic data processing.
@@ -418,6 +417,7 @@ class WaveformDisplay:
         client (Client): FDSN client for waveform data retrieval.
         ttmodel (TauPyModel): Travel-time model for seismic phases.
         stream (List[Stream]): List of waveform streams.
+        processed_cache (Dict): Cache for processed waveform data.
         missing_data (Dict): Dictionary tracking missing data.
         console (ConsoleDisplay): Console for logging output.
     """
@@ -431,15 +431,64 @@ class WaveformDisplay:
         """
         self.settings = settings
         self.filter_menu = filter_menu
-        
+
         try:
             self.client = Client(self.settings.waveform.client)
         except ValueError as e:
-            st.error(f"Error: {str(e)} Waveform client is set to {self.settings.waveform.client}, which seems does not exists. Please navigate to the settings page and use the Clients tab to add the client or fix the stored config.cfg file.")
+            st.error(f"Error: {str(e)} Waveform client is set to {self.settings.waveform.client}, which seems to not exist..? Please navigate to the settings page and use the Clients tab to add the client or fix the stored config.cfg file.")
         self.ttmodel = TauPyModel("iasp91")
         self.stream = []
+        self.processed_cache = {}  # NEW: Cache for processed waveforms
+        self.figure_cache = {}  # NEW: Cache for matplotlib figures
         self.missing_data = {}
         self.console = ConsoleDisplay()  # Add console display
+
+    def _get_processing_key(self, trace_id: str, filter_min: float, filter_max: float) -> str:
+        """Generate a unique key for processed waveform caching."""
+        response_level = self.settings.station.level if hasattr(self.settings.station, 'level') else "none"
+        before_p = self.settings.event.before_p_sec
+        after_p = self.settings.event.after_p_sec
+        return f"{trace_id}_{response_level}_{filter_min}_{filter_max}_{before_p}_{after_p}"
+
+    def _get_processed_trace(self, trace, filter_min: float, filter_max: float):
+        """Get a processed trace from cache or process it if not cached."""
+        trace_id = f"{trace.stats.network}.{trace.stats.station}.{trace.stats.location}.{trace.stats.channel}_{trace.stats.starttime}"
+        cache_key = self._get_processing_key(trace_id, filter_min, filter_max)
+        
+        # Return cached version if available
+        if cache_key in self.processed_cache:
+            return self.processed_cache[cache_key].copy()
+        
+        # Process and cache the trace
+        tr_copy = trace.copy()
+        tr_copy.detrend()
+        if self.settings.station.level == "response":
+            tr_copy.taper(.05)
+            tr_copy.remove_response(self.settings.station.selected_invs,pre_filt=[.03,.06,40,49])
+        else:
+            tr_copy.taper(.02)
+        
+        if hasattr(trace.stats, 'p_arrival'):
+            p_time = UTCDateTime(trace.stats.p_arrival)
+            before_p = self.settings.event.before_p_sec
+            after_p = self.settings.event.after_p_sec
+            window_start = p_time - before_p
+            window_end = p_time + after_p
+            tr_copy = tr_copy.slice(window_start, window_end)
+        
+        if tr_copy.stats.sampling_rate/2 > filter_min and filter_min<filter_max:
+            tr_copy.filter('bandpass',freqmin=filter_min,freqmax=filter_max,zerophase=True)
+        
+        tr_copy.stats.filterband = (filter_min,filter_max)
+        
+        # Cache and return
+        self.processed_cache[cache_key] = tr_copy.copy()
+        return tr_copy
+
+    def clear_cache(self):
+        """Clear the processed waveform cache."""
+        self.processed_cache.clear()
+        self.figure_cache.clear()  # NEW: Also clear figure cache
 
     def apply_filters(self, stream) -> Stream:
         """Apply filters to the waveform stream based on user selections.
@@ -452,14 +501,14 @@ class WaveformDisplay:
                 network, station, and channel filters.
         """
         filtered_stream = Stream()
-        
+
         # Handle case where stream is a list of traces
         if isinstance(stream, list):
             stream = Stream(traces=stream)
-        
+
         if not stream:
             return filtered_stream
-        
+
         for tr in stream:
             try:
                 if (self.filter_menu.network_filter == "All networks" or 
@@ -472,7 +521,6 @@ class WaveformDisplay:
             except AttributeError as e:
                 continue
         return filtered_stream
-    
 
     def fetch_data(self):
         """Fetch waveform data in a background thread with logging.
@@ -493,7 +541,7 @@ class WaveformDisplay:
             def write(self, text):
                 self.original_stream.write(text)
                 self.buffer += text
-                
+
                 # Only flush when buffer gets large enough
                 if len(self.buffer) > 80:  # Buffer getting too large, flush it
                     self.queue.put(self.buffer)
@@ -504,18 +552,19 @@ class WaveformDisplay:
                 if self.buffer:  # Flush any remaining content in buffer
                     self.queue.put(self.buffer)
                     self.buffer = ""
-        
+
         # Set up queue loggers
         original_stdout = sys.stdout
         original_stderr = sys.stderr
         sys.stdout = QueueLogger(original_stdout, log_queue)
         sys.stderr = QueueLogger(original_stderr, log_queue)
-        
+
         try:
             print("Starting waveform download process...")
             stream_and_missing = run_event(self.settings, stop_event)
             if stream_and_missing:
                 self.stream, self.missing_data = stream_and_missing
+                self.clear_cache()  # NEW: Clear cache when new data is loaded
                 success = True
                 print("Download completed successfully.")
                 # If stopped via the cancel button, reset it continue to plotting as normal
@@ -527,7 +576,7 @@ class WaveformDisplay:
                     st.session_state["download_cancelled"] = True
                 else:
                     print("Download failed.")
-            
+
             task_result["success"] = success
 
         except Exception as e:
@@ -540,12 +589,14 @@ class WaveformDisplay:
 
             # Ensure stop event is cleared
             stop_event.clear()
-            
+
             # Restore original stdout/stderr
             sys.stdout = original_stdout
             sys.stderr = original_stderr
 
             task_completed.set()
+
+
 
     def retrieve_waveforms(self):
         """Initiate waveform retrieval in a background thread.
@@ -606,7 +657,6 @@ class WaveformDisplay:
         else:
             return 'gray'
 
-
     def _calculate_figure_dimensions(self, num_traces: int) -> tuple:
         """Calculate figure dimensions based on number of traces.
 
@@ -642,6 +692,12 @@ class WaveformDisplay:
         if not stream:
             return
 
+        # NEW: Check figure cache first - use trace IDs for stable cache key
+        trace_ids = sorted([f"{tr.stats.network}.{tr.stats.station}.{tr.stats.channel}_{tr.stats.starttime}" for tr in stream])
+        cache_key = f"event_{event.resource_id.id}_{page}_{hash(tuple(trace_ids))}_{self.filter_menu.display_limit}"
+        if cache_key in self.figure_cache:
+            return self.figure_cache[cache_key]
+
         # Sort traces by distance (via starttime)
         stream.traces.sort(key=lambda x: x.stats.starttime)
 
@@ -667,29 +723,18 @@ class WaveformDisplay:
         
         # Process each trace
         for i, tr in enumerate(current_stream):
-            #print("DEBUG plotted trace:",tr)
             ax = axes[i]
 
             # Calculate and add an appropriate filter for plotting
             filter_min,filter_max = get_tele_filter(tr)
-            if filter_min < filter_max:
-                tr.stats.filterband = (filter_min,filter_max)                 
+            
+            # NEW: Use cached processing instead of remove_instrument_response
+            tr_windowed = self._get_processed_trace(tr, filter_min, filter_max)
             
             if hasattr(tr.stats, 'p_arrival'):
                 p_time = UTCDateTime(tr.stats.p_arrival)
                 before_p = self.settings.event.before_p_sec
                 after_p = self.settings.event.after_p_sec
-                
-                # Trim trace to window around P
-                window_start = p_time - before_p
-                window_end = p_time + after_p
-                tr_windowed = tr.slice(window_start, window_end)
-
-                # Pre-process and apply a bandpass filter
-                if tr_windowed.stats.sampling_rate/2 > filter_min and filter_min<filter_max:
-                    tr_windowed.detrend()
-                    tr_windowed.taper(.005)
-                    tr_windowed.filter('bandpass',freqmin=filter_min,freqmax=filter_max,zerophase=True)
                 
                 # Calculate times relative to P arrival
                 times = np.arange(tr_windowed.stats.npts) * tr_windowed.stats.delta
@@ -702,17 +747,19 @@ class WaveformDisplay:
                 # Add P arrival line (now at x=0)
                 ax.axvline(x=0, color='red', linewidth=1, linestyle='-', alpha=0.8)
                 
-                # Format station label with distance
-                station_info = f"{tr.stats.network}.{tr.stats.station}.{tr.stats.location or ''}.{tr.stats.channel}"
+                # Format station label with distance (formatted much differently than station view for some reason!)
+                station_info = f"{tr.stats.network}.{tr.stats.station}.{tr.stats.location or ''}.{tr.stats.channel} -"
                 if hasattr(tr.stats, 'distance_km'):
                     station_info += f" {tr.stats.distance_km:.1f} km"
                 #adding event mag and region temporarily for debugging
+                if hasattr(tr.stats, 'event_time'):
+                    station_info += f", OT:{str(tr.stats.event_time)[0:19]}"                
                 if hasattr(tr.stats, 'event_magnitude'):
                     station_info += f", M{tr.stats.event_magnitude:.1f}"
                 if hasattr(tr.stats, 'event_region'):
                     station_info += f", {tr.stats.event_region}"                    
-                if hasattr(tr.stats, 'filterband'):
-                    station_info += f", {tr.stats.filterband[0]}-{tr.stats.filterband[1]}Hz"
+                if hasattr(tr_windowed.stats, 'filterband'):
+                    station_info += f", {tr_windowed.stats.filterband[0]}-{tr_windowed.stats.filterband[1]}Hz"
                 
                 # Position label inside plot
                 ax.text(0.02, 0.95, station_info,
@@ -732,7 +779,7 @@ class WaveformDisplay:
                 if i < num_traces - 1:
                     ax.set_xticklabels([])
                 else:
-                    ax.set_xlabel('Time relative to P (seconds)')
+                    ax.set_xlabel(f'Seconds relative to P ({str(p_time)})')
                 
                 # Add subtle grid
                 ax.grid(True, alpha=0.2)
@@ -747,6 +794,9 @@ class WaveformDisplay:
         
         # Adjust layout
         plt.subplots_adjust(left=0.1, right=0.9, top=0.97, bottom=0.1)
+        
+        # NEW: Cache the figure before returning
+        self.figure_cache[cache_key] = fig
         
         return fig
 
@@ -764,25 +814,31 @@ class WaveformDisplay:
         """
         if not stream:
             return
-        
+
+        # NEW: Check figure cache first - use trace IDs for stable cache key
+        trace_ids = sorted([f"{tr.stats.network}.{tr.stats.station}.{tr.stats.channel}_{tr.stats.starttime}" for tr in stream])
+        cache_key = f"station_{station_code}_{page}_{hash(tuple(trace_ids))}_{self.filter_menu.display_limit}"
+        if cache_key in self.figure_cache:
+            return self.figure_cache[cache_key]
+
         # Sort traces by distance
         for tr in stream:
             if not hasattr(tr.stats, 'distance_km') or not tr.stats.distance_km:
                 tr.stats.distance_km = 99999
 
         stream = Stream(sorted(stream, key=lambda tr: tr.stats.distance_km)) #TODO users may prefer to sort by OT
-        
+
         # Get current page's traces
         start_idx = page * self.filter_menu.display_limit
         end_idx = start_idx + self.filter_menu.display_limit
         current_stream = Stream(traces=stream.traces[start_idx:end_idx])
-        
+
         # Calculate standardized dimensions
         width, height = self._calculate_figure_dimensions(len(current_stream))
-        
+
         # Create figure with standardized dimensions
         fig = plt.figure(figsize=(width, height))
-        
+
         # Use GridSpec with standardized spacing
         gs = plt.GridSpec(len(current_stream), 1,
                          height_ratios=[1] * len(current_stream),
@@ -792,31 +848,21 @@ class WaveformDisplay:
                          left=0.1,
                          right=0.9)
         axes = [plt.subplot(gs[i]) for i in range(len(current_stream))]
-        
+
         # Process each trace
         for i, tr in enumerate(current_stream):
             ax = axes[i]
 
             # Calculate and add an appropriate filter for plotting
             filter_min,filter_max = get_tele_filter(tr)
-            if filter_min < filter_max:
-                tr.stats.filterband = (filter_min,filter_max)
+            
+            # NEW: Use cached processing instead of remove_instrument_response
+            tr_windowed = self._get_processed_trace(tr, filter_min, filter_max)
 
             if hasattr(tr.stats, 'p_arrival'):
                 p_time = UTCDateTime(tr.stats.p_arrival)
                 before_p = self.settings.event.before_p_sec
                 after_p = self.settings.event.after_p_sec
-
-                # Trim trace to window around P
-                window_start = p_time - before_p
-                window_end = p_time + after_p
-                tr_windowed = tr.slice(window_start, window_end)
-
-                # Pre-process and apply a bandpass filter
-                if tr_windowed.stats.sampling_rate/2 > filter_min and filter_min<filter_max:
-                    tr_windowed.detrend()
-                    tr_windowed.taper(.005)
-                    tr_windowed.filter('bandpass',freqmin=filter_min,freqmax=filter_max,zerophase=True)                
 
                 # Calculate times relative to P arrival
                 times = np.arange(tr_windowed.stats.npts) * tr_windowed.stats.delta
@@ -836,17 +882,17 @@ class WaveformDisplay:
                 if hasattr(tr.stats, 'distance_km'):
                     event_info.append(f"{tr.stats.distance_km:.1f} km")
                 if hasattr(tr.stats, 'event_time'):
-                    event_info.append(f"OT:{str(tr.stats.event_time)[0:19]}")                    
+                    event_info.append(f"OT:{str(tr.stats.event_time)[0:19]}")
                 if hasattr(tr.stats, 'event_magnitude'):
                     event_info.append(f"M{tr.stats.event_magnitude:.1f}")
                 if hasattr(tr.stats, 'event_region'):
                     event_info.append(tr.stats.event_region)
-                if hasattr(tr.stats, 'filterband'):
-                    event_info.append(f"{tr.stats.filterband[0]}-{tr.stats.filterband[1]}Hz")
+                if hasattr(tr_windowed.stats, 'filterband'):
+                    event_info.append(f"{tr_windowed.stats.filterband[0]}-{tr_windowed.stats.filterband[1]}Hz")
 
                 # Combine all information with proper formatting
                 label = f"{station_info} - {', '.join(event_info)}"
-                
+
                 # Position label inside plot
                 ax.text(0.02, 0.95, label,
                        transform=ax.transAxes,
@@ -865,7 +911,7 @@ class WaveformDisplay:
                 if i < len(current_stream) - 1:
                     ax.set_xticklabels([])
                 else:
-                    ax.set_xlabel('Time relative to P (seconds)')
+                    ax.set_xlabel(f'Seconds relative to P ({str(p_time)})')
 
                 # Add subtle grid
                 ax.grid(True, alpha=0.2)
@@ -882,7 +928,10 @@ class WaveformDisplay:
         net, sta = station_code.split(".")
         #fig.suptitle(f"Station {station_code} - Multiple Events View",
         #            fontsize=10, y=0.98)
-        
+
+        # NEW: Cache the figure before returning
+        self.figure_cache[cache_key] = fig
+
         return fig
 
     def render(self):
@@ -898,7 +947,7 @@ class WaveformDisplay:
             ["Single Event - Multiple Stations", "Single Station - Multiple Events"],
             key="view_selector_waveform"
         )
-        
+
         if not self.stream:
             st.info("No waveforms to display. Use the 'Get Waveforms' button to retrieve waveforms.")
             return
@@ -917,7 +966,7 @@ class WaveformDisplay:
 
             # map the events.. hanging onto the original indexes so users can keep track of what's happening
             valid_events_with_indices = [(i, event) for i, event in enumerate(events)
-                            if hasattr(event, 'resource_id') and event.resource_id in existing_data_resource_ids]        
+                            if hasattr(event, 'resource_id') and event.resource_id in existing_data_resource_ids]
 
             event_options = [
                 f"Event {orig_idx+1}: {event.origins[0].time} "
@@ -959,29 +1008,27 @@ class WaveformDisplay:
                     st.pyplot(fig)
             else:
                 st.warning("No waveforms match the current filter criteria.")
-        
+
         else:  # Single Station - Multiple Events view
             if not self.stream:
                 st.warning("No traces available.")
                 return
-            
-            # Get unique stations from all traces
 
+            # Get unique stations from all traces
             filtered_stream = self.apply_filters(self.stream)
             stations = set([f"{tr.stats.network}.{tr.stats.station}" for tr in filtered_stream])
 
-            
             if not stations:
                 st.warning("No stations match the current filter criteria.")
                 return
-            
+
             # may have to check if there exists data for said station (TODO)
             station_options = sorted(list(stations))
             selected_station = st.selectbox(
                 "Select Station",
                 station_options
             )
-            
+
             if selected_station:
                 net, sta = selected_station.split(".")
 
@@ -996,7 +1043,7 @@ class WaveformDisplay:
                         range(1, num_pages + 1),
                         key="station_view_pagination"
                     ) - 1
-                    
+
                     # Use plot_station_view
                     try:
                         fig = self.plot_station_view(selected_station, station_stream, page, num_pages)
@@ -1016,27 +1063,28 @@ class WaveformDisplay:
         )
         missing_data_display.render()
 
+
 class WaveformComponents:
     settings: SeismoLoaderSettings
     filter_menu: WaveformFilterMenu
     waveform_display: WaveformDisplay
     continuous_components: ContinuousComponents
     console: ConsoleDisplay
-    
+
     def __init__(self, settings: SeismoLoaderSettings):
         self.settings = settings
         self.filter_menu = WaveformFilterMenu(settings)
         self.waveform_display = WaveformDisplay(settings, self.filter_menu)
         self.continuous_components = ContinuousComponents(settings)
         self.console = ConsoleDisplay()
-        
+
         # Initialize console with logs from session state if they exist
         if "log_entries" in st.session_state and st.session_state["log_entries"]:
             self.console.accumulated_output = st.session_state["log_entries"]
-        
+
         # Pass console to WaveformDisplay
         self.waveform_display.console = self.console
-        
+
         # Initialize session state
         required_states = {
             "is_downloading": False,
@@ -1158,7 +1206,7 @@ class WaveformComponents:
                         self.console.accumulated_output.append(log_entry)
                     except queue.Empty:
                         break
-                
+
                 # Save to session state
                 if self.console.accumulated_output:
                     st.session_state["log_entries"] = self.console.accumulated_output
@@ -1188,7 +1236,7 @@ class WaveformComponents:
                 "Get Waveforms",
                 key="get_waveforms",
                 disabled=st.session_state.get("is_downloading", False),
-                use_container_width=True
+                width='stretch'
             )
 
         # Cancel Download button in third column
@@ -1196,7 +1244,7 @@ class WaveformComponents:
             if st.button("Cancel Download", 
                         key="cancel_download",
                         disabled=not st.session_state.get("is_downloading", False),
-                        use_container_width=True):
+                        width='stretch'):
                 stop_event.set()  # Signal cancellation
                 st.warning("Cancelling download...")
                 st.session_state.update({
@@ -1206,18 +1254,17 @@ class WaveformComponents:
 
         # Download status indicator
         status_container = st.empty()
-        
+
         # Show appropriate status message
         if get_waveforms_button:
             status_container.info("Starting waveform download...")
             self.waveform_display.retrieve_waveforms()
         elif st.session_state.get("is_downloading"):
-            # status_container.info("Downloading waveforms... (this may take several minutes)")
             st.spinner("Downloading waveforms... (this may take several minutes)")
-            
+
             # Display real-time logs in the waveform view during download
             log_container = st.empty()
-            
+
             # Process any new log entries from the queue
             new_logs = False
             while not log_queue.empty():
@@ -1229,18 +1276,18 @@ class WaveformComponents:
                     new_logs = True
                 except queue.Empty:
                     break
-            
+
             # Save logs to session state if updated
             if new_logs or self.console.accumulated_output:
                 st.session_state["log_entries"] = self.console.accumulated_output
-                
+
                 # Display logs in the waveform view
                 if self.console.accumulated_output:
                     # Add the initial header line if it's not already there
                     if not any("Running run_event" in line for line in self.console.accumulated_output):
                         self.console.accumulated_output.insert(0, "Running run_event\n-----------------")
                         st.session_state["log_entries"] = self.console.accumulated_output
-                    
+
                     #raw_content = "".join(self.console.accumulated_output)
                     #escaped_content = escape(raw_content)
                     content = self.console._preserve_whitespace(''.join(self.console.accumulated_output))
@@ -1261,7 +1308,7 @@ class WaveformComponents:
                         'window.terminal_scroll();'
                         '</script>'
                     )
-                    
+
                     log_container.markdown(log_text, unsafe_allow_html=True)
             
             self.render_polling_ui()
@@ -1294,16 +1341,16 @@ class WaveformComponents:
                     data=buf,
                     file_name="waveform_plot.png",
                     mime="image/png",
-                    use_container_width=True
+                    width='stretch'
                 )
             else:
-                st.button("Download PNG", disabled=True, use_container_width=True)
+                st.button("Download PNG", disabled=True, width='stretch')
 
 
     def _render_log_view(self):
         st.title("Waveform Retrieval Logs")
         self.console._init_terminal_style()  # Initialize terminal styling
-        
+
         # Process any pending log entries from the queue
         logs_updated = False
         while not log_queue.empty():
@@ -1315,11 +1362,11 @@ class WaveformComponents:
                 logs_updated = True
             except queue.Empty:
                 break
-        
+
         # Save logs to session state if updated
         if logs_updated:
             st.session_state["log_entries"] = self.console.accumulated_output
-        
+
         if self.console.accumulated_output:
             # Add the initial header line if it's not already there
             if not any("Running run_event" in line for line in self.console.accumulated_output):
@@ -1344,7 +1391,7 @@ class WaveformComponents:
                 'window.terminal_scroll();'
                 '</script>'
             )
-            
+
             st.markdown(log_text, unsafe_allow_html=True)
         else:
             st.info("Perform a waveform download first :)")
@@ -1383,7 +1430,7 @@ class MissingDataDisplay:
             str: Formatted event time string.
         """
         return event.origins[0].time.strftime('%Y-%m-%d %H:%M:%S')
-    
+
     def _get_missing_events(self):
         """Identify events with no data and their missing channels.
 
@@ -1393,7 +1440,7 @@ class MissingDataDisplay:
                 and missing channels.
         """
         missing_events = []
-        
+
         # sort events by time
         try:
             catalog = self.settings.event.selected_catalogs.copy() #need copy?
@@ -1427,7 +1474,6 @@ class MissingDataDisplay:
                 missing_data_str = None
                 print("DEBUG missing data dict issue: ",e)
 
-
             if missing_data_str:
                 # Combine event ot, mag, region into one column
                 event_str = f"{self._format_event_time(event)},  M{event.magnitudes[0].mag:.1f},  {event.extra.get('region', {}).get('value', 'Unknown Region')}"
@@ -1438,9 +1484,10 @@ class MissingDataDisplay:
                     'Event': event_str,
                     'Missing Data': missing_data_str
                 })
-        
+
         return missing_events
-    
+
+
     def render(self):
         """Render the missing data display interface.
 
@@ -1450,20 +1497,20 @@ class MissingDataDisplay:
         - Dynamic height adjustment based on number of entries
         """
         missing_events = self._get_missing_events()
-        
+
         if missing_events:
             st.warning("⚠️ Events with Missing Data:")
-            
+
             # Create DataFrame from missing events
             df = pd.DataFrame(missing_events)
-            
+
             # Calculate dynamic height based on number of rows
             height = len(df) * 35 + 40  # Same formula as distance display
-            
+
             # Display the DataFrame
             st.dataframe(
                 df,
-                use_container_width=True,
+                width='stretch',
                 height=height,
                 hide_index=True
             )

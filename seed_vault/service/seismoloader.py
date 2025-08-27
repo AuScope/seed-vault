@@ -101,9 +101,9 @@ def read_config(config_file: str) -> CustomConfigParser:
     """
     config = CustomConfigParser(allow_no_value=True)
     config.read(config_file)
-    
+
     processed_config = CustomConfigParser(allow_no_value=True)
-    
+
     for section in config.sections():
         processed_config.add_section(section)
         for key, value in config.items(section):
@@ -113,7 +113,7 @@ def read_config(config_file: str) -> CustomConfigParser:
             else:
                 processed_key = key.lower()
                 processed_value = value.lower() if value is not None else None
-            
+
             processed_config.set(section, processed_key, processed_value)
 
     return processed_config
@@ -322,13 +322,13 @@ def select_highest_samplerate(inv, minSR=10, time=None):
                 if loc_code not in loc_groups:
                     loc_groups[loc_code] = []
                 loc_groups[loc_code].append(channel)
-            
+
             filtered_channels = []
             for loc_group in loc_groups.values():
                 if len(loc_group) == 1:
                     filtered_channels.extend(loc_group)
                     continue
-                
+
                 if time:
                     active_channels = [ch for ch in loc_group]
                     if active_channels:
@@ -341,16 +341,16 @@ def select_highest_samplerate(inv, minSR=10, time=None):
                         if time_key not in time_groups:
                             time_groups[time_key] = []
                         time_groups[time_key].append(channel)
-                    
+
                     for time_group in time_groups.values():
                         if len(time_group) > 1:
                             max_sr = max(ch.sample_rate for ch in time_group)
                             filtered_channels.extend([ch for ch in time_group if ch.sample_rate == max_sr])
                         else:
                             filtered_channels.extend(time_group)
-            
+
             sta.channels = filtered_channels
-    
+
     return inv
 
 
@@ -399,58 +399,58 @@ def get_preferred_channels(
 
     if time:
         inv = inv.select(time=time)
-    
+
     for net in inv:
         new_net = net.copy()
         new_net.stations = []
-        
+
         for sta in net:
             new_sta = sta.copy()
             new_sta.channels = []
-            
+
             # Group channels by component (e.g. Z, N, E, 1, 2)
             components = defaultdict(list)
             for chan in sta:
                 comp = chan.code[-1]
                 components[comp].append(chan)
-            
+
             # Select best channel for each component
             for chan_list in components.values():
                 best_chan = None
                 best_cha_rank = float('inf')
                 best_loc_rank = float('inf')
-                
+
                 for chan in chan_list:
                     if not chan.is_active(time):
                         continue
-                    
+
                     cha_code = chan.code[:-1]
-                    
+
                     # Get ranking positions
                     cha_position = len(cha_rank) if cha_rank is None else \
                         len(cha_rank) if cha_code not in cha_rank else cha_rank.index(cha_code)
                     loc_position = len(loc_rank) if loc_rank is None else \
                         len(loc_rank) if chan.location_code not in loc_rank else loc_rank.index(chan.location_code)
-                    
+
                     # Update if better ranking found
                     if (cha_position < best_cha_rank or 
                         (cha_position == best_cha_rank and loc_position < best_loc_rank)):
                         best_chan = chan
                         best_cha_rank = cha_position
                         best_loc_rank = loc_position
-                
+
                 if best_chan is not None:
                     new_sta.channels.append(best_chan)
-            
+
             # Keep original if no channels passed filtering
             if new_sta.channels:
                 new_net.stations.append(new_sta)
             else:
                 new_net.stations.append(sta)
-        
+
         if new_net.stations:
             new_inv.networks.append(new_net)
-    
+
     return new_inv
 
 
@@ -558,7 +558,7 @@ def collect_requests_event(
                     origin.latitude, origin.longitude,
                     sta.latitude, sta.longitude
                 )
-                
+
                 p_time, s_time = get_p_s_times(eq, dist_deg, model)
                 if p_time is None:
                     print(f"Warning: Unable to calculate first arrival for {net.code}.{sta.code}")
@@ -666,7 +666,7 @@ def get_missing_from_request(db_manager, eq_id: str, requests: List[Tuple], st: 
     """
     Compare requested seismic data against what's present in a Stream.
     Handles comma-separated values for location and channel codes.
-    
+
     Parameters:
     -----------
     eq_id : str
@@ -675,7 +675,7 @@ def get_missing_from_request(db_manager, eq_id: str, requests: List[Tuple], st: 
         List of request tuples, each containing (network, station, location, channel, starttime, endtime)
     st : Stream
         ObsPy Stream object containing seismic traces
-        
+
     Returns:
     --------
     dict
@@ -1232,7 +1232,7 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
         >>> settings.station.network = "IU"
         >>> inventory = get_stations(settings)
     """
-    print("Running get_stations")
+    print("Running get_stations...")
 
     starttime = UTCDateTime(settings.station.date_config.start_time)
     endtime = UTCDateTime(settings.station.date_config.end_time)
@@ -1280,7 +1280,6 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
             inv = read_inventory(settings.station.local_inventory, level='channel')
         except Exception as e:
             print(f"Could not read {settings.station.local_inventory}:\n{e}")
-
 
     # Query stations based on geographic constraints
     elif settings.station.geo_constraint:
@@ -1385,7 +1384,7 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
                     channel=sq.channel or '*',
                     starttime=sq.starttime,
                     endtime=sq.endtime,
-                    level='channel'
+                    level=settings.station.level.value
                 )
             except Exception as e:
                 print(f"Could not find requested station {net}.{sta} at {settings.station.client}\n{e}")
@@ -1398,6 +1397,7 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
     if cha_pref or loc_pref:
         inv = get_preferred_channels(inv, cha_pref, loc_pref)
 
+    print("     ...got stations")
     return inv
 
 def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
@@ -1425,7 +1425,7 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
         >>> settings.event.min_magnitude = 5.0
         >>> catalogs = get_events(settings)
     """
-    print("Running get_events")
+    print("Running get_events...")
 
     starttime = UTCDateTime(settings.event.date_config.start_time)
     endtime = UTCDateTime(settings.event.date_config.end_time)
@@ -1560,9 +1560,6 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
             print(f"No events found for constraint: {geo.geo_type}")
             continue
 
-    # Remove duplicates (*now done below)
-    #catalog = remove_duplicate_events(catalog)
-
     # Re-filter to remove anything that eclipsed original search. Also removes duplicates.
     try:
         catalog = filter_catalog_by_geo_constraints(catalog,geo_constraints_for_obspy)
@@ -1572,8 +1569,8 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
     # Sort by origin time
     catalog.events.sort(key=lambda event: event.origins[0].time)
 
+    print("     ...got events")
     return catalog
-
 
 
 def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event = None):
@@ -1615,7 +1612,10 @@ def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event =
     - The function logs detailed information about the processing steps and errors to aid
       in debugging and monitoring of data retrieval processes.
     """
-    print("Running run_continuous\n----------------------")
+    if not settings.station.selected_invs: #NEW / double check. issue #317
+        return None
+
+    print("Running run_continuous...\n----------------------")
     
     settings, db_manager = setup_paths(settings)
 
@@ -1707,7 +1707,6 @@ def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event =
         print(f"! Error with join_continuous_segments:\n {e}")
 
     return True
-
 
 
 def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None):
@@ -1883,7 +1882,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
                         request[0].upper(), # network
                         request[1].upper()  # station
                         )
-                    
+
                     if arrivals:
                         for tr in st:
                             tr.stats.resource_id = eq.resource_id.id
@@ -1895,14 +1894,13 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
                             tr.stats.event_magnitude = eq.magnitudes[0].mag if hasattr(eq, 'magnitudes') and eq.magnitudes else 0.99
                             tr.stats.event_region = event_region
                             tr.stats.event_time = eq.origins[0].time
-                    
+
                     event_stream.extend(st)
 
 
             except Exception as e:
                 print(f"Error reading data for {request[0].upper()}.{request[1].upper()}:\n {str(e)}")
                 continue
-
 
         # Now attempt to keep track of what data was missing. 
         # Note that this is not catching out-of-bounds data, for better or worse (probably better)
@@ -1917,7 +1915,6 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
 
             if missing:
                 all_missing.update(missing)
-
 
     # Final database cleanup
     try:

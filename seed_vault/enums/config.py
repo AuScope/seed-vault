@@ -19,7 +19,6 @@ class WorkflowType(DescribedEnum):
     STATION_BASED = ("Station Based - Starting from Selecting Stations", "Search for stations, then filter for pertinent events")
     CONTINUOUS = ("Requesting Continuous Data", "Search for and download bulk continuous station data")
 
-
 class GeoConstraintType(str, Enum):
     """
     The class `GeoConstraintType` defines an enumeration of geographic constraint types with values for
@@ -29,12 +28,11 @@ class GeoConstraintType(str, Enum):
     CIRCLE   = 'circle'
     NONE     = 'neither'
 
-
 class Levels(str, Enum):
     """
-    The class `Levels` is a Python enumeration with two members, `CHANNEL` and `STATION`, each
-    associated with a string value.
+    The class `Levels` is a Python enumeration with three members,
+    `RESPONSE`, `CHANNEL` and `STATION`, each associated with a string value.
     """
+    RESPONSE = 'response'
     CHANNEL  = 'channel'
     STATION  = 'station'
-

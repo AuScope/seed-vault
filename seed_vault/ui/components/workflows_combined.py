@@ -29,9 +29,9 @@ class CombinedBasedWorkflow:
         self.settings = get_app_settings()
         if(self.settings.status_handler.has_errors()):
             self.handle_error("Initialization failed due to invalid parameters. Please review the details below.")
-        else:    
-            self.event_components = BaseComponent(self.settings, step_type=Steps.EVENT, prev_step_type=None, stage=1)    
-            self.station_components = BaseComponent(self.settings, step_type=Steps.STATION, prev_step_type=Steps.EVENT, stage=2)    
+        else:
+            self.event_components = BaseComponent(self.settings, step_type=Steps.EVENT, prev_step_type=None, stage=1)
+            self.station_components = BaseComponent(self.settings, step_type=Steps.STATION, prev_step_type=Steps.EVENT, stage=2)
             self.waveform_components = WaveformComponents(self.settings)
 
     def next_stage(self):
@@ -42,7 +42,6 @@ class CombinedBasedWorkflow:
         self.stage -= 1
         st.rerun()
 
-    
     def init_settings(self, selected_flow_type):
         """
         See description in render_stage_0.
@@ -65,7 +64,7 @@ class CombinedBasedWorkflow:
         (we actually may need to keep the filters as is).
         """
         c1, c2 = st.columns([2,1])
-        
+
         with c1:
             workflow_options_list = list(workflow_options.keys())            
             # if self.settings.event is None:
@@ -152,7 +151,7 @@ class CombinedBasedWorkflow:
                 if(workflow_type == WorkflowType.STATION_BASED):
                     self.event_components.settings.event.date_config.start_time = self.station_components.settings.station.date_config.start_time
                     self.event_components.settings.event.date_config.end_time = self.station_components.settings.station.date_config.end_time
-                    
+
                     self.event_components.set_map_view(
                         map_center=self.station_components.map_view_center,
                         map_zoom=self.station_components.map_view_zoom
@@ -162,9 +161,8 @@ class CombinedBasedWorkflow:
                 if selected_invs is None or len(selected_invs) <= 0:
                     self.trigger_error("Please select a station to proceed to the next step.")
                     return False
-                
-                self.settings.waveform.client = self.settings.station.client                        
-                
+
+                self.settings.waveform.client = self.settings.station.client
 
         if self.stage == 2:
             if workflow_type == WorkflowType.EVENT_BASED: 
@@ -172,7 +170,7 @@ class CombinedBasedWorkflow:
                 self.station_components.update_selected_data()
                 selected_invs = self.station_components.settings.station.selected_invs
                 if selected_invs is not None and len(selected_invs) > 0: 
-                    self.settings.waveform.client = self.settings.station.client                                               
+                    self.settings.waveform.client = self.settings.station.client
                 else:
                     self.trigger_error("Please select a station to proceed to the next step.")
                     return False
@@ -183,16 +181,16 @@ class CombinedBasedWorkflow:
                 selected_catalogs = self.event_components.settings.event.selected_catalogs
                 if selected_catalogs is None or len(selected_catalogs) == 0:
                     self.trigger_error("Please select an event to proceed to the next step.")
-                    return False         
+                    return False
 
-        self.has_error = False       
-        
+        self.has_error = False
+
         return True
-    
+
     def render_stage_1(self):
         # Add CSS to prevent scrolling on headers..
         st.markdown("<style>.stMarkdown{overflow:visible !important;}</style>", unsafe_allow_html=True)
-        
+
         c1, c2, c3 = st.columns([1, 1, 1])
         title = "Events" if self.settings.selected_workflow == WorkflowType.EVENT_BASED else "Stations"
 
@@ -217,7 +215,7 @@ class CombinedBasedWorkflow:
                 elif self.settings.selected_workflow in [WorkflowType.STATION_BASED, WorkflowType.CONTINUOUS]:
                     selected_invs = self.station_components.settings.station.selected_invs
                     if selected_invs is None or len(selected_invs) <= 0:
-                        st.error(self.err_message)                           
+                        st.error(self.err_message)
 
         # Render components based on selected workflow
         if self.settings.selected_workflow == WorkflowType.EVENT_BASED:
@@ -234,7 +232,7 @@ class CombinedBasedWorkflow:
         if self.settings.selected_workflow == WorkflowType.CONTINUOUS:
             with c2:
                 st.markdown("### Step 2: Get Waveforms", unsafe_allow_html=False)
-                
+
             with c1:
                 if st.button("Previous"):
                     selected_idx = self.station_components.get_selected_idx()
@@ -262,7 +260,7 @@ class CombinedBasedWorkflow:
                 if st.button("Next"):
                     if self.validate_and_adjust_selection(self.settings.selected_workflow):
                         self.next_stage()
-                    
+
                 if self.has_error:
                     if self.settings.selected_workflow == WorkflowType.EVENT_BASED:
                         selected_invs = self.station_components.settings.station.selected_invs
@@ -277,7 +275,7 @@ class CombinedBasedWorkflow:
             self.station_components.render()
         elif self.settings.selected_workflow == WorkflowType.STATION_BASED:
             self.event_components.render()
-    
+
     def render_stage_3(self):
         # Add CSS to prevent scrolling on headers..
         st.markdown("<style>.stMarkdown{overflow:visible !important;}</style>", unsafe_allow_html=True)
@@ -292,7 +290,6 @@ class CombinedBasedWorkflow:
                     self.station_components.refresh_map(selected_idx=selected_idx,clear_draw=True)
                     self.previous_stage()
 
-
         if self.settings.selected_workflow == WorkflowType.STATION_BASED:
             with c1:
                 if st.button("Previous"):
@@ -301,8 +298,6 @@ class CombinedBasedWorkflow:
                     self.previous_stage()
 
         self.waveform_components.render()
-
-
 
     def render(self):
         if self.stage == 0:
@@ -316,7 +311,6 @@ class CombinedBasedWorkflow:
 
         if self.stage == 3:
             self.render_stage_3()
-          
 
     def reset_config(self):
         self.settings = reset_config()   
@@ -331,12 +325,12 @@ class CombinedBasedWorkflow:
         st.error(f"⚠️ {message}")
 
         if(self.settings.status_handler.has_errors()):
-            errors = self.settings.status_handler.generate_status_report("errors")                           
+            errors = self.settings.status_handler.generate_status_report("errors")
             st.error(f"🔍 **Parameter Issues Detected:**\n\n{errors}")
-                        
+
             self.settings.status_handler.display()        
 
             st.warning("The system encountered issues with the provided parameters. Try restarting the application or resetting the settings.")
             st.button("🔄 Reset Settings", on_click=self.reset_config)
 
-        st.stop()  
+        st.stop()

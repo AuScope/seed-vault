@@ -384,6 +384,9 @@ def filter_inventory_by_geo_constraints(inventory: Inventory, constraints) -> In
     if len(constraints) == 0:
         return inventory
 
+    if len(inventory) == 0:
+        return None
+
     # Create new networks list for filtered inventory
     networks = []
     

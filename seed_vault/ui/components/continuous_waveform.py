@@ -484,7 +484,7 @@ class ContinuousDisplay:
                 "Download Waveforms",
                 key="download_continuous",
                 disabled=st.session_state.get("is_downloading", False) or not st.session_state.get("date_range_valid", True),
-                use_container_width=True
+                width='stretch'
             )
 
         # Cancel Download button in second column
@@ -492,7 +492,7 @@ class ContinuousDisplay:
             if st.button("Cancel Download", 
                         key="cancel_continuous_download",
                         disabled=not st.session_state.get("is_downloading", False),
-                        use_container_width=True):
+                        width='stretch'):
                 stop_event.set()  # Signal cancellation
                 st.warning("Cancelling download...")
                 st.session_state.update({

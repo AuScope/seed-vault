@@ -213,7 +213,9 @@ class BaseComponent:
         self.map_view_center = init_map_center
         self.map_view_zoom   = init_map_zoom
         self.export_as_alternate = False
-
+        self.is_refreshing = False
+        self.station_dates_applied = False
+        self.event_dates_applied = False
 
     def get_key_element(self, name):
         """Generates a unique key identifier for a UI element based on the step type and stage.
@@ -241,7 +243,7 @@ class BaseComponent:
         if self.step_type == Steps.STATION and self.settings.station is not None:
             return self.settings.station.geo_constraint
         return []
-    
+
     def set_geo_constraint(self, geo_constraint: List[GeometryConstraint]):
         """Sets the geographic constraints for the current step.
 
@@ -264,9 +266,12 @@ class BaseComponent:
     # ====================
     def refresh_filters(self):
         """Refreshes and updates the filter settings based on configuration changes."""
+        #print(f"DEBUG refresh_filters called: step={self.step_type}, stage={self.stage}")
         changes = self.settings.has_changed(self.old_settings)
+        #print(f"DEBUG changes detected: {changes}")
         if changes.get('has_changed', False):
-            self.old_settings      = deepcopy(self.settings)
+            #print("DEBUG: Calling st.rerun() from refresh_filters")
+            self.old_settings = deepcopy(self.settings)
             save_filter(self.settings)
             st.rerun()
 
@@ -294,27 +299,34 @@ class BaseComponent:
         max_date = date(2100,1,1)
 
         # Trim start and end times to whatever we just returned
-        if self.prev_step_type == Steps.STATION:
+        if (self.prev_step_type == Steps.STATION and 
+            not self.station_dates_applied and 
+            not st.session_state.get('skip_station_date_calc', False)):
+            
             start_dates = [
                 station.start_date 
                 for network in self.settings.station.selected_invs 
                 for station in network 
                 if station.start_date is not None
             ]
-
             end_dates = [
                 station.end_date if station.end_date is not None else datetime.now()
                 for network in self.settings.station.selected_invs 
                 for station in network
             ]
-
-            start_date, start_time = convert_to_datetime(min(start_dates))
-            end_date, end_time     = convert_to_datetime(max(end_dates))
-            end_date = end_date + timedelta(days=1) # add an extra day for that last station
+            calculated_start_datetime = datetime.combine(*convert_to_datetime(min(start_dates)))
+            calculated_end_datetime = datetime.combine(*convert_to_datetime(max(end_dates))) + timedelta(days=1)
+            
+            self.settings.event.date_config.start_time = calculated_start_datetime
+            self.settings.event.date_config.end_time = calculated_end_datetime
+            self.station_dates_applied = True  # Mark as applied
 
         else:
-            start_date, start_time = convert_to_datetime(self.settings.event.date_config.start_time)
-            end_date, end_time     = convert_to_datetime(self.settings.event.date_config.end_time)
+            if st.session_state.get('skip_station_date_calc', False):
+                st.session_state['skip_station_date_calc'] = False
+
+        start_date, start_time = convert_to_datetime(self.settings.event.date_config.start_time)
+        end_date, end_time     = convert_to_datetime(self.settings.event.date_config.end_time)
 
 
         with st.sidebar:
@@ -338,28 +350,28 @@ class BaseComponent:
                 c11, c12, c13 = st.columns([1,1,1])
                 with c11:
                     if st.button('Last Month', key="event-set-last-month"):
+                        st.session_state['skip_station_date_calc'] = True
                         self.settings.event.date_config.end_time, self.settings.event.date_config.start_time = get_time_interval('month')
                         st.rerun()
                 with c12:
                     if st.button('Last Week', key="event-set-last-week"):
+                        st.session_state['skip_station_date_calc'] = True
                         self.settings.event.date_config.end_time, self.settings.event.date_config.start_time = get_time_interval('week')
                         st.rerun()
                 with c13:
                     if st.button('Last Day', key="event-set-last-day"):
+                        st.session_state['skip_station_date_calc'] = True
                         self.settings.event.date_config.end_time, self.settings.event.date_config.start_time = get_time_interval('day')
                         st.rerun()
-
 
                 c1, c2 = st.columns([1,1])
 
                 with c1:
                     start_date  = st.date_input("Start Date", min_value=min_date, max_value=max_date, value=start_date, key="event-pg-start-date-event")
                     start_time  = st.time_input("Start Time (UTC)", start_time)
-                    self.settings.event.date_config.start_time = datetime.combine(start_date, start_time)
                 with c2:
                     end_date  = st.date_input("End Date", min_value=min_date, max_value=max_date, value=end_date, key="event-pg-end-date-event")
                     end_time  = st.time_input("End Time (UTC)", end_time)
-                    self.settings.event.date_config.end_time = datetime.combine(end_date, end_time)
 
                 if self.settings.event.date_config.start_time > self.settings.event.date_config.end_time:
                     st.error("Error: End Date must fall after Start Date.")
@@ -409,7 +421,10 @@ class BaseComponent:
         max_date = date(2100,1,1)
 
         # Trim start and end times to whatever we just returned
-        if self.prev_step_type == Steps.EVENT:
+        if (self.prev_step_type == Steps.EVENT and 
+            not getattr(self, 'event_dates_applied', False) and 
+            not st.session_state.get('skip_event_date_calc', False)):
+            
             origin_times = []
 
             for event in self.settings.event.selected_catalogs:
@@ -422,9 +437,14 @@ class BaseComponent:
                 end_date, end_time     = convert_to_datetime(max(origin_times))
                 end_date = end_date + timedelta(days=1) # add an extra day for that last event
 
+            self.event_dates_applied = True
+
         else:
-            start_date, start_time = convert_to_datetime(self.settings.station.date_config.start_time)
-            end_date, end_time = convert_to_datetime(self.settings.station.date_config.end_time)
+            if st.session_state.get('skip_event_date_calc', False):
+                st.session_state['skip_event_date_calc'] = False
+
+        start_date, start_time = convert_to_datetime(self.settings.station.date_config.start_time)
+        end_date, end_time = convert_to_datetime(self.settings.station.date_config.end_time)
 
         # One hour shift
         if (start_date == end_date and start_time >= end_time):
@@ -453,14 +473,17 @@ class BaseComponent:
                 c11, c12, c13 = st.columns([1,1,1])
                 with c11:
                     if st.button('Last Year', key="station-set-last-year"):
+                        st.session_state['skip_event_date_calc'] = True
                         self.settings.station.date_config.end_time, self.settings.station.date_config.start_time = get_time_interval('year')
                         st.rerun()
                 with c12:
                     if st.button('Last Month', key="station-set-last-month"):
+                        st.session_state['skip_event_date_calc'] = True
                         self.settings.station.date_config.end_time, self.settings.station.date_config.start_time = get_time_interval('month')
                         st.rerun()
                 with c13:
                     if st.button('Last Week', key="station-set-last-week"):
+                        st.session_state['skip_event_date_calc'] = True
                         self.settings.station.date_config.end_time, self.settings.station.date_config.start_time = get_time_interval('week')
                         st.rerun()
 
@@ -492,16 +515,25 @@ class BaseComponent:
                 self.settings.station.highest_samplerate_only = st.checkbox(
                     "Highest Sample Rate Only", 
                     value=self.settings.station.highest_samplerate_only,  # Default to unchecked
+                    help="If a station has multiple channels for the same component (e.g. HHZ & LHZ), only select the one with the highest samplerate (HHZ).",
                     key="station-pg-highest-sample-rate"
                 )
                 
                 self.settings.station.include_restricted = st.checkbox(
                     "Include Restricted Data", 
                     value=self.settings.station.include_restricted,  # Default to unchecked
+                    help="Includes restricted data in station search.",
                     key="event-pg-include-restricted-station"
                 )
 
-                self.settings.station.level = Levels.CHANNEL
+                # TODO WORK IN PROGRESS
+                inventory_level_tick = st.checkbox(
+                    "Include Instrument Response", 
+                    value=False,
+                    help="Download station metadata with full instrument response. Potentially makes metadata download MUCH larger. Use only if you need to export the fdsnXML or need to plot events with response removed.",
+                    key="event-pg-station-level"
+                )
+                self.settings.station.level = Levels.RESPONSE if inventory_level_tick else Levels.CHANNEL
 
                 self.render_map_buttons()
 
@@ -738,47 +770,53 @@ class BaseComponent:
 
 
     def refresh_map(self, reset_areas = False, selected_idx = None, clear_draw = False, rerun = False, get_data = True, recreate_map = True):
-        geo_constraint = self.get_geo_constraint()
+        if self.is_refreshing:
+            return
+        self.is_refreshing = True
 
-        if recreate_map:
-            
-            self.map_disp = create_map(
-                map_id=self.map_id, 
-                zoom_start=self.map_view_zoom,
-                map_center=[
-                    self.map_view_center.get("lat", 0.0),
-                    self.map_view_center.get("lng", 0.0),
-                ]
-            )
+        try:
+            geo_constraint = self.get_geo_constraint()
 
-        if clear_draw:
-            clear_map_draw(self.map_disp)
-            self.all_feature_drawings = geo_constraint
-            self.map_fg_area= add_area_overlays(areas=geo_constraint)
-        else:
-            if reset_areas:
-                geo_constraint = []
-            else:
-                geo_constraint = self.all_current_drawings + self.all_feature_drawings
+            if recreate_map:
+                self.map_disp = create_map(
+                    map_id=self.map_id, 
+                    zoom_start=self.map_view_zoom,
+                    map_center=[
+                        self.map_view_center.get("lat", 0.0),
+                        self.map_view_center.get("lng", 0.0)
+                    ]
+                )
 
-        self.set_geo_constraint(geo_constraint)
-
-        if selected_idx != None:
-            self.handle_update_data_points(selected_idx)
-        else:
-            # @NOTE: Below is added to resolve triangle marker displays.
-            #        But it results in map blinking and hence a chance to
-            #        break the map.
-            if not clear_draw:
+            if clear_draw:
                 clear_map_draw(self.map_disp)
                 self.all_feature_drawings = geo_constraint
                 self.map_fg_area= add_area_overlays(areas=geo_constraint)
-            if get_data:
-                self.handle_get_data()
-                # self.fetch_data_with_loading(fetch_func=self.handle_get_data)
+            else:
+                if reset_areas:
+                    geo_constraint = []
+                else:
+                    geo_constraint = self.all_current_drawings + self.all_feature_drawings
 
-        if rerun:
-            st.rerun()
+            self.set_geo_constraint(geo_constraint)
+
+            if selected_idx != None:
+                self.handle_update_data_points(selected_idx)
+            else:
+                # @NOTE: Below is added to resolve triangle marker displays.
+                #        But it results in map blinking and hence a chance to
+                #        break the map.
+                if not clear_draw:
+                    clear_map_draw(self.map_disp)
+                    self.all_feature_drawings = geo_constraint
+                    self.map_fg_area= add_area_overlays(areas=geo_constraint)
+                if get_data:
+                    self.has_fetch_new_data = False
+                    self.handle_get_data()
+
+            if rerun:
+                st.rerun()
+        finally:
+            self.is_refreshing = False
 
     def reset_markers(self):
         self.map_fg_marker = None
@@ -976,7 +1014,7 @@ class BaseComponent:
                 # with st.expander(f"Search around {self.TXT.PREV_STEP}", expanded = True):
                 self.area_around_prev_step_selections()
                 # st.write(f"Total Number of Selected {self.TXT.PREV_STEP.title()}s: {len(self.df_markers_prev)}")
-                # st.dataframe(self.df_markers_prev, use_container_width=True)
+                # st.dataframe(self.df_markers_prev, width='stretch')
 
 
     def area_around_prev_step_selections(self):
@@ -1229,16 +1267,20 @@ class BaseComponent:
         # if self.all_current_drawings != all_drawings:
         #     self.all_current_drawings = all_drawings
         #     self.refresh_map(rerun=True, get_data=True)
+        #print(f"DEBUG watch_all_drawings called: step={self.step_type}, prev_step={self.prev_step_type}, stage={self.stage}")
+        #print(f"DEBUG has_fetch_new_data: {self.has_fetch_new_data}")
+        #print(f"DEBUG drawings changed: {self.all_current_drawings != all_drawings}")        
+        if self.is_refreshing or self.all_current_drawings == all_drawings:
+            #print("DEBUG: Early return - no changes or already refreshing")
+            return
 
-        if self.all_current_drawings != all_drawings:
-            self.all_current_drawings = all_drawings
-            if not self.has_fetch_new_data:
-                self.has_fetch_new_data = True
-                self.refresh_map(rerun=False, get_data=True)
+        self.all_current_drawings = all_drawings
+        if not self.has_fetch_new_data:
+            self.has_fetch_new_data = True
+            self.refresh_map(rerun=False, get_data=True)
         else:
             if self.has_fetch_new_data:
                 self.has_fetch_new_data = False
-
 
     # ===================
     #  ERROR HANDLES
@@ -1310,7 +1352,7 @@ class BaseComponent:
                         file_name="config.cfg",
                         mime="application/octet-stream",
                         help="Download the current settings.",
-                        use_container_width=True,
+                        width='stretch',
                     )
                 else:
                     st.caption("No config file available for download.")
@@ -1363,7 +1405,6 @@ class BaseComponent:
             return c2_export
 
 
-
     def render_map_right_menu(self):
         if self.prev_step_type and len(self.df_markers_prev) < 6:
             with st.expander(f"Search Around {self.prev_step_type.title()}s", expanded=True):
@@ -1396,7 +1437,7 @@ class BaseComponent:
                 self.map_disp, 
                 key=f"map_{self.map_id}",
                 feature_group_to_add=feature_groups, 
-                use_container_width=True, 
+                width='stretch', 
                 # height=self.map_height
             )
 
@@ -1656,7 +1697,7 @@ class BaseComponent:
             column_config=_format_columns(), 
             column_order = ordered_col, 
             key=self.get_key_element("Data Table"),
-            use_container_width=True,
+            width='stretch',
             height=height,
             on_change=self.on_change_df_table
         )
