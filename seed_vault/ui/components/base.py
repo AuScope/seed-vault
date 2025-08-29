@@ -270,7 +270,7 @@ class BaseComponent:
         changes = self.settings.has_changed(self.old_settings)
         #print(f"DEBUG changes detected: {changes}")
         if changes.get('has_changed', False):
-            #print("DEBUG: Calling st.rerun() from refresh_filters")
+            print("DEBUG: Calling st.rerun() from refresh_filters")
             self.old_settings = deepcopy(self.settings)
             save_filter(self.settings)
             st.rerun()
@@ -295,12 +295,14 @@ class BaseComponent:
         - Refreshes filters upon changes.
         """
 
+        # TODO ensure a fresh start if returning to this page via the "previous button"
+
         min_date = date(1800,1,1)
         max_date = date(2100,1,1)
 
         # Trim start and end times to whatever we just returned
         if (self.prev_step_type == Steps.STATION and 
-            not self.station_dates_applied and 
+            not self.station_dates_applied and ### TODO bug with including this because then we can't change dates manually
             not st.session_state.get('skip_station_date_calc', False)):
             
             start_dates = [
@@ -369,9 +371,13 @@ class BaseComponent:
                 with c1:
                     start_date  = st.date_input("Start Date", min_value=min_date, max_value=max_date, value=start_date, key="event-pg-start-date-event")
                     start_time  = st.time_input("Start Time (UTC)", start_time)
+                    self.settings.event.date_config.start_time = datetime.combine(start_date, start_time)
+                    self.station_dates_applied = True
                 with c2:
                     end_date  = st.date_input("End Date", min_value=min_date, max_value=max_date, value=end_date, key="event-pg-end-date-event")
                     end_time  = st.time_input("End Time (UTC)", end_time)
+                    self.settings.event.date_config.end_time = datetime.combine(end_date, end_time)
+                    self.station_dates_applied = True
 
                 if self.settings.event.date_config.start_time > self.settings.event.date_config.end_time:
                     st.error("Error: End Date must fall after Start Date.")
@@ -416,6 +422,8 @@ class BaseComponent:
         - Map interaction buttons are rendered.
         - Refreshes filters upon changes.
         """
+
+        # TODO ensure a fresh start if returning to this page via the "previous button"
 
         min_date = date(1800,1,1)
         max_date = date(2100,1,1)
@@ -468,7 +476,6 @@ class BaseComponent:
                 # Display warning if service is not available
                 if not is_service_available:
                     st.warning(f"⚠️ Warning: Selected client '{self.settings.station.client}' does not support STATION service. Please choose another client.")
-
 
                 c11, c12, c13 = st.columns([1,1,1])
                 with c11:

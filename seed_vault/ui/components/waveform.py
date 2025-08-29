@@ -463,10 +463,14 @@ class WaveformDisplay:
         tr_copy = trace.copy()
         tr_copy.detrend()
         if self.settings.station.level == "response":
-            tr_copy.taper(.05)
-            tr_copy.remove_response(self.settings.station.selected_invs,pre_filt=[.03,.06,40,49])
+            tr_copy.taper(.1) # taper has to be a bit extra to ensure safe deconvolution
+            try: 
+                tr_copy.remove_response(self.settings.station.selected_invs,pre_filt=[.03,.05,40,49],water_level=70)
+            except:
+                print("It seems you are missing the instrument response in your stationXML.. likely our fault? For now, continuing without removing instrument response...")
+                pass
         else:
-            tr_copy.taper(.02)
+            tr_copy.taper(.03)
         
         if hasattr(trace.stats, 'p_arrival'):
             p_time = UTCDateTime(trace.stats.p_arrival)
