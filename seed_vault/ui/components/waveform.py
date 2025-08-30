@@ -454,24 +454,26 @@ class WaveformDisplay:
         """Get a processed trace from cache or process it if not cached."""
         trace_id = f"{trace.stats.network}.{trace.stats.station}.{trace.stats.location}.{trace.stats.channel}_{trace.stats.starttime}"
         cache_key = self._get_processing_key(trace_id, filter_min, filter_max)
-        
+
         # Return cached version if available
         if cache_key in self.processed_cache:
             return self.processed_cache[cache_key].copy()
-        
+
         # Process and cache the trace
         tr_copy = trace.copy()
         tr_copy.detrend()
         if self.settings.station.level == "response":
             tr_copy.taper(.1) # taper has to be a bit extra to ensure safe deconvolution
             try: 
-                tr_copy.remove_response(self.settings.station.selected_invs,pre_filt=[.03,.05,40,49],water_level=70)
+                tr_copy.remove_response(self.settings.station.selected_invs,pre_filt=[.4,.5,40,49])
+                tr_copy.stats.plotunit = "VELOCITY (inst. response removed)"
             except:
-                print("It seems you are missing the instrument response in your stationXML.. likely our fault? For now, continuing without removing instrument response...")
+                print(f"DEBUG: Could not remove response for f{trace.stats.network}.{trace.stats.station}")
                 pass
         else:
             tr_copy.taper(.03)
-        
+            tr_copy.stats.plotunit = "COUNTS"
+
         if hasattr(trace.stats, 'p_arrival'):
             p_time = UTCDateTime(trace.stats.p_arrival)
             before_p = self.settings.event.before_p_sec
@@ -479,12 +481,12 @@ class WaveformDisplay:
             window_start = p_time - before_p
             window_end = p_time + after_p
             tr_copy = tr_copy.slice(window_start, window_end)
-        
+
         if tr_copy.stats.sampling_rate/2 > filter_min and filter_min<filter_max:
             tr_copy.filter('bandpass',freqmin=filter_min,freqmax=filter_max,zerophase=True)
-        
+
         tr_copy.stats.filterband = (filter_min,filter_max)
-        
+
         # Cache and return
         self.processed_cache[cache_key] = tr_copy.copy()
         return tr_copy
@@ -492,7 +494,7 @@ class WaveformDisplay:
     def clear_cache(self):
         """Clear the processed waveform cache."""
         self.processed_cache.clear()
-        self.figure_cache.clear()  # NEW: Also clear figure cache
+        self.figure_cache.clear()
 
     def apply_filters(self, stream) -> Stream:
         """Apply filters to the waveform stream based on user selections.
@@ -547,7 +549,7 @@ class WaveformDisplay:
                 self.buffer += text
 
                 # Only flush when buffer gets large enough
-                if len(self.buffer) > 80:  # Buffer getting too large, flush it
+                if len(self.buffer) > 500:  # Buffer getting too large, flush it
                     self.queue.put(self.buffer)
                     self.buffer = ""
 
@@ -563,23 +565,26 @@ class WaveformDisplay:
         sys.stdout = QueueLogger(original_stdout, log_queue)
         sys.stderr = QueueLogger(original_stderr, log_queue)
 
+        # Start fresh always otherwise it's a bit confusing
+        self.clear_cache()
+
         try:
             print("Starting waveform download process...")
             stream_and_missing = run_event(self.settings, stop_event)
             if stream_and_missing:
                 self.stream, self.missing_data = stream_and_missing
-                self.clear_cache()  # NEW: Clear cache when new data is loaded
+                #self.clear_cache()
                 success = True
-                print("Download completed successfully.")
+                print("Download completed successfully")
                 # If stopped via the cancel button, reset it continue to plotting as normal
                 stop_event.clear()
             else:
                 success = False
                 if stop_event.is_set():
-                    print("Download was cancelled by user.")
+                    print("Download cancelled (but finishing last request)")
                     st.session_state["download_cancelled"] = True
                 else:
-                    print("Download failed.")
+                    print("Download failed")
 
             task_result["success"] = success
 
@@ -599,7 +604,6 @@ class WaveformDisplay:
             sys.stderr = original_stderr
 
             task_completed.set()
-
 
 
     def retrieve_waveforms(self):
@@ -764,6 +768,8 @@ class WaveformDisplay:
                     station_info += f", {tr.stats.event_region}"                    
                 if hasattr(tr_windowed.stats, 'filterband'):
                     station_info += f", {tr_windowed.stats.filterband[0]}-{tr_windowed.stats.filterband[1]}Hz"
+                if hasattr(tr_windowed.stats, 'plotunit'):
+                    station_info += f", {tr_windowed.stats.plotunit}"
                 
                 # Position label inside plot
                 ax.text(0.02, 0.95, station_info,
@@ -859,7 +865,7 @@ class WaveformDisplay:
 
             # Calculate and add an appropriate filter for plotting
             filter_min,filter_max = get_tele_filter(tr)
-            
+
             # NEW: Use cached processing instead of remove_instrument_response
             tr_windowed = self._get_processed_trace(tr, filter_min, filter_max)
 
@@ -882,7 +888,6 @@ class WaveformDisplay:
                 # Format station label with distance, magnitude, and region
                 station_info = f"{tr.stats.network}.{tr.stats.station}.{tr.stats.location or ''}.{tr.stats.channel}"
                 event_info = []
-                # TODO: Add distance, magnitude, and region to station_info
                 if hasattr(tr.stats, 'distance_km'):
                     event_info.append(f"{tr.stats.distance_km:.1f} km")
                 if hasattr(tr.stats, 'event_time'):
@@ -893,6 +898,8 @@ class WaveformDisplay:
                     event_info.append(tr.stats.event_region)
                 if hasattr(tr_windowed.stats, 'filterband'):
                     event_info.append(f"{tr_windowed.stats.filterband[0]}-{tr_windowed.stats.filterband[1]}Hz")
+                if hasattr(tr_windowed.stats, 'plotunit'):
+                    event_info.append(f"{tr_windowed.stats.plotunit}")
 
                 # Combine all information with proper formatting
                 label = f"{station_info} - {', '.join(event_info)}"
@@ -1317,10 +1324,10 @@ class WaveformComponents:
             
             self.render_polling_ui()
         elif st.session_state.get("query_done") and self.waveform_display.stream:
-            status_container.success(f"Successfully retrieved waveforms for {len(self.waveform_display.stream)} channels.")
+            status_container.success(f"Successfully retrieved waveforms for {len(self.waveform_display.stream)} channels. Creating plots..")
         elif st.session_state.get("query_done"):
             if st.session_state.get("download_cancelled", False):
-                status_container.warning("Waveform download was cancelled by user.")
+                status_container.warning("Waveform download cancelled (but finishing up last request)")
                 # Reset the flag after displaying
                 st.session_state["download_cancelled"] = False
             else:
@@ -1450,7 +1457,7 @@ class MissingDataDisplay:
             catalog = self.settings.event.selected_catalogs.copy() #need copy?
             catalog.events.sort(key=lambda x: getattr(x.origins[0], 'time', UTCDateTime(0)) if x.origins else UTCDateTime(0))
         except Exception as e:
-            print("catalog sort problem",e)
+            print("DEBUG: Catalog sort problem ",e)
 
         for event in catalog:
             resource_id = str(event.resource_id)
@@ -1476,7 +1483,7 @@ class MissingDataDisplay:
 
             except Exception as e:
                 missing_data_str = None
-                print("DEBUG missing data dict issue: ",e)
+                print("DEBUG: missing data dict issue: ",e)
 
             if missing_data_str:
                 # Combine event ot, mag, region into one column

@@ -244,13 +244,6 @@ class CombinedBasedWorkflow:
             title = "Stations" if self.settings.selected_workflow == WorkflowType.EVENT_BASED else "Events"
             with c1:
                 if st.button("Previous"):
-                    if self.settings.selected_workflow == WorkflowType.EVENT_BASED:
-                        selected_idx = self.event_components.get_selected_idx()
-                        self.event_components.refresh_map(selected_idx=selected_idx, clear_draw=True)
-                    elif self.settings.selected_workflow == WorkflowType.STATION_BASED:
-                        selected_idx = self.station_components.get_selected_idx()
-                        self.station_components.refresh_map(selected_idx=selected_idx, clear_draw=True)
-
                     self.previous_stage()
 
             with c2:
@@ -283,19 +276,11 @@ class CombinedBasedWorkflow:
         c1, c2, c3 = st.columns([1, 1, 1])
         with c2:
             st.markdown("### Step 3: Waveforms", unsafe_allow_html=False)
-        if self.settings.selected_workflow == WorkflowType.EVENT_BASED:
-            with c1:
-                if st.button("Previous"):
-                    selected_idx = self.station_components.get_selected_idx()
-                    self.station_components.refresh_map(selected_idx=selected_idx,clear_draw=True)
-                    self.previous_stage()
 
-        if self.settings.selected_workflow == WorkflowType.STATION_BASED:
-            with c1:
-                if st.button("Previous"):
-                    selected_idx = self.event_components.get_selected_idx()
-                    self.event_components.refresh_map(selected_idx=selected_idx,clear_draw=True)
-                    self.previous_stage()
+        with c1:
+            if st.button("Previous"):
+                self.waveform_components.waveform_display.clear_cache()
+                self.previous_stage()
 
         self.waveform_components.render()
 

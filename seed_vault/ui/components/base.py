@@ -214,8 +214,8 @@ class BaseComponent:
         self.map_view_zoom   = init_map_zoom
         self.export_as_alternate = False
         self.is_refreshing = False
-        self.station_dates_applied = False
-        self.event_dates_applied = False
+        self.auto_sync_dates = True
+        self.dates_manually_set = False
 
     def get_key_element(self, name):
         """Generates a unique key identifier for a UI element based on the step type and stage.
@@ -270,12 +270,159 @@ class BaseComponent:
         changes = self.settings.has_changed(self.old_settings)
         #print(f"DEBUG changes detected: {changes}")
         if changes.get('has_changed', False):
-            print("DEBUG: Calling st.rerun() from refresh_filters")
+            #print("DEBUG: Calling st.rerun() from refresh_filters")
             self.old_settings = deepcopy(self.settings)
             save_filter(self.settings)
             st.rerun()
 
+    def sync_dates_from_previous_step(self):
+        """Sync dates from previous step's selections"""
+        if not self.auto_sync_dates or self.dates_manually_set:
+            return
+
+        if self.prev_step_type == Steps.EVENT and self.settings.event.selected_catalogs:
+            # Get date range from selected events
+            origin_times = [
+                event.preferred_origin().time if event.preferred_origin() 
+                else event.origins[0].time
+                for event in self.settings.event.selected_catalogs
+                if event.origins
+            ]
+            if origin_times:
+                start_time = min(origin_times)
+                end_time = max(origin_times) + timedelta(days=1)
+                self.settings.station.date_config.start_time = start_time
+                self.settings.station.date_config.end_time = end_time
+
+        elif self.prev_step_type == Steps.STATION and self.settings.station.selected_invs:
+            # Get date range from selected stations
+            start_dates = []
+            end_dates = []
+            for network in self.settings.station.selected_invs:
+                for station in network:
+                    if station.start_date:
+                        start_dates.append(station.start_date)
+                    if station.end_date:
+                        end_dates.append(station.end_date)
+                    else:
+                        end_dates.append(datetime.now())
+
+            if start_dates and end_dates:
+                self.settings.event.date_config.start_time = min(start_dates)
+                self.settings.event.date_config.end_time = max(end_dates)
+
+    def handle_manual_date_change(self):
+        """Mark dates as manually set when user changes them"""
+        self.dates_manually_set = True
+        self.auto_sync_dates = False  # Disable auto-sync once user takes control
+
+
     def event_filter(self):
+        """Displays and manages event filtering options in the Streamlit sidebar.
+
+        This method allows users to filter seismic events based on:
+        - Client selection
+        - Time range (last month, last week, last day, or custom start/end dates)
+        - Magnitude range
+        - Depth range
+
+        Functionality:
+        - Users select a client from a dropdown list.
+        - A warning is displayed if the selected client does not support event services.
+        - Users can set predefined time intervals (last month, last week, last day).
+        - Users can manually set start and end dates/times.
+        - Validation ensures that the end date is after the start date.
+        - Users can adjust event magnitude and depth ranges using sliders.
+        - Map interaction buttons are rendered.
+        - Refreshes filters upon changes.
+        """
+        
+        min_date = date(1800,1,1)
+        max_date = date(2100,1,1)
+
+        # Auto-sync dates from previous step if not manually overridden
+        self.sync_dates_from_previous_step()
+        
+        start_date, start_time = convert_to_datetime(self.settings.event.date_config.start_time)
+        end_date, end_time = convert_to_datetime(self.settings.event.date_config.end_time)
+
+        with st.sidebar:
+            with st.expander("Filters", expanded=True):
+                client_options = list(self.settings.client_url_mapping.get_clients())
+                self.settings.event.client = st.selectbox(
+                    'Choose a client:',
+                    client_options,
+                    index=client_options.index(self.settings.event.client),
+                    key=f"{self.TXT.STEP}-pg-client-event"
+                )
+
+                # Check services for selected client
+                services = check_client_services(self.settings.event.client)
+                is_service_available = bool(services.get('event'))
+
+                if not is_service_available:
+                    st.warning(f"⚠️ Warning: Selected client '{self.settings.event.client}' does not support EVENT service. Please choose another client.")
+
+                # Quick preset buttons - don't trigger manual override
+                c11, c12, c13 = st.columns([1,1,1])
+                with c11:
+                    if st.button('Last Month', key="event-set-last-month"):
+                        self.settings.event.date_config.end_time, self.settings.event.date_config.start_time = get_time_interval('month')
+                        self.handle_manual_date_change()
+                        st.rerun()
+                with c12:
+                    if st.button('Last Week', key="event-set-last-week"):
+                        self.settings.event.date_config.end_time, self.settings.event.date_config.start_time = get_time_interval('week')
+                        self.handle_manual_date_change()
+                        st.rerun()
+                with c13:
+                    if st.button('Last Day', key="event-set-last-day"):
+                        self.settings.event.date_config.end_time, self.settings.event.date_config.start_time = get_time_interval('day')
+                        self.handle_manual_date_change()
+                        st.rerun()
+
+                # Store original values to detect manual changes
+                original_start = self.settings.event.date_config.start_time
+                original_end = self.settings.event.date_config.end_time
+
+                c1, c2 = st.columns([1,1])
+                with c1:
+                    new_start_date = st.date_input("Start Date", min_value=min_date, max_value=max_date, value=start_date, key="event-pg-start-date-event")
+                    new_start_time = st.time_input("Start Time (UTC)", value=start_time, key="event-pg-start-time-event")
+                    new_start_datetime = datetime.combine(new_start_date, new_start_time)
+                    self.handle_manual_date_change()
+
+                with c2:
+                    new_end_date = st.date_input("End Date", min_value=min_date, max_value=max_date, value=end_date, key="event-pg-end-date-event")
+                    new_end_time = st.time_input("End Time (UTC)", value=end_time, key="event-pg-end-time-event")
+                    new_end_datetime = datetime.combine(new_end_date, new_end_time)
+                    self.handle_manual_date_change()
+
+                self.settings.event.date_config.start_time = new_start_datetime
+                self.settings.event.date_config.end_time = new_end_datetime
+
+                if self.settings.event.date_config.start_time > self.settings.event.date_config.end_time:
+                    st.error("Error: End Date must fall after Start Date.")
+
+                self.settings.event.min_magnitude, self.settings.event.max_magnitude = st.slider(
+                    "Min Magnitude", 
+                    min_value=-2.0, max_value=10.0, 
+                    value=(self.settings.event.min_magnitude, self.settings.event.max_magnitude), 
+                    step=0.1, key="event-pg-mag"
+                )
+
+                self.settings.event.min_depth, self.settings.event.max_depth = st.slider(
+                    "Min Depth (km)", 
+                    min_value=-5.0, max_value=1000.0, 
+                    value=(self.settings.event.min_depth, self.settings.event.max_depth), 
+                    step=1.0, key="event-pg-depth"
+                )
+
+                self.render_map_buttons()
+
+        self.refresh_filters()
+
+    def OLDevent_filter(self):
         """Displays and manages event filtering options in the Streamlit sidebar.
 
         This method allows users to filter seismic events based on:
@@ -302,7 +449,7 @@ class BaseComponent:
 
         # Trim start and end times to whatever we just returned
         if (self.prev_step_type == Steps.STATION and 
-            not self.station_dates_applied and ### TODO bug with including this because then we can't change dates manually
+            not self.station_dates_applied and
             not st.session_state.get('skip_station_date_calc', False)):
             
             start_dates = [
@@ -400,8 +547,136 @@ class BaseComponent:
 
         self.refresh_filters()
 
-
     def station_filter(self):
+        """Displays and manages station filtering options in the Streamlit sidebar.
+
+        This method allows users to filter seismic stations based on:
+        - Client selection
+        - Time range (last month, last week, last day, or custom start/end dates)
+        - Network, station, location, and channel filters
+        - Highest sample rate option
+        - Restricted data inclusion
+
+        Functionality:
+        - Users select a client from a dropdown list.
+        - A warning is displayed if the selected client does not support station services.
+        - Users can set predefined time intervals (last month, last week, last day).
+        - Users can manually set start and end dates/times with a one-hour shift if needed.
+        - Validation ensures that the end date is after the start date.
+        - Users can input station metadata filters (network, station, location, channel).
+        - Users can enable highest sample rate filtering and restricted data inclusion.
+        - Map interaction buttons are rendered.
+        - Refreshes filters upon changes.
+        """
+
+        min_date = date(1800,1,1)
+        max_date = date(2100,1,1)
+
+        # Auto-sync dates from previous step if not manually overridden
+        self.sync_dates_from_previous_step()
+
+        start_date, start_time = convert_to_datetime(self.settings.station.date_config.start_time)
+        end_date, end_time = convert_to_datetime(self.settings.station.date_config.end_time)
+
+        # Handle edge case where start and end are too close
+        if (start_date == end_date and start_time >= end_time):
+            start_time = time(hour=0, minute=0, second=0)
+            end_time = time(hour=1, minute=0, second=0)
+
+        with st.sidebar:
+            with st.expander("Filters", expanded=True):
+                client_options = list(self.settings.client_url_mapping.get_clients())
+                self.settings.station.client = st.selectbox(
+                    'Choose a client:', 
+                    client_options,
+                    index=client_options.index(self.settings.station.client),
+                    key=f"{self.TXT.STEP}-pg-client-station"
+                )
+
+                # Check services for selected client
+                services = check_client_services(self.settings.station.client)
+                is_service_available = bool(services.get('station'))
+
+                if not is_service_available:
+                    st.warning(f"⚠️ Warning: Selected client '{self.settings.station.client}' does not support STATION service. Please choose another client.")
+
+                # Quick preset buttons - don't trigger manual override
+                c11, c12, c13 = st.columns([1,1,1])
+                with c11:
+                    if st.button('Last Year', key="station-set-last-year"):
+                        self.settings.station.date_config.end_time, self.settings.station.date_config.start_time = get_time_interval('year')
+                        self.handle_manual_date_change()
+                        st.rerun()
+                with c12:
+                    if st.button('Last Month', key="station-set-last-month"):
+                        self.settings.station.date_config.end_time, self.settings.station.date_config.start_time = get_time_interval('month')
+                        self.handle_manual_date_change()
+                        st.rerun()
+                with c13:
+                    if st.button('Last Week', key="station-set-last-week"):
+                        self.settings.station.date_config.end_time, self.settings.station.date_config.start_time = get_time_interval('week')
+                        self.handle_manual_date_change()
+                        st.rerun()
+
+                # Store original values to detect manual changes
+                original_start = self.settings.station.date_config.start_time
+                original_end = self.settings.station.date_config.end_time
+
+                c11, c12 = st.columns([1,1])
+                with c11:
+                    new_start_date = st.date_input("Start Date", min_value=min_date, max_value=max_date, value=start_date, key="station-pg-start-date")
+                    new_start_datetime = datetime.combine(new_start_date, start_time)
+                    self.handle_manual_date_change()
+                with c12:
+                    new_end_date = st.date_input("End Date", min_value=min_date, max_value=max_date, value=end_date, key="station-pg-end-date")
+                    new_end_datetime = datetime.combine(new_end_date, end_time)
+                    self.handle_manual_date_change()
+
+                self.settings.station.date_config.start_time = new_start_datetime
+                self.settings.station.date_config.end_time = new_end_datetime
+
+                if self.settings.station.date_config.start_time > self.settings.station.date_config.end_time:
+                    st.error("Error: End Date must fall after Start Date.")
+
+                c21, c22 = st.columns([1,1])
+                c31, c32 = st.columns([1,1])
+
+                with c21:
+                    self.settings.station.network = st.text_input("Network", self.settings.station.network, key="station-pg-net-txt")
+                with c22:
+                    self.settings.station.station = st.text_input("Station", self.settings.station.station, key="station-pg-sta-txt")
+                with c31:
+                    self.settings.station.location = st.text_input("Location", self.settings.station.location, key="station-pg-loc-txt")
+                with c32:
+                    self.settings.station.channel = st.text_input("Channel", self.settings.station.channel, key="station-pg-cha-txt")
+
+                self.settings.station.highest_samplerate_only = st.checkbox(
+                    "Highest Sample Rate Only", 
+                    value=self.settings.station.highest_samplerate_only,
+                    help="If a station has multiple channels for the same component (e.g. HHZ & LHZ), only select the one with the highest samplerate (HHZ).",
+                    key="station-pg-highest-sample-rate"
+                )
+                
+                self.settings.station.include_restricted = st.checkbox(
+                    "Include Restricted Data", 
+                    value=self.settings.station.include_restricted,
+                    help="Includes restricted data in station search.",
+                    key="station-pg-include-restricted"
+                )
+
+                inventory_level_tick = st.checkbox(
+                    "Include Instrument Response", 
+                    value=False,
+                    help="Download station metadata with full instrument response. Potentially makes metadata download MUCH larger. Use only if you need to export the fdsnXML or need to plot events with response removed.",
+                    key="station-pg-instrument-response"
+                )
+                self.settings.station.level = Levels.RESPONSE if inventory_level_tick else Levels.CHANNEL
+
+                self.render_map_buttons()
+
+        self.refresh_filters()
+
+    def OLDstation_filter(self):
         """Displays and manages station filtering options in the Streamlit sidebar.
 
         This method allows users to filter seismic stations based on:
@@ -965,21 +1240,61 @@ class BaseComponent:
         mask = self.df_markers['is_selected']
         return self.df_markers[mask].index.tolist()
 
+    def sync_df_markers_with_df_edit_debug(self):
+        print(f"DEBUG: sync called for {self.step_type}")
+        print(f"DEBUG: df_data_edit is None: {self.df_data_edit is None}")
+        if self.df_data_edit is not None and 'is_selected' in self.df_data_edit.columns:
+            print(f"DEBUG: selected count in df_data_edit: {self.df_data_edit['is_selected'].sum()}")
+        else:
+            print(f"DEBUG: df_data_edit has no is_selected column or is None")
+
+        if 'is_selected' in self.df_markers.columns:
+            print(f"DEBUG: selected count in df_markers BEFORE sync: {self.df_markers['is_selected'].sum()}")
+
+        # Original sync logic
+        if self.df_data_edit is None:
+            return
+        if 'is_selected' not in self.df_data_edit.columns:
+            return
+        self.df_markers['is_selected'] = self.df_data_edit['is_selected']
+
+        print(f"DEBUG: selected count in df_markers AFTER sync: {self.df_markers['is_selected'].sum()}")
+
     def sync_df_markers_with_df_edit(self):
         if self.df_data_edit is None:
-            # st.error("No data has been edited yet. Please make a selection first.")
             return
 
         if 'is_selected' not in self.df_data_edit.columns:
-            # st.error("'is_selected' column is missing from the edited data.")
             return
 
         self.df_markers['is_selected'] = self.df_data_edit['is_selected']
 
-    def refresh_map_selection(self, rerun=True, recreate=False):
+    def OLDrefresh_map_selection(self, rerun=True, recreate=False):
         selected_idx = self.get_selected_idx()
         self.update_selected_data()
         self.refresh_map(reset_areas=False, selected_idx=selected_idx, rerun=rerun, recreate_map=recreate)
+
+    # attempt at a faster version but the real solution is to stop using folium TODO TODO
+    def refresh_map_selection(self, rerun=True):
+        selected_idx = self.get_selected_idx()
+        self.update_selected_data()
+
+        # Only clear and update marker layers, keep base map and areas intact
+        if self.map_disp and self.map_fg_marker:
+            # Clear only the marker feature group from the map
+            if hasattr(self.map_disp, '_children') and any('Marker' in str(child) for child in self.map_disp._children.values()):
+                layers_to_remove = [
+                    key for key, layer in self.map_disp._children.items()
+                    if isinstance(layer, folium.map.FeatureGroup) and 'Marker' in layer.layer_name
+                ]
+                for key in layers_to_remove:
+                    self.map_disp._children.pop(key)
+
+        # Re-add only the updated marker layer
+        self.handle_update_data_points(selected_idx)
+
+        if rerun:
+            st.rerun()
 
     # ===================
     # PREV SELECTION
@@ -1276,7 +1591,7 @@ class BaseComponent:
         #     self.refresh_map(rerun=True, get_data=True)
         #print(f"DEBUG watch_all_drawings called: step={self.step_type}, prev_step={self.prev_step_type}, stage={self.stage}")
         #print(f"DEBUG has_fetch_new_data: {self.has_fetch_new_data}")
-        #print(f"DEBUG drawings changed: {self.all_current_drawings != all_drawings}")        
+        #print(f"DEBUG drawings changed: {self.all_current_drawings != all_drawings}")
         if self.is_refreshing or self.all_current_drawings == all_drawings:
             #print("DEBUG: Early return - no changes or already refreshing")
             return
@@ -1384,13 +1699,13 @@ class BaseComponent:
 
                                 if(settings.status_handler.has_warnings()):
                                     warning = settings.status_handler.generate_status_report("warnings")
-                                    st.warning(warning)                            
+                                    st.warning(warning)
                                 settings.status_handler.display()
 
-                            else:    
+                            else:
                                 settings.event.geo_constraint = []
-                                settings.station.geo_constraint = []           
-                                settings.event.selected_catalogs=Catalog(events=None)    
+                                settings.station.geo_constraint = []
+                                settings.event.selected_catalogs=Catalog(events=None)
                                 settings.station.selected_invs = None
                                 
                                 self.clear_all_data()
@@ -1506,7 +1821,7 @@ class BaseComponent:
 
             except KeyError:
                 print("Selected map marker not found")
-  
+
 
         if self.clicked_marker_info:
             handle_marker_select()
@@ -1592,7 +1907,7 @@ class BaseComponent:
                 on_change=lambda: self.update_auto_refresh_state()
             )
 
-        self.update_auto_refresh_state()            
+        self.update_auto_refresh_state()
 
     def update_auto_refresh_state(self):
         self.auto_refresh_enabled = st.session_state['auto_refresh_toggle']
@@ -1601,7 +1916,7 @@ class BaseComponent:
         """Displays the full data table, allowing selection."""
 
         def _get_column_width(column):
-            max_length = max(self.df_markers[column].astype(str).apply(len))  # Get max string length            
+            max_length = max(self.df_markers[column].astype(str).apply(len))  # Get max string length
             if max_length <= 10:
                 return None 
             elif max_length <= 10:
@@ -1775,7 +2090,6 @@ class BaseComponent:
 
                 # Update `is_selected` to False for matching rows
                 self.df_markers.loc[mask, 'is_selected'] = False
-
 
             st.session_state[state_key] = self.df_markers.copy()
             self.refresh_map_selection(recreate=False)
