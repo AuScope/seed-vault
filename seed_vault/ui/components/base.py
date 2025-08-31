@@ -18,6 +18,7 @@ from seed_vault.ui.app_pages.helpers.common import get_selected_areas, save_filt
 
 from seed_vault.service.events import get_event_data, event_response_to_df
 from seed_vault.service.stations import get_station_data, station_response_to_df
+from seed_vault.service.utils import convert_to_datetime, check_client_services, get_time_interval
 
 from seed_vault.models.config import SeismoLoaderSettings, GeometryConstraint
 from seed_vault.models.common import CircleArea, RectangleArea
@@ -25,7 +26,6 @@ from seed_vault.models.common import CircleArea, RectangleArea
 from seed_vault.enums.config import GeoConstraintType, Levels
 from seed_vault.enums.ui import Steps
 
-from seed_vault.service.utils import convert_to_datetime, check_client_services, get_time_interval
 
 class BaseComponentTexts:
     """Defines text constants for UI components in different configuration steps."""
@@ -422,130 +422,6 @@ class BaseComponent:
 
         self.refresh_filters()
 
-    def OLDevent_filter(self):
-        """Displays and manages event filtering options in the Streamlit sidebar.
-
-        This method allows users to filter seismic events based on:
-        - Client selection
-        - Time range (last month, last week, last day, or custom start/end dates)
-        - Magnitude range
-        - Depth range
-
-        Functionality:
-        - Users select a client from a dropdown list.
-        - A warning is displayed if the selected client does not support event services.
-        - Users can set predefined time intervals (last month, last week, last day).
-        - Users can manually set start and end dates/times.
-        - Validation ensures that the end date is after the start date.
-        - Users can adjust event magnitude and depth ranges using sliders.
-        - Map interaction buttons are rendered.
-        - Refreshes filters upon changes.
-        """
-
-        # TODO ensure a fresh start if returning to this page via the "previous button"
-
-        min_date = date(1800,1,1)
-        max_date = date(2100,1,1)
-
-        # Trim start and end times to whatever we just returned
-        if (self.prev_step_type == Steps.STATION and 
-            not self.station_dates_applied and
-            not st.session_state.get('skip_station_date_calc', False)):
-            
-            start_dates = [
-                station.start_date 
-                for network in self.settings.station.selected_invs 
-                for station in network 
-                if station.start_date is not None
-            ]
-            end_dates = [
-                station.end_date if station.end_date is not None else datetime.now()
-                for network in self.settings.station.selected_invs 
-                for station in network
-            ]
-            calculated_start_datetime = datetime.combine(*convert_to_datetime(min(start_dates)))
-            calculated_end_datetime = datetime.combine(*convert_to_datetime(max(end_dates))) + timedelta(days=1)
-            
-            self.settings.event.date_config.start_time = calculated_start_datetime
-            self.settings.event.date_config.end_time = calculated_end_datetime
-            self.station_dates_applied = True  # Mark as applied
-
-        else:
-            if st.session_state.get('skip_station_date_calc', False):
-                st.session_state['skip_station_date_calc'] = False
-
-        start_date, start_time = convert_to_datetime(self.settings.event.date_config.start_time)
-        end_date, end_time     = convert_to_datetime(self.settings.event.date_config.end_time)
-
-
-        with st.sidebar:
-            with st.expander("Filters", expanded=True):
-                client_options = list(self.settings.client_url_mapping.get_clients())
-                self.settings.event.client = st.selectbox(
-                    'Choose a client:',
-                    client_options,
-                    index=client_options.index(self.settings.event.client),
-                    key=f"{self.TXT.STEP}-pg-client-event"
-                )
-
-                # Check services for selected client
-                services = check_client_services(self.settings.event.client)
-                is_service_available = bool(services.get('event'))
-
-                # Display warning if service is not available
-                if not is_service_available:
-                    st.warning(f"⚠️ Warning: Selected client '{self.settings.event.client}' does not support EVENT service. Please choose another client.")
-            
-                c11, c12, c13 = st.columns([1,1,1])
-                with c11:
-                    if st.button('Last Month', key="event-set-last-month"):
-                        st.session_state['skip_station_date_calc'] = True
-                        self.settings.event.date_config.end_time, self.settings.event.date_config.start_time = get_time_interval('month')
-                        st.rerun()
-                with c12:
-                    if st.button('Last Week', key="event-set-last-week"):
-                        st.session_state['skip_station_date_calc'] = True
-                        self.settings.event.date_config.end_time, self.settings.event.date_config.start_time = get_time_interval('week')
-                        st.rerun()
-                with c13:
-                    if st.button('Last Day', key="event-set-last-day"):
-                        st.session_state['skip_station_date_calc'] = True
-                        self.settings.event.date_config.end_time, self.settings.event.date_config.start_time = get_time_interval('day')
-                        st.rerun()
-
-                c1, c2 = st.columns([1,1])
-
-                with c1:
-                    start_date  = st.date_input("Start Date", min_value=min_date, max_value=max_date, value=start_date, key="event-pg-start-date-event")
-                    start_time  = st.time_input("Start Time (UTC)", start_time)
-                    self.settings.event.date_config.start_time = datetime.combine(start_date, start_time)
-                    self.station_dates_applied = True
-                with c2:
-                    end_date  = st.date_input("End Date", min_value=min_date, max_value=max_date, value=end_date, key="event-pg-end-date-event")
-                    end_time  = st.time_input("End Time (UTC)", end_time)
-                    self.settings.event.date_config.end_time = datetime.combine(end_date, end_time)
-                    self.station_dates_applied = True
-
-                if self.settings.event.date_config.start_time > self.settings.event.date_config.end_time:
-                    st.error("Error: End Date must fall after Start Date.")
-
-                self.settings.event.min_magnitude, self.settings.event.max_magnitude = st.slider(
-                    "Min Magnitude", 
-                    min_value=-2.0, max_value=10.0, 
-                    value=(self.settings.event.min_magnitude, self.settings.event.max_magnitude), 
-                    step=0.1, key="event-pg-mag"
-                )
-
-                self.settings.event.min_depth, self.settings.event.max_depth = st.slider(
-                    "Min Depth (km)", 
-                    min_value=-5.0, max_value=1000.0, 
-                    value=(self.settings.event.min_depth, self.settings.event.max_depth), 
-                    step=1.0, key="event-pg-depth"
-                )
-
-                self.render_map_buttons()
-
-        self.refresh_filters()
 
     def station_filter(self):
         """Displays and manages station filtering options in the Streamlit sidebar.
@@ -676,150 +552,6 @@ class BaseComponent:
 
         self.refresh_filters()
 
-    def OLDstation_filter(self):
-        """Displays and manages station filtering options in the Streamlit sidebar.
-
-        This method allows users to filter seismic stations based on:
-        - Client selection
-        - Time range (last month, last week, last day, or custom start/end dates)
-        - Network, station, location, and channel filters
-        - Highest sample rate option
-        - Restricted data inclusion
-
-        Functionality:
-        - Users select a client from a dropdown list.
-        - A warning is displayed if the selected client does not support station services.
-        - Users can set predefined time intervals (last month, last week, last day).
-        - Users can manually set start and end dates/times with a one-hour shift if needed.
-        - Validation ensures that the end date is after the start date.
-        - Users can input station metadata filters (network, station, location, channel).
-        - Users can enable highest sample rate filtering and restricted data inclusion.
-        - Map interaction buttons are rendered.
-        - Refreshes filters upon changes.
-        """
-
-        # TODO ensure a fresh start if returning to this page via the "previous button"
-
-        min_date = date(1800,1,1)
-        max_date = date(2100,1,1)
-
-        # Trim start and end times to whatever we just returned
-        if (self.prev_step_type == Steps.EVENT and 
-            not getattr(self, 'event_dates_applied', False) and 
-            not st.session_state.get('skip_event_date_calc', False)):
-            
-            origin_times = []
-
-            for event in self.settings.event.selected_catalogs:
-                if event.preferred_origin():
-                    origin_times.append(event.preferred_origin().time)
-                elif event.origins:
-                    origin_times.append(event.origins[0].time)
-
-                start_date, start_time = convert_to_datetime(min(origin_times))
-                end_date, end_time     = convert_to_datetime(max(origin_times))
-                end_date = end_date + timedelta(days=1) # add an extra day for that last event
-
-            self.event_dates_applied = True
-
-        else:
-            if st.session_state.get('skip_event_date_calc', False):
-                st.session_state['skip_event_date_calc'] = False
-
-        start_date, start_time = convert_to_datetime(self.settings.station.date_config.start_time)
-        end_date, end_time = convert_to_datetime(self.settings.station.date_config.end_time)
-
-        # One hour shift
-        if (start_date == end_date and start_time >= end_time):
-            start_time = time(hour=0, minute=0, second=0)
-            end_time   = time(hour=1, minute=0, second=0)
-
-        with st.sidebar:
-            with st.expander("Filters", expanded=True):
-                client_options = list(self.settings.client_url_mapping.get_clients())
-                self.settings.station.client = st.selectbox(
-                    'Choose a client:', 
-                    client_options,
-                    index=client_options.index(self.settings.station.client),
-                    key=f"{self.TXT.STEP}-pg-client-station"
-                )
-                
-                # Check services for selected client
-                services = check_client_services(self.settings.station.client)
-                is_service_available = bool(services.get('station'))
-
-                # Display warning if service is not available
-                if not is_service_available:
-                    st.warning(f"⚠️ Warning: Selected client '{self.settings.station.client}' does not support STATION service. Please choose another client.")
-
-                c11, c12, c13 = st.columns([1,1,1])
-                with c11:
-                    if st.button('Last Year', key="station-set-last-year"):
-                        st.session_state['skip_event_date_calc'] = True
-                        self.settings.station.date_config.end_time, self.settings.station.date_config.start_time = get_time_interval('year')
-                        st.rerun()
-                with c12:
-                    if st.button('Last Month', key="station-set-last-month"):
-                        st.session_state['skip_event_date_calc'] = True
-                        self.settings.station.date_config.end_time, self.settings.station.date_config.start_time = get_time_interval('month')
-                        st.rerun()
-                with c13:
-                    if st.button('Last Week', key="station-set-last-week"):
-                        st.session_state['skip_event_date_calc'] = True
-                        self.settings.station.date_config.end_time, self.settings.station.date_config.start_time = get_time_interval('week')
-                        st.rerun()
-
-                c11, c12 = st.columns([1,1])
-                with c11:
-                    start_date = st.date_input("Start Date", min_value=min_date, max_value=max_date, value=start_date)
-                    # start_time = st.time_input("Start Time (UTC)", value=start_time)
-                    self.settings.station.date_config.start_time = datetime.combine(start_date, start_time)
-                with c12:
-                    end_date = st.date_input("End Date", min_value=min_date, max_value=max_date, value=end_date)
-                    # end_time = st.time_input("End Time (UTC)", value=end_time)
-                    self.settings.station.date_config.end_time = datetime.combine(end_date, end_time)
-
-                if self.settings.station.date_config.start_time > self.settings.station.date_config.end_time:
-                    st.error("Error: End Date must fall after Start Date.")
-
-                c21, c22 = st.columns([1,1])
-                c31, c32 = st.columns([1,1])
-
-                with c21:
-                    self.settings.station.network = st.text_input("Network",   self.settings.station.network, key="event-pg-net-txt-station")
-                with c22:
-                    self.settings.station.station = st.text_input("Station",   self.settings.station.station, key="event-pg-sta-txt-station")
-                with c31:
-                    self.settings.station.location = st.text_input("Location", self.settings.station.location, key="event-pg-loc-txt-station")
-                with c32:
-                    self.settings.station.channel = st.text_input("Channel",   self.settings.station.channel, key="event-pg-cha-txt-station")
-
-                self.settings.station.highest_samplerate_only = st.checkbox(
-                    "Highest Sample Rate Only", 
-                    value=self.settings.station.highest_samplerate_only,  # Default to unchecked
-                    help="If a station has multiple channels for the same component (e.g. HHZ & LHZ), only select the one with the highest samplerate (HHZ).",
-                    key="station-pg-highest-sample-rate"
-                )
-                
-                self.settings.station.include_restricted = st.checkbox(
-                    "Include Restricted Data", 
-                    value=self.settings.station.include_restricted,  # Default to unchecked
-                    help="Includes restricted data in station search.",
-                    key="event-pg-include-restricted-station"
-                )
-
-                # TODO WORK IN PROGRESS
-                inventory_level_tick = st.checkbox(
-                    "Include Instrument Response", 
-                    value=False,
-                    help="Download station metadata with full instrument response. Potentially makes metadata download MUCH larger. Use only if you need to export the fdsnXML or need to plot events with response removed.",
-                    key="event-pg-station-level"
-                )
-                self.settings.station.level = Levels.RESPONSE if inventory_level_tick else Levels.CHANNEL
-
-                self.render_map_buttons()
-
-        self.refresh_filters()
 
     # ====================
     # MAP
@@ -1269,10 +1001,6 @@ class BaseComponent:
 
         self.df_markers['is_selected'] = self.df_data_edit['is_selected']
 
-    def OLDrefresh_map_selection(self, rerun=True, recreate=False):
-        selected_idx = self.get_selected_idx()
-        self.update_selected_data()
-        self.refresh_map(reset_areas=False, selected_idx=selected_idx, rerun=rerun, recreate_map=recreate)
 
     # attempt at a faster version but the real solution is to stop using folium TODO TODO
     def refresh_map_selection(self, rerun=True):

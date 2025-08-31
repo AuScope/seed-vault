@@ -14,9 +14,9 @@ import pandas as pd
 import jinja2
 
 from seed_vault.models.common import RectangleArea, CircleArea 
+from seed_vault.models.config import GeometryConstraint
 from seed_vault.enums.ui import Steps
 from seed_vault.utils.constants import AREA_COLOR
-from seed_vault.models.config import GeometryConstraint
 
 LON_RANGE_START = 0
 LON_RANGE_END = 360
@@ -47,7 +47,7 @@ def create_map(map_center=[-20 ,180.0], zoom_start=2, map_id=None):
         no_wrap=False ,
         # bounds=[[-90, 0], [90, 360]]  
     ).add_to(m)
-    
+
     outer_boundary = [
         [-90, -10000],
         [90, -10000],
@@ -464,7 +464,7 @@ class AddMapDraw(MacroElement):
         {% macro script(this, kwargs) %}
         console.log("JavaScript is adding drawing layers.");  // Debugging console log
         var map = this;  // Reference to the current map object
-                                         
+
         console.log(this.map)
         console.log(map)
 
@@ -483,8 +483,8 @@ class AddMapDraw(MacroElement):
             {% endif %}
             {% if drawing.geo_type == 'circle' %}
                 var circ = L.circle([{{drawing.coords.lat}}, {{drawing.coords.lon}}], {radius: {{drawing.coords.max_radius}}});
-                map.drawnItems.addLayer(circ);       
-            {% endif %}                          
+                map.drawnItems.addLayer(circ);
+            {% endif %}
         {% endfor %}
 
         // More cases for other types like circles, polylines, etc., can be added here

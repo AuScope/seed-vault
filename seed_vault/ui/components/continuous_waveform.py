@@ -110,7 +110,7 @@ class ContinuousFilterMenu:
             'start_time': self.settings.station.date_config.start_time,
             'end_time': self.settings.station.date_config.end_time
         }
-        
+
         # Check if time state changed - use deep comparison for datetime objects
         # it doesn't seem to stay updated always.. possible not working correctly in __init__
         time_changed = (current_time_state['start_time'] != self.old_time_state['start_time'] or 
@@ -127,26 +127,6 @@ class ContinuousFilterMenu:
             st.rerun()
 
         # Check if other settings changed
-        changes = self.settings.has_changed(self.old_settings)
-        if changes.get('has_changed', False):
-            self.old_settings = deepcopy(self.settings)
-            save_filter(self.settings)
-            st.rerun()
-
-    def refresh_filters_OLD(self):
-        """Check for changes and trigger updates"""
-        current_time_state = {
-            'start_time': self.settings.station.date_config.start_time,
-            'end_time': self.settings.station.date_config.end_time
-        }
-        
-        # Check if time state changed
-        if current_time_state != self.old_time_state:
-            self.old_time_state = current_time_state.copy()
-            save_filter(self.settings)
-            st.rerun()
-
-        # Check if settings changed
         changes = self.settings.has_changed(self.old_settings)
         if changes.get('has_changed', False):
             self.old_settings = deepcopy(self.settings)
@@ -201,7 +181,6 @@ class ContinuousFilterMenu:
                         self.settings.station.date_config.start_time, 'year', -1)
                     self.validate_date_range()
                     self.refresh_filters()
-            
             with col2:
                 if st.button("+Year", key="start-year-plus"):
                     self.settings.station.date_config.start_time = shift_time(
@@ -214,7 +193,6 @@ class ContinuousFilterMenu:
                         self.settings.station.date_config.end_time, 'year', -1)
                     self.validate_date_range()
                     self.refresh_filters()
-            
             with col4:
                 if st.button("+Year", key="end-year-plus"):
                     self.settings.station.date_config.end_time = shift_time(
@@ -229,7 +207,6 @@ class ContinuousFilterMenu:
                         self.settings.station.date_config.start_time, 'month', -1)
                     self.validate_date_range()
                     self.refresh_filters()
-            
             with col6:
                 if st.button("+Month", key="start-month-plus"):
                     self.settings.station.date_config.start_time = shift_time(
@@ -242,7 +219,6 @@ class ContinuousFilterMenu:
                         self.settings.station.date_config.end_time, 'month', -1)
                     self.validate_date_range()
                     self.refresh_filters()
-            
             with col8:
                 if st.button("+Month", key="end-month-plus"):
                     self.settings.station.date_config.end_time = shift_time(
@@ -257,7 +233,6 @@ class ContinuousFilterMenu:
                         self.settings.station.date_config.start_time, 'week', -1)
                     self.validate_date_range()
                     self.refresh_filters()
-            
             with col10:
                 if st.button("+Week", key="start-week-plus"):
                     self.settings.station.date_config.start_time = shift_time(
@@ -270,14 +245,13 @@ class ContinuousFilterMenu:
                         self.settings.station.date_config.end_time, 'week', -1)
                     self.validate_date_range()
                     self.refresh_filters()
-            
             with col12:
                 if st.button("+Week", key="end-week-plus"):
                     self.settings.station.date_config.end_time = shift_time(
                         self.settings.station.date_config.end_time, 'week', 1)
                     self.validate_date_range()
                     self.refresh_filters()
-            
+
             # Day controls (...overkill)
             """
             with col13:
@@ -285,7 +259,6 @@ class ContinuousFilterMenu:
                     self.settings.station.date_config.start_time = shift_time(
                         self.settings.station.date_config.start_time, 'day', -1)
                     self.refresh_filters()
-            
             with col14:
                 if st.button("+ Day", key="start-day-plus"):
                     self.settings.station.date_config.start_time = shift_time(
@@ -296,7 +269,6 @@ class ContinuousFilterMenu:
                     self.settings.station.date_config.end_time = shift_time(
                         self.settings.station.date_config.end_time, 'day', -1)
                     self.refresh_filters()
-            
             with col16:
                 if st.button("+ Day", key="end-day-plus"):
                     self.settings.station.date_config.end_time = shift_time(
@@ -463,7 +435,7 @@ class ContinuousDisplay:
             sys.stderr = original_stderr
             
             task_completed.set()
-        
+
     def render(self):
         """Render the continuous waveform display interface.
 
@@ -494,7 +466,7 @@ class ContinuousDisplay:
                         disabled=not st.session_state.get("is_downloading", False),
                         width='stretch'):
                 stop_event.set()  # Signal cancellation
-                st.warning("Cancelling download...")
+                st.warning("Cancelling download... (but finishing last request)")
                 st.session_state.update({
                     "is_downloading": False,
                     "polling_active": False,
@@ -504,17 +476,17 @@ class ContinuousDisplay:
 
         # Download status indicator
         status_container = st.empty()
-        
+
         # Show appropriate status message
         if get_waveforms_button:
             status_container.info("Starting continuous waveform download...")
             self.retrieve_waveforms()
         elif st.session_state.get("is_downloading"):
             st.spinner("Downloading continuous waveforms... (this may take a long time!)")
-            
+
             # Display real-time logs in the waveform view during download
             log_container = st.empty()
-            
+
             # Process any new log entries from the queue
             new_logs = False
             while not log_queue.empty():
@@ -591,7 +563,7 @@ class ContinuousDisplay:
             "polling_active": True,
             "download_cancelled": False
         })
-        
+
         st.rerun()
 
 class ContinuousComponents:
@@ -621,10 +593,10 @@ class ContinuousComponents:
         # Initialize console with logs from session state if they exist
         if "log_entries" in st.session_state and st.session_state["log_entries"]:
             self.console.accumulated_output = st.session_state["log_entries"]
-        
+
         # Pass console to ContinuousDisplay
         self.display.console = self.console
-        
+
         # Initialize session state
         required_states = {
             "is_downloading": False,
@@ -638,7 +610,7 @@ class ContinuousComponents:
         for key, val in required_states.items():
             if key not in st.session_state:
                 st.session_state[key] = val
-    
+
     def render_polling_ui(self):
         """Handle UI updates while monitoring background thread status.
 
@@ -665,7 +637,7 @@ class ContinuousComponents:
                 return
 
             query_thread = st.session_state.get("query_thread")
-            
+
             # Process any new log entries from the queue
             new_logs = False
             while not log_queue.empty():
@@ -677,13 +649,13 @@ class ContinuousComponents:
                     new_logs = True
                 except queue.Empty:
                     break
-            
+
             # Save logs to session state if updated
             if new_logs:
                 st.session_state["log_entries"] = self.console.accumulated_output
                 # Trigger rerun to update the UI with new logs
                 st.rerun()
-            
+
             if query_thread and not query_thread.is_alive():
                 try:
                     query_thread.join()
@@ -720,15 +692,15 @@ class ContinuousComponents:
         # Initialize tab selection in session state if not exists
         if "continuous_active_tab" not in st.session_state:
             st.session_state["continuous_active_tab"] = 0  # Default to download tab
-        
+
         # Auto-switch to log tab during download if new logs are available
         if st.session_state.get("is_downloading", False) and log_queue.qsize() > 0:
             st.session_state["continuous_active_tab"] = 0  # Keep on download tab to show real-time logs
-        
+
         # Create tabs for Download and Log views
         tab_names = ["📊 Download View", "📝 Log View"]
         download_tab, log_tab = st.tabs(tab_names)
-        
+
         # Always render filter menu (sidebar) first
         self.filter_menu.render()
 
@@ -737,7 +709,7 @@ class ContinuousComponents:
             self.display.render()
             # Handle polling for background thread updates
             self.render_polling_ui()
-        
+
         with log_tab:
             # If we're switching to log tab and download is complete, 
             # make sure all logs are transferred from queue to accumulated_output
@@ -751,21 +723,21 @@ class ContinuousComponents:
                         self.console.accumulated_output.append(log_entry)
                     except queue.Empty:
                         break
-                
+
                 # Save to session state
                 if self.console.accumulated_output:
                     st.session_state["log_entries"] = self.console.accumulated_output
-            
+
             # Render log view
             st.title("Continuous Waveform Logs")
-            
+
             if self.console.accumulated_output:
                 # Initialize terminal styling
                 self.console._init_terminal_style()
-                
+
                 # Display logs
                 content = self.console._preserve_whitespace('\n'.join(self.console.accumulated_output))
-                
+
                 log_text = (
                     '<div class="terminal" id="log-terminal">'
                     f'<pre style="margin: 0; white-space: pre; tab-size: 4; font-family: \'Courier New\', Courier, monospace; font-size: 14px; line-height: 1.4;">{content}</pre>'
@@ -782,7 +754,7 @@ class ContinuousComponents:
                     'window.terminal_scroll();'
                     '</script>'
                 )
-                
+
                 st.markdown(log_text, unsafe_allow_html=True)
             else:
                 st.info("No logs available. Start a download to generate logs.")

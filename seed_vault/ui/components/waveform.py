@@ -43,7 +43,7 @@ def get_tele_filter(tr):
     data based on the distance from the source and the sensor type.
 
     Args:
-        tr (Trace): ObsPy Trace object containing waveform data.
+        tr (Trace): ObsPy Trace.
 
     Returns:
         tuple: A tuple of (f0, f1) where:
@@ -59,9 +59,9 @@ def get_tele_filter(tr):
         - 250-500 km: 1.4-8 Hz
         - 500-1000 km: 1.3-6 Hz
         - 1000-2500 km: 1.2-5 Hz
-        - 2500-5000 km: 1.1-4 Hz
-        - 5000-10000 km: 1.0-3 Hz
-        - > 10000 km: 0.7-2 Hz
+        - 2500-5000 km: 1.0-3 Hz
+        - 5000-10000 km: 0.8-2 Hz
+        - > 10000 km: 0.6-1.5 Hz
     """
     distance_km = tr.stats.distance_km
     nyq = tr.stats.sampling_rate/2 - 0.1
@@ -83,11 +83,11 @@ def get_tele_filter(tr):
     elif distance_km < 2500:
         f0,f1 = 1.2,5
     elif distance_km < 5000:
-        f0,f1 = 1.1,4     
+        f0,f1 = 1.0,3     
     elif distance_km < 10000:
-        f0,f1 = 1.0,3
+        f0,f1 = 0.8,2
     else:
-        f0,f1 = 0.7,2
+        f0,f1 = 0.6,1.5
 
     return min(f0,nyq),min(f1,nyq)
 
@@ -735,26 +735,26 @@ class WaveformDisplay:
 
             # Calculate and add an appropriate filter for plotting
             filter_min,filter_max = get_tele_filter(tr)
-            
-            # NEW: Use cached processing instead of remove_instrument_response
+
+            # Use cached processing instead of remove_instrument_response
             tr_windowed = self._get_processed_trace(tr, filter_min, filter_max)
-            
+
             if hasattr(tr.stats, 'p_arrival'):
                 p_time = UTCDateTime(tr.stats.p_arrival)
                 before_p = self.settings.event.before_p_sec
                 after_p = self.settings.event.after_p_sec
-                
+
                 # Calculate times relative to P arrival
                 times = np.arange(tr_windowed.stats.npts) * tr_windowed.stats.delta
                 relative_times = times - before_p  # This makes P arrival at t=0
-                
+
                 # Plot the trace
                 ax.plot(relative_times, tr_windowed.data, '-', 
                        color=self._get_trace_color(tr), linewidth=0.8)
-                
+
                 # Add P arrival line (now at x=0)
                 ax.axvline(x=0, color='red', linewidth=1, linestyle='-', alpha=0.8)
-                
+
                 # Format station label with distance (formatted much differently than station view for some reason!)
                 station_info = f"{tr.stats.network}.{tr.stats.station}.{tr.stats.location or ''}.{tr.stats.channel} -"
                 if hasattr(tr.stats, 'distance_km'):
@@ -770,7 +770,7 @@ class WaveformDisplay:
                     station_info += f", {tr_windowed.stats.filterband[0]}-{tr_windowed.stats.filterband[1]}Hz"
                 if hasattr(tr_windowed.stats, 'plotunit'):
                     station_info += f", {tr_windowed.stats.plotunit}"
-                
+
                 # Position label inside plot
                 ax.text(0.02, 0.95, station_info,
                        transform=ax.transAxes,
@@ -778,22 +778,22 @@ class WaveformDisplay:
                        horizontalalignment='left',
                        fontsize=7,
                        bbox=dict(facecolor='white', alpha=0.6, edgecolor='none', pad=1))
-                
+
                 # Set consistent x-axis limits
                 ax.set_xlim(-before_p, after_p)
-                
+
                 # Remove y-axis ticks and labels
                 ax.set_yticks([])
-                
+
                 # Only show x-axis labels for bottom subplot
                 if i < num_traces - 1:
                     ax.set_xticklabels([])
                 else:
                     ax.set_xlabel(f'Seconds relative to P ({str(p_time)})')
-                
+
                 # Add subtle grid
                 ax.grid(True, alpha=0.2)
-                
+
                 # Update box styling to show all borders
                 for spine in ax.spines.values():
                     spine.set_visible(True)
@@ -801,13 +801,13 @@ class WaveformDisplay:
 
                 # Add padding to the plot
                 ax.margins(x=0.05)  # Increased padding to 5% on left and right
-        
+
         # Adjust layout
         plt.subplots_adjust(left=0.1, right=0.9, top=0.97, bottom=0.1)
-        
-        # NEW: Cache the figure before returning
+
+        # Cache the figure before returning
         self.figure_cache[cache_key] = fig
-        
+
         return fig
 
     def plot_station_view(self, station_code: str, stream: Stream, page: int, num_pages: int):
@@ -966,7 +966,7 @@ class WaveformDisplay:
         if view_type == "Single Event - Multiple Stations":
             events = self.settings.event.selected_catalogs
             if not events:
-                st.warning("No events available.")
+                st.warning("No events in catalog?")
                 return
 
             # a list of event resource ids
@@ -987,6 +987,9 @@ class WaveformDisplay:
             ]
 
             valid_events = [event for _, event in valid_events_with_indices]
+            if not valid_events:
+                st.warning("No valid events returned.")
+                return
 
             selected_event_idx = st.selectbox(
                 "Select Event",
@@ -1007,7 +1010,7 @@ class WaveformDisplay:
                     range(1, num_pages + 1),
                     key="event_view_pagination"
                 ) - 1
-                
+
                 fig = self.plot_event_view(
                     selected_event,
                     filtered_stream,
@@ -1045,7 +1048,7 @@ class WaveformDisplay:
 
                 # select for pertinent station
                 station_stream = filtered_stream.select(network=net,station=sta)
-                
+
                 if station_stream:
                     # Calculate pagination
                     num_pages = (len(station_stream) - 1) // self.filter_menu.display_limit + 1
@@ -1065,7 +1068,7 @@ class WaveformDisplay:
                         st.session_state.current_figure = fig
                         st.pyplot(fig)
                 else:
-                    st.warning("No waveforms available for the selected station.")
+                    st.warning("No waveforms returned for the selected station.")
         # Create missing data display before checking stream
         missing_data_display = MissingDataDisplay(
             self.stream,
@@ -1179,15 +1182,15 @@ class WaveformComponents:
         # Initialize tab selection in session state if not exists
         if "active_tab" not in st.session_state:
             st.session_state["active_tab"] = 0  # Default to waveform tab
-        
+
         # Auto-switch to log tab during download if new logs are available
         if st.session_state.get("is_downloading", False) and log_queue.qsize() > 0:
             st.session_state["active_tab"] = 0  # Keep on waveform tab to show real-time logs
-        
+
         # Create tabs for Waveform and Log views
         tab_names = ["📊 Waveform View", "📝 Log View"]
         waveform_tab, log_tab = st.tabs(tab_names)
-        
+
         # Get the current stream and update available channels before rendering filter menu
         current_stream = None
         if self.waveform_display.stream:
@@ -1196,14 +1199,14 @@ class WaveformComponents:
             current_stream = self.waveform_display.stream
             # Update available channels with the current stream
             self.filter_menu.update_available_channels(current_stream)
-        
+
         # Always render filter menu (sidebar) first
         self.filter_menu.render(current_stream)
 
         # Handle content based on active tab
         with waveform_tab:
             self._render_waveform_view()
-        
+
         with log_tab:
             # If we're switching to log tab and download is complete, 
             # make sure all logs are transferred from queue to accumulated_output
@@ -1221,7 +1224,7 @@ class WaveformComponents:
                 # Save to session state
                 if self.console.accumulated_output:
                     st.session_state["log_entries"] = self.console.accumulated_output
-            
+
             self._render_log_view()
 
 
@@ -1230,7 +1233,7 @@ class WaveformComponents:
 
         # Create three columns for the controls
         col1, col2, col3 = st.columns(3)
-        
+
         # Force Re-download toggle in first column
         with col1:
             self.settings.waveform.force_redownload = st.toggle(
@@ -1257,7 +1260,7 @@ class WaveformComponents:
                         disabled=not st.session_state.get("is_downloading", False),
                         width='stretch'):
                 stop_event.set()  # Signal cancellation
-                st.warning("Cancelling download...")
+                st.warning("Cancelling download... (but finishing last request)")
                 st.session_state.update({
                     "download_cancelled": True  # Set cancellation flag
                 })
@@ -1324,10 +1327,10 @@ class WaveformComponents:
             
             self.render_polling_ui()
         elif st.session_state.get("query_done") and self.waveform_display.stream:
-            status_container.success(f"Successfully retrieved waveforms for {len(self.waveform_display.stream)} channels. Creating plots..")
+            status_container.success(f"Successfully retrieved waveforms for {len(self.waveform_display.stream)} channels. Making plots...")
         elif st.session_state.get("query_done"):
             if st.session_state.get("download_cancelled", False):
-                status_container.warning("Waveform download cancelled (but finishing up last request)")
+                status_container.warning("Waveform download cancelled")
                 # Reset the flag after displaying
                 st.session_state["download_cancelled"] = False
             else:

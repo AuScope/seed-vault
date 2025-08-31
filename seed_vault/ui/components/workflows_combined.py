@@ -3,15 +3,19 @@ from seed_vault.ui.components.waveform import WaveformComponents
 import streamlit as st
 import plotly.express as px
 import pandas as pd
+import queue
 
 from seed_vault.enums.ui import Steps
 from seed_vault.models.config import SeismoLoaderSettings, DownloadType, WorkflowType
 
 from seed_vault.ui.components.base import BaseComponent
+from seed_vault.ui.components.waveform import log_queue, task_completed, task_result
+from seed_vault.ui.components.continuous_waveform import log_queue as continuous_log_queue
+
 from seed_vault.ui.app_pages.helpers.common import get_app_settings, save_filter, reset_config
 
-download_options = [f.name.title() for f in DownloadType]
 
+download_options = [f.name.title() for f in DownloadType]
 workflow_options = {workflow.value: workflow for workflow in WorkflowType}
 workflow_options_list = list(workflow_options.keys())
 
@@ -143,26 +147,42 @@ class CombinedBasedWorkflow:
                 if selected_catalogs is None or len(selected_catalogs) <= 0:
                     self.trigger_error("Please select an event to proceed to the next step.")
                     return False
-            elif workflow_type in [WorkflowType.STATION_BASED, WorkflowType.CONTINUOUS]:
+
+            elif workflow_type == WorkflowType.STATION_BASED:
                 self.station_components.sync_df_markers_with_df_edit()
                 self.station_components.update_selected_data()
                 selected_invs = self.station_components.settings.station.selected_invs
 
-                if(workflow_type == WorkflowType.STATION_BASED):
-                    self.event_components.settings.event.date_config.start_time = self.station_components.settings.station.date_config.start_time
-                    self.event_components.settings.event.date_config.end_time = self.station_components.settings.station.date_config.end_time
+                self.event_components.settings.event.date_config.start_time = self.station_components.settings.station.date_config.start_time
+                self.event_components.settings.event.date_config.end_time = self.station_components.settings.station.date_config.end_time
 
-                    self.event_components.set_map_view(
-                        map_center=self.station_components.map_view_center,
-                        map_zoom=self.station_components.map_view_zoom
-                    )
-                    self.event_components.refresh_map(get_data=False, recreate_map=True)
+                self.event_components.set_map_view(
+                    map_center=self.station_components.map_view_center,
+                    map_zoom=self.station_components.map_view_zoom
+                )
+                self.event_components.refresh_map(get_data=False, recreate_map=True)
 
                 if selected_invs is None or len(selected_invs) <= 0:
                     self.trigger_error("Please select a station to proceed to the next step.")
                     return False
 
                 self.settings.waveform.client = self.settings.station.client
+
+            elif workflow_type == WorkflowType.CONTINUOUS:
+                self.station_components.sync_df_markers_with_df_edit()
+                self.station_components.update_selected_data()
+                selected_invs = self.station_components.settings.station.selected_invs
+
+                # Update the continuous component with fresh selections
+                if hasattr(self, 'waveform_components'):
+                    self.waveform_components.continuous_components.filter_menu.todo_nets = None
+                    self.waveform_components.continuous_components.filter_menu.todo_stas = None
+                    self.waveform_components.continuous_components.filter_menu.todo_locs = None
+                    self.waveform_components.continuous_components.filter_menu.todo_chas = None
+
+                if selected_invs is None or len(selected_invs) <= 0:
+                    self.trigger_error("Please select a station to proceed to the next step.")
+                    return False
 
         if self.stage == 2:
             if workflow_type == WorkflowType.EVENT_BASED: 
@@ -237,10 +257,29 @@ class CombinedBasedWorkflow:
                 if st.button("Previous"):
                     selected_idx = self.station_components.get_selected_idx()
                     self.station_components.refresh_map(selected_idx=selected_idx,clear_draw=True)
+
+                    # Also need to clear stuff for CONTINUOUS downloads..
+                    while not continuous_log_queue.empty():
+                        try:
+                            continuous_log_queue.get_nowait()
+                        except queue.Empty:
+                            break
+
+                    st.session_state["continuous_active_tab"] = 0
+                    st.session_state["date_range_valid"] = True
+                    # Clear status messages and download state also
+                    st.session_state["query_done"] = False
+                    st.session_state["is_downloading"] = False
+                    st.session_state["download_cancelled"] = False
+                    st.session_state["success"] = False
+                    st.session_state["polling_active"] = False
+
+                    if hasattr(self.waveform_components, 'continuous_components'):
+                        self.waveform_components.continuous_components.console.accumulated_output = []
+
                     self.previous_stage() 
             self.waveform_components.render()
         else:    
-
             title = "Stations" if self.settings.selected_workflow == WorkflowType.EVENT_BASED else "Events"
             with c1:
                 if st.button("Previous"):
@@ -278,8 +317,33 @@ class CombinedBasedWorkflow:
             st.markdown("### Step 3: Waveforms", unsafe_allow_html=False)
 
         with c1:
+            # When a user hits previous, we are completely clearing everything
             if st.button("Previous"):
+                # Clear plot cache (double check this.. maybe can get away with saving some?)
                 self.waveform_components.waveform_display.clear_cache()
+
+                # Clear log
+                st.session_state["log_entries"] = []
+                self.waveform_components.console.accumulated_output = []
+                while not log_queue.empty():
+                    try:
+                        log_queue.get_nowait()
+                    except queue.Empty:
+                        break
+
+                # Clear global task status
+                task_completed.clear()
+                task_result["success"] = False
+
+                # Clear status messages and download state also
+                st.session_state["query_done"] = False
+                st.session_state["is_downloading"] = False
+                st.session_state["download_cancelled"] = False
+                st.session_state["success"] = False
+                st.session_state["polling_active"] = False
+
+                print("DEBUG 3 previous")
+
                 self.previous_stage()
 
         self.waveform_components.render()

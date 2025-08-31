@@ -1,6 +1,6 @@
 [project]
 name = "seed-vault"
-version = "1.0.9"
+version = "1.0.10"
 description = "GUI and CLI utility to interface with FDSN seismic data centers to search, download, and archive event and continuous waveform data."
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -18,10 +18,10 @@ classifiers = [
 ]
 readme = "README.md"
 authors = [
+           {name = "Robert Pickle", email = "robert.pickle@anu.edu.au"},
            {name = "Ben Motevalli", email = "benyamin.motevalli@csiro.au"},
            {name = "Vincent Fazio", email = "vincent.fazio@csiro.au"},
-           {name = "Neda Taherifar", email = "neda.taherifar@csiro.au"},
-           {name = "Robert Pickle", email = "robert.pickle@anu.edu.au"}
+           {name = "Neda Taherifar", email = "neda.taherifar@csiro.au"}
 ]
 keywords = ["seismology", "earthquakes", "seismometers", "FDSN", "ObsPy", "miniseed"] 
 
@@ -34,7 +34,7 @@ seed-vault = "seed_vault.cli.cli:cli"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.14"
-streamlit = "^1.49.0"
+streamlit = "^1.49.1"
 pandas = "^2.2.2"
 folium = "^0.20.0"
 requests = "^2.32.3"
