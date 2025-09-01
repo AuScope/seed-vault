@@ -781,7 +781,7 @@ def prune_requests(
 
     Example:
         >>> requests = [("IU", "ANMO", "00", "BHZ", "2020-01-01", "2020-01-02")]
-        >>> pruned = prune_requests(requests, db_manager, "/data/SDS")
+        >>> pruned = prune_requests(requests, db_manager, "/SVdata/SDS")
     """
     if not requests:
         return []
@@ -1277,7 +1277,7 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
     # Try loading local inventory if specified
     if settings.station.local_inventory:
         try: 
-            inv = read_inventory(settings.station.local_inventory, level='channel')
+            inv = read_inventory(settings.station.local_inventory)
         except Exception as e:
             print(f"Could not read {settings.station.local_inventory}:\n{e}")
 

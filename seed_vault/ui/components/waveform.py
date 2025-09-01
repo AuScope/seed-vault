@@ -445,7 +445,7 @@ class WaveformDisplay:
 
     def _get_processing_key(self, trace_id: str, filter_min: float, filter_max: float) -> str:
         """Generate a unique key for processed waveform caching."""
-        response_level = self.settings.station.level if hasattr(self.settings.station, 'level') else "none"
+        response_level = self.settings.station.level if hasattr(self.settings.station, 'level') else "channel"
         before_p = self.settings.event.before_p_sec
         after_p = self.settings.event.after_p_sec
         return f"{trace_id}_{response_level}_{filter_min}_{filter_max}_{before_p}_{after_p}"

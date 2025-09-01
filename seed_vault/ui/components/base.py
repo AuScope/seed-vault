@@ -12,7 +12,6 @@ from obspy.core.inventory import Inventory, read_inventory
 from time import sleep
 import tempfile
 
-
 from seed_vault.ui.components.map import LON_RANGE_END, LON_RANGE_START, create_map, add_area_overlays, add_data_points, clear_map_layers, clear_map_draw,add_map_draw
 from seed_vault.ui.app_pages.helpers.common import get_selected_areas, save_filter
 
@@ -542,8 +541,8 @@ class BaseComponent:
 
                 inventory_level_tick = st.checkbox(
                     "Include Instrument Response", 
-                    value=False,
-                    help="Download station metadata with full instrument response. Potentially makes metadata download MUCH larger. Use only if you need to export the fdsnXML or need to plot events with response removed.",
+                    value=self.settings.station.level == Levels.RESPONSE,
+                    help="Download station metadata with full instrument response. Potentially makes download much larger. Use only if you need to export the fdsnXML or need to plot events with response removed.",
                     key="station-pg-instrument-response"
                 )
                 self.settings.station.level = Levels.RESPONSE if inventory_level_tick else Levels.CHANNEL
@@ -710,7 +709,7 @@ class BaseComponent:
 
                 if not invalid_entries.empty:
                     st.warning(f"Invalid rectangle coordinates detected. Ensure min_lat ≤ max_lat and min_lon ≤ max_lon, with values within valid ranges (-90 to 90 for lat, {LON_RANGE_START} to {LON_RANGE_END} for lon).")
-                    return  
+                    return
 
             else:
                 st.error("Error: Missing required columns. Check RectangleArea.model_fields.")
@@ -775,13 +774,11 @@ class BaseComponent:
         else:
             self.warning = "No data found."
 
-
     def get_data_globally(self):
         self.clear_all_data()
         clear_map_draw(self.map_disp)
         self.handle_get_data()        
         st.rerun()
-
 
     def refresh_map(self, reset_areas = False, selected_idx = None, clear_draw = False, rerun = False, get_data = True, recreate_map = True):
         if self.is_refreshing:
@@ -879,7 +876,7 @@ class BaseComponent:
             502: "Server response is invalid; please try again another time",
             503: "Server appears to be down; please try again another time",
             504: "Server appears to be down; please try again another time"
-        }        
+        }
         self.warning = None
         self.error   = None
         self.has_error = False
@@ -899,7 +896,6 @@ class BaseComponent:
 
             if self.step_type == Steps.STATION:
                 self.inventories = Inventory()
-                # self.inventories = get_station_data(self.settings.model_dump_json())
                 if is_import:
                     self.import_xml(uploaded_file)
                 else:
@@ -908,7 +904,7 @@ class BaseComponent:
                     self.df_markers = station_response_to_df(self.inventories)
                 else:
                     self.reset_markers()
-                
+
             if not self.df_markers.empty:
                 cols = self.df_markers.columns
                 cols_to_disp = {c:c.capitalize() for c in cols if c not in self.cols_to_exclude}
@@ -955,20 +951,21 @@ class BaseComponent:
         self.update_rectangle_areas()
         self.update_circle_areas()
 
-
     def get_selected_marker_info(self):
         info = self.clicked_marker_info
         if self.step_type == Steps.EVENT:
             return f"Event No {info['id']}: {info['Magnitude']} {info['Magnitude type']}, {info['Depth (km)']} km, {info['Place']}"
         if self.step_type == Steps.STATION:
             return f"Station No {info['id']}: {info['Network']}, {info['Station']}"
+
     # ===================
     # SELECT DATA
     # ===================
+
     def get_selected_idx(self):
         if self.df_markers.empty:
             return []
-        
+
         mask = self.df_markers['is_selected']
         return self.df_markers[mask].index.tolist()
 
@@ -1002,7 +999,7 @@ class BaseComponent:
         self.df_markers['is_selected'] = self.df_data_edit['is_selected']
 
 
-    # attempt at a faster version but the real solution is to stop using folium TODO TODO
+    # streamlit-folium does not allow clean marker on/off changes without remaking the entire map (yet...)
     def refresh_map_selection(self, rerun=True):
         selected_idx = self.get_selected_idx()
         self.update_selected_data()
@@ -1027,6 +1024,7 @@ class BaseComponent:
     # ===================
     # PREV SELECTION
     # ===================
+
     def get_prev_step_df(self):
         if self.prev_step_type == Steps.EVENT:
             self.df_markers_prev = event_response_to_df(self.settings.event.selected_catalogs)
@@ -1055,7 +1053,6 @@ class BaseComponent:
                 selected_idx = self.df_markers_prev.index.tolist()
                 self.map_fg_prev_selected_marker, _, _ = add_data_points( self.df_markers_prev, cols_to_disp, step=self.prev_step_type,selected_idx=selected_idx, col_color=col_color, col_size=col_size)
 
-
     def display_prev_step_selection_table(self):
         if self.stage > 1:
             if self.df_markers_prev.empty:
@@ -1065,7 +1062,6 @@ class BaseComponent:
                 self.area_around_prev_step_selections()
                 # st.write(f"Total Number of Selected {self.TXT.PREV_STEP.title()}s: {len(self.df_markers_prev)}")
                 # st.dataframe(self.df_markers_prev, width='stretch')
-
 
     def area_around_prev_step_selections(self):
 
@@ -1128,7 +1124,6 @@ class BaseComponent:
                 self.prev_max_radius = max_radius
                 self.prev_marker = self.df_markers_prev.copy()
 
-
             self.refresh_map(reset_areas=False, clear_draw=True, rerun=True)
             # st.rerun()
 
@@ -1186,6 +1181,7 @@ class BaseComponent:
     # ===================
     # FILES
     # ===================
+
     def exp_imp_events_stations(self):
         st.write(f"#### Export/Import {self.TXT.STEP.title()}s (XML)")
 
@@ -1215,7 +1211,6 @@ class BaseComponent:
                 disabled=(len(self.catalogs.events) == 0 and (self.inventories is None or len(self.inventories.get_contents().get('stations')) == 0))
             )
 
-
             ## @NOTE: Download Selected had to be with the table.
             ## if (len(self.catalogs.events) > 0 or len(self.inventories.get_contents().get('stations')) > 0):
             #st.download_button(
@@ -1227,10 +1222,11 @@ class BaseComponent:
             #    disabled=(len(self.catalogs.events) == 0 and (self.inventories is None or len(self.inventories.get_contents().get('stations')) == 0))
             #)
 
-        def reset_uploaded_file_processed():
-            st.session_state['uploaded_file_processed'] = False
+        uploaded_file = st.file_uploader(
+            f"Import {self.TXT.STEP.title()}s from a File", 
+            on_change=lambda: st.session_state.update({'uploaded_file_processed': False})
+        )
 
-        uploaded_file = st.file_uploader(f"Import {self.TXT.STEP.title()}s from a File", on_change=lambda:  reset_uploaded_file_processed())
         if uploaded_file and not st.session_state['uploaded_file_processed']:
             self.clear_all_data()
             self.refresh_map(reset_areas=True, clear_draw=True)
@@ -1249,7 +1245,7 @@ class BaseComponent:
                 if export_selected:
                 # self.sync_df_markers_with_df_edit()
                     self.update_selected_data()
-                
+
                 if self.step_type == Steps.STATION:
                     inv = self.settings.station.selected_invs if export_selected else self.inventories
                     if inv:
@@ -1292,7 +1288,6 @@ class BaseComponent:
             if os.path.exists(temp_path):
                 os.remove(temp_path)
 
-
     def import_xml(self, uploaded_file):
         st.session_state["show_error_workflow_combined"] = False
         try:
@@ -1313,6 +1308,7 @@ class BaseComponent:
     # ===================
     # WATCHER
     # ===================
+
     def watch_all_drawings(self, all_drawings):
         # if self.all_current_drawings != all_drawings:
         #     self.all_current_drawings = all_drawings
@@ -1335,6 +1331,7 @@ class BaseComponent:
     # ===================
     #  ERROR HANDLES
     # ===================
+
     def trigger_error(self, message):
         """Set an error message in session state to be displayed."""
         self.has_error = True
@@ -1343,6 +1340,7 @@ class BaseComponent:
     # ===================
     # RENDER
     # ===================
+
     def render_map_buttons(self):
 
         cc1, cc2, cc3 = st.columns([1,1,1])
@@ -1366,13 +1364,11 @@ class BaseComponent:
             ):
                 self.refresh_map(get_data=False, clear_draw=True, rerun=True, recreate_map=True)
 
-
     def render_map_handles(self):
         # not sure if plotting these area tables is useful
         with st.expander("Shape tools - edit areas", expanded=True):
             self.update_rectangle_areas()
             self.update_circle_areas()
-
 
     def render_import_export(self):
         def reset_import_setting_processed():
@@ -1435,30 +1431,29 @@ class BaseComponent:
                                 settings.station.geo_constraint = []
                                 settings.event.selected_catalogs=Catalog(events=None)
                                 settings.station.selected_invs = None
-                                
+
                                 self.clear_all_data()
                                 # self.settings = settings
                                 for key, value in vars(settings).items():
                                     setattr(self.settings, key, value)
                                 self.df_markers_prev= pd.DataFrame()
                                 self.refresh_map(reset_areas=True, clear_draw=True)
-                                st.session_state['import_setting_processed'] = True   
+                                st.session_state['import_setting_processed'] = True
 
                                 if(settings.status_handler.has_warnings()):
                                     warning = settings.status_handler.generate_status_report("warnings")
-                                    st.warning(warning) 
+                                    st.warning(warning)
 
-                                st.success("Settings imported successfully!")   
+                                st.success("Settings imported successfully!")
             with tab1:
                 c2_export = self.exp_imp_events_stations()
 
             return c2_export
 
-
     def render_map_right_menu(self):
         if self.prev_step_type and len(self.df_markers_prev) < 6:
             with st.expander(f"Search Around {self.prev_step_type.title()}s", expanded=True):
-                self.display_prev_step_selection_table() 
+                self.display_prev_step_selection_table()
 
     def render_map(self):
 
@@ -1466,12 +1461,10 @@ class BaseComponent:
             self.map_disp = create_map(map_id=f"init_{self.map_id}")
         else:
             clear_map_layers(self.map_disp)
-        
+
         self.display_prev_step_selection_marker()
 
-        # feature_groups = [fg for fg in [self.map_fg_area, self.map_fg_marker] if fg is not None]
-        feature_groups = [fg for fg in [self.map_fg_area, self.map_fg_marker , self.map_fg_prev_selected_marker] if fg is not None]
-        
+        feature_groups = [fg for fg in [self.map_fg_area, self.map_fg_marker, self.map_fg_prev_selected_marker] if fg is not None]
 
         info_display = f"ℹ️ Use **shape tools** to search **{self.TXT.STEP}s** in confined areas   "
         info_display += "\nℹ️ Use **Reload** button to refresh map if needed   "
@@ -1480,7 +1473,7 @@ class BaseComponent:
            info_display += "\nℹ️ **Marker size** is associated with **earthquake magnitude**"
 
         st.caption(info_display)
-        
+
         c1, c2 = st.columns([18,1])
         with c1:
             self.map_output = st_folium(
@@ -1490,7 +1483,6 @@ class BaseComponent:
                 width='stretch', 
                 # height=self.map_height
             )
-
 
         with c2:
             if self.fig_color_bar:
@@ -1520,13 +1512,11 @@ class BaseComponent:
                     if self.selected_marker_map_idx is None or idx != self.selected_marker_map_idx:
                         self.selected_marker_map_idx = idx
                         self.clicked_marker_info = self.marker_info[self.selected_marker_map_idx]
-
             else:
                 self.clicked_marker_info = None
 
         if self.warning:
             st.warning(self.warning)
-
 
     def render_marker_select(self):
         def handle_marker_select():
@@ -1550,10 +1540,8 @@ class BaseComponent:
             except KeyError:
                 print("Selected map marker not found")
 
-
         if self.clicked_marker_info:
             handle_marker_select()
-
 
     def render_data_table(self, c5_map):
         if self.df_markers.empty:
@@ -1583,7 +1571,6 @@ class BaseComponent:
             st.session_state[state_key] = self.df_markers.copy()
 
         self.data_table_view(ordered_col, config, state_key)
-
 
         # Download button logic
         is_disabled = 'is_selected' not in self.df_markers or self.df_markers['is_selected'].sum() == 0
@@ -1631,7 +1618,7 @@ class BaseComponent:
             st.toggle(
                 "Auto-Refresh Enabled",
                 key='auto_refresh_toggle',
-                help="Toggle automatic refresh when making selections or drawing areas (helpful when table is large)",
+                help="Toggle automatic refresh when making selections or drawing areas (turning OFF is helpful when table is large)",
                 on_change=lambda: self.update_auto_refresh_state()
             )
 
@@ -1654,7 +1641,6 @@ class BaseComponent:
             elif max_length <= 100:
                 return None
             return "large"
-
 
         def _format_columns():
             column_map = {}
@@ -1698,7 +1684,6 @@ class BaseComponent:
                     config[col] = st.column_config.Column(col)
 
             return config
-
 
         c1, c2, c3 = st.columns([1,1,1])
         with c1:
@@ -1790,7 +1775,6 @@ class BaseComponent:
             st.warning(f"Missing columns in data: {', '.join(missing_columns)}")
             return
 
-
         df_selected["display_label"] = df_selected[unique_columns].astype(str).agg(".".join, axis=1)
 
         selected_items = df_selected["display_label"].tolist()
@@ -1832,7 +1816,7 @@ class BaseComponent:
             c1_err, c2_err = st.columns([4,1])
             with c1_err:
                 if self.error == "Error: 'TimeoutError' object has no attribute 'splitlines'":
-                    st.error("server timeout, try again in a minute")                
+                    st.error("Server timeout, try again in a minute")
                 st.error(self.error)
             with c2_err:
                 if st.button(":material/close:"): # ❌

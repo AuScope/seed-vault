@@ -21,11 +21,11 @@ def parse_time(time_str):
     """
     The function `parse_time` attempts to parse a given time string in various formats and return it in
     ISO format.
-    
+
     Args:
       time_str: The date-time in string format. Some acceptable input formats are:
                 '2014,2,1' | '2014001' | '2014,3,2,0,0,5'
-    
+
     Returns:
       The `parse_time` function is attempting to parse a time string using different formats. If
       successful, it returns the parsed time in ISO format. If parsing fails for all formats, it returns
@@ -48,17 +48,17 @@ def parse_time(time_str):
             except ValueError:
                 continue
     return None
-    
+
 def safe_add_to_config(config, section, key, value):
     """
     The function `safe_add_to_config` safely adds key-value pairs to a configuration dictionary,
     handling any exceptions that may occur.
-    
+
     Args:
       config: Config is a dictionary that stores configuration settings. It typically has sections as
               keys, where each section contains key-value pairs representing specific configuration 
               settings. 
-              
+
       section: Section refers to a specific section within the configuration file 
                where the key-value pair will be added. It helps organize and categorize different 
                settings or options within the configuration file.
@@ -80,12 +80,12 @@ def convert_to_str(val):
     """
     The function `convert_to_str` converts various types of values to strings, handling different cases
     and providing error handling.
-    
+
     Args:
       val: The `convert_to_str` function takes a value `val` as input and attempts to convert it to a
            string representation. It handles different types of values such as `None`, `Enum`, strings,
            integers, floats, booleans, objects with `__str__` method, and other unsupported
-    
+
     Returns:
       The function `convert_to_str` returns a string representation of the input value `val`. It handles
       different types of input values and converts them to a string using various methods based on their
@@ -104,7 +104,7 @@ def convert_to_str(val):
     except Exception as e:
         print(f"Error converting value {val}: {e}")
         return ''  # Return empty string if conversion fails
-            
+
 class ProcessingConfig(BaseModel):
     """
     This class defines a configuration for processing with default values for the number of processes,
@@ -154,17 +154,17 @@ class SeismoQuery(BaseModel):
             cmb_str += f"{self.location}."
         if self.channel:
             cmb_str += f"{self.channel}."
-        
+
         if cmb_str.endswith("."):
             cmb_str = cmb_str[:-1]
 
         return cmb_str
-    
+
     def cmb_str_n_s_to_props(self, cmb_n_s):
         lst_split = cmb_n_s.split(".")
         if len(lst_split) < 2:
             raise ValueError(f"Input station code is malformed: {cmb_n_s}")
-        
+
         for item in lst_split[0:2]:
             if item == "":  # Add other validation checks here
                 raise ValueError(f"Input station code is malformed: {cmb_n_s}")
@@ -181,7 +181,7 @@ class SeismoQuery(BaseModel):
             setattr(self, 'channel', lst_split[3])
         else:
             setattr(self, 'channel', None)
-        
+
 
 class DateConfig(BaseModel):
     """
@@ -206,7 +206,7 @@ class WaveformConfig(BaseModel):
     location_pref    : Optional     [str] = None
     force_redownload : Optional    [bool] = False
 
-    days_per_request : Optional     [int]             = 1
+    days_per_request : Optional     [int] = 1
 
     def set_default(self):
         """Resets all fields to their default values."""
@@ -395,7 +395,7 @@ class SeismoLoaderSettings(BaseModel):
     file, managing authentication, and persisting settings to disk.
 
     Attributes:
-        sds_path (str): The directory path for the Seismic Data Structure (SDS). Defaults to `data/SDS`.
+        sds_path (str): The directory path for the Seismic Data Structure (SDS). Defaults to `SVdata/SDS`.
         db_path (str): The database file path for tracking downloaded data. Defaults to `data/database.sqlite`.
         download_type (DownloadType): The type of download to perform (e.g., event-based or continuous).
         selected_workflow (WorkflowType): The selected workflow type (e.g., event-based, station-based).
@@ -412,7 +412,7 @@ class SeismoLoaderSettings(BaseModel):
     Methods:
         set_download_type_from_workflow():
             Sets the `download_type` attribute based on the selected workflow.
-        
+
         from_cfg_file(cls, cfg_source: Union[str, IO]) -> "SeismoLoaderSettings":
             Loads and initializes a `SeismoLoaderSettings` instance from a configuration file.
 
@@ -428,8 +428,8 @@ class SeismoLoaderSettings(BaseModel):
         from_pickle_file(cls, pickle_path: str) -> "SeismoLoaderSettings":
             Loads a `SeismoLoaderSettings` instance from a pickle file.
     """
-    sds_path          : str                                   = "data/SDS"
-    db_path           : str                                   = "data/database.sqlite"
+    sds_path          : str                                   = "SVdata/SDS"
+    db_path           : str                                   = "SVdata/database.sqlite"
     download_type     : DownloadType                          = DownloadType.EVENT
     selected_workflow : WorkflowType                          = WorkflowType.EVENT_BASED
     processing        : ProcessingConfig                      = None
@@ -454,8 +454,8 @@ class SeismoLoaderSettings(BaseModel):
         event_instance.set_default()
 
         return cls(
-            sds_path='data/SDS',
-            db_path='data/database.sqlite',
+            sds_path='SVdata/SDS',
+            db_path='SVdata/database.sqlite',
             download_type=DownloadType.EVENT,
             selected_workflow=WorkflowType.EVENT_BASED,
             processing=ProcessingConfig(
@@ -492,10 +492,10 @@ class SeismoLoaderSettings(BaseModel):
     def _check_val(cls, val, default_val, val_type: str = "int", return_empty_str: bool = False):
         if val is not None and not isinstance(val, str):
             return val
-        
+
         if val is None or val.strip().lower() == 'none':
             return default_val
-        
+
         # For cases where user purposedly is passing empty string
         if val.strip() == '':
             if return_empty_str:
@@ -508,7 +508,7 @@ class SeismoLoaderSettings(BaseModel):
             if val_type == "float":
                 return float(val)
             return val
-        
+
 
     @classmethod
     def _is_none(cls, val):
@@ -516,7 +516,7 @@ class SeismoLoaderSettings(BaseModel):
             if val.strip() == '' or val.strip().lower() == 'none':
                 return True
         return False
-            
+
     @classmethod
     def from_cfg_file(cls, cfg_source: Union[str, IO]) -> "SeismoLoaderSettings":
         """
@@ -547,7 +547,6 @@ class SeismoLoaderSettings(BaseModel):
 
         # status_handler.display()
 
-
         # Return the populated SeismoLoaderSettings
         return cls(
             sds_path=sds_path,
@@ -560,7 +559,7 @@ class SeismoLoaderSettings(BaseModel):
             event=event_config,
             status_handler =status_handler
         )
-    
+
     @classmethod
     def _load_config_file(cls, cfg_source, config):
         if isinstance(cfg_source, str):
@@ -579,8 +578,8 @@ class SeismoLoaderSettings(BaseModel):
         try:
             sds_path = config.get('SDS', 'sds_path', fallback=None)
             if not sds_path:
-                sds_path = "data/SDS"
-                status_handler.add_warning("input_parameters" , "'sds_path' is missing in the [SDS] section. Using default value: 'data/SDS'.")
+                sds_path = "SVdata/SDS"
+                status_handler.add_warning("input_parameters" , "'sds_path' is missing in the [SDS] section. Using default value: 'SVdata/SDS'.")
             return sds_path
         except Exception as e:
             status_handler.add_error("input_parameters" , f"Error parsing [SDS] section: {str(e)}")
@@ -635,7 +634,7 @@ class SeismoLoaderSettings(BaseModel):
         try:
             if 'AUTH' not in config:
                 return []
-            
+
             credentials = list(config['AUTH'].items())
             return [
                 AuthConfig(nslc_code=nslc, username=cred.split(':')[0], password=cred.split(':')[1])
@@ -644,7 +643,7 @@ class SeismoLoaderSettings(BaseModel):
         except Exception as e:
             status_handler.add_error("input_parameters", f"Error parsing [AUTH] section: {str(e)}")
             return []
-        
+
 
     @classmethod
     def _parse_waveform_section(cls, config, status_handler ):
@@ -684,13 +683,13 @@ class SeismoLoaderSettings(BaseModel):
             location_pref=location_pref,
             days_per_request=days_per_request,
         )
-            
+
     @classmethod
     def _parse_station_section(cls, config, status_handler):
         station_section = 'STATION'
         if not config.has_section(station_section):
             status_handler.add_error("input_parameters", f"The [{station_section}] section is missing in the configuration file. Please provide station details.")
-        
+
         station_client = cls._parse_param(
             config=config,
             section=station_section,
@@ -742,7 +741,7 @@ class SeismoLoaderSettings(BaseModel):
             warning_message=f"'channel' is empty in the [{station_section}] section. Defaulting to '?H?,?N?'.",
             # validation_fn=lambda x: bool(re.match(r'^(\?[\w]\?,?)+$', x))
         )
-        
+
         start_time = cls._parse_param(
             config=config,
             section=station_section,
@@ -789,12 +788,13 @@ class SeismoLoaderSettings(BaseModel):
         # Parse level
         level = config.get(station_section, 'level', fallback='channel')
         if level is None:  # Key is missing
-            status_handler.add_error("input_parameters", f"'level' is missing in the [{station_section}] section. Please specify a level (e.g., 'channel').")
+            #status_handler.add_error("input_parameters", f"'level' is missing in the [{station_section}] section. Please specify a level (e.g., 'channel').")
+            level = Levels.CHANNEL # quietly just set a sane default
         else:
-            level = level.strip()
-            if not level:  # Value is empty
-                level= Levels.CHANNEL
-                status_handler.add_warning("input_parameters", f"'level' is empty in the [{station_section}] section. Defaulting to 'channel'.")
+            level = level.strip().lower()
+            if level not in ['channel','response']:
+                level = Levels.CHANNEL
+                #status_handler.add_warning("input_parameters", f"'level' is empty in the [{station_section}] section. Defaulting to 'channel'.")
 
 
         # Parse date configurations
@@ -932,7 +932,6 @@ class SeismoLoaderSettings(BaseModel):
         include_all_origins = cls._check_val(config.get(event_section, "includeallorigins", fallback=False), False, "bool")
         include_all_magnitudes = cls._check_val(config.get(event_section, "includeallmagnitudes", fallback=False), False, "bool")
         include_arrivals = cls._check_val(config.get(event_section, "includearrivals", fallback=False), False, "bool")
-        
 
         # Parse optional strings
         limit = cls.parse_optional(config.get(event_section, "limit", fallback=None))
@@ -1091,7 +1090,6 @@ class SeismoLoaderSettings(BaseModel):
                 )
             )
 
-
         elif geo_constraint_type is not None:  # Invalid type provided
             if geo_constraint_type == '' or geo_constraint_type.isspace():
                 geo_constraint = None
@@ -1101,7 +1099,7 @@ class SeismoLoaderSettings(BaseModel):
                     f"Invalid 'geo_constraint' type '{geo_constraint_type}' in the [{section}] section. "
                     f"Allowed values are 'BOUNDING' or 'CIRCLE'."
                 )
-              
+
         return geo_constraint
 
 
@@ -1210,9 +1208,9 @@ class SeismoLoaderSettings(BaseModel):
             safe_add_to_config(config, 'EVENT', 'catalog', self.event.catalog)
 
             # FIXME: The settings are updated such that they support multiple geometries.
-            # But config file only accepts one geometry at a time.For now we just get
+            # But config file only accepts one geometry at a time. For now we just get
             # the first item.
-         
+
             if self.event.geo_constraint and hasattr(self.event.geo_constraint[0], 'geo_type'):
                 safe_add_to_config(config, 'EVENT', 'geo_constraint', self.event.geo_constraint[0].geo_type)
 
@@ -1237,7 +1235,7 @@ class SeismoLoaderSettings(BaseModel):
             'processing': {
                 'num_processes': self.processing.num_processes,
                 'gap_tolerance': self.processing.gap_tolerance,
-            },            
+            }, 
             'download_type': self.download_type.value if self.download_type else None,
             'auths': self.auths if self.auths else [],
             'waveform': {
@@ -1294,7 +1292,7 @@ class SeismoLoaderSettings(BaseModel):
                 'catalog': self.event.catalog if self.event and self.event.catalog else None,
                 'updatedafter': self.event.updatedafter if self.event and self.event.updatedafter else None,
             }
-        
+
         return config_dict
 
 
@@ -1344,7 +1342,7 @@ class SeismoLoaderSettings(BaseModel):
         """
         with open(pickle_path, "wb") as f:
             pickle.dump(self, f)
-    
+
     @classmethod
     def from_pickle_file(cls, pickle_path: str) -> "SeismoLoaderSettings":
         """
@@ -1358,7 +1356,7 @@ class SeismoLoaderSettings(BaseModel):
         """
         with open(pickle_path, "rb") as f:
             return pickle.load(f)
-        
+
 
     def has_changed(self, old_settings: "SeismoLoaderSettings") -> Dict[str, bool]:
         """
@@ -1465,4 +1463,3 @@ def convert_circle_to_minus180_180(circle: CircleArea) -> CircleArea:
         min_radius=circle.min_radius,
         color=circle.color
     )
-
