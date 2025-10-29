@@ -1,13 +1,14 @@
+import os
 import re
 from pydantic import BaseModel
 import json
 from typing import IO, Dict, Optional, List, Tuple, Union, Any
 from datetime import date, timedelta, datetime
 from enum import Enum
-import os
 import configparser
 from configparser import ConfigParser
 import pickle
+from io import StringIO #new
 
 from obspy import UTCDateTime
 
@@ -471,7 +472,7 @@ class SeismoLoaderSettings(BaseModel):
             predictions={},
             status_handler=StatusHandler(),
         )
-    
+
     def set_download_type_from_workflow(self):
         """
         Sets the download type based on the selected workflow.
@@ -528,6 +529,47 @@ class SeismoLoaderSettings(BaseModel):
         Returns:
             SeismoLoaderSettings: A populated instance of the class.
         """
+        # Attempt to allow duplicate values in config
+        if isinstance(cfg_source, str):
+            with open(cfg_source, 'r', encoding='utf-8') as f:
+                lines = f.readlines()
+        else:
+            lines = cfg_source.readlines()
+            if lines and isinstance(lines[0], bytes):
+                lines = [line.decode('utf-8') for line in lines]
+
+        # Find last occurrence of each option
+        seen_options = {}
+        current_section = None
+
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            if stripped.startswith('[') and stripped.endswith(']'):
+                current_section = stripped[1:-1]
+            elif current_section and '=' in line and not stripped.startswith(('#', ';')):
+                option = line.split('=')[0].strip().lower()
+                if option:
+                    seen_options[(current_section, option)] = i
+
+        # Filter to keep only last occurrences
+        current_section = None
+        filtered_lines = []
+
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            if stripped.startswith('[') and stripped.endswith(']'):
+                current_section = stripped[1:-1]
+                filtered_lines.append(line)
+            elif current_section and '=' in line and not stripped.startswith(('#', ';')):
+                option = line.split('=')[0].strip().lower()
+                if option and seen_options.get((current_section, option)) == i:
+                    filtered_lines.append(line)
+            else:
+                filtered_lines.append(line)
+
+        # Create a StringIO object with the filtered content
+        cfg_source = StringIO(''.join(filtered_lines))
+
         status_handler= StatusHandler()       
         config = configparser.ConfigParser()
         config.optionxform = str
@@ -535,6 +577,48 @@ class SeismoLoaderSettings(BaseModel):
         # Load configuration file
         cls._load_config_file(cfg_source, config)
 
+        # Parse sections
+        sds_path = cls._parse_sds_section(config, status_handler)
+        db_path = cls._parse_database_section(config, sds_path, status_handler)
+        processing_config, download_type = cls._parse_processing_section(config, status_handler)
+        lst_auths = cls._parse_auth_section(config, status_handler)
+        waveform = cls._parse_waveform_section(config, status_handler)
+        station_config = cls._parse_station_section(config, status_handler)
+        event_config = cls._parse_event_section(config, status_handler, download_type)
+
+        # status_handler.display()
+
+        # Return the populated SeismoLoaderSettings
+        return cls(
+            sds_path=sds_path,
+            db_path=db_path,
+            download_type=download_type,
+            processing=processing_config,
+            auths=lst_auths,
+            waveform=waveform,
+            station=station_config,
+            event=event_config,
+            status_handler =status_handler
+        )
+
+    # replaced by above (for now.. see issue #321)
+    @classmethod
+    def from_cfg_file_OLD(cls, cfg_source: Union[str, IO]) -> "SeismoLoaderSettings":
+        """
+        Loads a `SeismoLoaderSettings` instance from a configuration file.
+
+        Args:
+            cfg_source (Union[str, IO]): The path to the configuration file or a file-like object.
+
+        Returns:
+            SeismoLoaderSettings: A populated instance of the class.
+        """
+        status_handler= StatusHandler()       
+        config = configparser.ConfigParser()
+        config.optionxform = str
+
+        # Load configuration file
+        cls._load_config_file(cfg_source, config)
 
         # Parse sections
         sds_path = cls._parse_sds_section(config, status_handler)

@@ -86,9 +86,9 @@ class SettingsComponent:
 
         if self.is_new_cred_added is not None:
             if self.is_new_cred_added:
-                st.success("Added a new auth. Please fill up the entries.")
+                st.success("Added a new auth/password!")
             else:
-                st.error("You cannot define duplicate N.S.L.C code.")
+                st.error("Duplicate values are superceded by the latest.")
 
             # self.reset_is_new_cred_added()
 

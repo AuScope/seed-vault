@@ -170,9 +170,18 @@ def collect_requests(inv, time0, time1, days_per_request=3,
     # Select inventory within the overall time window
     sub_inv = inv.select(starttime=time0, endtime=time1)
 
+    if not sub_inv:
+        print("ERROR in collect_requests: time filter removed all stations from inventory")
+        return requests
+
     # Filter by preferred channels if specified
     if cha_pref or loc_pref:
-        sub_inv = get_preferred_channels(sub_inv, cha_pref, loc_pref, time0)
+        # we're filtering by end time (time1) which is a bit more safe than start time,
+        # though still potentially an issue if the XML metadata's time ranges are poorly defined
+        sub_inv = get_preferred_channels(sub_inv, cha_pref, loc_pref, time1)
+        if not sub_inv:
+            print("ERROR in collect_requests: cha_pref and/or loc_pref removed all stations from inventory")
+            return requests
 
     # Process each network, station, and channel
     for net in sub_inv:
@@ -399,6 +408,10 @@ def get_preferred_channels(
 
     if time:
         inv = inv.select(time=time)
+        if not inv:
+            print("ERROR in get_preferred_channels: time kwarg is filtering entire inventory "
+              "(source metadata likely malformed, try different search window?)")           
+            return None
 
     for net in inv:
         new_net = net.copy()
