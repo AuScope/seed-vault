@@ -442,6 +442,8 @@ class SeismoLoaderSettings(BaseModel):
     event             : Optional[EventConfig]                 = None
     predictions       : Dict            [str, PredictionData] = {}
     status_handler    : StatusHandler                         = StatusHandler()
+    analytics_enabled : bool                                  = True
+    analytics_popup_dismissed : bool                          = False
 
 
     @classmethod
@@ -471,6 +473,8 @@ class SeismoLoaderSettings(BaseModel):
             event=event_instance,      
             predictions={},
             status_handler=StatusHandler(),
+            analytics_enabled=True,
+            analytics_popup_dismissed=False,
         )
 
     def set_download_type_from_workflow(self):
@@ -585,6 +589,7 @@ class SeismoLoaderSettings(BaseModel):
         waveform = cls._parse_waveform_section(config, status_handler)
         station_config = cls._parse_station_section(config, status_handler)
         event_config = cls._parse_event_section(config, status_handler, download_type)
+        analytics_enabled, analytics_popup_dismissed = cls._parse_analytics_section(config, status_handler)
 
         # status_handler.display()
 
@@ -598,7 +603,9 @@ class SeismoLoaderSettings(BaseModel):
             waveform=waveform,
             station=station_config,
             event=event_config,
-            status_handler =status_handler
+            status_handler=status_handler,
+            analytics_enabled=analytics_enabled,
+            analytics_popup_dismissed=analytics_popup_dismissed,
         )
 
     # replaced by above (for now.. see issue #321)
@@ -628,6 +635,7 @@ class SeismoLoaderSettings(BaseModel):
         waveform = cls._parse_waveform_section(config, status_handler)
         station_config = cls._parse_station_section(config, status_handler)
         event_config = cls._parse_event_section(config, status_handler, download_type)
+        analytics_enabled, analytics_popup_dismissed = cls._parse_analytics_section(config, status_handler)
 
         # status_handler.display()
 
@@ -641,7 +649,9 @@ class SeismoLoaderSettings(BaseModel):
             waveform=waveform,
             station=station_config,
             event=event_config,
-            status_handler =status_handler
+            status_handler=status_handler,
+            analytics_enabled=analytics_enabled,
+            analytics_popup_dismissed=analytics_popup_dismissed,
         )
 
     @classmethod
@@ -727,6 +737,21 @@ class SeismoLoaderSettings(BaseModel):
         except Exception as e:
             status_handler.add_error("input_parameters", f"Error parsing [AUTH] section: {str(e)}")
             return []
+
+    @classmethod
+    def _parse_analytics_section(cls, config, status_handler):
+        """Parse analytics settings from config file."""
+        analytics_enabled = cls._check_val(
+            config.get('ANALYTICS', 'analytics_enabled', fallback=True), 
+            True, 
+            "bool"
+        )
+        analytics_popup_dismissed = cls._check_val(
+            config.get('ANALYTICS', 'analytics_popup_dismissed', fallback=False), 
+            False, 
+            "bool"
+        )
+        return analytics_enabled, analytics_popup_dismissed
 
 
     @classmethod
@@ -1310,6 +1335,11 @@ class SeismoLoaderSettings(BaseModel):
                     safe_add_to_config(config, 'EVENT', 'minlongitude', self.event.geo_constraint[0].coords.min_lon)
                     safe_add_to_config(config, 'EVENT', 'maxlongitude', self.event.geo_constraint[0].coords.max_lon)
 
+        # Populate the [ANALYTICS] section
+        config['ANALYTICS'] = {}
+        safe_add_to_config(config, 'ANALYTICS', 'analytics_enabled', self.analytics_enabled)
+        safe_add_to_config(config, 'ANALYTICS', 'analytics_popup_dismissed', self.analytics_popup_dismissed)
+
         return config
 
     def add_to_config(self):
@@ -1376,6 +1406,11 @@ class SeismoLoaderSettings(BaseModel):
                 'catalog': self.event.catalog if self.event and self.event.catalog else None,
                 'updatedafter': self.event.updatedafter if self.event and self.event.updatedafter else None,
             }
+
+        config_dict['analytics'] = {
+            'analytics_enabled': self.analytics_enabled,
+            'analytics_popup_dismissed': self.analytics_popup_dismissed,
+        }
 
         return config_dict
 

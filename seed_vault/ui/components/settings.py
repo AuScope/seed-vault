@@ -232,6 +232,107 @@ class SettingsComponent:
         """
         )
 
+    def render_analytics(self):
+        st.write("## Analytics Information")
+        
+        # Analytics status indicator
+        current_status = "✅ Enabled" if self.settings.analytics_enabled else "🚫 Disabled"
+        st.markdown(f"**Current Analytics Status:** {current_status}")
+        
+        st.markdown("---")
+        
+        # Main content
+        st.markdown("""
+        ### What We Collect
+        
+        Seed Vault collects **anonymous usage analytics** to help us understand how the application is being used 
+        and to improve the user experience. We are committed to protecting your privacy.
+        
+        #### Data We Collect
+        
+        The following types of anonymous data may be collected:
+        
+        - **Application Usage Statistics**: Which features and workflows are used most frequently
+        - **Performance Metrics**: Application load times and processing performance
+        - **Error Reports**: Anonymized error logs to help identify and fix bugs
+        - **System Information**: Python version, operating system type (for compatibility)
+        
+        #### What We DO NOT Collect
+        
+        We do **not** collect:
+        
+        - ❌ Personal identifying information (names, emails, IP addresses)
+        - ❌ Seismic data or research data you process
+        - ❌ Station codes, network codes, or event information
+        - ❌ File paths or directory structures from your system
+        - ❌ Authentication credentials or passwords
+        """)
+        
+        st.markdown("---")
+        
+        st.markdown("""
+        ### Why We Collect Analytics
+        
+        Analytics help us:
+        
+        1. **Improve User Experience**: Understand which features are most valuable and which need improvement
+        2. **Prioritize Development**: Focus our efforts on the features that matter most to users
+        3. **Fix Bugs Faster**: Identify and resolve errors that affect real users
+        4. **Ensure Compatibility**: Test and optimize for the platforms and environments our users rely on
+        5. **Guide Future Development**: Make data-driven decisions about new features
+        """)
+        
+        st.markdown("---")
+        
+        st.markdown("""
+        ### Your Privacy & Control
+        
+        **You have full control** over analytics collection:
+        
+        - Analytics are **enabled by default** but can be disabled at any time
+        - Disabling analytics does **not** affect any functionality of Seed Vault
+        - Your choice is saved and persists across sessions
+        - You can change your preference at any time using the toggle below
+        """)
+        
+        st.markdown("---")
+        
+        st.write("### Manage Your Analytics Preferences")
+        
+        # Analytics control section
+        col1, col2 = st.columns([3, 1])
+        
+        with col1:
+            new_analytics_enabled = st.toggle(
+                "Enable Anonymous Analytics",
+                value=self.settings.analytics_enabled,
+                help="Enable or disable anonymous usage analytics collection",
+                key="analytics_toggle_settings"
+            )
+        
+        with col2:
+            st.text("")
+            st.text("")
+            if new_analytics_enabled != self.settings.analytics_enabled:
+                self.settings.analytics_enabled = new_analytics_enabled
+                # Mark popup as dismissed when user changes setting
+                self.settings.analytics_popup_dismissed = True
+                st.info("💾 Click 'Save Config' above to persist your changes.")
+        
+        st.markdown("---")
+        
+        st.markdown("""
+        ### Questions or Concerns?
+        
+        If you have questions about our analytics practices or privacy policy, please:
+        
+        - 📧 Open an issue on our [GitHub repository](https://github.com/AuScope/seed-vault)
+        - 📖 Review our [documentation](https://seed-vault.readthedocs.io/)
+        - 💬 Contact the development team through the project channels
+        
+        Thank you for using Seed Vault! Your feedback and trust are important to us.
+        """)
+
     def render(self):
         c1, c2, c3 = st.columns([1,1,1])
         with c1:
@@ -264,12 +365,21 @@ class SettingsComponent:
             st.text("")
             st.link_button("Help", f"{DOC_BASE_URL}/app_settings.html")
 
-        tab1, tab2, tab3, tab4 = st.tabs(["🛠️ Data", "🔑 Credentials", "📡 Clients", "📜 License"])
-        with tab1:
+        # Check if we should open the Analytics tab (from popup "Learn More" button)
+        default_tab = 3 if st.session_state.get('open_analytics_tab', False) else 0
+        if 'open_analytics_tab' in st.session_state:
+            del st.session_state['open_analytics_tab']  # Clear the flag after using it
+
+        tab_selection = st.tabs(["🛠️ Data", "🔑 Credentials", "📡 Clients", "📊 Analytics", "📜 License"])
+        
+        # Render all tabs
+        with tab_selection[0]:
             self.render_db()
-        with tab2:
+        with tab_selection[1]:
             self.render_auth()
-        with tab3:
+        with tab_selection[2]:
             self.render_clients()
-        with tab4:
+        with tab_selection[3]:
+            self.render_analytics()
+        with tab_selection[4]:
             self.render_license()

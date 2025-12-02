@@ -39,6 +39,8 @@ st.markdown(
 
 
 from seed_vault.ui.components.workflows_combined import CombinedBasedWorkflow
+from seed_vault.ui.components.analytics_popup import AnalyticsPopup
+from seed_vault.ui.app_pages.helpers.common import get_app_settings
 
 current_page = st.session_state.get("current_page", None)
 new_page = "main_flow"
@@ -48,6 +50,10 @@ if current_page != new_page:
 
 st.session_state["current_page"] = new_page
 
+# Display analytics popup if conditions are met
+settings = get_app_settings(create_new=False, empty_geo=False)
+analytics_popup = AnalyticsPopup(settings)
+analytics_popup.render()
 
 if "combined_based_workflow" not in st.session_state:
     combined_based_workflow                  = CombinedBasedWorkflow()
