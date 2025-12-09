@@ -20,12 +20,16 @@ Here you can directly set the search configs and run your desired workflow insta
 
 from seed_vault.ui.app_pages.helpers.common import get_app_settings
 from seed_vault.ui.components.run_from_config import RunFromConfigComponent
+from seed_vault.ui.app_pages.helpers.telemetry import track_page_view
 
 current_page = st.session_state.get("current_page", None)
 new_page = "run_config"
 if current_page != new_page:
     st.session_state.clear()
 st.session_state["current_page"] = new_page
+
+# Track page view
+track_page_view("/run-from-parameters", "Run from Parameters")
 
 
 settings = get_direct_settings()

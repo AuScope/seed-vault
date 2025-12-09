@@ -11,6 +11,7 @@ from obspy.geodetics import kilometer2degrees
 from seed_vault.models.common import RectangleArea, CircleArea
 from seed_vault.enums.common import GeometryType
 from seed_vault.models.config import SeismoLoaderSettings, GeometryConstraint
+from seed_vault.ui.app_pages.helpers.telemetry import init_telemetry_client
 
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
@@ -37,6 +38,10 @@ def get_app_settings(create_new: bool = True, empty_geo: bool = True):
         settings = SeismoLoaderSettings.from_cfg_file(target_file)
         settings.client_url_mapping.load()
         st.session_state.app_settings = settings
+        
+        # Initialize telemetry client on first settings load
+        db_path = settings.db_path if settings.db_path else "SVdata/database.sqlite"
+        init_telemetry_client(settings, db_path)
     else:
         if create_new:
             settings = SeismoLoaderSettings.from_cfg_file(target_file)

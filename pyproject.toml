@@ -50,6 +50,7 @@ pydantic = "^2.9.1"
 streamlit-extras = "^0.7.8"
 streamlit-ace = "^0.1.1"
 st-pages = "^1.0.1"
+python-dotenv = "^1.0.0"
 
 [build-system]
 requires = ["poetry-core"]

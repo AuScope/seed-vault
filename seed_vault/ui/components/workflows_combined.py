@@ -13,6 +13,7 @@ from seed_vault.ui.components.waveform import log_queue, task_completed, task_re
 from seed_vault.ui.components.continuous_waveform import log_queue as continuous_log_queue
 
 from seed_vault.ui.app_pages.helpers.common import get_app_settings, save_filter, reset_config
+from seed_vault.ui.app_pages.helpers.telemetry import track_page_view, track_event
 
 
 download_options = [f.name.title() for f in DownloadType]
@@ -43,6 +44,11 @@ class CombinedBasedWorkflow:
         st.rerun()
 
     def previous_stage(self):
+        track_event("workflow_navigation", {
+            "action": "back",
+            "from_stage": self.stage,
+            "to_stage": self.stage - 1
+        })
         self.stage -= 1
         st.rerun()
 
@@ -67,6 +73,9 @@ class CombinedBasedWorkflow:
         changes. Also, probably, we do not need clean up on the filter settings 
         (we actually may need to keep the filters as is).
         """
+        # Track workflow selection page
+        track_page_view("/main-flows/workflow-selection", "Workflow Selection")
+        
         c1, c2 = st.columns([2,1])
 
         with c1:
@@ -92,6 +101,13 @@ class CombinedBasedWorkflow:
             if st.button("Start"):
                 st.session_state.selected_flow_type = selected_flow_type
                 self.settings.set_download_type_from_workflow()
+                
+                # Track workflow start
+                track_event("workflow_started", {
+                    "workflow_type": self.settings.selected_workflow.value,
+                    "download_type": self.settings.download_type.value
+                })
+                
                 if self.settings.selected_workflow == WorkflowType.EVENT_BASED:
                     self.event_components = BaseComponent(self.settings, step_type=Steps.EVENT, prev_step_type=None, stage=1)    
                     self.station_components = BaseComponent(self.settings, step_type=Steps.STATION, prev_step_type=Steps.EVENT, stage=2)    
@@ -211,6 +227,14 @@ class CombinedBasedWorkflow:
         # Add CSS to prevent scrolling on headers..
         st.markdown("<style>.stMarkdown{overflow:visible !important;}</style>", unsafe_allow_html=True)
 
+        # Track stage 1 page view
+        if self.settings.selected_workflow == WorkflowType.EVENT_BASED:
+            track_page_view("/main-flows/step1-event-search", "Step 1: Event Search")
+        elif self.settings.selected_workflow == WorkflowType.STATION_BASED:
+            track_page_view("/main-flows/step1-station-search", "Step 1: Station Search")
+        elif self.settings.selected_workflow == WorkflowType.CONTINUOUS:
+            track_page_view("/main-flows/step1-station-search-continuous", "Step 1: Station Search (Continuous)")
+
         c1, c2, c3 = st.columns([1, 1, 1])
         title = "Events" if self.settings.selected_workflow == WorkflowType.EVENT_BASED else "Stations"
 
@@ -224,6 +248,12 @@ class CombinedBasedWorkflow:
         with c3:
             if st.button("Next"):
                 if self.validate_and_adjust_selection(self.settings.selected_workflow):
+                    # Track progression to next stage
+                    track_event("workflow_step_completed", {
+                        "workflow_type": self.settings.selected_workflow.value,
+                        "step": 1,
+                        "step_name": "event_search" if self.settings.selected_workflow == WorkflowType.EVENT_BASED else "station_search"
+                    })
                     self.next_stage()
 
             if self.has_error:
@@ -246,6 +276,14 @@ class CombinedBasedWorkflow:
     def render_stage_2(self):
         # Add CSS to prevent scrolling on headers..
         st.markdown("<style>.stMarkdown{overflow:visible !important;}</style>", unsafe_allow_html=True)
+
+        # Track stage 2 page view
+        if self.settings.selected_workflow == WorkflowType.CONTINUOUS:
+            track_page_view("/main-flows/step2-waveform-download-continuous", "Step 2: Waveform Download (Continuous)")
+        elif self.settings.selected_workflow == WorkflowType.EVENT_BASED:
+            track_page_view("/main-flows/step2-station-search", "Step 2: Station Search")
+        elif self.settings.selected_workflow == WorkflowType.STATION_BASED:
+            track_page_view("/main-flows/step2-event-search", "Step 2: Event Search")
 
         c1, c2, c3 = st.columns([1, 1, 1])
 
@@ -291,6 +329,12 @@ class CombinedBasedWorkflow:
             with c3:
                 if st.button("Next"):
                     if self.validate_and_adjust_selection(self.settings.selected_workflow):
+                        # Track progression to next stage
+                        track_event("workflow_step_completed", {
+                            "workflow_type": self.settings.selected_workflow.value,
+                            "step": 2,
+                            "step_name": "station_search" if self.settings.selected_workflow == WorkflowType.EVENT_BASED else "event_search"
+                        })
                         self.next_stage()
 
                 if self.has_error:
@@ -311,6 +355,9 @@ class CombinedBasedWorkflow:
     def render_stage_3(self):
         # Add CSS to prevent scrolling on headers..
         st.markdown("<style>.stMarkdown{overflow:visible !important;}</style>", unsafe_allow_html=True)
+
+        # Track stage 3 page view (waveform download)
+        track_page_view("/main-flows/step3-waveform-download", "Step 3: Waveform Download")
 
         c1, c2, c3 = st.columns([1, 1, 1])
         with c2:

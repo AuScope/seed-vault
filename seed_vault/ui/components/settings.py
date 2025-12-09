@@ -6,6 +6,7 @@ from copy import deepcopy
 from seed_vault.enums.common import ClientType
 from seed_vault.models.config import AuthConfig, SeismoLoaderSettings
 from seed_vault.ui.app_pages.helpers.common import save_filter, reset_config
+from seed_vault.ui.app_pages.helpers.telemetry import track_page_view, track_event
 
 from seed_vault.service.seismoloader import populate_database_from_sds
 from seed_vault.utils.constants import DOC_BASE_URL
@@ -46,6 +47,7 @@ class SettingsComponent:
             st.rerun()
     
     def render_auth(self):
+        track_page_view("/settings/credentials", "Settings - Credentials")
         st.write("## Auth Records")
         # auths_lst = [item.model_dump() for item in settings.auths]
         # edited_df = st.data_editor(pd.DataFrame(auths_lst), num_rows="dynamic")
@@ -94,6 +96,7 @@ class SettingsComponent:
 
 
     def render_db(self):
+        track_page_view("/settings/data", "Settings - Data")
         try:
             c1, c2 = st.columns([1,1])
             with c1:
@@ -147,6 +150,7 @@ class SettingsComponent:
             st.error(str(e))
 
     def render_clients(self):
+        track_page_view("/settings/clients", "Settings - Clients")
         c1, c2 = st.columns([1,1])
         extra_clients = self.settings.client_url_mapping.get_clients(client_type = ClientType.EXTRA) # load_extra_client()
         orig_clients  = self.settings.client_url_mapping.get_clients(client_type = ClientType.ORIGINAL)
@@ -167,6 +171,7 @@ class SettingsComponent:
         st.success("Settings have been reset to default.")
 
     def render_license(self):
+        track_page_view("/settings/license", "Settings - License")
         st.text(
         """
         CSIRO Open Source Software License Agreement (variation of the BSD/MIT License)
@@ -233,6 +238,8 @@ class SettingsComponent:
         )
 
     def render_analytics(self):
+        track_page_view("/settings/analytics", "Settings - Analytics")
+        
         st.write("## Analytics Information")
         
         # Analytics status indicator
@@ -314,6 +321,11 @@ class SettingsComponent:
             st.text("")
             st.text("")
             if new_analytics_enabled != self.settings.analytics_enabled:
+                # Track analytics preference change
+                track_event("analytics_preference_changed", {
+                    "new_value": new_analytics_enabled,
+                    "previous_value": self.settings.analytics_enabled
+                })
                 self.settings.analytics_enabled = new_analytics_enabled
                 # Mark popup as dismissed when user changes setting
                 self.settings.analytics_popup_dismissed = True
@@ -349,6 +361,9 @@ class SettingsComponent:
                         df_copy = deepcopy(self.df_clients)
                         df_copy = df_copy.rename(columns={"Client Name": 'client', "Url": 'url'})
                         self.settings.client_url_mapping.save(df_copy.to_dict('records'))
+                        track_event("settings_saved", {
+                            "analytics_enabled": self.settings.analytics_enabled
+                        })
                         with c3:
                             st.text("")
                             st.success("Config is successfully saved.")

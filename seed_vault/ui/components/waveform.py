@@ -7,6 +7,7 @@ from seed_vault.service.seismoloader import run_event
 from obspy.clients.fdsn import Client
 from obspy.taup import TauPyModel
 from seed_vault.ui.components.display_log import ConsoleDisplay
+from seed_vault.ui.app_pages.helpers.telemetry import track_event
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -1118,13 +1119,21 @@ class WaveformComponents:
         """
         if st.session_state.get("is_downloading", False):
             if task_completed.is_set():
+                # Track download completion
+                success = task_result.get("success", False)
+                track_event("workflow_completed", {
+                    "success": success,
+                    "cancelled": st.session_state.get("download_cancelled", False),
+                    "workflow_type": st.session_state.get("selected_flow_type", "unknown")
+                })
+                
                 # Update session state from the main thread
                 st.session_state.update({
                     "is_downloading": False,
                     "query_done": True,
                     "query_thread": None,
                     "polling_active": False,
-                    "success": task_result.get("success", False),
+                    "success": success,
                     "download_cancelled": st.session_state.get("download_cancelled", False)
                 })
                 task_completed.clear()  # Reset for next time
