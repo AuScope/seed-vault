@@ -619,7 +619,8 @@ def collect_requests_event(
 
 
 def combine_requests(
-    requests: List[Tuple[str, str, str, str, str, str]]
+    requests: List[Tuple[str, str, str, str, str, str]],
+    max_stations_per_day: Optional[int] = None
 ) -> List[Tuple[str, str, str, str, str, str]]:
     """
     Combine multiple data requests for efficiency.
@@ -630,6 +631,7 @@ def combine_requests(
     Args:
         requests: List of request tuples, each containing:
             (network, station, location, channel, start_time, end_time)
+        max_stations_per_day: Maximum number of stations per day in a single request.
 
     Returns:
         List of combined request tuples with the same structure but with
@@ -649,28 +651,36 @@ def combine_requests(
     if not requests:
         return []
 
-    # Group requests by network and time range
+    # apply a hard limit. events may be OK for many stations
+    if max_stations_per_day is None or max_stations_per_day > 25:
+        max_stations_per_day = 25
+
     groups = defaultdict(list)
     for net, sta, loc, chan, t0, t1 in requests:
         groups[(net, t0, t1)].append((sta, loc, chan))
 
-    # Combine requests within each group
     combined_requests = []
     for (net, t0, t1), items in groups.items():
-        # Collect unique values
-        stas = set(sta for sta, _, _ in items)
+
+        stas = sorted(set(sta for sta, _, _ in items))
         locs = set(loc for _, loc, _ in items)
         chans = set(chan for _, _, chan in items)
-        
-        # Create combined request
-        combined_requests.append((
-            net, # keep networks distinct
-            ','.join(sorted(stas)),
-            ','.join(sorted(locs)),
-            ','.join(sorted(chans)),
-            t0,
-            t1
-        ))
+
+        for i in range(0, len(stas), max_stations_per_day):
+            chunk_stas = stas[i:i + max_stations_per_day]
+
+            chunk_items = [(s, l, c) for s, l, c in items if s in chunk_stas]
+            chunk_locs = set(l for _, l, _ in chunk_items)
+            chunk_chans = set(c for _, _, c in chunk_items)
+            
+            combined_requests.append((
+                net,
+                ','.join(chunk_stas),
+                ','.join(sorted(chunk_locs)),
+                ','.join(sorted(chunk_chans)),
+                t0,
+                t1
+            ))
 
     return combined_requests
 
@@ -1674,7 +1684,8 @@ def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event =
         return None
 
     # Combine these into fewer (but larger) requests
-    combined_requests = combine_requests(pruned_requests)
+    combined_requests = combine_requests(pruned_requests,
+                        max_stations_per_day=settings.waveform.stations_per_request)
 
     waveform_clients= {'open':waveform_client} #now a dictionary
     requested_networks = [ele[0] for ele in combined_requests]
@@ -1842,7 +1853,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
         # Download new data if needed
         if pruned_requests:
             try:
-                combined_requests = combine_requests(pruned_requests)
+                combined_requests = combine_requests(pruned_requests, max_stations_per_day=25)
             except Exception as e:
                 print(f"Issue with run_event > combine_requests:\n",{e})
 

@@ -5,7 +5,7 @@ here that gets the selection and runs Rob's script.
 
 We should also be able to support multi-select areas.
 
-@TODO: For now, dummy scripts are used. @Yunlong to fix.
+@TODO: For now, dummy scripts are used.
 """
 
 import pandas as pd
@@ -44,7 +44,7 @@ def remove_duplicate_inventories(inventories):
             if network_station_pair not in unique_network_station_pairs:
                 unique_network_station_pairs.add(network_station_pair)
                 unique_stations.append(station)
-        
+
         # If there are unique stations for this network, add a new network with filtered stations
         if unique_stations:
             filtered_network = Network(
@@ -83,7 +83,7 @@ def station_response_to_df(inventory):
             locations = ",".join(sorted(set([channel.location_code if channel.location_code else "--" for channel in station])))
             channels = ",".join(sorted(set([channel.code for channel in station])))
             start_date = str(station.start_date.strftime("%Y-%m-%d"))
-            end_date = str(station.end_date.strftime("%Y-%m-%d") if station.end_date else "ongoing")
+            end_date = str(station.end_date.strftime("%Y-%m-%d") if station.end_date else "active")
 
 
             record = {

@@ -346,6 +346,17 @@ Parameter Reference
             </td>
             <td style="border: 1px solid black; padding: 8px"><code>4</code></td>
          </tr>
+         <tr>
+            <td style="border: 1px solid black; padding: 8px">
+               stations_per_request
+            </td>
+            <td
+               style="border: 1px solid black; padding: 8px; word-wrap: break-word"
+            >
+               Set maximum number of simultaneous stations per data request.
+            </td>
+            <td style="border: 1px solid black; padding: 8px"><code>1</code></td>
+         </tr>         
          <!-- STATION SECTION  -->
          <!--===============================================-->
          <tr>

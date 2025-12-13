@@ -1,13 +1,13 @@
 client,url,is_original
 AUSPASS,http://auspass.edu.au,True
 BGR,http://eida.bgr.de,True
-EARTHSCOPE,https://service.iris.edu,False
+EARTHSCOPE,https://service.earthscope.org,False
 EIDA,http://eida-federator.ethz.ch,True
 EMSC,http://www.seismicportal.eu,True
 ETH,http://eida.ethz.ch,True
-GEOFON,http://geofon.gfz-potsdam.de,True
+GEOFON,https://geofon.gfz.de,True
 GEONET,http://service.geonet.org.nz,True
-GFZ,http://geofon.gfz-potsdam.de,True
+GFZ,https://geofon.gfz.de,True
 ICGC,http://ws.icgc.cat,True
 IESDMC,http://batsws.earth.sinica.edu.tw,True
 INGV,http://webservices.ingv.it,True

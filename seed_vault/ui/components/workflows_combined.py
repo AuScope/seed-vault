@@ -342,8 +342,6 @@ class CombinedBasedWorkflow:
                 st.session_state["success"] = False
                 st.session_state["polling_active"] = False
 
-                print("DEBUG 3 previous")
-
                 self.previous_stage()
 
         self.waveform_components.render()

@@ -1,6 +1,8 @@
 import click
 import os
-from seed_vault.service.seismoloader import run_main, populate_database_from_sds
+from seed_vault.service.seismoloader import run_main
+from seed_vault.service.db import populate_database_from_sds
+from seed_vault.service.db import clean_database
 
 dirname = os.path.dirname(__file__)
 par_dir = os.path.dirname(dirname)
@@ -24,8 +26,9 @@ def cli(ctx, file_path):
 @click.argument("db_path", type=click.Path())
 @click.option("-sp", "--search-patterns", default="??.*.*.???.?.????.???", help="Comma-separated list of search patterns.")
 @click.option("-nt", "--newer-than", type=click.DateTime(formats=["%Y-%m-%d"]), default=None, help="Filter for files newer than a specific date (YYYY-MM-DD).")
-@click.option("-c", "--cpu", default=0, type=int, help="Number of processes to use, input 0 to maximize.")
+@click.option("-c", "--cpu", default=0, type=int, help="Number of processes to use, enter 0 for all.")
 @click.option("-g", "--gap-tolerance", default=60, type=int, help="Gap tolerance in seconds.")
+
 def populate_db(sds_path, db_path, search_patterns, newer_than, cpu, gap_tolerance):
     """Populates the database from the SDS path into the specified database file."""
     search_patterns_list = search_patterns.strip().split(",")
@@ -38,10 +41,13 @@ def populate_db(sds_path, db_path, search_patterns, newer_than, cpu, gap_toleran
         num_processes=cpu,
         gap_tolerance=gap_tolerance,
     )
-
-
-
 cli.add_command(populate_db, name="sync-db")
+
+
+run_clean_db = click.command(name="clean-db", help="Perform various database maintenance/cleanup functions.")(
+    click.argument("db_path", type=click.Path())(clean_database)
+)
+cli.add_command(run_clean_db, name="clean-db")
 
 
 if __name__ == "__main__":

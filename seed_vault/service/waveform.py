@@ -9,6 +9,7 @@ from obspy.clients.filesystem.sds import Client as LocalClient
 from seed_vault.models.config import SeismoLoaderSettings, SeismoQuery
 from seed_vault.models.exception import NotFoundError
 
+
 def stream_to_dataframe(stream):
     df = pd.DataFrame()
     for trace in stream:
@@ -23,6 +24,7 @@ def stream_to_dataframe(stream):
         df = pd.concat([df, trace_df], ignore_index=True)
     return df
 
+
 def check_is_archived(cursor, req: SeismoQuery): 
     cursor.execute('''
         SELECT starttime, endtime FROM archive_data
@@ -30,11 +32,12 @@ def check_is_archived(cursor, req: SeismoQuery):
         AND endtime >= ? AND starttime <= ?
         ORDER BY starttime
     ''', (req.network, req.station, req.location, req.channel, req.starttime.isoformat(), req.endtime.isoformat()))
-    
+
     existing_data = cursor.fetchall()
     if not existing_data:
         return False
     return True
+
 
 #only in use for run_event
 def get_local_waveform(request: Tuple[str, str, str, str, str, str], settings: SeismoLoaderSettings) -> Optional[Stream]:
@@ -54,7 +57,6 @@ def get_local_waveform(request: Tuple[str, str, str, str, str, str], settings: S
     # Parse the comma-separated values
     networks = [n.strip().upper() for n in request[0].split(',')]
     stations = [s.strip().upper() for s in request[1].split(',')]
-    # sometimes location is ''...
     locations = []
     if request[2]:
         for loc in request[2].split(','):
@@ -87,7 +89,7 @@ def get_local_waveform(request: Tuple[str, str, str, str, str, str], settings: S
  
         except Exception as e:
             # Continue to the next combination if this one fails
-            print("get_local_waveform problem:",e)
+            print("get_local_waveform problem:", e)
             continue
 
     # Return the combined stream, or None if empty

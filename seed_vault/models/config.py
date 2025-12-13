@@ -207,7 +207,8 @@ class WaveformConfig(BaseModel):
     location_pref    : Optional     [str] = None
     force_redownload : Optional    [bool] = False
 
-    days_per_request : Optional     [int] = 1
+    days_per_request     : Optional     [int] = 1
+    stations_per_request : Optional     [int] = 1
 
     def set_default(self):
         """Resets all fields to their default values."""
@@ -750,16 +751,24 @@ class SeismoLoaderSettings(BaseModel):
             section=waveform_section,
             key="days_per_request",
             default=1,
-            validation_fn=lambda x: x.isdigit() and int(x) > 0,  # Ensure it's a positive integer
+            validation_fn=lambda x: x.isdigit() and int(x) > 0,  # Ensure positive integer
             status_handler=status_handler,
             error_message=f"'days_per_request' is missing or invalid in the [{waveform_section}] section.",
             warning_message=f"'days_per_request' is empty in the [{waveform_section}] section. Using default value: 1.",
         )
+        stations_per_request = cls._parse_param(
+            config=config,
+            section=waveform_section,
+            key="stations_per_request",
+            default=1,
+            validation_fn=lambda x: x.isdigit() and int(x) > 0,  # Ensure positive integer
+            status_handler=status_handler,
+            error_message=f"'stations_per_request' is missing or invalid in the [{waveform_section}] section.",
+            warning_message=f"'stations_per_request' is empty in the [{waveform_section}] section. Using default value: 1.",
+        )
 
         channel_pref = config.get(waveform_section, 'channel_pref', fallback='').strip()
         location_pref = config.get(waveform_section, 'location_pref', fallback='').strip()
-        # channel_pref = cls.parse_optional (config.get(waveform_section, 'channel_pref', fallback=None))
-        # location_pref =cls.parse_optional(config.get(waveform_section, 'location_pref', fallback=None))
 
         return WaveformConfig(
             client=client,
@@ -1227,6 +1236,7 @@ class SeismoLoaderSettings(BaseModel):
         safe_add_to_config(config, 'WAVEFORM', 'channel_pref', self.waveform.channel_pref)
         safe_add_to_config(config, 'WAVEFORM', 'location_pref', self.waveform.location_pref)
         safe_add_to_config(config, 'WAVEFORM', 'days_per_request', self.waveform.days_per_request)
+        safe_add_to_config(config, 'WAVEFORM', 'stations_per_request', self.waveform.stations_per_request)
 
         # Populate the [STATION] section
         if self.station:
@@ -1327,6 +1337,7 @@ class SeismoLoaderSettings(BaseModel):
                 'channel_pref': self.waveform.channel_pref if self.waveform else None,
                 'location_pref': self.waveform.location_pref if self.waveform else None,
                 'days_per_request': self.waveform.days_per_request if self.waveform and self.waveform.days_per_request is not None else None,
+                'stations_per_request': self.waveform.stations_per_request if self.waveform and self.waveform.stations_per_request is not None else None,
                 'force_redownload': self.waveform.force_redownload if self.waveform else None, 
             },
             'station': {

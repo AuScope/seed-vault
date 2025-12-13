@@ -327,11 +327,20 @@ def populate_database_from_files(cursor, file_paths=[]):
                     (network, station, location, channel, starttime, endtime, importtime)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
                 ''', (network, station, location, channel, start_timestamp, end_timestamp, now))
- 
+
+
+def clean_database(db_path):
+    # collection of cleanup routines
+    db_manager = DatabaseManager(db_path)
+    db_manager.reindex_tables()
+    db_manager.vacuum_database()
+    db_manager.analyze_table()
+    print(f"finished reindexing, vacuuming, and analysing {db_path}")
+
 
 class DatabaseManager:
     """
-    Manages seismic data storage and retrieval using SQLite.
+    Manages waveform data storage and retrieval using SQLite.
 
     This class handles database connections, table creation, data insertion,
     and querying for seismic archive and arrival data.
@@ -350,6 +359,7 @@ class DatabaseManager:
         parent_dir = Path(db_path).parent
         parent_dir.mkdir(parents=True, exist_ok=True)
         self.setup_database()
+
 
     @contextlib.contextmanager
     def connection(self, max_retries: int = 3, initial_delay: float = 1):
@@ -375,9 +385,10 @@ class DatabaseManager:
                 # Wise to increase cache_size if your database grows very large / can afford it. mmap seems to be less important
                 conn.execute('PRAGMA journal_mode = WAL')
                 conn.execute('PRAGMA synchronous = NORMAL')
-                conn.execute('PRAGMA cache_size = -128000')  # 128MB
+                conn.execute('PRAGMA cache_size = -256000')  # 256MB
                 conn.execute('PRAGMA mmap_size = 256000000')  # 256MB
                 conn.execute('PRAGMA temp_store = MEMORY')
+                conn.execute('PRAGMA page_size = 8192')
                 yield conn
                 conn.commit()
                 return
@@ -396,6 +407,7 @@ class DatabaseManager:
             finally:
                 if 'conn' in locals():
                     conn.close()
+
 
     def setup_database(self):
         """
@@ -456,6 +468,7 @@ class DatabaseManager:
                 ON arrival_data (resource_id, s_netcode, s_stacode)
             ''')
 
+
     def display_contents(
         self, table_name: str, start_time: Union[int, float, datetime, UTCDateTime] = 0,
         end_time: Union[int, float, datetime, UTCDateTime] = 4102444799, limit: int = 100):
@@ -501,19 +514,26 @@ class DatabaseManager:
             
             print(f"\nTotal rows: {len(results)}")
 
+
     def reindex_tables(self):
         """Reindex both of the tables in our DB"""
         with self.connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("REINDEX TABLE archive_data")
-            cursor.execute("REINDEX TABLE arrival_data")
+            cursor.execute("REINDEX archive_data")
+            cursor.execute("REINDEX arrival_data")
+
 
     def vacuum_database(self):
-        """Rebuild the database file to reclaim unused space."""
-        with self.connection() as conn:
+        """Rebuild the database file to reclaim unused space.
+        must be ran outside our context manager."""
+        conn = sqlite3.connect(self.db_path, timeout=20)
+        try:
             conn.execute("VACUUM")
+        finally:
+            conn.close()
 
-    def analyze_table(self, table_name: str):
+
+    def analyze_table(self):
         """Update table statistics for query optimization.
 
         Args:
@@ -521,7 +541,9 @@ class DatabaseManager:
         """
         with self.connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(f"ANALYZE {table_name}")
+            cursor.execute("ANALYZE archive_data")
+            cursor.execute("ANALYZE arrival_data")
+
 
     def delete_elements(self, table_name: str, 
                        start_time: Union[int, float, datetime, UTCDateTime] = 0,
@@ -557,6 +579,7 @@ class DatabaseManager:
             """
             cursor.execute(query, (start_timestamp, end_timestamp))
             return cursor.rowcount
+
 
     def join_continuous_segments(self, gap_tolerance: float = 30):
         """
@@ -619,6 +642,7 @@ class DatabaseManager:
 
         print(f"\nDatabase cleaned. Deleted {len(to_delete)} rows, updated {len(to_update)} rows.")
 
+
     def execute_query(self, query: str) -> Tuple[bool, str, Optional[pd.DataFrame]]:
         """
         Execute an SQL query and return results.
@@ -652,6 +676,7 @@ class DatabaseManager:
         except Exception as e:
             return True, f"Error executing query: {str(e)}", None
 
+
     def bulk_insert_archive_data(self, archive_list: List[Tuple]) -> int:
         """
         Insert multiple archive data records.
@@ -677,6 +702,7 @@ class DatabaseManager:
             ''', archive_list)
             
             return cursor.rowcount
+
 
     def bulk_insert_arrival_data(self, arrival_list: List[Tuple]) -> int:
         """
@@ -710,6 +736,7 @@ class DatabaseManager:
             cursor.executemany(query, arrival_list)
             
             return cursor.rowcount
+
 
     def check_data_existence(
         self, netcode: str, stacode: str, location: str, 
@@ -751,6 +778,7 @@ class DatabaseManager:
             
             return count > 0        
 
+
     def get_arrival_data(
     self, resource_id: str, netcode: str, stacode: str
     ) -> Optional[Dict[str, Any]]:
@@ -778,6 +806,7 @@ class DatabaseManager:
                 return dict(zip(columns, result))
         return None
 
+
     def get_stations_for_event(self, resource_id: str) -> List[Dict[str, Any]]:
         """
         Retrieve all station data associated with a specific seismic event.
@@ -800,6 +829,7 @@ class DatabaseManager:
                 columns = [description[0] for description in cursor.description]
                 return [dict(zip(columns, result)) for result in results]
         return []
+
 
     def get_events_for_station(self, netcode: str, stacode: str) -> List[Dict[str, Any]]:
         """
@@ -824,6 +854,7 @@ class DatabaseManager:
                 columns = [description[0] for description in cursor.description]
                 return [dict(zip(columns, result)) for result in results]
         return []
+
 
     def fetch_arrivals_distances(
     self, resource_id: str, netcode: str, stacode: str

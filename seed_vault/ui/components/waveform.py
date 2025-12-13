@@ -1,24 +1,28 @@
 from typing import List, Dict, Union
-from obspy import Stream, Trace, UTCDateTime
 import threading
-from seed_vault.enums.config import WorkflowType
-from seed_vault.models.config import SeismoLoaderSettings
-from seed_vault.service.seismoloader import run_event
-from obspy.clients.fdsn import Client
-from obspy.taup import TauPyModel
-from seed_vault.ui.components.display_log import ConsoleDisplay
 import streamlit as st
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-from html import escape
-from seed_vault.ui.components.continuous_waveform import ContinuousComponents
-from seed_vault.service.utils import check_client_services
-from copy import deepcopy
-from seed_vault.ui.app_pages.helpers.common import save_filter
-from time import sleep
 import sys
 import queue
+
+from seed_vault.enums.config import WorkflowType
+from seed_vault.models.config import SeismoLoaderSettings
+from seed_vault.service.seismoloader import run_event
+from seed_vault.service.utils import check_client_services
+from seed_vault.ui.components.continuous_waveform import ContinuousComponents
+from seed_vault.ui.components.display_log import ConsoleDisplay
+from seed_vault.ui.app_pages.helpers.common import save_filter
+
+from obspy import Stream, Trace, UTCDateTime
+from obspy.clients.fdsn import Client
+from obspy.taup import TauPyModel
+
+import matplotlib.pyplot as plt
+from html import escape
+from copy import deepcopy
+from time import sleep
+
 
 # Create a global stop event for cancellation
 query_thread = None
@@ -64,10 +68,10 @@ def get_tele_filter(tr):
         - > 10000 km: 0.6-1.5 Hz
     """
     distance_km = tr.stats.distance_km
-    nyq = tr.stats.sampling_rate/2 - 0.1
+    nyq = tr.stats.sampling_rate/2 - 0.02
     senstype = tr.stats.channel[1]
 
-    if senstype not in ['H','N']:
+    if senstype not in ['H','N','P']:
         return 0,0 # flagged elsewhere
 
     if distance_km < 50:
@@ -112,6 +116,7 @@ class WaveformFilterMenu:
         self.channel_filter = "All channels"
         self.available_channels = ["All channels"]
         self.display_limit = 50
+        self.waveform_display = None
         # Track previous filter state
         self.old_filter_state = {
             'network_filter': self.network_filter,
@@ -120,7 +125,8 @@ class WaveformFilterMenu:
             'display_limit': self.display_limit
         }
 
-    def refresh_filters(self):
+
+    def refresh_filters(self, clear_cache=False, waveform_display=None):
         """Check for changes in filter settings and trigger UI updates.
 
         This method compares current filter settings with previous state and
@@ -131,6 +137,11 @@ class WaveformFilterMenu:
             The method uses Streamlit's rerun mechanism to update the UI
             when changes are detected.
         """
+
+        # Clear cache if requested (before rerun!)
+        if clear_cache and waveform_display:
+            waveform_display.clear_cache()
+
         current_state = {
             'network_filter': self.network_filter,
             'station_filter': self.station_filter,
@@ -149,6 +160,7 @@ class WaveformFilterMenu:
             self.old_settings = deepcopy(self.settings)
             save_filter(self.settings)
             st.rerun()
+
 
     def update_available_channels(self, stream: Stream):
         """Update the list of available channels based on the current stream.
@@ -207,6 +219,7 @@ class WaveformFilterMenu:
         if self.channel_filter not in self.available_channels:
             self.channel_filter = "All channels"
 
+
     def render(self, stream=None):
         """Render the waveform filter menu interface.
 
@@ -258,7 +271,8 @@ class WaveformFilterMenu:
             )
             if before_p != self.settings.event.before_p_sec:
                 self.settings.event.before_p_sec = before_p
-                self.refresh_filters()
+                self.refresh_filters(clear_cache=True,
+                    waveform_display=self.waveform_display)
 
             after_p = st.number_input(
                 "End (secs after P arrival):", 
@@ -269,7 +283,8 @@ class WaveformFilterMenu:
             )
             if after_p != self.settings.event.after_p_sec:
                 self.settings.event.after_p_sec = after_p
-                self.refresh_filters()
+                self.refresh_filters(clear_cache=True,
+                    waveform_display=self.waveform_display)
 
             # Client selection with immediate refresh
             client_options = list(self.settings.client_url_mapping.get_clients())
@@ -404,6 +419,7 @@ class WaveformFilterMenu:
                     self.display_limit = 50
                     self.refresh_filters()
 
+
 class WaveformDisplay:
     """A component for displaying and managing waveform data visualization.
 
@@ -443,12 +459,14 @@ class WaveformDisplay:
         self.missing_data = {}
         self.console = ConsoleDisplay()  # Add console display
 
+
     def _get_processing_key(self, trace_id: str, filter_min: float, filter_max: float) -> str:
         """Generate a unique key for processed waveform caching."""
         response_level = self.settings.station.level if hasattr(self.settings.station, 'level') else "channel"
         before_p = self.settings.event.before_p_sec
         after_p = self.settings.event.after_p_sec
         return f"{trace_id}_{response_level}_{filter_min}_{filter_max}_{before_p}_{after_p}"
+
 
     def _get_processed_trace(self, trace, filter_min: float, filter_max: float):
         """Get a processed trace from cache or process it if not cached."""
@@ -465,10 +483,10 @@ class WaveformDisplay:
         if self.settings.station.level == "response":
             tr_copy.taper(.1) # taper has to be a bit extra to ensure safe deconvolution
             try: 
-                tr_copy.remove_response(self.settings.station.selected_invs,pre_filt=[.4,.5,40,49])
+                tr_copy.remove_response(self.settings.station.selected_invs,pre_filt=[.08,.2,30,49])
                 tr_copy.stats.plotunit = "VELOCITY (inst. response removed)"
             except:
-                print(f"DEBUG: Could not remove response for f{trace.stats.network}.{trace.stats.station}")
+                print(f"WARNING: Could not remove response for f{trace.stats.network}.{trace.stats.station} ?")
                 pass
         else:
             tr_copy.taper(.03)
@@ -491,10 +509,12 @@ class WaveformDisplay:
         self.processed_cache[cache_key] = tr_copy.copy()
         return tr_copy
 
+
     def clear_cache(self):
         """Clear the processed waveform cache."""
         self.processed_cache.clear()
         self.figure_cache.clear()
+
 
     def apply_filters(self, stream) -> Stream:
         """Apply filters to the waveform stream based on user selections.
@@ -527,6 +547,7 @@ class WaveformDisplay:
             except AttributeError as e:
                 continue
         return filtered_stream
+
 
     def fetch_data(self):
         """Fetch waveform data in a background thread with logging.
@@ -634,6 +655,7 @@ class WaveformDisplay:
 
         st.rerun()
 
+
     def _get_trace_color(self, tr) -> str:
         """Get color for a trace based on its channel component.
 
@@ -652,18 +674,25 @@ class WaveformDisplay:
         component = tr.stats.channel[-1].upper()
         sensortype = tr.stats.channel[1].upper()
 
-        if sensortype not in ['H','N']:
+        if sensortype not in ['H','N','P']:
             return 'tomato'
         
-        # Standard color scheme for components
+        # Standard color scheme for components. High gain sensors darker in color
         if component == 'Z':
             return 'black'
         elif component in ['N', '1']:
-            return 'blue'
+            if sensortype == 'H':
+                return 'darkblue'
+            else:
+                return 'blue'
         elif component in ['E', '2']:
-            return 'green'
+            if sensortype == 'H':
+                return 'darkgreen'
+            else:
+                return 'green'
         else:
             return 'gray'
+
 
     def _calculate_figure_dimensions(self, num_traces: int) -> tuple:
         """Calculate figure dimensions based on number of traces.
@@ -684,6 +713,7 @@ class WaveformDisplay:
         total_height = max(4, total_height)  # Only keep minimum height limit
         
         return (width, total_height)
+
 
     def plot_event_view(self, event, stream: Stream, page: int, num_pages: int):
         """Plot event view with proper time alignment and improved layout.
@@ -809,6 +839,7 @@ class WaveformDisplay:
         self.figure_cache[cache_key] = fig
 
         return fig
+
 
     def plot_station_view(self, station_code: str, stream: Stream, page: int, num_pages: int):
         """Plot station view with event information.
@@ -944,6 +975,7 @@ class WaveformDisplay:
         self.figure_cache[cache_key] = fig
 
         return fig
+
 
     def render(self):
         """Render the waveform display interface.
@@ -1085,12 +1117,16 @@ class WaveformComponents:
     continuous_components: ContinuousComponents
     console: ConsoleDisplay
 
+
     def __init__(self, settings: SeismoLoaderSettings):
         self.settings = settings
         self.filter_menu = WaveformFilterMenu(settings)
         self.waveform_display = WaveformDisplay(settings, self.filter_menu)
         self.continuous_components = ContinuousComponents(settings)
         self.console = ConsoleDisplay()
+
+        # To help clear cache when filters change
+        self.filter_menu.waveform_display = self.waveform_display
 
         # Initialize console with logs from session state if they exist
         if "log_entries" in st.session_state and st.session_state["log_entries"]:
@@ -1111,6 +1147,7 @@ class WaveformComponents:
         for key, val in required_states.items():
             if key not in st.session_state:
                 st.session_state[key] = val
+
 
     def render_polling_ui(self):
         """
@@ -1173,6 +1210,7 @@ class WaveformComponents:
             if st.session_state.get("polling_active"):
                 sleep(0.2)  # Shorter pause for more frequent updates
                 st.rerun()
+
 
     def render(self):
         if self.settings.selected_workflow == WorkflowType.CONTINUOUS:
@@ -1410,6 +1448,7 @@ class WaveformComponents:
         else:
             st.info("Perform a waveform download first :)")
 
+
 class MissingDataDisplay:
     """A component for displaying information about missing waveform data.
 
@@ -1433,7 +1472,8 @@ class MissingDataDisplay:
         self.stream = stream #is this needed? i think we can drop it TODO
         self.missing_data = missing_data
         self.settings = settings
-    
+
+
     def _format_event_time(self, event) -> str:
         """Format event time in a readable way.
 
@@ -1444,6 +1484,7 @@ class MissingDataDisplay:
             str: Formatted event time string.
         """
         return event.origins[0].time.strftime('%Y-%m-%d %H:%M:%S')
+
 
     def _get_missing_events(self):
         """Identify events with no data and their missing channels.

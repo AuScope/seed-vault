@@ -216,6 +216,7 @@ class BaseComponent:
         self.auto_sync_dates = True
         self.dates_manually_set = False
 
+
     def get_key_element(self, name):
         """Generates a unique key identifier for a UI element based on the step type and stage.
 
@@ -242,6 +243,7 @@ class BaseComponent:
         if self.step_type == Steps.STATION and self.settings.station is not None:
             return self.settings.station.geo_constraint
         return []
+
 
     def set_geo_constraint(self, geo_constraint: List[GeometryConstraint]):
         """Sets the geographic constraints for the current step.
@@ -273,6 +275,7 @@ class BaseComponent:
             self.old_settings = deepcopy(self.settings)
             save_filter(self.settings)
             st.rerun()
+
 
     def sync_dates_from_previous_step(self):
         """Sync dates from previous step's selections"""
@@ -309,6 +312,7 @@ class BaseComponent:
             if start_dates and end_dates:
                 self.settings.event.date_config.start_time = min(start_dates)
                 self.settings.event.date_config.end_time = max(end_dates)
+
 
     def handle_manual_date_change(self):
         """Mark dates as manually set when user changes them"""
@@ -590,6 +594,7 @@ class BaseComponent:
 
         self.set_geo_constraint(new_geo)
 
+
     def is_valid_rectangle(self, min_lat, max_lat, min_lon, max_lon):
         """Checks if the given latitude and longitude values define a valid rectangle.
 
@@ -611,6 +616,7 @@ class BaseComponent:
         return (-90 <= min_lat <= 90 and -90 <= max_lat <= 90 and
                 LON_RANGE_START <= min_lon <= LON_RANGE_END and LON_RANGE_START <= max_lon <= LON_RANGE_END and
                 min_lat <= max_lat and min_lon <= max_lon)
+
 
     def is_valid_circle(self, lat, lon, max_radius, min_radius):
         """Checks if the given latitude, longitude, and radius values define a valid circle.
@@ -654,6 +660,7 @@ class BaseComponent:
                 unique.append(gc)
         return unique
 
+
     def update_circle_areas(self):
         geo_constraint = self.get_geo_constraint() 
         lst_circ = [area.coords.model_dump() for area in geo_constraint
@@ -689,6 +696,7 @@ class BaseComponent:
                 self.update_filter_geometry(self.df_circ, GeoConstraintType.CIRCLE, geo_constraint)
                 self.refresh_map(reset_areas=False, clear_draw=True)
 
+
     def update_rectangle_areas(self):
         geo_constraint = self.get_geo_constraint() 
         lst_rect = [area.coords.model_dump() for area in geo_constraint
@@ -722,6 +730,7 @@ class BaseComponent:
                 self.update_filter_geometry(self.df_rect, GeoConstraintType.BOUNDING, geo_constraint)
                 self.refresh_map(reset_areas=False, clear_draw=True)
 
+
     def update_selected_data(self):
         if self.df_data_edit is None or self.df_data_edit.empty:
             if 'is_selected' not in self.df_markers.columns:
@@ -751,11 +760,11 @@ class BaseComponent:
 
         if self.step_type == Steps.STATION:
             self.settings.station.selected_invs = None
-            
+
             if not self.df_markers.empty and 'is_selected' in list(self.df_markers.columns):
                 # Get all selected (network,station) pairs at once
                 selected_stations = self.df_markers[self.df_markers['is_selected']][['network', 'station']].drop_duplicates().apply(tuple, axis=1).tolist()
-                
+
                 if selected_stations:
                     self.settings.station.selected_invs = None
                     for i, ns in enumerate(selected_stations):
@@ -774,11 +783,13 @@ class BaseComponent:
         else:
             self.warning = "No data found."
 
+
     def get_data_globally(self):
         self.clear_all_data()
         clear_map_draw(self.map_disp)
         self.handle_get_data()        
         st.rerun()
+
 
     def refresh_map(self, reset_areas = False, selected_idx = None, clear_draw = False, rerun = False, get_data = True, recreate_map = True):
         if self.is_refreshing:
@@ -829,9 +840,12 @@ class BaseComponent:
         finally:
             self.is_refreshing = False
 
+
     def reset_markers(self):
         self.map_fg_marker = None
         self.df_markers    = pd.DataFrame()
+
+
     # ====================
     # GET DATA
     # ====================
@@ -847,6 +861,7 @@ class BaseComponent:
                 st.error(f"⚠️ An unexpected error occurred: {str(e)}")
             finally:
                 st.session_state['loading'] = False
+
 
     def add_loading_overlay(self):
         st.markdown("""
@@ -865,6 +880,7 @@ class BaseComponent:
             </style>
             <div class="loading-overlay">🔄 Loading... Please wait.</div>
         """, unsafe_allow_html=True)
+
 
     def handle_get_data(self, is_import: bool = False, uploaded_file = None):
         http_error = {
@@ -931,6 +947,7 @@ class BaseComponent:
 
             print(self.error)  # Logging for debugging
 
+
     def clear_all_data(self):
         self.map_fg_marker= None
         self.map_fg_area= None
@@ -951,12 +968,14 @@ class BaseComponent:
         self.update_rectangle_areas()
         self.update_circle_areas()
 
+
     def get_selected_marker_info(self):
         info = self.clicked_marker_info
         if self.step_type == Steps.EVENT:
             return f"Event No {info['id']}: {info['Magnitude']} {info['Magnitude type']}, {info['Depth (km)']} km, {info['Place']}"
         if self.step_type == Steps.STATION:
             return f"Station No {info['id']}: {info['Network']}, {info['Station']}"
+
 
     # ===================
     # SELECT DATA
@@ -965,9 +984,9 @@ class BaseComponent:
     def get_selected_idx(self):
         if self.df_markers.empty:
             return []
-
         mask = self.df_markers['is_selected']
         return self.df_markers[mask].index.tolist()
+
 
     def sync_df_markers_with_df_edit_debug(self):
         print(f"DEBUG: sync called for {self.step_type}")
@@ -1021,6 +1040,7 @@ class BaseComponent:
         if rerun:
             st.rerun()
 
+
     # ===================
     # PREV SELECTION
     # ===================
@@ -1035,6 +1055,7 @@ class BaseComponent:
             return
 
         self.df_markers_prev = pd.DataFrame()
+
 
     def display_prev_step_selection_marker(self):
         if self.stage > 1:
@@ -1053,6 +1074,7 @@ class BaseComponent:
                 selected_idx = self.df_markers_prev.index.tolist()
                 self.map_fg_prev_selected_marker, _, _ = add_data_points( self.df_markers_prev, cols_to_disp, step=self.prev_step_type,selected_idx=selected_idx, col_color=col_color, col_size=col_size)
 
+
     def display_prev_step_selection_table(self):
         if self.stage > 1:
             if self.df_markers_prev.empty:
@@ -1062,6 +1084,7 @@ class BaseComponent:
                 self.area_around_prev_step_selections()
                 # st.write(f"Total Number of Selected {self.TXT.PREV_STEP.title()}s: {len(self.df_markers_prev)}")
                 # st.dataframe(self.df_markers_prev, width='stretch')
+
 
     def area_around_prev_step_selections(self):
 
@@ -1127,6 +1150,7 @@ class BaseComponent:
             self.refresh_map(reset_areas=False, clear_draw=True, rerun=True)
             # st.rerun()
 
+
     def update_area_around_prev_step_selections(self, min_radius, max_radius):
         min_radius_value = float(min_radius)
         max_radius_value = float(max_radius)
@@ -1177,6 +1201,7 @@ class BaseComponent:
         ]
 
         self.set_geo_constraint(updated_constraints)
+
 
     # ===================
     # FILES
@@ -1239,6 +1264,7 @@ class BaseComponent:
 
         return c22
 
+
     def export_xml_bytes(self, export_selected: bool = True):
         with io.BytesIO() as f:
             if not self.df_markers.empty and len(self.df_markers) > 0:
@@ -1260,6 +1286,7 @@ class BaseComponent:
             #     f.write(b"No Data")
 
             return f.getvalue()
+
 
     def export_txt_tmpfile(self, export_selected: bool = True):
         extension = ".txt" if self.step_type == Steps.STATION else ".kml"
@@ -1288,6 +1315,7 @@ class BaseComponent:
             if os.path.exists(temp_path):
                 os.remove(temp_path)
 
+
     def import_xml(self, uploaded_file):
         st.session_state["show_error_workflow_combined"] = False
         try:
@@ -1304,6 +1332,7 @@ class BaseComponent:
             if "unknown format" in str(e).lower():
                 self.trigger_error(f"Import Error: Unknown format for file {uploaded_file.name}. Please ensure the file is in correct format and **do not forget to remove the {uploaded_file.name} file from upload.**")
             self.trigger_error(f"Import Error: An error occured when importing {uploaded_file.name}. Please ensure the file is in correct format and **do not forget to remove the {uploaded_file.name} file from upload.**")
+
 
     # ===================
     # WATCHER
@@ -1328,6 +1357,7 @@ class BaseComponent:
             if self.has_fetch_new_data:
                 self.has_fetch_new_data = False
 
+
     # ===================
     #  ERROR HANDLES
     # ===================
@@ -1336,6 +1366,7 @@ class BaseComponent:
         """Set an error message in session state to be displayed."""
         self.has_error = True
         self.error = message
+
 
     # ===================
     # RENDER
@@ -1364,11 +1395,13 @@ class BaseComponent:
             ):
                 self.refresh_map(get_data=False, clear_draw=True, rerun=True, recreate_map=True)
 
+
     def render_map_handles(self):
         # not sure if plotting these area tables is useful
         with st.expander("Shape tools - edit areas", expanded=True):
             self.update_rectangle_areas()
             self.update_circle_areas()
+
 
     def render_import_export(self):
         def reset_import_setting_processed():
@@ -1450,10 +1483,12 @@ class BaseComponent:
 
             return c2_export
 
+
     def render_map_right_menu(self):
         if self.prev_step_type and len(self.df_markers_prev) < 6:
             with st.expander(f"Search Around {self.prev_step_type.title()}s", expanded=True):
                 self.display_prev_step_selection_table()
+
 
     def render_map(self):
 
@@ -1518,6 +1553,7 @@ class BaseComponent:
         if self.warning:
             st.warning(self.warning)
 
+
     def render_marker_select(self):
         def handle_marker_select():
             # selected_data = self.get_selected_marker_info()
@@ -1542,6 +1578,7 @@ class BaseComponent:
 
         if self.clicked_marker_info:
             handle_marker_select()
+
 
     def render_data_table(self, c5_map):
         if self.df_markers.empty:
@@ -1573,7 +1610,8 @@ class BaseComponent:
         self.data_table_view(ordered_col, config, state_key)
 
         # Download button logic
-        is_disabled = 'is_selected' not in self.df_markers or self.df_markers['is_selected'].sum() == 0
+        #is_disabled = 'is_selected' not in self.df_markers or self.df_markers['is_selected'].sum() == 0
+        is_disabled = bool('is_selected' not in self.df_markers or self.df_markers['is_selected'].sum() == 0)
 
         with c5_map:
 
@@ -1596,12 +1634,14 @@ class BaseComponent:
                 disabled=is_disabled
             )
 
+
     def on_change_df_table(self):
         if self.auto_refresh_enabled:
             self.delay_selection = 0.2
         else:
             self.update_selected_data()
             self.delay_selection = 0
+
 
     def render_auto_refresh_toggle(self):
         """Renders the auto-refresh toggle between the map and data table."""
@@ -1624,9 +1664,11 @@ class BaseComponent:
 
         self.update_auto_refresh_state()
 
+
     def update_auto_refresh_state(self):
         self.auto_refresh_enabled = st.session_state['auto_refresh_toggle']
-    
+
+
     def data_table_view(self, ordered_col, config, state_key):
         """Displays the full data table, allowing selection."""
 
@@ -1753,6 +1795,7 @@ class BaseComponent:
                 self.delay_selection = 0.2
             #else: (seems to work better with this commented...?)
             #    self.sync_df_markers_with_df_edit()
+
 
     # This function pertains to the red icons above the table.. currently disabled
     def selected_items_view(self, state_key):

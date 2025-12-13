@@ -5,7 +5,7 @@ here that gets the selection and runs Rob's script.
 
 We should also be able to support multi-select areas.
 
-@TODO: For now, dummy scripts are used. @Yunlong to fix.
+@TODO: For now, dummy scripts are used.
 """
 
 import pandas as pd
@@ -58,7 +58,7 @@ def event_response_to_df(data):
 
         # Extract the time and place
         time = origin.time.datetime
-        place = event.event_descriptions[0].text if event.event_descriptions else "Unknown place"
+        place = event.event_descriptions[0].text if event.event_descriptions else "Unknown Description"
 
         # Extract the magnitude
         mag = magnitude.mag if magnitude.mag is not None else 0.99999
