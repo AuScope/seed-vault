@@ -171,3 +171,6 @@ data/
 seed_vault/service/config.cfg
 
 requirements.txt
+
+SVdata/
+SVdata/database.sqlite
