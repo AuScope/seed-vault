@@ -11,13 +11,9 @@ from dotenv import load_dotenv
 from .base_telemetry import (
     BaseTelemetryProvider,
     TelemetryContext,
-    GA4Config,
-    AmplitudeConfig,
-    MixpanelConfig
+    RudderStackConfig
 )
-from .ga4_provider import GA4TelemetryProvider
-from .amplitude_provider import AmplitudeTelemetryProvider
-from .mixpanel_provider import MixpanelTelemetryProvider
+from .rudderstack_provider import RudderStackTelemetryProvider
 
 # Load environment variables
 load_dotenv()
@@ -25,11 +21,12 @@ load_dotenv()
 
 class TelemetryManager:
     """
-    Unified manager for multiple analytics providers.
+    Unified telemetry manager using RudderStack.
     
-    Handles initialization, configuration, and event routing to multiple
-    analytics providers (GA4, Amplitude, etc.) simultaneously. Provides
-    a single interface for tracking across all configured providers.
+    RudderStack acts as a Customer Data Platform (CDP) that routes events
+    to multiple analytics destinations (GA4, Amplitude, Mixpanel, etc.)
+    from a single integration point. This provides a clean, maintainable
+    approach to multi-destination analytics.
     
     Features:
     - Multi-provider support (send events to multiple services)
@@ -93,54 +90,22 @@ class TelemetryManager:
         
         providers = []
         
-        # Initialize GA4 provider
-        ga4_config = GA4Config(
+        # Initialize RudderStack provider
+        rudderstack_config = RudderStackConfig(
             enabled=analytics_enabled,
-            measurement_id=os.getenv("GA_MEASUREMENT_ID"),
-            api_secret=os.getenv("GA_API_SECRET")
+            write_key=os.getenv("RUDDERSTACK_WRITE_KEY"),
+            dataPlaneUrl=os.getenv("RUDDERSTACK_DATA_PLANE_URL")
         )
         
-        if ga4_config.is_valid():
-            ga4_provider = GA4TelemetryProvider(
-                config=ga4_config,
+        if rudderstack_config.is_valid():
+            rudderstack_provider = RudderStackTelemetryProvider(
+                config=rudderstack_config,
                 db_path=db_path,
                 client_id=context.client_id,
                 session_id=context.session_id,
                 runtime=context.runtime
             )
-            providers.append(ga4_provider)
-        
-        # Initialize Amplitude provider
-        amplitude_config = AmplitudeConfig(
-            enabled=analytics_enabled,
-            api_key=os.getenv("AMPLITUDE_API_KEY")
-        )
-        
-        if amplitude_config.is_valid():
-            amplitude_provider = AmplitudeTelemetryProvider(
-                config=amplitude_config,
-                db_path=db_path,
-                client_id=context.client_id,
-                session_id=context.session_id,
-                runtime=context.runtime
-            )
-            providers.append(amplitude_provider)
-        
-        # Initialize Mixpanel provider
-        mixpanel_config = MixpanelConfig(
-            enabled=analytics_enabled,
-            project_token=os.getenv("MIXPANEL_PROJECT_TOKEN")
-        )
-        
-        if mixpanel_config.is_valid():
-            mixpanel_provider = MixpanelTelemetryProvider(
-                config=mixpanel_config,
-                db_path=db_path,
-                client_id=context.client_id,
-                session_id=context.session_id,
-                runtime=context.runtime
-            )
-            providers.append(mixpanel_provider)
+            providers.append(rudderstack_provider)
         
         return cls(providers, context)
     
@@ -149,9 +114,7 @@ class TelemetryManager:
         cls,
         db_path: str,
         analytics_enabled: bool,
-        ga4_config: Optional[GA4Config] = None,
-        amplitude_config: Optional[AmplitudeConfig] = None,
-        mixpanel_config: Optional[MixpanelConfig] = None
+        rudderstack_config: Optional[RudderStackConfig] = None
     ) -> "TelemetryManager":
         """
         Create TelemetryManager from explicit provider configs.
@@ -159,9 +122,7 @@ class TelemetryManager:
         Args:
             db_path: Path to SQLite database
             analytics_enabled: Whether analytics is globally enabled
-            ga4_config: Optional GA4Config
-            amplitude_config: Optional AmplitudeConfig
-            mixpanel_config: Optional MixpanelConfig
+            rudderstack_config: Optional RudderStackConfig
         
         Returns:
             Initialized TelemetryManager instance
@@ -170,30 +131,10 @@ class TelemetryManager:
         
         providers = []
         
-        # Initialize GA4 if config provided
-        if ga4_config and ga4_config.is_valid():
-            providers.append(GA4TelemetryProvider(
-                config=ga4_config,
-                db_path=db_path,
-                client_id=context.client_id,
-                session_id=context.session_id,
-                runtime=context.runtime
-            ))
-        
-        # Initialize Amplitude if config provided
-        if amplitude_config and amplitude_config.is_valid():
-            providers.append(AmplitudeTelemetryProvider(
-                config=amplitude_config,
-                db_path=db_path,
-                client_id=context.client_id,
-                session_id=context.session_id,
-                runtime=context.runtime
-            ))
-        
-        # Initialize Mixpanel if config provided
-        if mixpanel_config and mixpanel_config.is_valid():
-            providers.append(MixpanelTelemetryProvider(
-                config=mixpanel_config,
+        # Initialize RudderStack if config provided
+        if rudderstack_config and rudderstack_config.is_valid():
+            providers.append(RudderStackTelemetryProvider(
+                config=rudderstack_config,
                 db_path=db_path,
                 client_id=context.client_id,
                 session_id=context.session_id,

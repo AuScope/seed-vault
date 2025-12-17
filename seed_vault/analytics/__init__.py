@@ -1,7 +1,7 @@
 """
 Analytics module for Seed Vault.
 
-Provides telemetry tracking with multi-provider support (GA4, Amplitude, Mixpanel, etc.)
+Provides telemetry tracking with RudderStack integration
 and SQLite-persistent client IDs.
 """
 
@@ -10,26 +10,20 @@ from .base_telemetry import (
     BaseTelemetryProvider,
     TelemetryContext,
     ProviderConfig,
-    GA4Config,
-    AmplitudeConfig,
-    MixpanelConfig
+    RudderStackConfig
 )
 
 # Provider implementations
-from .ga4_provider import GA4TelemetryProvider
-from .amplitude_provider import AmplitudeTelemetryProvider
-from .mixpanel_provider import MixpanelTelemetryProvider
+from .rudderstack_provider import RudderStackTelemetryProvider
 
 # Manager and convenience functions
 from .telemetry_manager import TelemetryManager, init_telemetry
-
-# Backward compatibility
-from .telemetry import TelemetryClient as LegacyTelemetryClient
 
 # Main exports
 __all__ = [
     # Manager (primary interface)
     "TelemetryManager",
+    "TelemetryClient",  # Alias for backward compatibility
     "init_telemetry",
     
     # Base classes
@@ -38,18 +32,10 @@ __all__ = [
     
     # Configs
     "ProviderConfig",
-    "GA4Config",
-    "AmplitudeConfig",
-    "MixpanelConfig",
+    "RudderStackConfig",
     
     # Providers
-    "GA4TelemetryProvider",
-    "AmplitudeTelemetryProvider",
-    "MixpanelTelemetryProvider",
-    
-    # Backward compatibility (deprecated - use TelemetryManager)
-    "TelemetryClient",
-    "LegacyTelemetryClient",
+    "RudderStackTelemetryProvider",
 ]
 
 # Alias for backward compatibility

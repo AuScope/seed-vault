@@ -1,8 +1,8 @@
 """
 Base telemetry abstraction layer for Seed Vault Analytics.
 
-Provides a common interface for multiple analytics providers (GA4, Amplitude, etc.)
-with shared functionality for client/session management and event tracking.
+Provides a common interface for analytics providers with RudderStack as the primary
+integration point for routing events to multiple destinations.
 """
 
 import os
@@ -28,56 +28,22 @@ class ProviderConfig:
 
 
 @dataclass
-class GA4Config(ProviderConfig):
-    """Configuration for Google Analytics 4."""
-    measurement_id: Optional[str] = None
-    api_secret: Optional[str] = None
+class RudderStackConfig(ProviderConfig):
+    """Configuration for RudderStack."""
+    write_key: Optional[str] = None
+    dataPlaneUrl: Optional[str] = None
     
     def __post_init__(self):
-        self.provider_name = "GA4"
+        self.provider_name = "RudderStack"
     
     def is_valid(self) -> bool:
-        """Check if GA4 configuration is valid."""
+        """Check if RudderStack configuration is valid."""
         return (
             self.enabled and
-            self.measurement_id is not None and
-            self.api_secret is not None and
-            len(self.measurement_id) > 0 and
-            len(self.api_secret) > 0
-        )
-
-
-@dataclass
-class AmplitudeConfig(ProviderConfig):
-    """Configuration for Amplitude."""
-    api_key: Optional[str] = None
-    
-    def __post_init__(self):
-        self.provider_name = "Amplitude"
-    
-    def is_valid(self) -> bool:
-        """Check if Amplitude configuration is valid."""
-        return (
-            self.enabled and
-            self.api_key is not None and
-            len(self.api_key) > 0
-        )
-
-
-@dataclass
-class MixpanelConfig(ProviderConfig):
-    """Configuration for Mixpanel."""
-    project_token: Optional[str] = None
-    
-    def __post_init__(self):
-        self.provider_name = "Mixpanel"
-    
-    def is_valid(self) -> bool:
-        """Check if Mixpanel configuration is valid."""
-        return (
-            self.enabled and
-            self.project_token is not None and
-            len(self.project_token) > 0
+            self.write_key is not None and
+            self.dataPlaneUrl is not None and
+            len(self.write_key) > 0 and
+            len(self.dataPlaneUrl) > 0
         )
 
 
