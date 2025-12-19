@@ -479,7 +479,7 @@ class WaveformDisplay:
 
         # Process and cache the trace
         tr_copy = trace.copy()
-        tr_copy.detrend()
+        tr_copy.detrend() # can consider using a polynomial detrend but takes a lot longer
         if self.settings.station.level == "response":
             tr_copy.taper(.1) # taper has to be a bit extra to ensure safe deconvolution
             try: 

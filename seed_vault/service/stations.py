@@ -16,7 +16,7 @@ from obspy.core.inventory import Inventory, Network
 from seed_vault.models.config import SeismoLoaderSettings
 from seed_vault.service.seismoloader import get_stations
 
-
+from bs4 import BeautifulSoup
 
 # @st.cache_data
 # def get_station_data(settings_json_str: str):
@@ -101,7 +101,6 @@ def station_response_to_df(inventory):
             }
 
             records.append(record)
-
             
             # for channel in station.channels:
             #     channel_code = channel.code
@@ -125,3 +124,57 @@ def station_response_to_df(inventory):
             #     records.append(record)
 
     return pd.DataFrame(records)
+
+
+def inventory_to_bibtex(inventory, tmpfile):
+    """
+    create a bibtex file of all networks in inventory
+    """
+    print("Downloading BibTeX")
+
+    def get_bibtex(url):
+        """
+        generate bibtex from the crosscite url
+        """
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+
+            soup = BeautifulSoup(response.text, 'html.parser')
+
+            doi = soup.find('div', class_='doi-citation').get('data-doi')
+
+            if doi:
+                bibtex_url = "https://data.crosscite.org/application/x-bibtex/"+doi
+                bibtex_response = requests.get(bibtex_url)
+                bibtex_response.raise_for_status()
+                return bibtex_response.text
+            else:
+                return # "No BibTeX link found on the page."
+
+        except requests.exceptions.RequestException as e:
+            return # f"Error accessing the URL: {e}"
+        except Exception as e:
+            return # f"Error: {e}"
+
+    far_future = 2493072000 # timestamp for obspy.UTCDateTime(2049,1,1)
+    with open(tmpfile, 'w') as output_file:
+        for network in inventory.networks:
+            startyear = network.start_date.year
+            if network.end_date is None or network.end_date > far_future: # e.g., permanent network
+                fdsn_url = "https://www.fdsn.org/networks/detail/%s" % (network.code)
+            else:
+                fdsn_url = "https://www.fdsn.org/networks/detail/%s_%s" % (network.code, startyear)            
+
+            # the above is a little precarious. may have to try/except or at least warn people
+
+            try:
+                text = get_bibtex(fdsn_url)
+            except Exception as e:
+                print(f"Error fetching BibTeX for {network.code}_{year}: {e}")
+                text = None
+
+            if text:
+                output_file.write(text)
+                output_file.write("\n")
+                output_file.flush()

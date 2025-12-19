@@ -35,7 +35,7 @@ seed-vault = "seed_vault.cli.cli:cli"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.15"
-streamlit = "^1.50"
+streamlit = "^1.52"
 pandas = "^2.2.2"
 folium = "^0.20.0"
 requests = "^2.32.3"
@@ -46,7 +46,7 @@ obspy = "^1.4.2"
 tabulate = "^0.9.0"
 matplotlib = "^3.8.5"
 pydantic = "^2.9.1"
-streamlit-extras = "^0.7.8"
+streamlit-extras = "^0.6.0"
 streamlit-ace = "^0.1.1"
 st-pages = "^1.0.1"
 

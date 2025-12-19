@@ -194,11 +194,25 @@ def to_timestamp(time_obj: Union[int, float, datetime, date, UTCDateTime]) -> fl
         raise ValueError(f"Unsupported time type: {type(time_obj)}")
 
 
-def check_client_services(client_name: str):
+def check_client_services(client_name: str, active_client=None):
     """Check which services are available for a given client name."""
+
+    # Short circuit for well-known servers
+    has_all = ['IRIS','EARTHSCOPE','GFZ','GEOFON','GEONET','ETH',
+               'INGV', 'SCEDC', 'NCEDC']
+    if client_name.upper() in has_all:
+        return {
+            'station': True,
+            'event': True,
+            'dataselect': True
+        }        
+
     try:
-        client = Client(client_name)
-        available_services = client.services.keys()  # Get available services as keys
+        if active_client:
+            client = active_client # skip re-establishing if already have
+        else:
+            client = Client(client_name)
+        available_services = client.services.keys()
         return {
             'station': 'station' in available_services,
             'event': 'event' in available_services,

@@ -16,7 +16,7 @@ from seed_vault.ui.components.map import LON_RANGE_END, LON_RANGE_START, create_
 from seed_vault.ui.app_pages.helpers.common import get_selected_areas, save_filter
 
 from seed_vault.service.events import get_event_data, event_response_to_df
-from seed_vault.service.stations import get_station_data, station_response_to_df
+from seed_vault.service.stations import get_station_data, station_response_to_df, inventory_to_bibtex
 from seed_vault.service.utils import convert_to_datetime, check_client_services, get_time_interval
 
 from seed_vault.models.config import SeismoLoaderSettings, GeometryConstraint
@@ -37,7 +37,7 @@ class BaseComponentTexts:
 
     def __init__(self, config_type: Steps):
         if config_type == Steps.EVENT:
-            self.STEP   = "event"
+            self.STEP = "event"
             self.PREV_STEP = "station"
 
             self.GET_DATA_TITLE = "Select Data Tools"
@@ -52,18 +52,18 @@ class BaseComponentTexts:
             self.SELECT_AREA_AROUND_MSG = "Define an area around the selected events."
 
         if config_type == Steps.STATION:
-            self.STEP   = "station"
+            self.STEP = "station"
             self.PREV_STEP = "event"
 
             self.GET_DATA_TITLE = "Select Data Tools"
             self.BTN_GET_DATA = "Get Stations"
             self.SELECT_DATA_TITLE = "Select Stations from Map or Table"
             self.SELECT_MARKER_TITLE = "#### Select Stations from map"
-            self.SELECT_MARKER_MSG   = "Select a station from map and Add to Selection."
+            self.SELECT_MARKER_MSG = "Select a station from map and Add to Selection."
             self.SELECT_DATA_TABLE_TITLE = "Select Stations from table  ⤵️  or from Map  ↗️"
             self.SELECT_DATA_TABLE_MSG = "Tick stations from the table to view your selected stations on the map."
 
-            self.PREV_SELECT_NO  = "Total Number of Selected Stations"
+            self.PREV_SELECT_NO = "Total Number of Selected Stations"
             self.SELECT_AREA_AROUND_MSG = "Define an area around the selected stations."
 
 
@@ -153,6 +153,9 @@ class BaseComponent:
     auto_refresh_enabled: bool = True
     error: str = ""
 
+    # try to cut down on refreshing
+    needs_rerun: bool = False
+
     @property
     def page_type(self) -> str:
         """Determines the page type based on the previous or current step.
@@ -184,6 +187,7 @@ class BaseComponent:
             init_map_center (dict, optional): Initial map center coordinates. Defaults to an empty dictionary.
             init_map_zoom (int, optional): Initial map zoom level. Defaults to 2.
         """
+
         self.settings       = settings
         self.old_settings   = deepcopy(settings)
         self.step_type      = step_type
@@ -191,6 +195,19 @@ class BaseComponent:
         self.stage          = stage
         self.map_id         = f"map_{step_type.value}_{prev_step_type.value}_{stage}" if prev_step_type else f"map_{step_type.value}_no_prev_{stage}" 
         self.TXT            = BaseComponentTexts(step_type)
+
+        if "export_action_pending" not in st.session_state:
+            st.session_state.export_action_pending = None
+        if "auto_refresh_enabled" not in st.session_state:
+            st.session_state.auto_refresh_enabled = True
+
+        if "auto_sync_dates" not in st.session_state:
+            st.session_state.auto_sync_dates = True
+        if "dates_manually_set" not in st.session_state:
+            st.session_state.dates_manually_set = False
+
+        # Sync instance variable with session state
+        self.auto_refresh_enabled = st.session_state.auto_refresh_enabled
 
         self.all_feature_drawings = self.get_geo_constraint()
         self.map_fg_area= add_area_overlays(areas=self.get_geo_constraint()) 
@@ -213,18 +230,38 @@ class BaseComponent:
         self.map_view_zoom   = init_map_zoom
         self.export_as_alternate = False
         self.is_refreshing = False
-        self.auto_sync_dates = True
-        self.dates_manually_set = False
+        self.needs_rerun = False
 
+
+    def request_rerun(self):
+        """Mark that a rerun is needed but don't do it yet"""
+        #print("DEBUG: request_rerun")
+        self.needs_rerun = True
+
+
+    def execute_rerun_if_needed(self):
+        """Execute a rerun if one has been scheduled"""
+        if self.needs_rerun:
+            #print("DEBUG: execute_rerun_if_needed & needs_return")
+            # Reset the flag
+            self.needs_rerun = False
+
+            # Apply any pending changes
+            if self.df_data_edit is not None:
+                self.sync_df_markers_with_df_edit()
+
+            # Small delay to batch multiple changes
+            if self.delay_selection > 0:
+                sleep(self.delay_selection)
+                self.delay_selection = 0
+
+            st.rerun()
 
     def get_key_element(self, name):
         """Generates a unique key identifier for a UI element based on the step type and stage.
 
-        Args:
-            name (str): The base name of the element.
-
-        Returns:
-            str: A formatted string representing the unique key for the element.
+        Args: name (str): The base name of the element.
+        Returns: A formatted string representing the unique key for the element.
         """
         return f"{name}-{self.step_type.value}-{self.stage}"
 
@@ -265,8 +302,9 @@ class BaseComponent:
     # ====================
     # FILTERS
     # ====================
+
     def refresh_filters(self):
-        """Refreshes and updates the filter settings based on configuration changes."""
+        """Refreshes and updates the filter settings based on configuration changes"""
         #print(f"DEBUG refresh_filters called: step={self.step_type}, stage={self.stage}")
         changes = self.settings.has_changed(self.old_settings)
         #print(f"DEBUG changes detected: {changes}")
@@ -274,12 +312,12 @@ class BaseComponent:
             #print("DEBUG: Calling st.rerun() from refresh_filters")
             self.old_settings = deepcopy(self.settings)
             save_filter(self.settings)
-            st.rerun()
+            self.request_rerun()
 
 
     def sync_dates_from_previous_step(self):
         """Sync dates from previous step's selections"""
-        if not self.auto_sync_dates or self.dates_manually_set:
+        if not st.session_state.auto_sync_dates or st.session_state.dates_manually_set:
             return
 
         if self.prev_step_type == Steps.EVENT and self.settings.event.selected_catalogs:
@@ -316,10 +354,11 @@ class BaseComponent:
 
     def handle_manual_date_change(self):
         """Mark dates as manually set when user changes them"""
-        self.dates_manually_set = True
-        self.auto_sync_dates = False  # Disable auto-sync once user takes control
+        #print("DEBUG: handle_manual_date_change")
+        st.session_state.dates_manually_set = True
+        st.session_state.auto_sync_dates = False
 
-
+    # note that times/time buttons are wrong for EVENT, but OK for station TODO
     def event_filter(self):
         """Displays and manages event filtering options in the Streamlit sidebar.
 
@@ -339,15 +378,42 @@ class BaseComponent:
         - Map interaction buttons are rendered.
         - Refreshes filters upon changes.
         """
-        
+
+        # Check services for selected client
+        # TODO / copy from station settings when it works
+        services = check_client_services(self.settings.event.client)
+        is_service_available = bool(services.get('event'))
+        if not is_service_available:
+            st.warning(f"⚠️ Warning: Selected client '{self.settings.event.client}' does not support EVENT service. Please choose another client.")
+
         min_date = date(1800,1,1)
         max_date = date(2100,1,1)
 
         # Auto-sync dates from previous step if not manually overridden
         self.sync_dates_from_previous_step()
-        
+
         start_date, start_time = convert_to_datetime(self.settings.event.date_config.start_time)
         end_date, end_time = convert_to_datetime(self.settings.event.date_config.end_time)
+
+        # Handle edge case where start and end are too close
+        if (start_date == end_date and start_time >= end_time):
+            start_time = time(hour=0, minute=0, second=0)
+            end_time = time(hour=1, minute=0, second=0)
+
+        def _on_manual_date_change():
+            """Callback for when user manually changes date inputs"""
+            start_date = st.session_state.get("station-pg-start-date")
+            end_date = st.session_state.get("station-pg-end-date")
+            if start_date and end_date:
+                self.settings.event.date_config.start_time = datetime.combine(start_date, start_time)
+                self.settings.event.date_config.end_time = datetime.combine(end_date, end_time)
+                self.handle_manual_date_change()
+
+        # Initialize widget keys if they don't exist yet
+        if "event-pg-start-date" not in st.session_state:
+            st.session_state["event-pg-start-date"] = start_date
+        if "event-pg-end-date" not in st.session_state:
+            st.session_state["event-pg-end-date"] = end_date
 
         with st.sidebar:
             with st.expander("Filters", expanded=True):
@@ -359,50 +425,33 @@ class BaseComponent:
                     key=f"{self.TXT.STEP}-pg-client-event"
                 )
 
-                # Check services for selected client
-                services = check_client_services(self.settings.event.client)
-                is_service_available = bool(services.get('event'))
-
-                if not is_service_available:
-                    st.warning(f"⚠️ Warning: Selected client '{self.settings.event.client}' does not support EVENT service. Please choose another client.")
-
                 # Quick preset buttons - don't trigger manual override
                 c11, c12, c13 = st.columns([1,1,1])
                 with c11:
                     if st.button('Last Month', key="event-set-last-month"):
                         self.settings.event.date_config.end_time, self.settings.event.date_config.start_time = get_time_interval('month')
+                        st.session_state["event-pg-start-date"] = self.settings.event.date_config.start_time.date()
+                        st.session_state["event-pg-end-date"] = self.settings.event.date_config.end_time.date()
                         self.handle_manual_date_change()
-                        st.rerun()
                 with c12:
                     if st.button('Last Week', key="event-set-last-week"):
                         self.settings.event.date_config.end_time, self.settings.event.date_config.start_time = get_time_interval('week')
+                        st.session_state["event-pg-start-date"] = self.settings.event.date_config.start_time.date()
+                        st.session_state["event-pg-end-date"] = self.settings.event.date_config.end_time.date()
                         self.handle_manual_date_change()
-                        st.rerun()
                 with c13:
                     if st.button('Last Day', key="event-set-last-day"):
                         self.settings.event.date_config.end_time, self.settings.event.date_config.start_time = get_time_interval('day')
+                        st.session_state["event-pg-start-date"] = self.settings.event.date_config.start_time.date()
+                        st.session_state["event-pg-end-date"] = self.settings.event.date_config.end_time.date()
                         self.handle_manual_date_change()
-                        st.rerun()
-
-                # Store original values to detect manual changes
-                original_start = self.settings.event.date_config.start_time
-                original_end = self.settings.event.date_config.end_time
 
                 c1, c2 = st.columns([1,1])
                 with c1:
-                    new_start_date = st.date_input("Start Date", min_value=min_date, max_value=max_date, value=start_date, key="event-pg-start-date-event")
-                    new_start_time = st.time_input("Start Time (UTC)", value=start_time, key="event-pg-start-time-event")
-                    new_start_datetime = datetime.combine(new_start_date, new_start_time)
-                    self.handle_manual_date_change()
-
+                    st.date_input("Start Date", min_value=min_date, max_value=max_date, key="event-pg-start-date", on_change=_on_manual_date_change)
                 with c2:
-                    new_end_date = st.date_input("End Date", min_value=min_date, max_value=max_date, value=end_date, key="event-pg-end-date-event")
-                    new_end_time = st.time_input("End Time (UTC)", value=end_time, key="event-pg-end-time-event")
-                    new_end_datetime = datetime.combine(new_end_date, new_end_time)
-                    self.handle_manual_date_change()
+                    st.date_input("End Date", min_value=min_date, max_value=max_date, key="station-pg-end-date", on_change=_on_manual_date_change)
 
-                self.settings.event.date_config.start_time = new_start_datetime
-                self.settings.event.date_config.end_time = new_end_datetime
 
                 if self.settings.event.date_config.start_time > self.settings.event.date_config.end_time:
                     st.error("Error: End Date must fall after Start Date.")
@@ -423,7 +472,7 @@ class BaseComponent:
 
                 self.render_map_buttons()
 
-        self.refresh_filters()
+        #self.refresh_filters()
 
 
     def station_filter(self):
@@ -448,6 +497,12 @@ class BaseComponent:
         - Refreshes filters upon changes.
         """
 
+        # Check services for selected client (unlikely? not sure how long this takes, maybe we can bypass for known servers TODO)
+        services = check_client_services(self.settings.station.client)
+        is_service_available = bool(services.get('station'))
+        if not is_service_available:
+            st.warning(f"⚠️ Warning: Selected client '{self.settings.station.client}' does not support STATION service. Please choose another client.")
+
         min_date = date(1800,1,1)
         max_date = date(2100,1,1)
 
@@ -462,57 +517,65 @@ class BaseComponent:
             start_time = time(hour=0, minute=0, second=0)
             end_time = time(hour=1, minute=0, second=0)
 
+        def _on_manual_date_change():
+            """Callback for when user manually changes date inputs"""
+            start_date = st.session_state.get("station-pg-start-date")
+            end_date = st.session_state.get("station-pg-end-date")
+            if start_date and end_date:
+                self.settings.station.date_config.start_time = datetime.combine(start_date, start_time)
+                self.settings.station.date_config.end_time = datetime.combine(end_date, end_time)
+                self.handle_manual_date_change()
+
+        # Initialize widget keys if they don't exist yet
+        if "station-pg-start-date" not in st.session_state:
+            st.session_state["station-pg-start-date"] = start_date
+        if "station-pg-end-date" not in st.session_state:
+            st.session_state["station-pg-end-date"] = end_date
+
         with st.sidebar:
             with st.expander("Filters", expanded=True):
                 client_options = list(self.settings.client_url_mapping.get_clients())
                 self.settings.station.client = st.selectbox(
-                    'Choose a client:', 
+                    'Choose a client:',
                     client_options,
                     index=client_options.index(self.settings.station.client),
                     key=f"{self.TXT.STEP}-pg-client-station"
                 )
 
-                # Check services for selected client
-                services = check_client_services(self.settings.station.client)
-                is_service_available = bool(services.get('station'))
-
-                if not is_service_available:
-                    st.warning(f"⚠️ Warning: Selected client '{self.settings.station.client}' does not support STATION service. Please choose another client.")
-
-                # Quick preset buttons - don't trigger manual override
+                # Quick preset buttons - works but with some widget warning/error
                 c11, c12, c13 = st.columns([1,1,1])
                 with c11:
                     if st.button('Last Year', key="station-set-last-year"):
                         self.settings.station.date_config.end_time, self.settings.station.date_config.start_time = get_time_interval('year')
+                        st.session_state["station-pg-start-date"] = self.settings.station.date_config.start_time.date()
+                        st.session_state["station-pg-end-date"] = self.settings.station.date_config.end_time.date()
                         self.handle_manual_date_change()
-                        st.rerun()
+
                 with c12:
                     if st.button('Last Month', key="station-set-last-month"):
                         self.settings.station.date_config.end_time, self.settings.station.date_config.start_time = get_time_interval('month')
+                        st.session_state["station-pg-start-date"] = self.settings.station.date_config.start_time.date()
+                        st.session_state["station-pg-end-date"] = self.settings.station.date_config.end_time.date()
                         self.handle_manual_date_change()
-                        st.rerun()
+
                 with c13:
                     if st.button('Last Week', key="station-set-last-week"):
                         self.settings.station.date_config.end_time, self.settings.station.date_config.start_time = get_time_interval('week')
+                        st.session_state["station-pg-start-date"] = self.settings.station.date_config.start_time.date()
+                        st.session_state["station-pg-end-date"] = self.settings.station.date_config.end_time.date()                        
                         self.handle_manual_date_change()
-                        st.rerun()
 
-                # Store original values to detect manual changes
-                original_start = self.settings.station.date_config.start_time
-                original_end = self.settings.station.date_config.end_time
+                # Re-read dates AFTER buttons may have changed them                
+                #? start_date, start_time = convert_to_datetime(self.settings.station.date_config.start_time)
+                #? end_date, end_time = convert_to_datetime(self.settings.station.date_config.end_time)
 
                 c11, c12 = st.columns([1,1])
                 with c11:
-                    new_start_date = st.date_input("Start Date", min_value=min_date, max_value=max_date, value=start_date, key="station-pg-start-date")
-                    new_start_datetime = datetime.combine(new_start_date, start_time)
-                    self.handle_manual_date_change()
+                    st.date_input("Start Date", min_value=min_date, max_value=max_date, key="station-pg-start-date", on_change=_on_manual_date_change)
                 with c12:
-                    new_end_date = st.date_input("End Date", min_value=min_date, max_value=max_date, value=end_date, key="station-pg-end-date")
-                    new_end_datetime = datetime.combine(new_end_date, end_time)
-                    self.handle_manual_date_change()
+                    st.date_input("End Date", min_value=min_date, max_value=max_date, key="station-pg-end-date", on_change=_on_manual_date_change)
 
-                self.settings.station.date_config.start_time = new_start_datetime
-                self.settings.station.date_config.end_time = new_end_datetime
+                #print(f"DEBUG station times: {self.settings.station.date_config.start_time} {self.settings.station.date_config.end_time}")                
 
                 if self.settings.station.date_config.start_time > self.settings.station.date_config.end_time:
                     st.error("Error: End Date must fall after Start Date.")
@@ -521,13 +584,13 @@ class BaseComponent:
                 c31, c32 = st.columns([1,1])
 
                 with c21:
-                    self.settings.station.network = st.text_input("Network", self.settings.station.network, key="station-pg-net-txt")
+                    self.settings.station.network = st.text_input("Network", self.settings.station.network, key="station-pg-net-txt").upper()
                 with c22:
-                    self.settings.station.station = st.text_input("Station", self.settings.station.station, key="station-pg-sta-txt")
+                    self.settings.station.station = st.text_input("Station", self.settings.station.station, key="station-pg-sta-txt").upper()
                 with c31:
-                    self.settings.station.location = st.text_input("Location", self.settings.station.location, key="station-pg-loc-txt")
+                    self.settings.station.location = st.text_input("Location", self.settings.station.location, key="station-pg-loc-txt").upper()
                 with c32:
-                    self.settings.station.channel = st.text_input("Channel", self.settings.station.channel, key="station-pg-cha-txt")
+                    self.settings.station.channel = st.text_input("Channel", self.settings.station.channel, key="station-pg-cha-txt").upper()
 
                 self.settings.station.highest_samplerate_only = st.checkbox(
                     "Highest Sample Rate Only", 
@@ -535,7 +598,7 @@ class BaseComponent:
                     help="If a station has multiple channels for the same component (e.g. HHZ & LHZ), only select the one with the highest samplerate (HHZ).",
                     key="station-pg-highest-sample-rate"
                 )
-                
+
                 self.settings.station.include_restricted = st.checkbox(
                     "Include Restricted Data", 
                     value=self.settings.station.include_restricted,
@@ -553,7 +616,7 @@ class BaseComponent:
 
                 self.render_map_buttons()
 
-        self.refresh_filters()
+        #self.refresh_filters() i don't think was needed
 
 
     # ====================
@@ -723,7 +786,6 @@ class BaseComponent:
                 st.error("Error: Missing required columns. Check RectangleArea.model_fields.")
                 return 
 
-
             rect_changed = not original_df_rect.equals(self.df_rect)
 
             if rect_changed:
@@ -761,7 +823,7 @@ class BaseComponent:
         if self.step_type == Steps.STATION:
             self.settings.station.selected_invs = None
 
-            if not self.df_markers.empty and 'is_selected' in list(self.df_markers.columns):
+            if not self.df_markers.empty and 'is_selected' in list(self.df_markers.columns) and {'network', 'station'}.issubset(self.df_markers.columns):
                 # Get all selected (network,station) pairs at once
                 selected_stations = self.df_markers[self.df_markers['is_selected']][['network', 'station']].drop_duplicates().apply(tuple, axis=1).tolist()
 
@@ -776,12 +838,24 @@ class BaseComponent:
 
 
     def handle_update_data_points(self, selected_idx):
+        if self.df_markers.empty:
+            self.map_fg_marker = None
+            self.marker_info = None
+            self.fig_color_bar = None
+            return
+
+        cols = self.df_markers.columns
+        cols_to_disp = {c:c.capitalize() for c in cols if c not in self.cols_to_exclude}
+        self.map_fg_marker, self.marker_info, self.fig_color_bar = add_data_points( self.df_markers, cols_to_disp, step=self.step_type, selected_idx = selected_idx, col_color=self.col_color, col_size=self.col_size)
+
+
+    def handle_update_data_points_ORIG(self, selected_idx):
         if not self.df_markers.empty:
             cols = self.df_markers.columns
             cols_to_disp = {c:c.capitalize() for c in cols if c not in self.cols_to_exclude}
             self.map_fg_marker, self.marker_info, self.fig_color_bar = add_data_points( self.df_markers, cols_to_disp, step=self.step_type, selected_idx = selected_idx, col_color=self.col_color, col_size=self.col_size)
         else:
-            self.warning = "No data found."
+            self.warning = "No data found"
 
 
     def get_data_globally(self):
@@ -791,10 +865,15 @@ class BaseComponent:
         st.rerun()
 
 
-    def refresh_map(self, reset_areas = False, selected_idx = None, clear_draw = False, rerun = False, get_data = True, recreate_map = True):
+    def refresh_map(self, reset_areas = False, selected_idx = None,
+        clear_draw = False, rerun = False, get_data = True, recreate_map = True):
+
         if self.is_refreshing:
+            #print("DEBUG: refresh_map is refreshing")
             return
+
         self.is_refreshing = True
+        #print("DEBUG: refresh_map wasn't refreshing")
 
         try:
             geo_constraint = self.get_geo_constraint()
@@ -810,6 +889,7 @@ class BaseComponent:
                 )
 
             if clear_draw:
+                #print("DEBUG: refresh_map clear_draw")
                 clear_map_draw(self.map_disp)
                 self.all_feature_drawings = geo_constraint
                 self.map_fg_area= add_area_overlays(areas=geo_constraint)
@@ -836,7 +916,8 @@ class BaseComponent:
                     self.handle_get_data()
 
             if rerun:
-                st.rerun()
+                #print("DEBUG: refresh_map request_rerun")
+                self.request_rerun()
         finally:
             self.is_refreshing = False
 
@@ -899,7 +980,7 @@ class BaseComponent:
         try:
             if self.step_type == Steps.EVENT:
                 self.catalogs = Catalog()
-                # self.catalogs = get_event_data(self.settings.model_dump_json())
+
                 if is_import:
                     self.import_xml(uploaded_file)
                 else:
@@ -912,10 +993,12 @@ class BaseComponent:
 
             if self.step_type == Steps.STATION:
                 self.inventories = Inventory()
+
                 if is_import:
                     self.import_xml(uploaded_file)
                 else:
                     self.inventories = get_station_data(self.settings)
+
                 if self.inventories:
                     self.df_markers = station_response_to_df(self.inventories)
                 else:
@@ -945,7 +1028,7 @@ class BaseComponent:
             if http_status_code:
                 self.error += f"**Technical details:**\n\nError {http_status_code}: {error_message}"
 
-            print(self.error)  # Logging for debugging
+            print(self.error)
 
 
     def clear_all_data(self):
@@ -988,26 +1071,6 @@ class BaseComponent:
         return self.df_markers[mask].index.tolist()
 
 
-    def sync_df_markers_with_df_edit_debug(self):
-        print(f"DEBUG: sync called for {self.step_type}")
-        print(f"DEBUG: df_data_edit is None: {self.df_data_edit is None}")
-        if self.df_data_edit is not None and 'is_selected' in self.df_data_edit.columns:
-            print(f"DEBUG: selected count in df_data_edit: {self.df_data_edit['is_selected'].sum()}")
-        else:
-            print(f"DEBUG: df_data_edit has no is_selected column or is None")
-
-        if 'is_selected' in self.df_markers.columns:
-            print(f"DEBUG: selected count in df_markers BEFORE sync: {self.df_markers['is_selected'].sum()}")
-
-        # Original sync logic
-        if self.df_data_edit is None:
-            return
-        if 'is_selected' not in self.df_data_edit.columns:
-            return
-        self.df_markers['is_selected'] = self.df_data_edit['is_selected']
-
-        print(f"DEBUG: selected count in df_markers AFTER sync: {self.df_markers['is_selected'].sum()}")
-
     def sync_df_markers_with_df_edit(self):
         if self.df_data_edit is None:
             return
@@ -1038,7 +1101,7 @@ class BaseComponent:
         self.handle_update_data_points(selected_idx)
 
         if rerun:
-            st.rerun()
+            self.request_rerun()
 
 
     # ===================
@@ -1064,7 +1127,7 @@ class BaseComponent:
             if self.prev_step_type == Steps.EVENT:
                 col_color = "depth (km)"
                 col_size  = "magnitude"
-            
+
             if self.prev_step_type == Steps.STATION:
                 col_color = "network"
 
@@ -1080,10 +1143,7 @@ class BaseComponent:
             if self.df_markers_prev.empty:
                 st.write(f"No selected {self.TXT.PREV_STEP}s")
             else:
-                # with st.expander(f"Search around {self.TXT.PREV_STEP}", expanded = True):
                 self.area_around_prev_step_selections()
-                # st.write(f"Total Number of Selected {self.TXT.PREV_STEP.title()}s: {len(self.df_markers_prev)}")
-                # st.dataframe(self.df_markers_prev, width='stretch')
 
 
     def area_around_prev_step_selections(self):
@@ -1133,6 +1193,7 @@ class BaseComponent:
             not self.df_markers_prev.equals(self.prev_marker) 
         )
 
+        # so this works.. it shows up in Shape tools
         # with c3:
         if st.button("Draw Area", key=self.get_key_element("Draw Area")):
             if (
@@ -1148,7 +1209,6 @@ class BaseComponent:
                 self.prev_marker = self.df_markers_prev.copy()
 
             self.refresh_map(reset_areas=False, clear_draw=True, rerun=True)
-            # st.rerun()
 
 
     def update_area_around_prev_step_selections(self, min_radius, max_radius):
@@ -1207,64 +1267,6 @@ class BaseComponent:
     # FILES
     # ===================
 
-    def exp_imp_events_stations(self):
-        st.write(f"#### Export/Import {self.TXT.STEP.title()}s (XML)")
-
-        c11, c22 = st.columns([1,1])
-        self.export_as_alternate = st.checkbox(
-            "Export as " + ("TXT" if self.step_type == Steps.STATION else "KML"), 
-            key=self.get_key_element("export_alternate_format")
-        )
-        with c11:
-
-            if self.export_as_alternate:
-                export_data = self.export_txt_tmpfile(export_selected=False)
-                file_extension = ".txt" if self.step_type == Steps.STATION else ".kml"
-                file_name = f"{self.TXT.STEP}s{file_extension}"
-                mime_type = "text/plain" if self.step_type == Steps.STATION else "application/vnd.google-earth.kml+xml"
-            else:
-                export_data = self.export_xml_bytes(export_selected=False)
-                file_name = f"{self.TXT.STEP}s.xml"
-                mime_type = "application/xml"
-
-            st.download_button(
-                f"Download All", 
-                key=self.get_key_element(f"Download All {self.TXT.STEP.title()}s"),
-                data=export_data,
-                file_name=file_name,
-                mime=mime_type,
-                disabled=(len(self.catalogs.events) == 0 and (self.inventories is None or len(self.inventories.get_contents().get('stations')) == 0))
-            )
-
-            ## @NOTE: Download Selected had to be with the table.
-            ## if (len(self.catalogs.events) > 0 or len(self.inventories.get_contents().get('stations')) > 0):
-            #st.download_button(
-            #    f"Download All", 
-            #    key=self.get_key_element(f"Download All {self.TXT.STEP.title()}s"),
-            #    data=self.export_xml_bytes(export_selected=False),
-            #    file_name = f"{self.TXT.STEP}s.xml",
-            #    mime="application/xml",
-            #    disabled=(len(self.catalogs.events) == 0 and (self.inventories is None or len(self.inventories.get_contents().get('stations')) == 0))
-            #)
-
-        uploaded_file = st.file_uploader(
-            f"Import {self.TXT.STEP.title()}s from a File", 
-            on_change=lambda: st.session_state.update({'uploaded_file_processed': False})
-        )
-
-        if uploaded_file and not st.session_state['uploaded_file_processed']:
-            self.clear_all_data()
-            self.refresh_map(reset_areas=True, clear_draw=True)
-            self.handle_get_data(is_import=True, uploaded_file=uploaded_file)
-
-            st.session_state['uploaded_file_processed'] = True
-
-        if self.has_error and "Import Error" in self.error:
-            st.error(self.error)
-
-        return c22
-
-
     def export_xml_bytes(self, export_selected: bool = True):
         with io.BytesIO() as f:
             if not self.df_markers.empty and len(self.df_markers) > 0:
@@ -1276,14 +1278,16 @@ class BaseComponent:
                     inv = self.settings.station.selected_invs if export_selected else self.inventories
                     if inv:
                         inv.write(f, format='STATIONXML')
+                        print("Exporting station data as fdsnXML")                        
 
                 if self.step_type == Steps.EVENT:
                     cat = self.settings.event.selected_catalogs if export_selected else self.catalogs
                     if cat:
                         cat.write(f, format='QUAKEML')
+                        print("Exporting catalog data as QuakeML")
 
-            # if f.getbuffer().nbytes == 0:
-            #     f.write(b"No Data")
+            if f.getbuffer().nbytes < 8:
+                f.write(b"No Data")
 
             return f.getvalue()
 
@@ -1304,13 +1308,40 @@ class BaseComponent:
                     inv = self.settings.station.selected_invs if export_selected else self.inventories
                     if inv:
                         inv.write(temp_path, format='STATIONTXT')
+                        print("Exporting station data as TXT")
                 if self.step_type == Steps.EVENT:
                     cat = self.settings.event.selected_catalogs if export_selected else self.catalogs
                     if cat:
                         cat.write(temp_path, format='KML')
+                        print("Exporting station data as KML")
 
             with open(temp_path, 'rb') as f:
                 return f.read()
+        finally:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+
+
+    def export_bib_tmpfile(self, export_selected: bool = True):
+
+        # Create temporary file with the correct extension (doing this a bit differently)
+        with tempfile.NamedTemporaryFile(suffix=".bib", delete=False) as temp_file:
+            temp_path = temp_file.name
+
+        try:
+            if not self.df_markers.empty and len(self.df_markers) > 0:
+                if export_selected:
+                    self.update_selected_data()
+
+                if self.step_type == Steps.STATION:
+                    inv = self.settings.station.selected_invs if export_selected else self.inventories
+                    if inv:
+                        inventory_to_bibtex(inv,temp_path)
+                        print("Exporting BibTeX references")
+
+            with open(temp_path, 'rb') as f:
+                return f.read()
+
         finally:
             if os.path.exists(temp_path):
                 os.remove(temp_path)
@@ -1339,14 +1370,10 @@ class BaseComponent:
     # ===================
 
     def watch_all_drawings(self, all_drawings):
-        # if self.all_current_drawings != all_drawings:
-        #     self.all_current_drawings = all_drawings
-        #     self.refresh_map(rerun=True, get_data=True)
-        #print(f"DEBUG watch_all_drawings called: step={self.step_type}, prev_step={self.prev_step_type}, stage={self.stage}")
-        #print(f"DEBUG has_fetch_new_data: {self.has_fetch_new_data}")
-        #print(f"DEBUG drawings changed: {self.all_current_drawings != all_drawings}")
+        #print("DEBUG: watch_all_drawings called")
+
         if self.is_refreshing or self.all_current_drawings == all_drawings:
-            #print("DEBUG: Early return - no changes or already refreshing")
+            #print("DEBUG: watch_all_drawings Early return - no changes or already refreshing")
             return
 
         self.all_current_drawings = all_drawings
@@ -1363,7 +1390,7 @@ class BaseComponent:
     # ===================
 
     def trigger_error(self, message):
-        """Set an error message in session state to be displayed."""
+        """Set an error message in session state to be displayed"""
         self.has_error = True
         self.error = message
 
@@ -1404,91 +1431,160 @@ class BaseComponent:
 
 
     def render_import_export(self):
-        def reset_import_setting_processed():
-            if uploaded_file is not None:
-                uploaded_file_info = f"{uploaded_file.name}-{uploaded_file.size}"
-                if "uploaded_file_info" not in st.session_state or st.session_state.uploaded_file_info != uploaded_file_info:
-                    st.session_state['import_setting_processed'] = False
-                    st.session_state['uploaded_file_info'] = uploaded_file_info  
+        """Renders import/export functionality in the sidebar"""
+        st.write("### Import/Export")
 
-        # st.sidebar.markdown("### Import/Export Settings")
+        export_csv_key = self.get_key_element("export_csv_clicked")
+        export_xml_key = self.get_key_element("export_xml_clicked")
+        export_bibtex_key = self.get_key_element("export_bibtex_clicked")
+        
+        if export_csv_key not in st.session_state:
+            st.session_state[export_csv_key] = False
+        if export_xml_key not in st.session_state:
+            st.session_state[export_xml_key] = False
+        if export_bibtex_key not in st.session_state:
+            st.session_state[export_bibtex_key] = False
 
-        with st.expander("Import & Export", expanded=True):
-            tab1, tab2 = st.tabs([f"{self.TXT.STEP.title()}s", "Settings"])
-            with tab2:
-                config_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../service/config.cfg')
-                config_file_path = os.path.abspath(config_file_path)
+        c1_export, c2_export = st.columns(2)
 
-                st.markdown("#### ⬇️ Export Settings")
+        with c1_export:
+            # Export CSV Button
+            if st.button("Export CSV", key=self.get_key_element("export_csv_btn"),help="Export stations/events to CSV"):
+                st.session_state[export_csv_key] = True
 
-                if os.path.exists(config_file_path):
-                    with open(config_file_path, "r") as file:
-                        file_data = file.read()
+            # Handle CSV export after button click (prevents re-triggering)
+            if st.session_state[export_csv_key]:
+                self._export_csv()
+                st.session_state[export_csv_key] = False
 
+            # Export XML Button (QuakeML for events, StationXML for stations)
+            if self.step_type == Steps.EVENT:
+                if st.button("Export QuakeML", key=self.get_key_element("export_quakeml_btn"),help="Export catalog to QuakeML"):
+                    st.session_state[export_xml_key] = True
+
+                if st.session_state[export_xml_key]:
+                    self._export_quakeml()
+                    st.session_state[export_xml_key] = False
+
+            elif self.step_type == Steps.STATION:
+                if st.button("Export StationXML", key=self.get_key_element("export_stationxml_btn"),help="Export station metadata to fdsnXML"):
+                    st.session_state[export_xml_key] = True
+
+                if st.session_state[export_xml_key]:
+                    self._export_stationxml()
+                    st.session_state[export_xml_key] = False
+
+                # Additional BibTeX export for stations
+                if st.button("Export BibTeX", key=self.get_key_element("export_bibtex_btn"),help="Export individual network citations to BibTeX"):
+                    st.session_state[export_bibtex_key] = True
+
+                if st.session_state[export_bibtex_key]:
+                    self._export_bibtex()
+                    st.session_state[export_bibtex_key] = False
+
+        with c2_export:
+            uploaded_file = st.file_uploader(
+                "Import Data",
+                type=['xml', 'csv', 'cfg'],
+                key=self.get_key_element("import_file"),
+                on_change=self._handle_import
+            )
+
+        return c2_export
+
+    def _handle_import(self):
+        """Handle import operations"""
+        key = self.get_key_element("import_file")
+        if key in st.session_state and st.session_state[key] is not None:
+            uploaded_file = st.session_state[key]
+            try:
+                if uploaded_file.name.endswith('.xml'):
+                    self._import_xml(uploaded_file)
+                elif uploaded_file.name.endswith('.csv'):
+                    self._import_csv(uploaded_file)
+                elif uploaded_file.name.endswith('.cfg'):
+                    self._import_config(uploaded_file)
+                st.success(f"Successfully imported {uploaded_file.name}")
+            except Exception as e:
+                st.error(f"Import failed: {str(e)}")
+
+    def _export_csv(self):
+        """Export data as CSV"""
+        if not self.df_markers.empty:
+            csv = self.df_markers.to_csv(index=False)
+            print("Exporting station data as CSV") 
+            # Create a unique container for the download button
+            download_container = st.container()
+            with download_container:
+                st.download_button(
+                    label="📥 Download CSV",
+                    data=csv,
+                    file_name=f"{self.TXT.STEP}_data.csv",
+                    mime="text/csv",
+                    key=self.get_key_element("download_csv_file")
+                )
+
+    def _export_quakeml(self):
+        """Export events as QuakeML"""
+        if self.catalogs and len(self.catalogs) > 0:
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.xml', delete=False) as f:
+                self.catalogs.write(f.name, format="QUAKEML")
+                print("Exporting catalog data as QuakeML")
+                with open(f.name, 'rb') as file:
+                    download_container = st.container()
+                    with download_container:
+                        st.download_button(
+                            label="📥 Download QuakeML",
+                            data=file.read(),
+                            file_name="events.xml",
+                            mime="text/xml",
+                            key=self.get_key_element("download_quakeml_file")
+                        )
+                os.remove(f.name)
+
+    def _export_stationxml(self):
+        """Export stations as StationXML"""
+        if self.inventories and len(self.inventories) > 0:
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.xml', delete=False) as f:
+                self.inventories.write(f.name, format="STATIONXML")
+                print("Exporting station data as fdsnXML")
+                with open(f.name, 'rb') as file:
+                    download_container = st.container()
+                    with download_container:
+                        st.download_button(
+                            label="📥 Download StationXML",
+                            data=file.read(),
+                            file_name="stations.xml",
+                            mime="text/xml",
+                            key=self.get_key_element("download_stationxml_file")
+                        )
+                os.remove(f.name)
+
+    def _export_bibtex(self):
+        """Export station citations as BibTeX"""
+        if self.inventories and len(self.inventories) > 0:
+            with tempfile.NamedTemporaryFile(suffix=".bib", delete=False) as f:
+                inventory_to_bibtex(self.inventories, f.name) # writes to f.name
+
+                with open(f.name, 'r') as file:
+                    bibtex_content = file.read()
+
+                print("Exporting BibTeX references")
+                download_container = st.container()
+                with download_container:
                     st.download_button(
-                        label="Download file",
-                        data=file_data,  
-                        file_name="config.cfg",
-                        mime="application/octet-stream",
-                        help="Download the current settings.",
-                        width='stretch',
+                        label="📥 Download BibTeX",
+                        data=bibtex_content,
+                        file_name="stations.bib",
+                        mime="text/plain",
+                        key=self.get_key_element("download_bibtex_file")
                     )
-                else:
-                    st.caption("No config file available for download.")
-
-                # Import settings should only be displayed if stage == 1
-                if self.stage == 1:
-                    st.markdown("#### 📂 Import Settings")
-                    uploaded_file = st.file_uploader(
-                        "Import Settings",type=["cfg"], on_change=reset_import_setting_processed,
-                        help="Upload a config file (.cfg) to update settings." , label_visibility="collapsed"
-                    )
-
-                    if uploaded_file:
-                        if not st.session_state.get('import_setting_processed', False):
-                            file_like_object = io.BytesIO(uploaded_file.getvalue())
-                            text_file_object = io.TextIOWrapper(file_like_object, encoding='utf-8')
-
-                            settings = SeismoLoaderSettings.from_cfg_file(text_file_object)
-                            if(settings.status_handler.has_errors()):
-                                errors = settings.status_handler.generate_status_report("errors")
-                                st.error(f"{errors}\n\n**Please review the errors in the imported file. Resolve them before proceeding.**")
-
-                                if(settings.status_handler.has_warnings()):
-                                    warning = settings.status_handler.generate_status_report("warnings")
-                                    st.warning(warning)
-                                settings.status_handler.display()
-
-                            else:
-                                settings.event.geo_constraint = []
-                                settings.station.geo_constraint = []
-                                settings.event.selected_catalogs=Catalog(events=None)
-                                settings.station.selected_invs = None
-
-                                self.clear_all_data()
-                                # self.settings = settings
-                                for key, value in vars(settings).items():
-                                    setattr(self.settings, key, value)
-                                self.df_markers_prev= pd.DataFrame()
-                                self.refresh_map(reset_areas=True, clear_draw=True)
-                                st.session_state['import_setting_processed'] = True
-
-                                if(settings.status_handler.has_warnings()):
-                                    warning = settings.status_handler.generate_status_report("warnings")
-                                    st.warning(warning)
-
-                                st.success("Settings imported successfully!")
-            with tab1:
-                c2_export = self.exp_imp_events_stations()
-
-            return c2_export
-
+                os.remove(f.name)
 
     def render_map_right_menu(self):
         if self.prev_step_type and len(self.df_markers_prev) < 6:
             with st.expander(f"Search Around {self.prev_step_type.title()}s", expanded=True):
                 self.display_prev_step_selection_table()
-
 
     def render_map(self):
 
@@ -1509,13 +1605,17 @@ class BaseComponent:
 
         st.caption(info_display)
 
+        # Store previous interaction state
+        prev_clicked = st.session_state.get(f"{self.map_id}_last_clicked", None)
+        prev_center = st.session_state.get(f"{self.map_id}_last_center", None)        
+
         c1, c2 = st.columns([18,1])
         with c1:
             self.map_output = st_folium(
                 self.map_disp, 
                 key=f"map_{self.map_id}",
                 feature_group_to_add=feature_groups, 
-                width='stretch', 
+                width='stretch'
                 # height=self.map_height
             )
 
@@ -1523,32 +1623,60 @@ class BaseComponent:
             if self.fig_color_bar:
                 st.pyplot(self.fig_color_bar)
 
-        self.watch_all_drawings(get_selected_areas(self.map_output))
-
         # @IMPORTANT NOTE: Streamlit-Folium does not provide a direct way to tag a Marker with
         #                  some metadata, including adding an id. The options are using PopUp
         #                  window or tooltips. Here, we have embedded a line at the bottom of the
         #                  popup to be able to get the Event/Station Ids as well as the type of 
         #                  the marker, ie, event or station.
 
-        if self.map_output is not None and self.map_output.get("center"):
-            self.map_view_center = self.map_output.get("center", {})
-            self.map_view_zoom = self.map_output.get("zoom", 2)
+        if self.map_output is not None:
 
-        # st.write(self.map_output)
-        if self.map_output and self.map_output.get('last_object_clicked') is not None:
-            last_clicked = self.map_output['last_object_clicked_popup']
+            # PROBLEM: this is called excessively, it should only trigger when a new drawing is made! need to add session state var
+            #self.watch_all_drawings(get_selected_areas(self.map_output))
 
-            if isinstance(last_clicked, str):
-                idx_info = last_clicked.splitlines()[-1].split()
-                step = idx_info[0].lower()
-                idx  = int(idx_info[1])
-                if step == self.step_type:
-                    if self.selected_marker_map_idx is None or idx != self.selected_marker_map_idx:
-                        self.selected_marker_map_idx = idx
-                        self.clicked_marker_info = self.marker_info[self.selected_marker_map_idx]
-            else:
-                self.clicked_marker_info = None
+            # Get current drawings from map output
+            current_drawings = get_selected_areas(self.map_output)
+
+            # Initialize session state for tracking drawings if not exists
+            drawings_key = f"{self.map_id}_prev_drawings"
+            if drawings_key not in st.session_state:
+                st.session_state[drawings_key] = []
+
+            # Compare to previous drawings
+            prev_drawings = st.session_state[drawings_key]
+            drawings_changed = (
+                len(current_drawings) != len(prev_drawings) or
+                current_drawings != prev_drawings
+            )
+
+            # Only call watch_all_drawings if drawings actually changed
+            if drawings_changed:
+                st.session_state[drawings_key] = current_drawings
+                self.watch_all_drawings(current_drawings)
+
+            current_center = self.map_output.get("center", {})
+            current_clicked = self.map_output.get('last_object_clicked_popup')
+
+            # Only update if center actually changed (not just from resize)
+            if current_center != prev_center:
+                self.map_view_center = current_center
+                self.map_view_zoom = self.map_output.get("zoom", 2)
+                st.session_state[f"{self.map_id}_last_center"] = current_center
+
+            # Only process clicks if they're actually new
+            if current_clicked != prev_clicked:
+                st.session_state[f"{self.map_id}_last_clicked"] = current_clicked
+
+                if current_clicked and isinstance(current_clicked, str):
+                    idx_info = current_clicked.splitlines()[-1].split()
+                    step = idx_info[0].lower()
+                    idx = int(idx_info[1])
+                    if step == self.step_type:
+                        if self.selected_marker_map_idx is None or idx != self.selected_marker_map_idx:
+                            self.selected_marker_map_idx = idx
+                            self.clicked_marker_info = self.marker_info[self.selected_marker_map_idx]
+                else:
+                    self.clicked_marker_info = None
 
         if self.warning:
             st.warning(self.warning)
@@ -1556,7 +1684,6 @@ class BaseComponent:
 
     def render_marker_select(self):
         def handle_marker_select():
-            # selected_data = self.get_selected_marker_info()
 
             if 'is_selected' not in self.df_markers.columns:
                 self.df_markers['is_selected'] = False
@@ -1567,11 +1694,8 @@ class BaseComponent:
                         self.sync_df_markers_with_df_edit()
                         self.df_markers.loc[self.clicked_marker_info['id'] - 1, 'is_selected'] = True
                         self.clicked_marker_info = None
-                        if self.auto_refresh_enabled:
+                        if st.session_state.get('auto_refresh_enabled', True):
                             self.refresh_map_selection()
-                    # else:
-                    #     self.df_markers.loc[self.clicked_marker_info['id'] - 1, 'is_selected'] = False
-                    #     self.refresh_map_selection()
 
             except KeyError:
                 print("Selected map marker not found")
@@ -1580,144 +1704,48 @@ class BaseComponent:
             handle_marker_select()
 
 
-    def render_data_table(self, c5_map):
-        if self.df_markers.empty:
-            st.warning("No data available for the selected settings.")
-            return
+    def render_data_table(self, export_container=None):
+        """Renders an editable data table for marker selection"""
+        state_key = f"{self.get_key_element('Data Table State')}"
+        
+        # Initialize state if not exists
+        if state_key not in st.session_state:
+            st.session_state[state_key] = self.df_markers.copy()
 
         # Ensure `is_selected` column exists
         if 'is_selected' not in self.df_markers.columns:
             self.df_markers['is_selected'] = False
 
-        # Define ordered columns
-        cols = self.df_markers.columns
-        orig_cols = [col for col in cols if col != 'is_selected']
-        if self.step_type == Steps.STATION:
-            ordered_col = ['is_selected'] + orig_cols
-        else: # Steps.EVENT
-            ordered_col = ['is_selected','place','time','magnitude_combined','latitude','longitude','depth (km)']
-
-        # Define config
-        config = {col: {'disabled': True} for col in orig_cols}
-        config['is_selected'] = st.column_config.CheckboxColumn('Select')
-
-        state_key = f'initial_df_markers_{self.stage}'
-
-        # Store the initial state in the session if not already stored
-        if state_key not in st.session_state:
-            st.session_state[state_key] = self.df_markers.copy()
-
-        self.data_table_view(ordered_col, config, state_key)
-
-        # Download button logic
-        #is_disabled = 'is_selected' not in self.df_markers or self.df_markers['is_selected'].sum() == 0
-        is_disabled = bool('is_selected' not in self.df_markers or self.df_markers['is_selected'].sum() == 0)
-
-        with c5_map:
-
-            if self.export_as_alternate:
-                export_data = self.export_txt_tmpfile(export_selected=True)
-                file_extension = ".txt" if self.step_type == Steps.STATION else ".kml"
-                file_name = f"{self.TXT.STEP}s_selected{file_extension}"
-                mime_type = "text/plain" if self.step_type == Steps.STATION else "application/vnd.google-earth.kml+xml"
-            else:
-                export_data = self.export_xml_bytes(export_selected=True)
-                file_name = f"{self.TXT.STEP}s_selected.xml"
-                mime_type = "application/xml"
-
-            st.download_button(
-                f"Download Selected",
-                key=self.get_key_element(f"Download Selected {self.TXT.STEP.title()}s"),
-                data=export_data,
-                file_name=file_name,
-                mime=mime_type,
-                disabled=is_disabled
-            )
-
-
-    def on_change_df_table(self):
-        if self.auto_refresh_enabled:
-            self.delay_selection = 0.2
-        else:
-            self.update_selected_data()
-            self.delay_selection = 0
-
-
-    def render_auto_refresh_toggle(self):
-        """Renders the auto-refresh toggle between the map and data table."""
-
-        # Initialize the toggle state if not already in session state
-        if 'auto_refresh_toggle' not in st.session_state:
-            st.session_state['auto_refresh_toggle'] = self.auto_refresh_enabled
-
-        # Create columns for the toggle and refresh button
-        col1, col2 = st.columns([3, 1])
-
-        with col1:
-            # Add the toggle switch
-            st.toggle(
-                "Auto-Refresh Enabled",
-                key='auto_refresh_toggle',
-                help="Toggle automatic refresh when making selections or drawing areas (turning OFF is helpful when table is large)",
-                on_change=lambda: self.update_auto_refresh_state()
-            )
-
-        self.update_auto_refresh_state()
-
-
-    def update_auto_refresh_state(self):
-        self.auto_refresh_enabled = st.session_state['auto_refresh_toggle']
-
-
-    def data_table_view(self, ordered_col, config, state_key):
-        """Displays the full data table, allowing selection."""
-
-        def _get_column_width(column):
-            max_length = max(self.df_markers[column].astype(str).apply(len))  # Get max string length
-            if max_length <= 10:
-                return None 
-            elif max_length <= 10:
-                return "small"
-            elif max_length <= 50 or column=="description" or column=="loc. codes":
-                return "medium"
-            elif max_length <= 100:
-                return None
-            return "large"
-
         def _format_columns():
-            column_map = {}
+            """Format column configurations for the data editor."""
+            ordered_col = [col for col in self.df_markers.columns if col not in self.cols_to_exclude]
+            ordered_col.insert(0, "is_selected")
+            config = {"is_selected": st.column_config.CheckboxColumn("✓", width="small")}
 
             if self.step_type == Steps.EVENT:
-
-                # combine magnitude scalar and type into one column
-                self.df_markers['magnitude_combined'] = self.df_markers['magnitude'].astype(str) + ' ' + self.df_markers['magnitude type']
-
                 column_map = {
-                    "is_selected": st.column_config.Column("", width=4, disabled=False),
-                    "place": st.column_config.TextColumn("place", width=None, disabled=True),
-                    "magnitude_combined": st.column_config.TextColumn("mag", width=12, disabled=True),
-                    #"magnitude": st.column_config.NumberColumn("mag", format="%.1f",width=6, disabled=True),
-                    #"magnitude type": st.column_config.Column("type", width=6, disabled=True),
-                    "time": st.column_config.DatetimeColumn("origin time", width=18, disabled=True),
-                    "longitude": st.column_config.NumberColumn("lon", format="%.4f", width=8, disabled=True),
-                    "latitude": st.column_config.NumberColumn("lat", format="%.4f", width=8, disabled=True),
-                    "depth (km)": st.column_config.NumberColumn("dep (km)", format="%.1f", width=6, disabled=True),
+                    "time": st.column_config.DatetimeColumn("time (UTC)", format="DD/MM/YY HH:mm", width="medium"),
+                    "place": st.column_config.TextColumn("location", width="medium"),
+                    "magnitude": st.column_config.NumberColumn("mag", format="%.1f", width="small"),
+                    "magnitude_type": st.column_config.TextColumn("mag type", width="small"),
+                    "depth": st.column_config.NumberColumn("depth", format="%.1f", width="small"),
+                    "latitude": st.column_config.NumberColumn("lat", format="%.4f", width="small"),
+                    "longitude": st.column_config.NumberColumn("lon", format="%.4f", width="small")
                 }
 
             if self.step_type == Steps.STATION:
                 column_map = {
-                        "is_selected": st.column_config.Column("", width=4, disabled=False),
-                        "network": st.column_config.TextColumn("net", width=2, disabled=True),
-                        "station": st.column_config.TextColumn("sta", width=5, disabled=True),
-                        "description": st.column_config.TextColumn("description", width=38, disabled=True),
-                        "latitude": st.column_config.NumberColumn("lat", format="%.4f", width=8, disabled=True),
-                        "longitude": st.column_config.NumberColumn("lon", format="%.4f", width=8, disabled=True),
-                        "elevation": st.column_config.NumberColumn("elev", format="%d", width=6, disabled=True),
-                        "loc. codes": st.column_config.TextColumn("loc", width=None),
-                        "channels": st.column_config.TextColumn("cha", width=None),
-                        "start date (UTC)": st.column_config.Column("start", width=13, disabled=True),
-                        "end date (UTC)": st.column_config.Column("end", width=11, disabled=True),
-                    }
+                    "network": st.column_config.TextColumn("net", width="small", disabled=True),
+                    "station": st.column_config.TextColumn("sta", width="small", disabled=True),
+                    "description": st.column_config.TextColumn("description", width="small", disabled=True),
+                    "latitude": st.column_config.NumberColumn("lat", format="%.4f", width="small", disabled=True),
+                    "longitude": st.column_config.NumberColumn("lon", format="%.4f", width="small", disabled=True),
+                    "elevation": st.column_config.NumberColumn("elev", format="%d", width="small", disabled=True),
+                    "loc. codes": st.column_config.TextColumn("loc", width="medium"),
+                    "channels": st.column_config.TextColumn("cha", width="medium"),
+                    "start date (UTC)": st.column_config.Column("start", width="small", disabled=True),
+                    "end date (UTC)": st.column_config.Column("end", width="small", disabled=True)
+                }
 
             for col in ordered_col:
                 if col in column_map:
@@ -1734,6 +1762,7 @@ class BaseComponent:
         with c2:
             if st.button("Select All", key=self.get_key_element("Select All")):
                 self.df_markers['is_selected'] = True
+                st.session_state[state_key] = self.df_markers.copy()
                 self.update_selected_data()
                 self.refresh_map_selection(rerun=True)
 
@@ -1741,44 +1770,34 @@ class BaseComponent:
             if st.button("Unselect All", key=self.get_key_element("Unselect All")):
                 self.df_markers['is_selected'] = False
                 self.clicked_marker_info = None
+                st.session_state[state_key] = self.df_markers.copy()
                 self.update_selected_data()
                 self.refresh_map_selection(rerun=True)
 
-        # Add a manual refresh button if auto-refresh is disabled
-        # BUG: if Un/Select All only operates with auto_refresh, 
-        #      first click doesn't register / have to click twice for Select All and Unselect All
-        #      for now we just have Un/Select All just work regardless of auto_refresh_state
-        #      ...which sort of makes sense anyway
+        # Show apply button only when auto-refresh is disabled
         if not self.auto_refresh_enabled:
             if st.button("Apply Selections", key=self.get_key_element("Apply Selections")):
                 self.sync_df_markers_with_df_edit()
                 self.refresh_map_selection(rerun=True)
 
-        #OFF for now / self.selected_items_view(state_key) #this adds the red icons above the table.. possibly not worth the lag
+        height = min(100*35, (len(self.df_markers) + 1) * 35 + 2)
 
-        height = (len(self.df_markers) + 1) * 35 + 2
-        height = min(100*35, height)
-
-        # These create "bubble icons" for the individual channel codes in the table.. but take up extra space
-        #df_markers_view = None
-        #if self.step_type == Steps.STATION:
-        #    df_markers_view = deepcopy(self.df_markers)
-        #    df_markers_view["loc. codes"] = df_markers_view["loc. codes"].apply(lambda x: x.split(",")) 
-        #    df_markers_view["channels"] = df_markers_view["channels"].apply(lambda x: x.split(","))            
-        #    # df_markers_view.drop("elevation", axis=1, inplace=True)
+        # Create ordered columns list
+        ordered_col = [col for col in self.df_markers.columns if col not in self.cols_to_exclude]
+        ordered_col.insert(0, "is_selected")
 
         self.df_data_edit = st.data_editor(
-            #df_markers_view if self.step_type == Steps.STATION else self.df_markers, # for bubble icons
             self.df_markers,
-            hide_index = True, 
+            hide_index=True, 
             column_config=_format_columns(), 
-            column_order = ordered_col, 
+            column_order=ordered_col, 
             key=self.get_key_element("Data Table"),
             width='stretch',
             height=height,
             on_change=self.on_change_df_table
         )
 
+        # Check if data has changed
         if len(self.df_data_edit) != len(st.session_state[state_key]):
             has_changed = True
         else:
@@ -1787,14 +1806,45 @@ class BaseComponent:
         if has_changed:
             if self.delay_selection > 0:
                 sleep(self.delay_selection)
-            st.session_state[state_key] = self.df_data_edit.copy()  # Save the unsorted version to preserve user sorting
+            st.session_state[state_key] = self.df_data_edit.copy()
 
-            if self.auto_refresh_enabled:
+            if st.session_state.get('auto_refresh_enabled', True):
                 self.sync_df_markers_with_df_edit()
                 self.refresh_map_selection()
                 self.delay_selection = 0.2
-            #else: (seems to work better with this commented...?)
-            #    self.sync_df_markers_with_df_edit()
+
+
+    def on_change_df_table(self):
+        if st.session_state.get('auto_refresh_enabled', True):
+            self.delay_selection = 0.2
+        else:
+            self.update_selected_data()
+            self.delay_selection = 0
+
+
+    def render_auto_refresh_toggle(self):
+        """Renders the auto-refresh toggle between the map and data table"""
+
+        # Initialize the toggle state if not already in session state
+        if 'auto_refresh_enabled' not in st.session_state:
+            st.session_state['auto_refresh_enabled'] = self.auto_refresh_enabled
+
+        # Create columns for the toggle and refresh button
+        col1, col2 = st.columns([3, 1])
+
+        with col1:
+            # Properly sync with value parameter
+            new_state = st.toggle(
+                "Auto-Refresh Enabled",
+                value=st.session_state.auto_refresh_enabled,
+                key='auto_refresh_toggle_widget',  # Different key for widget
+                help="Toggle automatic refresh when making selections or drawing areas\n(turning OFF is helpful when table is large)"
+            )
+
+            # Update both session state and instance if changed
+            if new_state != st.session_state.auto_refresh_enabled:
+                st.session_state.auto_refresh_enabled = new_state
+                self.auto_refresh_enabled = new_state
 
 
     # This function pertains to the red icons above the table.. currently disabled
@@ -1851,21 +1901,25 @@ class BaseComponent:
 
 
     def render(self):
+        """Main render method for the component"""
         with st.sidebar:
             self.render_map_handles()
             self.render_map_right_menu()
 
         if self.has_error and "Import Error" not in self.error:
-            c1_err, c2_err = st.columns([4,1])
-            with c1_err:
-                if self.error == "Error: 'TimeoutError' object has no attribute 'splitlines'":
-                    st.error("Server timeout, try again in a minute")
-                st.error(self.error)
-            with c2_err:
-                if st.button(":material/close:"): # ❌
-                    self.has_error = False
-                    self.error = ""
-                    st.rerun()
+            error_container = st.container()
+            with error_container:
+                c1_err, c2_err = st.columns([4,1])
+                with c1_err:
+                    if self.error == "Error: 'TimeoutError' object has no attribute 'splitlines'":
+                        st.error("Server timeout, try again in a minute")
+                    else:
+                        st.error(self.error)
+                with c2_err:
+                    if st.button(":material/close:"):
+                        self.has_error = False
+                        self.error = ""
+                        self.needs_rerun = True
 
         if self.step_type == Steps.EVENT:
             self.event_filter()
@@ -1883,7 +1937,10 @@ class BaseComponent:
         # Add the auto-refresh toggle between map and table
         self.render_auto_refresh_toggle()
 
-        if not self.df_markers.empty:
+        #if not self.df_markers.empty:
+        if not self.df_markers.empty and len(self.df_markers.columns) > 1:
             self.render_marker_select()
-            with st.expander(self.TXT.SELECT_DATA_TABLE_TITLE, expanded = not self.df_markers.empty):
+            with st.expander(self.TXT.SELECT_DATA_TABLE_TITLE, expanded=not self.df_markers.empty):
                 self.render_data_table(c2_export)
+
+        self.execute_rerun_if_needed()
