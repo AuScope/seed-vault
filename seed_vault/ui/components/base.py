@@ -849,15 +849,6 @@ class BaseComponent:
         self.map_fg_marker, self.marker_info, self.fig_color_bar = add_data_points( self.df_markers, cols_to_disp, step=self.step_type, selected_idx = selected_idx, col_color=self.col_color, col_size=self.col_size)
 
 
-    def handle_update_data_points_ORIG(self, selected_idx):
-        if not self.df_markers.empty:
-            cols = self.df_markers.columns
-            cols_to_disp = {c:c.capitalize() for c in cols if c not in self.cols_to_exclude}
-            self.map_fg_marker, self.marker_info, self.fig_color_bar = add_data_points( self.df_markers, cols_to_disp, step=self.step_type, selected_idx = selected_idx, col_color=self.col_color, col_size=self.col_size)
-        else:
-            self.warning = "No data found"
-
-
     def get_data_globally(self):
         self.clear_all_data()
         clear_map_draw(self.map_disp)
@@ -982,7 +973,7 @@ class BaseComponent:
                 self.catalogs = Catalog()
 
                 if is_import:
-                    self.import_xml(uploaded_file)
+                    self.catalogs += read_events(uploaded_file)
                 else:
                     self.catalogs = get_event_data(self.settings)
 
@@ -995,7 +986,7 @@ class BaseComponent:
                 self.inventories = Inventory()
 
                 if is_import:
-                    self.import_xml(uploaded_file)
+                    self.inventories += read_inventory(uploaded_file)
                 else:
                     self.inventories = get_station_data(self.settings)
 
@@ -1347,24 +1338,6 @@ class BaseComponent:
                 os.remove(temp_path)
 
 
-    def import_xml(self, uploaded_file):
-        st.session_state["show_error_workflow_combined"] = False
-        try:
-            if uploaded_file is not None:
-                if self.step_type == Steps.STATION:
-                    inv = read_inventory(uploaded_file)
-                    self.inventories = Inventory()
-                    self.inventories += inv
-                if self.step_type == Steps.EVENT:
-                    cat = read_events(uploaded_file)
-                    self.catalogs = Catalog()
-                    self.catalogs.extend(cat)
-        except Exception as e:
-            if "unknown format" in str(e).lower():
-                self.trigger_error(f"Import Error: Unknown format for file {uploaded_file.name}. Please ensure the file is in correct format and **do not forget to remove the {uploaded_file.name} file from upload.**")
-            self.trigger_error(f"Import Error: An error occured when importing {uploaded_file.name}. Please ensure the file is in correct format and **do not forget to remove the {uploaded_file.name} file from upload.**")
-
-
     # ===================
     # WATCHER
     # ===================
@@ -1409,12 +1382,10 @@ class BaseComponent:
                 key=self.get_key_element(f"Load {self.TXT.STEP}s")
             ):
                 self.refresh_map(reset_areas=False, clear_draw=False, rerun=False)
-
         with cc2:
             if st.button(self.TXT.CLEAR_ALL_MAP_DATA, key=self.get_key_element(self.TXT.CLEAR_ALL_MAP_DATA)):
                 self.clear_all_data()
                 self.refresh_map(reset_areas=True, clear_draw=True, rerun=True, get_data=False)
-
         with cc3:
             if st.button(
                 "Reload Map", 
@@ -1485,12 +1456,13 @@ class BaseComponent:
         with c2_export:
             uploaded_file = st.file_uploader(
                 "Import Data",
-                type=['xml', 'csv', 'cfg'],
+                type=['xml', 'qml', 'csv', 'cfg'],
                 key=self.get_key_element("import_file"),
                 on_change=self._handle_import
             )
 
         return c2_export
+
 
     def _handle_import(self):
         """Handle import operations"""
@@ -1498,12 +1470,41 @@ class BaseComponent:
         if key in st.session_state and st.session_state[key] is not None:
             uploaded_file = st.session_state[key]
             try:
-                if uploaded_file.name.endswith('.xml'):
-                    self._import_xml(uploaded_file)
+                if uploaded_file.name.endswith('.xml') or uploaded_file.name.endswith('.qml'):
+                    self.handle_get_data(is_import=True, uploaded_file=uploaded_file)
                 elif uploaded_file.name.endswith('.csv'):
-                    self._import_csv(uploaded_file)
+                    st.error("Cannot import CSV, only fdsnXML or QuakeML")
                 elif uploaded_file.name.endswith('.cfg'):
-                    self._import_config(uploaded_file)
+                    settings = SeismoLoaderSettings.from_cfg_file(text_file_object)
+                    if(settings.status_handler.has_errors()):
+                        errors = settings.status_handler.generate_status_report("errors")
+                        st.error(f"{errors}\n\n**Please review the errors in the imported file. Resolve them before proceeding.**")
+
+                        if(settings.status_handler.has_warnings()):
+                            warning = settings.status_handler.generate_status_report("warnings")
+                            st.warning(warning)
+                        settings.status_handler.display()
+
+                    else:
+                        settings.event.geo_constraint = []
+                        settings.station.geo_constraint = []
+                        settings.event.selected_catalogs=Catalog(events=None)
+                        settings.station.selected_invs = None
+                        
+                        self.clear_all_data()
+
+                        for key, value in vars(settings).items():
+                            setattr(self.settings, key, value)
+                        self.df_markers_prev= pd.DataFrame()
+                        self.refresh_map(reset_areas=True, clear_draw=True)
+                        st.session_state['import_setting_processed'] = True
+
+                        if(settings.status_handler.has_warnings()):
+                            warning = settings.status_handler.generate_status_report("warnings")
+                            st.warning(warning) 
+
+                        st.success("Settings imported successfully!")
+
                 st.success(f"Successfully imported {uploaded_file.name}")
             except Exception as e:
                 st.error(f"Import failed: {str(e)}")
@@ -1527,7 +1528,7 @@ class BaseComponent:
     def _export_quakeml(self):
         """Export events as QuakeML"""
         if self.catalogs and len(self.catalogs) > 0:
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.xml', delete=False) as f:
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.qml', delete=False) as f:
                 self.catalogs.write(f.name, format="QUAKEML")
                 print("Exporting catalog data as QuakeML")
                 with open(f.name, 'rb') as file:
@@ -1536,7 +1537,7 @@ class BaseComponent:
                         st.download_button(
                             label="📥 Download QuakeML",
                             data=file.read(),
-                            file_name="events.xml",
+                            file_name="events.qml",
                             mime="text/xml",
                             key=self.get_key_element("download_quakeml_file")
                         )
@@ -1630,9 +1631,6 @@ class BaseComponent:
         #                  the marker, ie, event or station.
 
         if self.map_output is not None:
-
-            # PROBLEM: this is called excessively, it should only trigger when a new drawing is made! need to add session state var
-            #self.watch_all_drawings(get_selected_areas(self.map_output))
 
             # Get current drawings from map output
             current_drawings = get_selected_areas(self.map_output)

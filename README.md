@@ -8,12 +8,12 @@
 - Quickly download and archive bulk continuous data, saving your progress along the way
 - View and plot event arrivals
 - A CLI scripting tool to automate common jobs
-- Search, export, or import earthquake event catalogs and station metadata
+- Search, export, or import earthquake event catalogs and station metadata and network references in BibTeX
 - Download restricted/embargoed data by storing auth passwords in local config
 - Add and use custom FDSN servers
 - Saves all downloaded data as miniseed in a local SDS database to speed up future retrievals
 - Local sqlite3 database editor
-- Load and save search parameters and configuration
+- Load, save, export, and share search parameters and configuration
 
 Runs on:
 
@@ -35,8 +35,8 @@ https://auscope.github.io/seed-vault
 ### Requirements
 
 - 8 GB RAM
-- Python >= 3.10
-- ObsPy (>=1.4.1), Streamlit (>=1.39), Plotly (>-5.24), Pandas (>=2.2.2), Matplotlib (>=3.8.5)
+- Python >= 3.10, tested up to 3.14
+- ObsPy (>=1.4.2), Streamlit (>=1.51), Plotly (>-5.24), Pandas (>=2.2.2), Matplotlib (>=3.8.5)
 
 # Install via pip (easy way)
 

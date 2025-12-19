@@ -198,7 +198,7 @@ def check_client_services(client_name: str, active_client=None):
     """Check which services are available for a given client name."""
 
     # Short circuit for well-known servers
-    has_all = ['IRIS','EARTHSCOPE','GFZ','GEOFON','GEONET','ETH',
+    has_all = ['IRIS','EARTHSCOPE','GFZ','GEOFON','GEONET',
                'INGV', 'SCEDC', 'NCEDC']
     if client_name.upper() in has_all:
         return {
