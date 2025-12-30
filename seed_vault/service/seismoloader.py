@@ -176,8 +176,8 @@ def collect_requests(inv, time0, time1, days_per_request=3,
 
     # Filter by preferred channels if specified
     if cha_pref or loc_pref:
-        # we're filtering by end time (time1) which is a bit more safe than start time,
-        # though still potentially an issue if the XML metadata's time ranges are poorly defined
+        # We are filtering by end time (time1) which is a bit more safe than start time,
+        #  though still potentially an issue if the XML metadata's time ranges are poorly defined
         sub_inv = get_preferred_channels(sub_inv, cha_pref, loc_pref, time1)
         if not sub_inv:
             print("ERROR in collect_requests: cha_pref and/or loc_pref removed all stations from inventory")
@@ -320,11 +320,11 @@ def select_highest_samplerate(inv, minSR=10, time=None):
     """
     if time:
         inv = inv.select(time=time)
-    
+
     for net in inv:
         for sta in net:
             channels = [ch for ch in sta.channels if ch.sample_rate >= minSR]
-            
+
             loc_groups = {}
             for channel in channels:
                 loc_code = channel.location_code
@@ -410,7 +410,7 @@ def get_preferred_channels(
         inv = inv.select(time=time)
         if not inv:
             print("ERROR in get_preferred_channels: time kwarg is filtering entire inventory "
-              "(source metadata likely malformed, try different search window?)")           
+              "(source metadata likely malformed, try different search window?)")
             return None
 
     for net in inv:
@@ -1014,10 +1014,10 @@ def archive_request(
             wc = waveform_clients['open']
 
         kwargs = {
-            'network': request[0].replace(' ','').upper(),
-            'station': request[1].replace(' ','').upper(),
-            'location': request[2].replace(' ','').upper(),
-            'channel': request[3].replace(' ','').upper(),
+            'network': request[0].strip().upper(),
+            'station': request[1].strip().upper(),
+            'location': request[2].strip().upper(),
+            'channel': request[3].strip().upper(),
             'starttime': t0,
             'endtime': t1
         }
@@ -1700,7 +1700,7 @@ def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event =
                 user=cred.username.upper(), password=cred.password)
             waveform_clients.update({cred_net:new_client})
         except:
-            print("Issue creating client: %s %s via %s:%s" % (settings.waveform.client, 
+            print("Issue creating client: %s %s via %s:%s" % (settings.waveform.client,
                 cred.nslc_code, cred.username, cred.password))
             continue
 
@@ -1778,10 +1778,10 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
     - Each stream in the output includes complete event metadata for analysis
     """
     print(f"Running run_event\n-----------------")
-    
+
     settings, db_manager = setup_paths(settings)
     waveform_client = Client(settings.waveform.client)
-    
+
     # Initialize travel time model
     try:
         ttmodel = TauPyModel(settings.event.model)
@@ -1980,7 +1980,7 @@ def run_main(
         >>> settings = SeismoLoaderSettings()
         >>> settings.download_type = DownloadType.EVENT
         >>> run_main(settings)
-        
+
         >>> # Using configuration file
         >>> run_main(from_file="config.ini")
     """

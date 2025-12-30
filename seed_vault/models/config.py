@@ -573,7 +573,7 @@ class SeismoLoaderSettings(BaseModel):
         # Create a StringIO object with the filtered content
         cfg_source = StringIO(''.join(filtered_lines))
 
-        status_handler= StatusHandler()       
+        status_handler= StatusHandler()
         config = configparser.ConfigParser()
         config.optionxform = str
 
@@ -872,10 +872,10 @@ class SeismoLoaderSettings(BaseModel):
             force_stations=force_stations,
             exclude_stations=exclude_stations,
             date_config=date_config,
-            network=network,
-            station=station,
-            location=location,
-            channel=channel,
+            network=network.replace(' ',''),
+            station=station.replace(' ',''),
+            location=location.replace(' ',''),
+            channel=channel.replace(' ',''),
             highest_samplerate_only=highest_samplerate_only, #double check this belongs here
             geo_constraint=[geo_constraint_station] if geo_constraint_station else [],
             include_restricted=include_restricted,
