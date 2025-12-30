@@ -59,8 +59,7 @@ def get_local_waveform(request: Tuple[str, str, str, str, str, str], settings: S
     stations = [s.strip().upper() for s in request[1].split(',')]
     locations = []
     if request[2]:
-        for loc in request[2].split(','):
-            loc = loc.strip().upper()
+        for loc in [x.strip().upper() for x in request[2].split(',')]:
             locations.append(loc)
     else:
         locations = ['']

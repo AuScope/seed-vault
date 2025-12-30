@@ -57,15 +57,15 @@ def safe_add_to_config(config, section, key, value):
 
     Args:
       config: Config is a dictionary that stores configuration settings. It typically has sections as
-              keys, where each section contains key-value pairs representing specific configuration 
+              keys, where each section contains key-value pairs representing specific configuration
               settings. 
 
       section: Section refers to a specific section within the configuration file 
-               where the key-value pair will be added. It helps organize and categorize different 
+               where the key-value pair will be added. It helps organize and categorize different
                settings or options within the configuration file.
 
       key: The `key` parameter in the `safe_add_to_config` function refers to the key of the key-value
-           pair that you want to add to the configuration. It is used to uniquely identify the value 
+           pair that you want to add to the configuration. It is used to uniquely identify the value
            associated with it within a specific section of the configuration.
 
       value: Value is the data that you want to add to the configuration file under the specified
@@ -105,6 +105,7 @@ def convert_to_str(val):
     except Exception as e:
         print(f"Error converting value {val}: {e}")
         return ''  # Return empty string if conversion fails
+
 
 class ProcessingConfig(BaseModel):
     """
@@ -169,7 +170,7 @@ class SeismoQuery(BaseModel):
         for item in lst_split[0:2]:
             if item == "":  # Add other validation checks here
                 raise ValueError(f"Input station code is malformed: {cmb_n_s}")
-        
+
         setattr(self, 'network', lst_split[0])
         setattr(self, 'station', lst_split[1])
 
@@ -285,7 +286,7 @@ class StationConfig(BaseModel):
         """Resets all fields to their default values."""
         self.__fields_set__.clear()
         for field_name, field in self.__fields__.items():
-            setattr(self, field_name, field.get_default())                 
+            setattr(self, field_name, field.get_default())
 
 
     # TODO: check if it makes sense to use SeismoLocation instead of separate
@@ -387,6 +388,7 @@ class PredictionData(BaseModel):
     p_arrival: datetime
     s_arrival: datetime
 
+
 class SeismoLoaderSettings(BaseModel):
     """
     The `SeismoLoaderSettings` class defines configuration settings for managing seismic data retrieval, 
@@ -467,9 +469,9 @@ class SeismoLoaderSettings(BaseModel):
             client_url_mapping=UrlMappings(),
             extra_clients={},
             auths=[],
-            waveform=WaveformConfig(), 
-            station=station_instance,  
-            event=event_instance,      
+            waveform=WaveformConfig(),
+            station=station_instance,
+            event=event_instance,
             predictions={},
             status_handler=StatusHandler(),
         )
@@ -504,7 +506,7 @@ class SeismoLoaderSettings(BaseModel):
                 return ''
             return default_val
 
-        else:            
+        else:
             if val_type == "int":
                 return int(val)
             if val_type == "float":
@@ -602,49 +604,6 @@ class SeismoLoaderSettings(BaseModel):
             status_handler =status_handler
         )
 
-    # replaced by above (for now.. see issue #321)
-    @classmethod
-    def from_cfg_file_OLD(cls, cfg_source: Union[str, IO]) -> "SeismoLoaderSettings":
-        """
-        Loads a `SeismoLoaderSettings` instance from a configuration file.
-
-        Args:
-            cfg_source (Union[str, IO]): The path to the configuration file or a file-like object.
-
-        Returns:
-            SeismoLoaderSettings: A populated instance of the class.
-        """
-        status_handler= StatusHandler()       
-        config = configparser.ConfigParser()
-        config.optionxform = str
-
-        # Load configuration file
-        cls._load_config_file(cfg_source, config)
-
-        # Parse sections
-        sds_path = cls._parse_sds_section(config, status_handler)
-        db_path = cls._parse_database_section(config, sds_path, status_handler)
-        processing_config, download_type = cls._parse_processing_section(config, status_handler)
-        lst_auths = cls._parse_auth_section(config, status_handler)
-        waveform = cls._parse_waveform_section(config, status_handler)
-        station_config = cls._parse_station_section(config, status_handler)
-        event_config = cls._parse_event_section(config, status_handler, download_type)
-
-        # status_handler.display()
-
-        # Return the populated SeismoLoaderSettings
-        return cls(
-            sds_path=sds_path,
-            db_path=db_path,
-            download_type=download_type,
-            processing=processing_config,
-            auths=lst_auths,
-            waveform=waveform,
-            station=station_config,
-            event=event_config,
-            status_handler =status_handler
-        )
-
     @classmethod
     def _load_config_file(cls, cfg_source, config):
         if isinstance(cfg_source, str):
@@ -668,7 +627,7 @@ class SeismoLoaderSettings(BaseModel):
             return sds_path
         except Exception as e:
             status_handler.add_error("input_parameters" , f"Error parsing [SDS] section: {str(e)}")
-            return None            
+            return None
 
     @classmethod
     def _parse_database_section(cls, config, sds_path, status_handler):
@@ -809,7 +768,7 @@ class SeismoLoaderSettings(BaseModel):
             section=station_section,
             key='station',
             default="*",
-            status_handler =status_handler,
+            status_handler=status_handler,
             error_message=f"'station' is missing in the [{station_section}] section. Please specify a station.",
             warning_message=f"'station' is empty in the [{station_section}] section. Defaulting to '*'."
         )
@@ -819,7 +778,7 @@ class SeismoLoaderSettings(BaseModel):
             section=station_section,
             key='location',
             default="*",
-            status_handler =status_handler,
+            status_handler=status_handler,
             error_message=f"'location' is missing in the [{station_section}] section. Please specify a location.",
             warning_message=f"'location' is empty in the [{station_section}] section. Defaulting to '*'."
         )
@@ -829,7 +788,7 @@ class SeismoLoaderSettings(BaseModel):
             section=station_section,
             key='channel',
             default="?H?,?N?",
-            status_handler =status_handler,
+            status_handler=status_handler,
             error_message=f"'channel' is missing in the [{station_section}] section. Please specify a channel.",
             warning_message=f"'channel' is empty in the [{station_section}] section. Defaulting to '?H?,?N?'.",
             # validation_fn=lambda x: bool(re.match(r'^(\?[\w]\?,?)+$', x))
@@ -862,12 +821,18 @@ class SeismoLoaderSettings(BaseModel):
         geo_constraint_station = cls._parse_geo_constraint(cls, config, 'STATION', status_handler)
 
         # Parse force_stations (can be network.station.location.channel)
-        force_stations_cmb_n_s = config.get(station_section, 'force_stations', fallback='').split(',')
-        force_stations = [SeismoQuery(cmb_str_n_s=cmb_n_s,starttime=start_time,endtime=end_time) for cmb_n_s in force_stations_cmb_n_s if cmb_n_s.strip()]
+        force_stations = [
+            SeismoQuery(cmb_str_n_s=s.strip(), starttime=start_time, endtime=end_time)
+            for s in config.get(station_section, 'force_stations', fallback='').split(',')
+            if s.strip()
+        ]
 
         # Parse exclude_stations (just network.station)
-        exclude_stations_cmb_n_s = config.get(station_section, 'exclude_stations', fallback='').split(',')
-        exclude_stations = [SeismoQuery(cmb_str_n_s=cmb_n_s) for cmb_n_s in exclude_stations_cmb_n_s if cmb_n_s.strip()]
+        exclude_stations = [
+            SeismoQuery(cmb_str_n_s=s.strip())
+            for s in config.get(station_section, 'exclude_stations', fallback='').split(',')
+            if s.strip()
+        ]
 
         # Parse local_inventory
         local_inventory = cls.parse_optional(config.get(station_section, 'local_inventory', fallback=None))

@@ -725,8 +725,8 @@ def get_missing_from_request(db_manager, eq_id: str, requests: List[Tuple], st: 
         station_key = f"{net}.{sta}"
 
         # Split location and channel if comma-separated
-        locations = loc.split(',') if ',' in loc else [loc]
-        channels = cha.split(',') if ',' in cha else [cha]
+        locations = [x.strip() for x in loc.split(',')]
+        channels = [x.strip() for x in cha.split(',')]
 
         missing_channels = []
         total_combinations = 0
@@ -1014,10 +1014,10 @@ def archive_request(
             wc = waveform_clients['open']
 
         kwargs = {
-            'network': request[0].upper(),
-            'station': request[1].upper(),
-            'location': request[2].upper(),
-            'channel': request[3].upper(),
+            'network': request[0].replace(' ','').upper(),
+            'station': request[1].replace(' ','').upper(),
+            'location': request[2].replace(' ','').upper(),
+            'channel': request[3].replace(' ','').upper(),
             'starttime': t0,
             'endtime': t1
         }
@@ -1029,7 +1029,7 @@ def archive_request(
         # Handle long station lists
         if len(request[1]) > 24:
             st = Stream()
-            split_stations = request[1].split(',')
+            split_stations = [x.strip() for x in request[1].split(',')]
             for s in split_stations:
                 try:
                     st += wc.get_waveforms(
