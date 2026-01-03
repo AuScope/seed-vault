@@ -1063,8 +1063,14 @@ class SeismoLoaderSettings(BaseModel):
         try:
             value = config.get(section, key, fallback=None)
             if value is None:  # Key is missing
-                if error_message and status_handler:
-                    status_handler.add_error("input_parameters", error_message)
+                if default is not None:
+                    # have default, so just warn
+                    if warning_message and status_handler:
+                        status_handler.add_warning("input_parameters", warning_message)
+                else:
+                    # no default! definitely an error
+                    if error_message and status_handler:
+                        status_handler.add_error("input_parameters", error_message)
                 return default
             value = value.strip()
             if not value:  # Value is empty
