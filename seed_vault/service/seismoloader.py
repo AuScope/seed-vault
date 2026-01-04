@@ -916,7 +916,7 @@ def prune_requests(
                              start_time.isoformat(), end_time.isoformat()))
 
                         # Update our in-memory cache
-                        existing_data[key] = [(UTCDateTime(r[0]), UTCDateTime(r[1])) 
+                        existing_data[key] = [(UTCDateTime(r[0]), UTCDateTime(r[1]))
                                               for r in cursor.fetchall()]
 
                 # Now that database is updated, identify gaps

@@ -30,10 +30,10 @@ def stream_to_db_elements(st: Stream) -> List[Tuple[str, str, str, str, str, str
     Convert an ObsPy Stream object to multiple database element tuples, properly handling gaps.
     Creates database elements from a stream, assuming all traces have the same 
     Network-Station-Location-Channel (NSLC) codes (e.g. an SDS file).
-    
+
     Args:
         st: ObsPy Stream object containing seismic traces.
-    
+
     Returns:
         List[Tuple[str, str, str, str, str, str]]: A list of tuples, each containing:
             - network: Network code
@@ -43,7 +43,7 @@ def stream_to_db_elements(st: Stream) -> List[Tuple[str, str, str, str, str, str
             - start_time: ISO format start time
             - end_time: ISO format end time
             Returns empty list if stream is empty.
-    
+
     Example:
         >>> stream = obspy.read()
         >>> elements = stream_to_db_element(stream)
@@ -53,21 +53,21 @@ def stream_to_db_elements(st: Stream) -> List[Tuple[str, str, str, str, str, str
     if len(st) == 0:
         print("Warning: Empty stream provided")
         return []
-    
+
     # Sort traces by start time
     st.sort(['starttime'])
-    
+
     # Get NSLC codes from the first trace (assuming all are the same)
     network = st[0].stats.network
     station = st[0].stats.station
     location = st[0].stats.location
     channel = st[0].stats.channel
-    
+
     # Group continuous segments
     elements = []
     current_segment_start = st[0].stats.starttime
     current_segment_end = st[0].stats.endtime
-    
+
     for i in range(1, len(st)):
         # If there's a gap, add the current segment and start a new one
         if st[i].stats.starttime > current_segment_end:
@@ -76,16 +76,16 @@ def stream_to_db_elements(st: Stream) -> List[Tuple[str, str, str, str, str, str
                 current_segment_start.isoformat(), current_segment_end.isoformat()
             ))
             current_segment_start = st[i].stats.starttime
-        
+
         # Update the end time of the current segment
         current_segment_end = max(current_segment_end, st[i].stats.endtime)
-    
+
     # Add the final segment
     elements.append((
         network, station, location, channel,
         current_segment_start.isoformat(), current_segment_end.isoformat()
     ))
-    
+
     return elements
 
 
@@ -121,9 +121,9 @@ def miniseed_to_db_elements(file_path: str) -> Optional[Tuple[str, str, str, str
         parts = file.split('.')
         if len(parts) != 7:
             return []  # Skip files that don't match expected format
-        
+
         network, station, location, channel, _, year, dayfolder = parts
-        
+
         # Read the file to get actual start and end times
         st = streamread(file_path, headonly=True)
 
@@ -202,7 +202,7 @@ def populate_database_from_sds(sds_path, db_path,
     if num_processes > 1:
         try:
             with multiprocessing.Pool(processes=num_processes) as pool:
-                results = list(tqdm(pool.imap(miniseed_to_db_elements, file_paths), 
+                results = list(tqdm(pool.imap(miniseed_to_db_elements, file_paths),
                               total=total_files, desc="Processing files"))
                 to_insert_db = [item for sublist in results for item in sublist]
 
@@ -294,33 +294,33 @@ def populate_database_from_files(cursor, file_paths=[]):
         except Exception as e:
             print(f"error in miniseed_to_db_elements: {fp}")
             continue
-        
+
         for result in results:  # Process each tuple in the list
             if not result or len(result) != 6:
                 print(f"populate_database_from_files: invalid result: {result}")
             else:
                 network, station, location, channel, start_timestamp, end_timestamp = result
-                
+
                 # First check for existing overlapping spans
                 cursor.execute('''
                     SELECT starttime, endtime FROM archive_data
                     WHERE network = ? AND station = ? AND location = ? AND channel = ?
                     AND NOT (endtime < ? OR starttime > ?)
                 ''', (network, station, location, channel, start_timestamp, end_timestamp))
-                
+
                 overlaps = cursor.fetchall()
                 if overlaps:
                     # Merge with existing spans
                     start_timestamp = min(start_timestamp, min(row[0] for row in overlaps))
                     end_timestamp = max(end_timestamp, max(row[1] for row in overlaps))
-                    
+
                     # Delete overlapping spans
                     cursor.execute('''
                         DELETE FROM archive_data
                         WHERE network = ? AND station = ? AND location = ? AND channel = ?
                         AND NOT (endtime < ? OR starttime > ?)
                     ''', (network, station, location, channel, start_timestamp, end_timestamp))
-                
+
                 # Insert the new or merged span
                 cursor.execute('''
                     INSERT INTO archive_data
@@ -359,6 +359,7 @@ class DatabaseManager:
         parent_dir = Path(db_path).parent
         parent_dir.mkdir(parents=True, exist_ok=True)
         self.setup_database()
+        self.add_missing_indexes()
 
 
     @contextlib.contextmanager
@@ -378,7 +379,7 @@ class DatabaseManager:
         """
         retry_count = 0
         delay = initial_delay
-        
+
         while retry_count < max_retries:
             try:
                 conn = sqlite3.connect(self.db_path, timeout=20)
@@ -414,7 +415,7 @@ class DatabaseManager:
         Initialize database schema with required tables and indices."""
         with self.connection() as conn:
             cursor = conn.cursor()
-            
+
             # Create archive_data table
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS archive_data (
@@ -428,13 +429,19 @@ class DatabaseManager:
                     importtime REAL
                 )
             ''')
-            
+
             # Create index for archive_data
             cursor.execute('''
                 CREATE INDEX IF NOT EXISTS idx_archive_data 
                 ON archive_data (network, station, location, channel, starttime, endtime, importtime)
             ''')
-            
+
+            # Create additional index for batch queries / pruning requests
+            cursor.execute('''
+                CREATE INDEX IF NOT EXISTS idx_archive_network_time
+                ON archive_data (network, endtime, starttime)
+            ''')
+
             # Create arrival_data table
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS arrival_data (
@@ -469,6 +476,29 @@ class DatabaseManager:
             ''')
 
 
+    def add_missing_indexes(self):
+        """Add any indexes that may be missing from older databases."""
+        with self.connection() as conn:
+            cursor = conn.cursor()
+
+            cursor.execute('''
+                CREATE INDEX IF NOT EXISTS idx_archive_data 
+                ON archive_data (network, station, location, channel, starttime, endtime, importtime)
+            ''')
+
+            cursor.execute('''
+                CREATE INDEX IF NOT EXISTS idx_archive_network_time
+                ON archive_data (network, endtime, starttime)
+            ''')
+
+            cursor.execute('''
+                CREATE INDEX IF NOT EXISTS idx_arrival_by_station_event
+                ON arrival_data (resource_id, s_netcode, s_stacode)
+            ''') 
+
+            # Update statistics so the query planner knows about the new index
+            cursor.execute("ANALYZE archive_data")
+
     def display_contents(
         self, table_name: str, start_time: Union[int, float, datetime, UTCDateTime] = 0,
         end_time: Union[int, float, datetime, UTCDateTime] = 4102444799, limit: int = 100):
@@ -494,7 +524,7 @@ class DatabaseManager:
             
             cursor.execute(f"PRAGMA table_info({table_name})")
             columns = [col[1] for col in cursor.fetchall()]
-            
+
             query = """
                 SELECT * FROM {table_name}
                 WHERE importtime BETWEEN ? AND ?
@@ -502,16 +532,16 @@ class DatabaseManager:
                 LIMIT ?
             """
             cursor.execute(query, (start_timestamp, end_timestamp, limit))
-            
+
             results = cursor.fetchall()
-            
+
             print(f"\nContents of {table_name} (limited to {limit} rows):")
             print("=" * 80)
             print(" | ".join(columns))
             print("=" * 80)
             for row in results:
                 print(" | ".join(str(item) for item in row))
-            
+
             print(f"\nTotal rows: {len(results)}")
 
 
@@ -590,23 +620,23 @@ class DatabaseManager:
         """
         with self.connection() as conn:
             cursor = conn.cursor()
-            
+
             cursor.execute('''
                 SELECT id, network, station, location, channel, starttime, endtime, importtime
                 FROM archive_data
                 ORDER BY network, station, location, channel, starttime
             ''')
-            
+
             all_data = cursor.fetchall()
             to_delete = []
             to_update = []
             current_segment = None
-            
+
             for row in all_data:
                 id, network, station, location, channel, starttime, endtime, importtime = row
                 starttime = UTCDateTime(starttime)
                 endtime = UTCDateTime(endtime)
-                
+
                 if current_segment is None:
                     current_segment = list(row)
                 else:
@@ -615,23 +645,23 @@ class DatabaseManager:
                         location == current_segment[3] and
                         channel == current_segment[4] and
                         starttime - UTCDateTime(current_segment[6]) <= gap_tolerance):
-                        
+
                         current_segment[6] = max(endtime, UTCDateTime(current_segment[6])).isoformat()
                         current_segment[7] = max(importtime, current_segment[7]) if importtime and current_segment[7] else None
                         to_delete.append(id)
                     else:
                         to_update.append(tuple(current_segment))
                         current_segment = list(row)
-            
+
             if current_segment:
                 to_update.append(tuple(current_segment))
-            
+
             cursor.executemany('''
                 UPDATE archive_data
                 SET endtime = ?, importtime = ?
                 WHERE id = ?
             ''', [(row[6], row[7], row[0]) for row in to_update])
-            
+
             if to_delete:
                 for i in range(0, len(to_delete), 500):
                     chunk = to_delete[i:i + 500]
@@ -659,7 +689,7 @@ class DatabaseManager:
         modify_commands = {'INSERT', 'UPDATE', 'DELETE', 'DROP', 'CREATE', 'ALTER', 'TRUNCATE'}
         first_word = query.strip().split()[0].upper()
         is_select = first_word == 'SELECT'
-        
+
         try:
             with self.connection() as conn:
                 if is_select:
@@ -668,11 +698,11 @@ class DatabaseManager:
                 else:
                     cursor = conn.cursor()
                     cursor.execute(query)
-                    
+
                     if first_word in modify_commands:
                         return False, f"Query executed successfully. Rows affected: {cursor.rowcount}", None
                     return False, "Query executed successfully.", None
-                    
+
         except Exception as e:
             return True, f"Error executing query: {str(e)}", None
 
@@ -694,13 +724,13 @@ class DatabaseManager:
             cursor = conn.cursor()
             now = int(datetime.now().timestamp())
             archive_list = [tuple(list(ele) + [now]) for ele in archive_list if ele is not None]
-            
+
             cursor.executemany('''
                 INSERT OR REPLACE INTO archive_data
                 (network, station, location, channel, starttime, endtime, importtime)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             ''', archive_list)
-            
+
             return cursor.rowcount
 
 
@@ -723,18 +753,18 @@ class DatabaseManager:
                       's_netcode', 's_stacode', 's_lat', 's_lon', 's_elev', 's_start', 's_end',
                       'dist_deg', 'dist_km', 'azimuth', 'p_arrival', 's_arrival', 'model',
                       'importtime']
-            
+
             placeholders = ', '.join(['?' for _ in columns])
             query = f'''
                 INSERT OR REPLACE INTO arrival_data
                 ({', '.join(columns)})
                 VALUES ({placeholders})
             '''
-            
+
             now = int(datetime.now().timestamp())
             arrival_list = [tuple(list(ele) + [now]) for ele in arrival_list]
             cursor.executemany(query, arrival_list)
-            
+
             return cursor.rowcount
 
 
@@ -751,7 +781,7 @@ class DatabaseManager:
             location (str): Location code
             channel (str): Channel code
             start/endtime (str): Time in iso
-        
+
         Returns:
             bool: True if data exists for the specified parameters, False otherwise
         """
@@ -761,7 +791,7 @@ class DatabaseManager:
         # Use the connection context manager from the DatabaseManager
         with self.connection() as conn:
             cursor = conn.cursor()
-            
+
             # Query to check if any record spans the given time point
             query = """
                 SELECT COUNT(*) FROM archive_data
@@ -772,11 +802,11 @@ class DatabaseManager:
                 AND starttime <= ?
                 AND endtime >= ?
             """
-            
+
             cursor.execute(query, (netcode, stacode, location, channel, starttime, endtime))
             count = cursor.fetchone()[0]
             
-            return count > 0        
+            return count > 0
 
 
     def get_arrival_data(
