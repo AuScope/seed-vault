@@ -824,16 +824,21 @@ def prune_requests(
 
         # Process each network as a batch
         for network, network_requests in requests_by_network.items():
+            # Get set of unique stations per network
+            stations = list(set(req[1] for req in network_requests))
+
             # Find min and max times for this batch to reduce query range
             min_start = min(UTCDateTime(req[4]) for req in network_requests)
             max_end = max(UTCDateTime(req[5]) for req in network_requests)
 
             # Get all relevant data in one query
+            placeholders = ','.join('?' * len(stations))
             cursor.execute('''
                 SELECT network, station, location, channel, starttime, endtime 
                 FROM archive_data
-                WHERE network = ? AND endtime >= ? AND starttime <= ?
-            ''', (network, min_start.isoformat(), max_end.isoformat()))
+                WHERE network = ? AND station IN ({placeholders})
+                AND endtime >= ? AND starttime <= ?
+            ''', (network, *stations, min_start.isoformat(), max_end.isoformat()))
 
             # Organize existing data by (station, location, channel)
             existing_data = {}

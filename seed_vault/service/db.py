@@ -438,8 +438,8 @@ class DatabaseManager:
 
             # Create additional index for batch queries / pruning requests
             cursor.execute('''
-                CREATE INDEX IF NOT EXISTS idx_archive_network_time
-                ON archive_data (network, endtime, starttime)
+                CREATE INDEX IF NOT EXISTS idx_archive_netsta_time
+                ON archive_data (network, station, endtime, starttime)
             ''')
 
             # Create arrival_data table
@@ -487,8 +487,8 @@ class DatabaseManager:
             ''')
 
             cursor.execute('''
-                CREATE INDEX IF NOT EXISTS idx_archive_network_time
-                ON archive_data (network, endtime, starttime)
+                CREATE INDEX IF NOT EXISTS idx_archive_netsta_time 
+                ON archive_data (network, station, endtime, starttime)
             ''')
 
             cursor.execute('''
