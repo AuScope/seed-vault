@@ -16,7 +16,7 @@ import numpy as np
 import threading
 import random
 from typing import Any, Dict, List, Tuple, Optional, Union
-from collections import defaultdict
+from collections import defaultdict, Counter
 import warnings
 
 from obspy import UTCDateTime
@@ -651,7 +651,7 @@ def combine_requests(
     if not requests:
         return []
 
-    # apply a hard limit. events may be OK for many stations
+    # Apply a hard limit. events may be OK for many stations
     if max_stations_per_day is None or max_stations_per_day > 25:
         max_stations_per_day = 25
 
@@ -833,7 +833,7 @@ def prune_requests(
 
             # Get all relevant data in one query
             placeholders = ','.join('?' * len(stations))
-            cursor.execute('''
+            cursor.execute(f'''
                 SELECT network, station, location, channel, starttime, endtime 
                 FROM archive_data
                 WHERE network = ? AND station IN ({placeholders})
@@ -948,6 +948,29 @@ def prune_requests(
                         if current_time < end_time:
                             gaps.append((current_time, end_time))
 
+                        # If too many gaps (3?) in the same day, just request the whole day
+                        if len(gaps) > 3:
+                            day_gap_counts = Counter(g[0].date for g in gaps)
+                            fragmented_days = {day for day, count in day_gap_counts.items() if count > 3}
+
+                            if fragmented_days:
+                                consolidated_gaps = []
+                                added_days = set()
+
+                                for gap_start, gap_end in gaps:
+                                    day = gap_start.date
+                                    if day in fragmented_days:
+                                        if day not in added_days:
+                                            # Expand to full day (within original request bounds)
+                                            day_start = max(start_time, UTCDateTime(day))
+                                            day_end = min(end_time, UTCDateTime(day) + 86400)
+                                            consolidated_gaps.append((day_start, day_end))
+                                            added_days.add(day)
+                                    else:
+                                        consolidated_gaps.append((gap_start, gap_end))
+
+                                gaps = consolidated_gaps
+
                         # Add requests per appropriate gap
                         for gap_start, gap_end in gaps:
                             if gap_end - gap_start >= min_request_window:
@@ -1000,7 +1023,6 @@ def archive_request(
         >>> archive_request(request, clients, "/data/seismic", db_manager)
     """
     try:
-
         t0 = UTCDateTime(request[4])
         t1 = UTCDateTime(request[5])
 
@@ -1027,7 +1049,7 @@ def archive_request(
             'endtime': t1
         }
 
-        # if possible, do not request anything under three seconds
+        # If possible, do not request anything under three seconds
         if 'minimumlength' in wc.services['dataselect'].keys():
             kwargs['minimumlength'] = 3.0
 
@@ -1711,7 +1733,7 @@ def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event =
 
     # Archive to disk and updated database
     for request in combined_requests:
-        print(" ")    
+        print(" ")
         print("Requesting: ", request)
         sleep(0.05) # to help ctrl-C out if needed
         try:
