@@ -69,16 +69,15 @@ def stream_to_db_elements(st: Stream) -> List[Tuple[str, str, str, str, str, str
     current_segment_end = st[0].stats.endtime
 
     for i in range(1, len(st)):
-        # If there's a gap, add the current segment and start a new one
         if st[i].stats.starttime > current_segment_end:
             elements.append((
                 network, station, location, channel,
                 current_segment_start.isoformat(), current_segment_end.isoformat()
             ))
             current_segment_start = st[i].stats.starttime
-
-        # Update the end time of the current segment
-        current_segment_end = max(current_segment_end, st[i].stats.endtime)
+            current_segment_end = st[i].stats.endtime
+        else:
+            current_segment_end = max(current_segment_end, st[i].stats.endtime)
 
     # Add the final segment
     elements.append((
@@ -89,7 +88,7 @@ def stream_to_db_elements(st: Stream) -> List[Tuple[str, str, str, str, str, str
     return elements
 
 
-def miniseed_to_db_elements(file_path: str) -> Optional[Tuple[str, str, str, str, str, str]]:
+def miniseed_to_db_elements(file_path: str) -> List[Tuple[str, str, str, str, str, str]]:
     """
     Convert a miniseed file to a database element tuple.
 
@@ -100,14 +99,14 @@ def miniseed_to_db_elements(file_path: str) -> Optional[Tuple[str, str, str, str
         file_path: Path to the miniseed file.
 
     Returns:
-        Optional[Tuple[str, str, str, str, str, str]]: A tuple containing:
+        List[Tuple[str, str, str, str, str, str]]: A tuple containing:
             - network: Network code
             - station: Station code
             - location: Location code
             - channel: Channel code
             - start_time: ISO format start time
             - end_time: ISO format end time
-            Returns None if file is invalid or cannot be processed.
+            Returns empty list [] if file is invalid or cannot be processed.
 
     Example:
         >>> element = miniseed_to_db_element("/path/to/IU.ANMO.00.BHZ.D.2020.001")
@@ -129,7 +128,7 @@ def miniseed_to_db_elements(file_path: str) -> Optional[Tuple[str, str, str, str
 
         db_elements = stream_to_db_elements(st)
     
-        return db_elements #this is now a list of tuples
+        return db_elements # this is now a list of tuples
     
     except Exception as e:
         print(f"Error processing file {file_path}: {str(e)}")
@@ -603,7 +602,7 @@ class DatabaseManager:
 
         with self.connection() as conn:
             cursor = conn.cursor()
-            query = """
+            query = f"""
                 DELETE FROM {table_name}
                 WHERE importtime >= ? AND importtime <= ?
             """
@@ -785,8 +784,6 @@ class DatabaseManager:
         Returns:
             bool: True if data exists for the specified parameters, False otherwise
         """
-
-        time_point = datetime.fromisoformat(starttime) + timedelta(seconds=5) # just 5 seconds in is fine
         
         # Use the connection context manager from the DatabaseManager
         with self.connection() as conn:

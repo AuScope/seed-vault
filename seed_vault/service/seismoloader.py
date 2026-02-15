@@ -732,31 +732,34 @@ def get_missing_from_request(db_manager, eq_id: str, requests: List[Tuple], st: 
         total_combinations = 0
         missing_combinations = 0
 
+        # Build lookup set once for the stream, for speed
+        trace_keys = {
+            (tr.stats.network, tr.stats.station, tr.stats.location, tr.stats.channel) 
+            for tr in st
+        }
+
         # Check all combinations
         for location in locations:
+            loc_normalized = location if location else ''
             for channel in channels:
                 total_combinations += 1
-                # Look for matching trace
                 found_match = False
 
-                for tr in st:
+                # Check stream (fast lookup)
+                # Handle fnmatch patterns in channel
+                if '*' in channel or '?' in channel:
+                    # Fall back to iteration only for wildcard patterns
+                    found_match = any(
+                        k[0] == net and k[1] == sta and k[2] == loc_normalized and fnmatch.fnmatch(k[3], channel)
+                        for k in trace_keys
+                    )
+                else:
+                    found_match = (net, sta, loc_normalized, channel) in trace_keys
 
-                    # check the recently downloaded stream
-                    if (tr.stats.network == net and 
-                        tr.stats.station == sta and
-                        tr.stats.location == (location if location else '') and
-                        fnmatch.fnmatch(tr.stats.channel, channel)):
-                        found_match = True
-                        break
-
-                    # also check the database
-                    if db_manager.check_data_existence(tr.stats.network,
-                                                    tr.stats.station,
-                                                    tr.stats.location,
-                                                    tr.stats.channel,
-                                                    t0,t1):
-                        found_match = True
-                        break
+                if not found_match:
+                    found_match = db_manager.check_data_existence(
+                        net, sta, loc_normalized, channel, t0, t1
+                    )
 
                 if not found_match:
                     missing_combinations += 1
@@ -832,7 +835,7 @@ def prune_requests(
             max_end = max(UTCDateTime(req[5]) for req in network_requests)
 
             # Get all relevant data in one query
-            placeholders = ','.join('?' * len(stations))
+            placeholders = ','.join('?' for _ in stations)
             cursor.execute(f'''
                 SELECT network, station, location, channel, starttime, endtime 
                 FROM archive_data
@@ -848,7 +851,10 @@ def prune_requests(
                     existing_data[key] = []
                 existing_data[key].append((UTCDateTime(row[4]), UTCDateTime(row[5])))
 
-            # Process each request with the pre-fetched data
+            # Collect all files that need database updates
+            files_to_process = []
+            requests_needing_file_check = []
+
             for req in network_requests:
                 network, station, location, channel, start_str, end_str = req
                 start_time = UTCDateTime(start_str)
@@ -858,25 +864,17 @@ def prune_requests(
                     continue
 
                 key = (station, location, channel)
-
-                # First check if we need to look at the filesystem
-                # We'll do this regardless of whether the key exists or not in existing_data
                 need_to_check_files = True
 
-                # If we have data for this key, check if it fully covers our request
+                # Check if fully covered by existing data
                 if key in existing_data and existing_data[key]:
-                    # Check if this request is fully covered by existing data
                     relevant_intervals = [
                         (db_start, db_end) for db_start, db_end in existing_data[key]
                         if not (db_end <= start_time or db_start >= end_time)
                     ]
 
-                    # If we have complete coverage, we don't need to look for files
                     if relevant_intervals:
                         relevant_intervals.sort(key=lambda x: x[0])
-
-                        # Analyze coverage by merging overlapping intervals
-                        full_coverage = False
                         merged_intervals = []
                         for interval in relevant_intervals:
                             if not merged_intervals:
@@ -884,47 +882,45 @@ def prune_requests(
                             else:
                                 last_end = merged_intervals[-1][1]
                                 if interval[0] <= last_end:
-                                    # Overlap found, merge intervals
                                     merged_intervals[-1] = (merged_intervals[-1][0], max(last_end, interval[1]))
                                 else:
-                                    # No overlap, add as new interval
                                     merged_intervals.append(interval)
 
-                        # Check if a single merged interval covers our entire request
                         for merged_start, merged_end in merged_intervals:
                             if merged_start <= start_time and merged_end >= end_time:
-                                full_coverage = True
+                                need_to_check_files = False
                                 break
 
-                        if full_coverage:
-                            need_to_check_files = False
-
-                # Look for files in the SDS archive if necessary
                 if need_to_check_files:
                     file_paths = get_sds_filenames(
-                        network, station, location, channel, 
+                        network, station, location, channel,
                         start_time, end_time, sds_path
                     )
-
-                    # If files exist, update the database and our in-memory cache
                     if file_paths:
-                        # Update database with newly found files
-                        populate_database_from_files(cursor, file_paths=file_paths)
+                        files_to_process.extend(file_paths)
+                    requests_needing_file_check.append((req, key, start_time, end_time))
 
-                        # Refresh our data for this key from the database
-                        cursor.execute('''
-                            SELECT starttime, endtime FROM archive_data
-                            WHERE network = ? AND station = ? AND location = ? AND channel = ?
-                            AND endtime >= ? AND starttime <= ?
-                            ORDER BY starttime
-                        ''', (network, station, location, channel,
-                             start_time.isoformat(), end_time.isoformat()))
+            # Batch update database with all discovered files
+            if files_to_process:
+                # Deduplicate file paths
+                files_to_process = list(set(files_to_process))
+                populate_database_from_files(cursor, file_paths=files_to_process)
 
-                        # Update our in-memory cache
-                        existing_data[key] = [(UTCDateTime(r[0]), UTCDateTime(r[1]))
-                                              for r in cursor.fetchall()]
+                # Refresh all affected keys
+                affected_keys = set(r[1] for r in requests_needing_file_check)
+                for key in affected_keys:
+                    station, location, channel = key
+                    cursor.execute('''
+                        SELECT starttime, endtime FROM archive_data
+                        WHERE network = ? AND station = ? AND location = ? AND channel = ?
+                        ORDER BY starttime
+                    ''', (network, station, location, channel))
+                    existing_data[key] = [(UTCDateTime(r[0]), UTCDateTime(r[1])) for r in cursor.fetchall()]
 
-                # Now that database is updated, identify gaps
+            # Identify gaps for all requests
+            for req, key, start_time, end_time in requests_needing_file_check:
+                network, station, location, channel, _, _ = req
+
                 if key in existing_data and existing_data[key]:
                     relevant_intervals = [
                         (db_start, db_end) for db_start, db_end in existing_data[key]
@@ -932,12 +928,11 @@ def prune_requests(
                     ]
 
                     if not relevant_intervals:
-                        # No coverage at all, add the full request
                         pruned_requests.append(req)
                     else:
                         relevant_intervals.sort(key=lambda x: x[0])
 
-                        # Find gaps in coverage
+                        # Find gaps
                         current_time = start_time
                         gaps = []
                         for db_start, db_end in relevant_intervals:
@@ -948,39 +943,25 @@ def prune_requests(
                         if current_time < end_time:
                             gaps.append((current_time, end_time))
 
-                        # If too many gaps (3?) in the same day, just request the whole day
-                        if len(gaps) > 3:
-                            day_gap_counts = Counter(g[0].date for g in gaps)
-                            fragmented_days = {day for day, count in day_gap_counts.items() if count > 3}
-
-                            if fragmented_days:
-                                consolidated_gaps = []
-                                added_days = set()
-
-                                for gap_start, gap_end in gaps:
-                                    day = gap_start.date
-                                    if day in fragmented_days:
-                                        if day not in added_days:
-                                            # Expand to full day (within original request bounds)
-                                            day_start = max(start_time, UTCDateTime(day))
-                                            day_end = min(end_time, UTCDateTime(day) + 86400)
-                                            consolidated_gaps.append((day_start, day_end))
-                                            added_days.add(day)
-                                    else:
-                                        consolidated_gaps.append((gap_start, gap_end))
-
-                                gaps = consolidated_gaps
-
-                        # Add requests per appropriate gap
-                        for gap_start, gap_end in gaps:
-                            if gap_end - gap_start >= min_request_window:
+                        # Generate requests: consolidate if too many gaps
+                        if len(gaps) > 4:
+                            # Too many, request the full range once
+                            if end_time - start_time >= min_request_window:
                                 pruned_requests.append((
                                     network, station, location, channel,
-                                    gap_start.isoformat(),
-                                    gap_end.isoformat()
+                                    start_time.isoformat(),
+                                    end_time.isoformat()
                                 ))
+                        else:
+                            # Re-request each individually
+                            for gap_start, gap_end in gaps:
+                                if gap_end - gap_start >= min_request_window:
+                                    pruned_requests.append((
+                                        network, station, location, channel,
+                                        gap_start.isoformat(),
+                                        gap_end.isoformat()
+                                    ))
                 else:
-                    # No data found in database or files, add the entire request
                     pruned_requests.append(req)
 
     if pruned_requests:
@@ -1140,7 +1121,7 @@ def archive_request(
                 if existing_st:
                     print(f"  ... Merging {full_path}")
             except Exception as e:
-                print(f"! Could not read {full_path}:\n {e}")
+                print(f"! Could not read {full_path}:\n{e}")
                 continue
         else:
             existing_st = day_stream
@@ -1162,9 +1143,9 @@ def archive_request(
                         existing_st.write(full_path, format="MSEED")
                         to_insert_db.extend(stream_to_db_elements(existing_st))
                     except Exception as e:
-                        print(f"Failed to write uncompressed MSEED to {full_path}:\n {e}")
+                        print(f"Failed to write uncompressed MSEED to {full_path}:\n{e}")
                 else:
-                    print(f"Failed to write {full_path}:\n {e}")
+                    print(f"Failed to write {full_path}:\n{e}")
 
     # Update database
     try:
@@ -1739,7 +1720,7 @@ def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event =
         try:
             archive_request(request, waveform_clients, settings.sds_path, db_manager)
         except Exception as e:
-            print(f"Continuous request not successful: {request} with exception:\n {e}")
+            print(f"Continuous request not successful: {request} with exception:\n{e}")
             continue
 
         # Check for cancellation before each individual request
@@ -1755,7 +1736,7 @@ def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event =
     try:
         db_manager.join_continuous_segments(settings.processing.gap_tolerance)
     except Exception as e:
-        print(f"! Error with join_continuous_segments:\n {e}")
+        print(f"! Error with join_continuous_segments:\n{e}")
 
     return True
 
@@ -1855,14 +1836,14 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
                 settings=settings
             )
         except Exception as e:
-            print(f"Issue running collect_requests_event in run_event:\n {e}")
+            print(f"Issue running collect_requests_event in run_event:\n{e}")
 
         # Update arrival database
         if new_arrivals:
             try:
                 db_manager.bulk_insert_arrival_data(new_arrivals)
             except Exception as e:
-                print(f"Issue with run_event > bulk_insert_arrival_data:\n",{e})
+                print(f"Issue with run_event > bulk_insert_arrival_data:\n{e}")
 
         # Process data requests
         if settings.waveform.force_redownload:
@@ -1872,7 +1853,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
             try:
                 pruned_requests = prune_requests(requests, db_manager, settings.sds_path)
             except Exception as e:
-                print(f"Issue with run_event > prune_requests:\n",{e})
+                print(f"Issue with run_event > prune_requests:\n{e}")
         
         if len(requests) > 0 and not pruned_requests:
             print(f"          ... All data already archived!")
@@ -1882,7 +1863,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
             try:
                 combined_requests = combine_requests(pruned_requests, max_stations_per_day=25)
             except Exception as e:
-                print(f"Issue with run_event > combine_requests:\n",{e})
+                print(f"Issue with run_event > combine_requests:\n{e}")
 
             if not combined_requests:
                 print("DEBUG: combined requests is empty? here was pruned_requests",pruned_requests)
