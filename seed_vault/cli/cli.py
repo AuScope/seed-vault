@@ -1,5 +1,6 @@
 import click
 import os
+from seed_vault.enums.config import WorkflowType
 from seed_vault.service.seismoloader import run_main, populate_database_from_sds
 from seed_vault.analytics import init_telemetry
 from seed_vault.models.config import SeismoLoaderSettings
@@ -35,7 +36,7 @@ def cli(ctx, file_path):
     if ctx.invoked_subcommand is None:
         if file_path:
             click.echo(f"Processing file: {file_path}")
-            run_main(from_file=file_path)
+            run_main(from_file=file_path, workflow_type=WorkflowType.RUN_FROM_CLI)
         else:
             path_to_run = os.path.join(par_dir, "ui", "app.py")
             os.system(f"streamlit run {path_to_run} --server.runOnSave=true")

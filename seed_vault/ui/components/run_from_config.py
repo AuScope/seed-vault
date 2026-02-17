@@ -8,6 +8,7 @@ from pathlib import Path
 from html import escape
 from time import sleep
 
+from seed_vault.enums.config import WorkflowType
 from seed_vault.models.config import SeismoLoaderSettings
 from seed_vault.service.seismoloader import run_main
 from seed_vault.utils.constants import DOC_BASE_URL
@@ -111,7 +112,7 @@ class RunFromConfigComponent:
                 return
             
             # Run the main function with stop_event for cancellation
-            result = run_main(settings=None, from_file=from_file, stop_event=stop_event)
+            result = run_main(settings=None, from_file=from_file, stop_event=stop_event, workflow_type=WorkflowType.RUN_FROM_CONFIG)
             
             # Check again for cancellation
             if stop_event.is_set():

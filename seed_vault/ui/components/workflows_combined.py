@@ -18,7 +18,8 @@ from seed_vault.ui.app_pages.helpers.telemetry import track_page_view, track_eve
 
 
 download_options = [f.name.title() for f in DownloadType]
-workflow_options = {workflow.value: workflow for workflow in WorkflowType}
+workflow_options = {workflow.value: workflow for workflow in WorkflowType if workflow not in [WorkflowType.RUN_FROM_CONFIG, WorkflowType.RUN_FROM_CLI]}
+# workflow_options = {workflow.value: workflow for workflow in WorkflowType}
 workflow_options_list = list(workflow_options.keys())
 
 
@@ -113,14 +114,11 @@ class CombinedBasedWorkflow:
                 
                 # Track workflow start
                 track_event_once(
-                    "workflow_track", 
+                    "flow_selected", 
                     dedupe_key=f"wf_started:{self.settings.selected_workflow.value}",
                     params= {
-                        "step_idx_completed": 0,
-                        "step_name_completed": "started",
                         "workflow_type": self.settings.selected_workflow.value,
                         "download_type": self.settings.download_type.value,
-                        "download_status": "NA",
                     },
                     ttl_seconds=2,
                 )
@@ -275,14 +273,13 @@ class CombinedBasedWorkflow:
                 if self.validate_and_adjust_selection(self.settings.selected_workflow):
                     # Track progression to next stage
                     track_event_once(
-                        "workflow_track", 
+                        "search_completed", 
                         dedupe_key=f"wf_started:{self.settings.selected_workflow.value}",
                         params= {
-                            "step_idx_completed": 1,
-                            "step_name_completed": step_name,
+                            "step_idx": 1,
+                            "step_name": step_name,
                             "workflow_type": self.settings.selected_workflow.value,
                             "download_type": self.settings.download_type.value,
-                            "download_status": "NA",
                         },
                         ttl_seconds=2,
                     )
@@ -367,14 +364,13 @@ class CombinedBasedWorkflow:
                     if self.validate_and_adjust_selection(self.settings.selected_workflow):
                         # Track progression to next stage
                         track_event_once(
-                            "workflow_track", 
+                            "search_completed", 
                             dedupe_key=f"wf_started:{self.settings.selected_workflow.value}",
                             params= {
-                                "step_idx_completed": 2,
-                                "step_name_completed": step_name,
+                                "step_idx": 1,
+                                "step_name": step_name,
                                 "workflow_type": self.settings.selected_workflow.value,
                                 "download_type": self.settings.download_type.value,
-                                "download_status": "NA",
                             },
                             ttl_seconds=2,
                         )
@@ -487,14 +483,12 @@ class CombinedBasedWorkflow:
             st.session_state["_download_id"] = download_id
 
             track_event_once(
-                "workflow_track", 
+                "waveform_download_started", 
                 dedupe_key=f"wf_started:{self.settings.selected_workflow.value}",
                 params= {
-                    "step_idx_completed": 2 if flow == "continuous" else 3,
-                    "step_name_completed": "waveform_download",
+                    "step_idx": 2 if flow == "continuous" else 3,
                     "workflow_type": self.settings.selected_workflow.value,
                     "download_type": self.settings.download_type.value,
-                    "download_status": "started",
                 },
                 ttl_seconds=2,
             )
@@ -504,14 +498,12 @@ class CombinedBasedWorkflow:
         # Success detected
         if cur["success"] and not prev["success"] and download_id:
             track_event_once(
-                "workflow_track",
+                "waveform_download_completed",
                 dedupe_key=f"dl_ok:{download_id}",
                 params= {
-                    "step_idx_completed": 2 if flow == "continuous" else 3,
-                    "step_name_completed": "waveform_download",
+                    "step_idx": 2 if flow == "continuous" else 3,
                     "workflow_type": self.settings.selected_workflow.value,
                     "download_type": self.settings.download_type.value,
-                    "download_status": "succeeded",
                 }
             )
             st.session_state.pop("_download_id", None)
@@ -519,28 +511,24 @@ class CombinedBasedWorkflow:
         # Cancel detected (treat as failed for funnel)
         if cur["cancelled"] and not prev["cancelled"] and download_id:
             track_event_once(
-                "workflow_track",
+                "waveform_download_cancelled",
                 dedupe_key=f"dl_cancel:{download_id}",
                 params= {
-                    "step_idx_completed": 2 if flow == "continuous" else 3,
-                    "step_name_completed": "waveform_download",
+                    "step_idx": 2 if flow == "continuous" else 3,
                     "workflow_type": self.settings.selected_workflow.value,
                     "download_type": self.settings.download_type.value,
-                    "download_status": "cancelled",
                 }
             )
             st.session_state.pop("_download_id", None)
 
         if cur["failed"] and not prev["failed"] and download_id:
             track_event_once(
-                "workflow_track",
+                "waveform_download_failed",
                 dedupe_key=f"dl_failed:{download_id}",
                 params= {
-                    "step_idx_completed": 2 if flow == "continuous" else 3,
-                    "step_name_completed": "waveform_download",
+                    "step_idx": 2 if flow == "continuous" else 3,
                     "workflow_type": self.settings.selected_workflow.value,
                     "download_type": self.settings.download_type.value,
-                    "download_status": "failed",
                 }
             )
 

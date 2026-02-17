@@ -33,7 +33,7 @@ from obspy.io.mseed.headers import InternalMSEEDWarning
 warnings.filterwarnings("ignore", category=InternalMSEEDWarning)
 
 from seed_vault.models.config import SeismoLoaderSettings, SeismoQuery, convert_geo_to_minus180_180
-from seed_vault.enums.config import DownloadType, GeoConstraintType
+from seed_vault.enums.config import DownloadType, GeoConstraintType, WorkflowType
 from seed_vault.service.utils import is_in_enum,get_sds_filenames,to_timestamp,\
     filter_inventory_by_geo_constraints,filter_catalog_by_geo_constraints,format_error
 from seed_vault.service.db import DatabaseManager,stream_to_db_elements,miniseed_to_db_elements,\
@@ -1216,7 +1216,7 @@ def get_selected_stations_at_channel_level(settings: SeismoLoaderSettings) -> Se
     return settings
 
 
-def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
+def get_stations(settings: SeismoLoaderSettings, workflow_type: Optional[WorkflowType] = None) -> Optional[Inventory]:
     """
     Retrieve station inventory based on configured criteria.
 
@@ -1227,7 +1227,7 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
     Args:
         settings: Configuration settings containing station selection criteria,
             client information, and filtering preferences.
-
+        workflow_type: Optional workflow type to tailor station retrieval.
     Returns:
         Inventory containing matching stations, or None if no stations found
         or if station service is unavailable.
@@ -1413,7 +1413,7 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
     print("     ...got stations")
     return inv
 
-def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
+def get_events(settings: SeismoLoaderSettings, workflow_type: Optional[WorkflowType] = None) -> List[Catalog]:
     """
     Retrieve seismic event catalogs based on configured criteria.
 
@@ -1423,7 +1423,7 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
     Args:
         settings: Configuration settings containing event search criteria,
             client information, and filtering preferences.
-
+        workflow_type: Optional workflow type to tailor event retrieval.
     Returns:
         List of ObsPy Catalog objects containing matching events.
         Returns empty catalog if no events found.
@@ -1586,7 +1586,7 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
     return catalog
 
 
-def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event = None):
+def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event = None, workflow_type: Optional[WorkflowType] = None):
     """
     Retrieves continuous seismic data over long time intervals for a set of stations
     defined by the `inv` parameter. The function manages multiple steps including
@@ -1722,7 +1722,7 @@ def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event =
     return True
 
 
-def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None):
+def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None, workflow_type: Optional[WorkflowType] = None):
     """
     Processes and downloads seismic event data for each event in the provided catalog using
     the specified settings and station inventory. The function manages multiple steps including
@@ -1946,7 +1946,8 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
 def run_main(
     settings: Optional[SeismoLoaderSettings] = None,
     from_file: Optional[str] = None,
-    stop_event: threading.Event = None
+    stop_event: threading.Event = None,
+    workflow_type: Optional[WorkflowType] = None
     ) -> None:
     """Main entry point for seismic data retrieval and processing.
 
@@ -1997,13 +1998,13 @@ def run_main(
     # Process continuous data
     if download_type == DownloadType.CONTINUOUS:
         settings.station.selected_invs = get_stations(settings)
-        return run_continuous(settings, stop_event)
+        return run_continuous(settings, stop_event, workflow_type)
         # run_continuous(settings) # this doesn't return anything
 
     # Process event-based data
     if download_type == DownloadType.EVENT:
-        settings.event.selected_catalogs = get_events(settings)
-        settings.station.selected_invs = get_stations(settings)
-        event_traces, missing = run_event(settings, stop_event) # this returns a stream containing all the downloaded traces, and a dictionary of what's missing
+        settings.event.selected_catalogs = get_events(settings, workflow_type)
+        settings.station.selected_invs = get_stations(settings, workflow_type)
+        event_traces, missing = run_event(settings, stop_event, workflow_type) # this returns a stream containing all the downloaded traces, and a dictionary of what's missing
 
     return None

@@ -18,6 +18,8 @@ class WorkflowType(DescribedEnum):
     EVENT_BASED = ("Event Based - Starting from Selecting Events", "Search for events, then filter for pertinent stations")
     STATION_BASED = ("Station Based - Starting from Selecting Stations", "Search for stations, then filter for pertinent events")
     CONTINUOUS = ("Requesting Continuous Data", "Search for and download bulk continuous station data")
+    RUN_FROM_CONFIG = ("Run from Config File", "Run a workflow based on settings defined in a config file")
+    RUN_FROM_CLI = ("Run from CLI Arguments", "Run a workflow based on settings defined in CLI arguments")
 
 class GeoConstraintType(str, Enum):
     """
