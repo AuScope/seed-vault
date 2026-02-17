@@ -1,6 +1,8 @@
 import click
 import os
 from seed_vault.service.seismoloader import run_main, populate_database_from_sds
+from seed_vault.analytics import init_telemetry
+from seed_vault.models.config import SeismoLoaderSettings
 
 dirname = os.path.dirname(__file__)
 par_dir = os.path.dirname(dirname)
@@ -10,6 +12,26 @@ par_dir = os.path.dirname(dirname)
 @click.pass_context
 def cli(ctx, file_path):
     """Seed Vault CLI: A tool for seismic data processing."""
+    
+    # Initialize telemetry and track app open event
+    try:
+        # Try to load settings from file if provided, otherwise use defaults
+        if file_path:
+            settings = SeismoLoaderSettings.from_cfg_file(file_path)
+        else:
+            # Create minimal settings with defaults for telemetry
+            settings = SeismoLoaderSettings()
+        
+        db_path = settings.db_path if settings.db_path else "SVdata/database.sqlite"
+        telemetry = init_telemetry(settings, db_path)
+        
+        # Track app open event
+        telemetry.track_event("app_open")
+    except Exception as e:
+        # Don't fail CLI execution if telemetry fails
+        if os.getenv("DEBUG_TELEMETRY"):
+            print(f"[Telemetry] Failed to track app_open: {e}")
+    
     if ctx.invoked_subcommand is None:
         if file_path:
             click.echo(f"Processing file: {file_path}")
