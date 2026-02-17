@@ -46,10 +46,10 @@ class CombinedBasedWorkflow:
 
     def previous_stage(self):
         track_event_once(
-        "workflow_navigation",
-        dedupe_key=f"nav:back:{self.stage}->{self.stage-1}",
-        params={"action": "back", "from_stage": self.stage, "to_stage": self.stage - 1},
-        ttl_seconds=1,
+            "workflow_navigation",
+            dedupe_key=f"nav:back:{self.stage}->{self.stage-1}",
+            params={"action": "back", "from_stage": self.stage, "to_stage": self.stage - 1},
+            ttl_seconds=1,
         )
         self.stage -= 1
         st.rerun()
@@ -113,25 +113,35 @@ class CombinedBasedWorkflow:
                 
                 # Track workflow start
                 track_event_once(
-                "workflow_started",
-                dedupe_key=f"wf_started:{self.settings.selected_workflow.value}",
-                params={"workflow_type": self.settings.selected_workflow.value, "download_type": self.settings.download_type.value},
-                ttl_seconds=2,
+                    "workflow_track", 
+                    dedupe_key=f"wf_started:{self.settings.selected_workflow.value}",
+                    params= {
+                        "step_idx_completed": 0,
+                        "step_name_completed": "started",
+                        "workflow_type": self.settings.selected_workflow.value,
+                        "download_type": self.settings.download_type.value,
+                        "download_status": "NA",
+                    },
+                    ttl_seconds=2,
                 )
-                
+
                 if self.settings.selected_workflow == WorkflowType.EVENT_BASED:
                     self.event_components = BaseComponent(self.settings, step_type=Steps.EVENT, prev_step_type=None, stage=1)    
                     self.station_components = BaseComponent(self.settings, step_type=Steps.STATION, prev_step_type=Steps.EVENT, stage=2)    
                     self.waveform_components = WaveformComponents(self.settings)
+                    self.waveform_components.step_idx = 3
 
                 if self.settings.selected_workflow == WorkflowType.STATION_BASED:
                     self.station_components = BaseComponent(self.settings, step_type=Steps.STATION, prev_step_type=None, stage=1)   
                     self.event_components = BaseComponent(self.settings, step_type=Steps.EVENT, prev_step_type=Steps.STATION, stage=2)  
                     self.waveform_components = WaveformComponents(self.settings)
+                    self.waveform_components.step_idx = 3
 
                 if self.settings.selected_workflow == WorkflowType.CONTINUOUS:
                     self.station_components = BaseComponent(self.settings, step_type=Steps.STATION, prev_step_type=None, stage=1)
                     self.waveform_components = WaveformComponents(self.settings)
+                    self.waveform_components.step_idx = 2
+
                 self.next_stage()
 
         st.info(self.settings.selected_workflow.description)
@@ -237,14 +247,18 @@ class CombinedBasedWorkflow:
     def render_stage_1(self):
         # Add CSS to prevent scrolling on headers..
         st.markdown("<style>.stMarkdown{overflow:visible !important;}</style>", unsafe_allow_html=True)
+        step_name = "Unknown"
 
         # Track stage 1 page view
         if self.settings.selected_workflow == WorkflowType.EVENT_BASED:
             track_page_view("/main-flows/step1-event-search", "Step 1: Event Search")
+            step_name = "event_search"
         elif self.settings.selected_workflow == WorkflowType.STATION_BASED:
             track_page_view("/main-flows/step1-station-search", "Step 1: Station Search")
+            step_name = "station_search"
         elif self.settings.selected_workflow == WorkflowType.CONTINUOUS:
             track_page_view("/main-flows/step1-station-search-continuous", "Step 1: Station Search (Continuous)")
+            step_name = "station_search"
 
         c1, c2, c3 = st.columns([1, 1, 1])
         title = "Events" if self.settings.selected_workflow == WorkflowType.EVENT_BASED else "Stations"
@@ -261,12 +275,14 @@ class CombinedBasedWorkflow:
                 if self.validate_and_adjust_selection(self.settings.selected_workflow):
                     # Track progression to next stage
                     track_event_once(
-                        "workflow_step_completed",
-                        dedupe_key=f"wf_step_done:{self.settings.selected_workflow.value}:step1",
-                        params={
+                        "workflow_track", 
+                        dedupe_key=f"wf_started:{self.settings.selected_workflow.value}",
+                        params= {
+                            "step_idx_completed": 1,
+                            "step_name_completed": step_name,
                             "workflow_type": self.settings.selected_workflow.value,
-                            "step": 1,
-                            "step_name": "event_search" if self.settings.selected_workflow == WorkflowType.EVENT_BASED else "station_search",
+                            "download_type": self.settings.download_type.value,
+                            "download_status": "NA",
                         },
                         ttl_seconds=2,
                     )
@@ -292,14 +308,17 @@ class CombinedBasedWorkflow:
     def render_stage_2(self):
         # Add CSS to prevent scrolling on headers..
         st.markdown("<style>.stMarkdown{overflow:visible !important;}</style>", unsafe_allow_html=True)
-
+        step_name = "Unknown"
         # Track stage 2 page view
         if self.settings.selected_workflow == WorkflowType.CONTINUOUS:
             track_page_view("/main-flows/step2-waveform-download-continuous", "Step 2: Waveform Download (Continuous)")
+            step_name = "waveform_download_continuous"
         elif self.settings.selected_workflow == WorkflowType.EVENT_BASED:
             track_page_view("/main-flows/step2-station-search", "Step 2: Station Search")
+            step_name = "station_search"
         elif self.settings.selected_workflow == WorkflowType.STATION_BASED:
             track_page_view("/main-flows/step2-event-search", "Step 2: Event Search")
+            step_name = "event_search"
 
         c1, c2, c3 = st.columns([1, 1, 1])
 
@@ -332,7 +351,7 @@ class CombinedBasedWorkflow:
                         self.waveform_components.continuous_components.console.accumulated_output = []
 
                     self.previous_stage()
-            self._track_download_transitions(flow="combined")
+            self._track_download_transitions(flow="continuous")
             self.waveform_components.render()
         else:    
             title = "Stations" if self.settings.selected_workflow == WorkflowType.EVENT_BASED else "Events"
@@ -348,12 +367,14 @@ class CombinedBasedWorkflow:
                     if self.validate_and_adjust_selection(self.settings.selected_workflow):
                         # Track progression to next stage
                         track_event_once(
-                            "workflow_step_completed",
-                            dedupe_key=f"wf_step_done:{self.settings.selected_workflow.value}:step2",
-                            params={
+                            "workflow_track", 
+                            dedupe_key=f"wf_started:{self.settings.selected_workflow.value}",
+                            params= {
+                                "step_idx_completed": 2,
+                                "step_name_completed": step_name,
                                 "workflow_type": self.settings.selected_workflow.value,
-                                "step": 2,
-                                "step_name": "station_search" if self.settings.selected_workflow == WorkflowType.EVENT_BASED else "event_search",
+                                "download_type": self.settings.download_type.value,
+                                "download_status": "NA",
                             },
                             ttl_seconds=2,
                         )
@@ -457,6 +478,7 @@ class CombinedBasedWorkflow:
             "is_downloading": bool(st.session_state.get("is_downloading", False)),
             "success": bool(st.session_state.get("success", False)),
             "cancelled": bool(st.session_state.get("download_cancelled", False)),
+            "failed": bool(st.session_state.get("download_failed", False)),
         }
 
         # Start detected
@@ -465,9 +487,16 @@ class CombinedBasedWorkflow:
             st.session_state["_download_id"] = download_id
 
             track_event_once(
-                "waveform_download_started",
-                dedupe_key=f"dl_start:{download_id}",
-                params={"download_id": download_id, "workflow_type": self.settings.selected_workflow.value, "flow": flow},
+                "workflow_track", 
+                dedupe_key=f"wf_started:{self.settings.selected_workflow.value}",
+                params= {
+                    "step_idx_completed": 2 if flow == "continuous" else 3,
+                    "step_name_completed": "waveform_download",
+                    "workflow_type": self.settings.selected_workflow.value,
+                    "download_type": self.settings.download_type.value,
+                    "download_status": "started",
+                },
+                ttl_seconds=2,
             )
 
         download_id = st.session_state.get("_download_id")
@@ -475,19 +504,53 @@ class CombinedBasedWorkflow:
         # Success detected
         if cur["success"] and not prev["success"] and download_id:
             track_event_once(
-                "waveform_download_succeeded",
+                "workflow_track",
                 dedupe_key=f"dl_ok:{download_id}",
-                params={"download_id": download_id, "workflow_type": self.settings.selected_workflow.value, "flow": flow},
+                params= {
+                    "step_idx_completed": 2 if flow == "continuous" else 3,
+                    "step_name_completed": "waveform_download",
+                    "workflow_type": self.settings.selected_workflow.value,
+                    "download_type": self.settings.download_type.value,
+                    "download_status": "succeeded",
+                }
             )
             st.session_state.pop("_download_id", None)
 
         # Cancel detected (treat as failed for funnel)
         if cur["cancelled"] and not prev["cancelled"] and download_id:
             track_event_once(
-                "waveform_download_failed",
+                "workflow_track",
                 dedupe_key=f"dl_cancel:{download_id}",
-                params={"download_id": download_id, "reason": "cancelled", "workflow_type": self.settings.selected_workflow.value, "flow": flow},
+                params= {
+                    "step_idx_completed": 2 if flow == "continuous" else 3,
+                    "step_name_completed": "waveform_download",
+                    "workflow_type": self.settings.selected_workflow.value,
+                    "download_type": self.settings.download_type.value,
+                    "download_status": "cancelled",
+                }
             )
+            st.session_state.pop("_download_id", None)
+
+        if cur["failed"] and not prev["failed"] and download_id:
+            track_event_once(
+                "workflow_track",
+                dedupe_key=f"dl_failed:{download_id}",
+                params= {
+                    "step_idx_completed": 2 if flow == "continuous" else 3,
+                    "step_name_completed": "waveform_download",
+                    "workflow_type": self.settings.selected_workflow.value,
+                    "download_type": self.settings.download_type.value,
+                    "download_status": "failed",
+                }
+            )
+
+
+        # Success detected
+        if cur["success"] and not prev["success"] and download_id:
+            st.session_state.pop("_download_id", None)
+
+        # Cancel detected (treat as failed for funnel)
+        if cur["cancelled"] and not prev["cancelled"] and download_id:
             st.session_state.pop("_download_id", None)
 
         st.session_state["_dl_prev"] = cur

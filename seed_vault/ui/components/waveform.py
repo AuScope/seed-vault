@@ -2,12 +2,13 @@ from typing import List, Dict, Union
 from obspy import Stream, Trace, UTCDateTime
 import threading
 from seed_vault.enums.config import WorkflowType
+from seed_vault.enums.ui  import Steps
 from seed_vault.models.config import SeismoLoaderSettings
 from seed_vault.service.seismoloader import run_event
 from obspy.clients.fdsn import Client
 from obspy.taup import TauPyModel
 from seed_vault.ui.components.display_log import ConsoleDisplay
-from seed_vault.ui.app_pages.helpers.telemetry import track_event
+from seed_vault.ui.app_pages.helpers.telemetry import track_event, track_event_once
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -586,12 +587,14 @@ class WaveformDisplay:
                     st.session_state["download_cancelled"] = True
                 else:
                     print("Download failed")
+                    st.session_state["download_failed"] = True
 
             task_result["success"] = success
 
         except Exception as e:
             print(f"Error: {str(e)}")
             task_result["success"] = False
+            st.session_state["download_failed"] = True
         finally:
             # Flush any remaining content
             sys.stdout.flush()
@@ -630,7 +633,8 @@ class WaveformDisplay:
             "is_downloading": True,
             "query_done": False,
             "polling_active": True,
-            "download_cancelled": False
+            "download_cancelled": False,
+            "download_failed": False
         })
 
         st.rerun()
@@ -1085,6 +1089,7 @@ class WaveformComponents:
     waveform_display: WaveformDisplay
     continuous_components: ContinuousComponents
     console: ConsoleDisplay
+    step_idx: int
 
     def __init__(self, settings: SeismoLoaderSettings):
         self.settings = settings
@@ -1121,11 +1126,6 @@ class WaveformComponents:
             if task_completed.is_set():
                 # Track download completion
                 success = task_result.get("success", False)
-                track_event("workflow_completed", {
-                    "success": success,
-                    "cancelled": st.session_state.get("download_cancelled", False),
-                    "workflow_type": st.session_state.get("selected_flow_type", "unknown")
-                })
                 
                 # Update session state from the main thread
                 st.session_state.update({
@@ -1134,7 +1134,8 @@ class WaveformComponents:
                     "query_thread": None,
                     "polling_active": False,
                     "success": success,
-                    "download_cancelled": st.session_state.get("download_cancelled", False)
+                    "download_cancelled": st.session_state.get("download_cancelled", False),
+                    "download_failed": st.session_state.get("download_failed", False)
                 })
                 task_completed.clear()  # Reset for next time
                 st.rerun()
@@ -1342,6 +1343,10 @@ class WaveformComponents:
                 status_container.warning("Waveform download cancelled")
                 # Reset the flag after displaying
                 st.session_state["download_cancelled"] = False
+            elif st.session_state.get("download_failed", False):
+                status_container.error("Waveform download failed. Please check logs for details.")
+                # Reset the flag after displaying
+                st.session_state["download_failed"] = False
             else:
                 status_container.warning("No waveforms retrieved. Please check your selection criteria and log view.")
 
