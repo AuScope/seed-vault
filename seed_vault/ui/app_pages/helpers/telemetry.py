@@ -86,3 +86,25 @@ def track_event(event_name: str, params: Optional[dict] = None) -> None:
     telemetry = get_telemetry_client()
     if telemetry:
         telemetry.track_event(event_name, params or {})
+
+
+
+def track_event_once(event_name: str, dedupe_key: str, params: Optional[dict] = None, ttl_seconds: Optional[int] = None) -> bool:
+    telemetry = get_telemetry_client()
+    if not telemetry:
+        return False
+
+    # If you added TelemetryManager.track_event_once previously, use it:
+    if hasattr(telemetry, "track_event_once"):
+        return telemetry.track_event_once(event_name, dedupe_key, params or {}, ttl_seconds)
+
+    # Fallback dedupe in session_state
+    store = st.session_state.setdefault("_telemetry_dedupe", {})
+    now = __import__("time").time()
+    last = store.get(dedupe_key)
+    if last is not None and (ttl_seconds is None or (now - last) < ttl_seconds):
+        return False
+
+    telemetry.track_event(event_name, params or {})
+    store[dedupe_key] = now
+    return True

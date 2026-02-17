@@ -56,15 +56,14 @@ settings = get_app_settings(create_new=False, empty_geo=False)
 analytics_popup = AnalyticsPopup(settings)
 analytics_popup.render()
 
-# Track page view
-track_page_view("/main-flows", "Main Flows")
-
+# Initialize workflow
 if "combined_based_workflow" not in st.session_state:
     combined_based_workflow                  = CombinedBasedWorkflow()
     st.session_state.combined_based_workflow = combined_based_workflow
 else:
     combined_based_workflow                  = st.session_state.combined_based_workflow
-    
+
+# Page tracking is handled by individual stage render methods to avoid conflicts
 combined_based_workflow.render()
 
 

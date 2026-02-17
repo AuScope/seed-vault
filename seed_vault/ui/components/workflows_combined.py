@@ -4,6 +4,7 @@ import streamlit as st
 import plotly.express as px
 import pandas as pd
 import queue
+import uuid
 
 from seed_vault.enums.ui import Steps
 from seed_vault.models.config import SeismoLoaderSettings, DownloadType, WorkflowType
@@ -13,7 +14,7 @@ from seed_vault.ui.components.waveform import log_queue, task_completed, task_re
 from seed_vault.ui.components.continuous_waveform import log_queue as continuous_log_queue
 
 from seed_vault.ui.app_pages.helpers.common import get_app_settings, save_filter, reset_config
-from seed_vault.ui.app_pages.helpers.telemetry import track_page_view, track_event
+from seed_vault.ui.app_pages.helpers.telemetry import track_page_view, track_event, track_event_once
 
 
 download_options = [f.name.title() for f in DownloadType]
@@ -44,11 +45,12 @@ class CombinedBasedWorkflow:
         st.rerun()
 
     def previous_stage(self):
-        track_event("workflow_navigation", {
-            "action": "back",
-            "from_stage": self.stage,
-            "to_stage": self.stage - 1
-        })
+        track_event_once(
+        "workflow_navigation",
+        dedupe_key=f"nav:back:{self.stage}->{self.stage-1}",
+        params={"action": "back", "from_stage": self.stage, "to_stage": self.stage - 1},
+        ttl_seconds=1,
+        )
         self.stage -= 1
         st.rerun()
 
@@ -73,7 +75,7 @@ class CombinedBasedWorkflow:
         changes. Also, probably, we do not need clean up on the filter settings 
         (we actually may need to keep the filters as is).
         """
-        # Track workflow selection page
+        # Track workflow selection stage
         track_page_view("/main-flows/workflow-selection", "Workflow Selection")
         
         c1, c2 = st.columns([2,1])
@@ -86,13 +88,20 @@ class CombinedBasedWorkflow:
             if self.settings.selected_workflow.value in workflow_options_list:
                 default_index = workflow_options_list.index(self.settings.selected_workflow.value)
 
+            # Only init settings if workflow selection actually changes
+            previous_selection = st.session_state.get('selected_flow_type', self.settings.selected_workflow.value)
+            
             selected_flow_type = st.selectbox(
                 "Select the Seismic Data Request Flow", 
                 workflow_options_list, 
                 index=default_index, 
                 key="combined-pg-download-type",
             )
-            self.init_settings(selected_flow_type)
+            
+            # Only reinitialize if the selection changed
+            if selected_flow_type != previous_selection:
+                self.init_settings(selected_flow_type)
+            
             if selected_flow_type:
                 self.settings.selected_workflow = workflow_options[selected_flow_type]
 
@@ -103,10 +112,12 @@ class CombinedBasedWorkflow:
                 self.settings.set_download_type_from_workflow()
                 
                 # Track workflow start
-                track_event("workflow_started", {
-                    "workflow_type": self.settings.selected_workflow.value,
-                    "download_type": self.settings.download_type.value
-                })
+                track_event_once(
+                "workflow_started",
+                dedupe_key=f"wf_started:{self.settings.selected_workflow.value}",
+                params={"workflow_type": self.settings.selected_workflow.value, "download_type": self.settings.download_type.value},
+                ttl_seconds=2,
+                )
                 
                 if self.settings.selected_workflow == WorkflowType.EVENT_BASED:
                     self.event_components = BaseComponent(self.settings, step_type=Steps.EVENT, prev_step_type=None, stage=1)    
@@ -249,11 +260,16 @@ class CombinedBasedWorkflow:
             if st.button("Next"):
                 if self.validate_and_adjust_selection(self.settings.selected_workflow):
                     # Track progression to next stage
-                    track_event("workflow_step_completed", {
-                        "workflow_type": self.settings.selected_workflow.value,
-                        "step": 1,
-                        "step_name": "event_search" if self.settings.selected_workflow == WorkflowType.EVENT_BASED else "station_search"
-                    })
+                    track_event_once(
+                        "workflow_step_completed",
+                        dedupe_key=f"wf_step_done:{self.settings.selected_workflow.value}:step1",
+                        params={
+                            "workflow_type": self.settings.selected_workflow.value,
+                            "step": 1,
+                            "step_name": "event_search" if self.settings.selected_workflow == WorkflowType.EVENT_BASED else "station_search",
+                        },
+                        ttl_seconds=2,
+                    )
                     self.next_stage()
 
             if self.has_error:
@@ -315,7 +331,8 @@ class CombinedBasedWorkflow:
                     if hasattr(self.waveform_components, 'continuous_components'):
                         self.waveform_components.continuous_components.console.accumulated_output = []
 
-                    self.previous_stage() 
+                    self.previous_stage()
+            self._track_download_transitions(flow="combined")
             self.waveform_components.render()
         else:    
             title = "Stations" if self.settings.selected_workflow == WorkflowType.EVENT_BASED else "Events"
@@ -330,11 +347,17 @@ class CombinedBasedWorkflow:
                 if st.button("Next"):
                     if self.validate_and_adjust_selection(self.settings.selected_workflow):
                         # Track progression to next stage
-                        track_event("workflow_step_completed", {
-                            "workflow_type": self.settings.selected_workflow.value,
-                            "step": 2,
-                            "step_name": "station_search" if self.settings.selected_workflow == WorkflowType.EVENT_BASED else "event_search"
-                        })
+                        track_event_once(
+                            "workflow_step_completed",
+                            dedupe_key=f"wf_step_done:{self.settings.selected_workflow.value}:step2",
+                            params={
+                                "workflow_type": self.settings.selected_workflow.value,
+                                "step": 2,
+                                "step_name": "station_search" if self.settings.selected_workflow == WorkflowType.EVENT_BASED else "event_search",
+                            },
+                            ttl_seconds=2,
+                        )
+
                         self.next_stage()
 
                 if self.has_error:
@@ -392,20 +415,17 @@ class CombinedBasedWorkflow:
                 print("DEBUG 3 previous")
 
                 self.previous_stage()
-
+        self._track_download_transitions(flow="combined")
         self.waveform_components.render()
 
     def render(self):
         if self.stage == 0:
             self.render_stage_0()
-
-        if self.stage == 1:
+        elif self.stage == 1:
             self.render_stage_1()
-
-        if self.stage == 2:
+        elif self.stage == 2:
             self.render_stage_2()
-
-        if self.stage == 3:
+        elif self.stage == 3:
             self.render_stage_3()
 
     def reset_config(self):
@@ -430,3 +450,44 @@ class CombinedBasedWorkflow:
             st.button("🔄 Reset Settings", on_click=self.reset_config)
 
         st.stop()
+
+    def _track_download_transitions(self, flow: str):
+        prev = st.session_state.get("_dl_prev", {"is_downloading": False, "success": False, "cancelled": False})
+        cur = {
+            "is_downloading": bool(st.session_state.get("is_downloading", False)),
+            "success": bool(st.session_state.get("success", False)),
+            "cancelled": bool(st.session_state.get("download_cancelled", False)),
+        }
+
+        # Start detected
+        if cur["is_downloading"] and not prev["is_downloading"]:
+            download_id = str(uuid.uuid4())
+            st.session_state["_download_id"] = download_id
+
+            track_event_once(
+                "waveform_download_started",
+                dedupe_key=f"dl_start:{download_id}",
+                params={"download_id": download_id, "workflow_type": self.settings.selected_workflow.value, "flow": flow},
+            )
+
+        download_id = st.session_state.get("_download_id")
+
+        # Success detected
+        if cur["success"] and not prev["success"] and download_id:
+            track_event_once(
+                "waveform_download_succeeded",
+                dedupe_key=f"dl_ok:{download_id}",
+                params={"download_id": download_id, "workflow_type": self.settings.selected_workflow.value, "flow": flow},
+            )
+            st.session_state.pop("_download_id", None)
+
+        # Cancel detected (treat as failed for funnel)
+        if cur["cancelled"] and not prev["cancelled"] and download_id:
+            track_event_once(
+                "waveform_download_failed",
+                dedupe_key=f"dl_cancel:{download_id}",
+                params={"download_id": download_id, "reason": "cancelled", "workflow_type": self.settings.selected_workflow.value, "flow": flow},
+            )
+            st.session_state.pop("_download_id", None)
+
+        st.session_state["_dl_prev"] = cur
