@@ -367,7 +367,7 @@ class CombinedBasedWorkflow:
                             "search_completed", 
                             dedupe_key=f"wf_started:{self.settings.selected_workflow.value}",
                             params= {
-                                "step_idx": 1,
+                                "step_idx": 2,
                                 "step_name": step_name,
                                 "workflow_type": self.settings.selected_workflow.value,
                                 "download_type": self.settings.download_type.value,

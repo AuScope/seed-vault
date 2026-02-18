@@ -30,6 +30,8 @@ from obspy.taup import TauPyModel
 from obspy.geodetics.base import locations2degrees,gps2dist_azimuth
 from obspy.clients.fdsn.header import URL_MAPPINGS, FDSNNoDataException
 from obspy.io.mseed.headers import InternalMSEEDWarning
+
+from seed_vault.ui.app_pages.helpers.telemetry import track_event_once
 warnings.filterwarnings("ignore", category=InternalMSEEDWarning)
 
 from seed_vault.models.config import SeismoLoaderSettings, SeismoQuery, convert_geo_to_minus180_180
@@ -1626,6 +1628,14 @@ def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event =
       in debugging and monitoring of data retrieval processes.
     """
     if not settings.station.selected_invs: #NEW / double check. issue #317
+        # Track failed workflow for CLI/Config runs
+        if workflow_type in (WorkflowType.RUN_FROM_CONFIG, WorkflowType.RUN_FROM_CLI):
+            track_event_once(
+                "workflow_download_failed",
+                dedupe_key=f"wf_failed:{workflow_type.value}",
+                params={"workflow_type": workflow_type.value, "download_type": DownloadType.CONTINUOUS.value, "reason": "no_selected_inventories"},
+                ttl_seconds=2,
+            )
         return None
 
     print("Running run_continuous...\n----------------------")
@@ -1671,6 +1681,14 @@ def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event =
     # network operations and data downloads begin
     if stop_event and stop_event.is_set():
         print("Run cancelled!")
+        # Track cancelled workflow for CLI/Config runs
+        if workflow_type in (WorkflowType.RUN_FROM_CONFIG, WorkflowType.RUN_FROM_CLI):
+            track_event_once(
+                "workflow_download_cancelled",
+                dedupe_key=f"wf_cancelled:{workflow_type.value}",
+                params={"workflow_type": workflow_type.value, "download_type": DownloadType.CONTINUOUS.value},
+                ttl_seconds=2,
+            )
         return None
 
     # Combine these into fewer (but larger) requests
@@ -1711,6 +1729,14 @@ def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event =
         if stop_event and stop_event.is_set():
             print("Run cancelled!")
             db_manager.join_continuous_segments(settings.processing.gap_tolerance)
+            # Track cancelled workflow for CLI/Config runs
+            if workflow_type in (WorkflowType.RUN_FROM_CONFIG, WorkflowType.RUN_FROM_CLI):
+                track_event_once(
+                    "workflow_download_cancelled",
+                    dedupe_key=f"wf_cancelled:{workflow_type.value}",
+                    params={"workflow_type": workflow_type.value, "download_type": DownloadType.CONTINUOUS.value},
+                    ttl_seconds=2,
+                )
             return True
 
     # Cleanup the database
@@ -1718,6 +1744,15 @@ def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event =
         db_manager.join_continuous_segments(settings.processing.gap_tolerance)
     except Exception as e:
         print(f"! Error with join_continuous_segments:\n {e}")
+
+    # Track completed workflow for CLI/Config runs
+    if workflow_type in (WorkflowType.RUN_FROM_CONFIG, WorkflowType.RUN_FROM_CLI):
+        track_event_once(
+            "workflow_download_completed",
+            dedupe_key=f"wf_completed:{workflow_type.value}",
+            params={"workflow_type": workflow_type.value, "download_type": DownloadType.CONTINUOUS.value},
+            ttl_seconds=2,
+        )
 
     return True
 
@@ -1790,6 +1825,15 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
                 db_manager.join_continuous_segments(settings.processing.gap_tolerance)
             except Exception as e:
                 print(f"! Error with join_continuous_segments: {str(e)}")
+
+            # Track cancelled workflow for CLI/Config runs
+            if workflow_type in (WorkflowType.RUN_FROM_CONFIG, WorkflowType.RUN_FROM_CLI):
+                track_event_once(
+                    "workflow_download_cancelled",
+                    dedupe_key=f"wf_cancelled:{workflow_type.value}",
+                    params={"workflow_type": workflow_type.value, "download_type": DownloadType.EVENT.value},
+                    ttl_seconds=2,
+                )
 
             if all_event_traces:
                 return all_event_traces, all_missing
@@ -1938,8 +1982,24 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
 
     # And return to ui/components/waveform.py
     if all_event_traces:
+        # Track completed workflow for CLI/Config runs
+        if workflow_type in (WorkflowType.RUN_FROM_CONFIG, WorkflowType.RUN_FROM_CLI):
+            track_event_once(
+                "workflow_download_completed",
+                dedupe_key=f"wf_completed:{workflow_type.value}",
+                params={"workflow_type": workflow_type.value, "download_type": DownloadType.EVENT.value},
+                ttl_seconds=2,
+            )
         return all_event_traces, all_missing
     else:
+        # Track failed workflow for CLI/Config runs
+        if workflow_type in (WorkflowType.RUN_FROM_CONFIG, WorkflowType.RUN_FROM_CLI):
+            track_event_once(
+                "workflow_download_failed",
+                dedupe_key=f"wf_failed:{workflow_type.value}",
+                params={"workflow_type": workflow_type.value, "download_type": DownloadType.EVENT.value, "reason": "no_event_traces"},
+                ttl_seconds=2,
+            )
         return None
 
 
@@ -1974,6 +2034,14 @@ def run_main(
         >>> # Using configuration file
         >>> run_main(from_file="config.ini")
     """
+    track_event_once(
+        "waveform_download_started", 
+        dedupe_key=f"wf_started:{workflow_type.value}",
+        params= {
+            "workflow_type": workflow_type.value,
+        },
+        ttl_seconds=2,
+    )
     if not settings and from_file:
         settings = SeismoLoaderSettings()
         settings = settings.from_cfg_file(cfg_source=from_file)
