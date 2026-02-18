@@ -31,7 +31,7 @@ from obspy.geodetics.base import locations2degrees,gps2dist_azimuth
 from obspy.clients.fdsn.header import URL_MAPPINGS, FDSNNoDataException
 from obspy.io.mseed.headers import InternalMSEEDWarning
 
-from seed_vault.ui.app_pages.helpers.telemetry import track_event_once
+from seed_vault.analytics import init_telemetry
 warnings.filterwarnings("ignore", category=InternalMSEEDWarning)
 
 from seed_vault.models.config import SeismoLoaderSettings, SeismoQuery, convert_geo_to_minus180_180
@@ -1588,7 +1588,7 @@ def get_events(settings: SeismoLoaderSettings, workflow_type: Optional[WorkflowT
     return catalog
 
 
-def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event = None, workflow_type: Optional[WorkflowType] = None):
+def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event = None, workflow_type: Optional[WorkflowType] = None, telemetry = None):
     """
     Retrieves continuous seismic data over long time intervals for a set of stations
     defined by the `inv` parameter. The function manages multiple steps including
@@ -1627,15 +1627,14 @@ def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event =
     - The function logs detailed information about the processing steps and errors to aid
       in debugging and monitoring of data retrieval processes.
     """
+    HAS_TELEMETRY = workflow_type in (WorkflowType.RUN_FROM_CONFIG, WorkflowType.RUN_FROM_CLI) and telemetry is not None
     if not settings.station.selected_invs: #NEW / double check. issue #317
         # Track failed workflow for CLI/Config runs
-        if workflow_type in (WorkflowType.RUN_FROM_CONFIG, WorkflowType.RUN_FROM_CLI):
-            track_event_once(
-                "workflow_download_failed",
-                dedupe_key=f"wf_failed:{workflow_type.value}",
-                params={"workflow_type": workflow_type.value, "download_type": DownloadType.CONTINUOUS.value, "reason": "no_selected_inventories"},
-                ttl_seconds=2,
-            )
+        if HAS_TELEMETRY:
+            telemetry.track_event(
+                    "workflow_download_failed",
+                    params={"workflow_type": workflow_type.value, "download_type": DownloadType.CONTINUOUS.value, "reason": "no_selected_inventories"},
+                )
         return None
 
     print("Running run_continuous...\n----------------------")
@@ -1682,12 +1681,10 @@ def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event =
     if stop_event and stop_event.is_set():
         print("Run cancelled!")
         # Track cancelled workflow for CLI/Config runs
-        if workflow_type in (WorkflowType.RUN_FROM_CONFIG, WorkflowType.RUN_FROM_CLI):
-            track_event_once(
+        if HAS_TELEMETRY:
+            telemetry.track_event(
                 "workflow_download_cancelled",
-                dedupe_key=f"wf_cancelled:{workflow_type.value}",
                 params={"workflow_type": workflow_type.value, "download_type": DownloadType.CONTINUOUS.value},
-                ttl_seconds=2,
             )
         return None
 
@@ -1730,12 +1727,10 @@ def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event =
             print("Run cancelled!")
             db_manager.join_continuous_segments(settings.processing.gap_tolerance)
             # Track cancelled workflow for CLI/Config runs
-            if workflow_type in (WorkflowType.RUN_FROM_CONFIG, WorkflowType.RUN_FROM_CLI):
-                track_event_once(
+            if HAS_TELEMETRY:
+                telemetry.track_event(
                     "workflow_download_cancelled",
-                    dedupe_key=f"wf_cancelled:{workflow_type.value}",
                     params={"workflow_type": workflow_type.value, "download_type": DownloadType.CONTINUOUS.value},
-                    ttl_seconds=2,
                 )
             return True
 
@@ -1746,18 +1741,16 @@ def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event =
         print(f"! Error with join_continuous_segments:\n {e}")
 
     # Track completed workflow for CLI/Config runs
-    if workflow_type in (WorkflowType.RUN_FROM_CONFIG, WorkflowType.RUN_FROM_CLI):
-        track_event_once(
+    if HAS_TELEMETRY:
+        telemetry.track_event(
             "workflow_download_completed",
-            dedupe_key=f"wf_completed:{workflow_type.value}",
             params={"workflow_type": workflow_type.value, "download_type": DownloadType.CONTINUOUS.value},
-            ttl_seconds=2,
         )
 
     return True
 
 
-def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None, workflow_type: Optional[WorkflowType] = None):
+def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None, workflow_type: Optional[WorkflowType] = None, telemetry = None):
     """
     Processes and downloads seismic event data for each event in the provided catalog using
     the specified settings and station inventory. The function manages multiple steps including
@@ -1804,6 +1797,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
     print(f"Running run_event\n-----------------")
     
     settings, db_manager = setup_paths(settings)
+    HAS_TELEMETRY = workflow_type in (WorkflowType.RUN_FROM_CONFIG, WorkflowType.RUN_FROM_CLI) and telemetry is not None
     waveform_client = Client(settings.waveform.client)
     
     # Initialize travel time model
@@ -1827,12 +1821,10 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
                 print(f"! Error with join_continuous_segments: {str(e)}")
 
             # Track cancelled workflow for CLI/Config runs
-            if workflow_type in (WorkflowType.RUN_FROM_CONFIG, WorkflowType.RUN_FROM_CLI):
-                track_event_once(
+            if HAS_TELEMETRY:
+                telemetry.track_event(
                     "workflow_download_cancelled",
-                    dedupe_key=f"wf_cancelled:{workflow_type.value}",
                     params={"workflow_type": workflow_type.value, "download_type": DownloadType.EVENT.value},
-                    ttl_seconds=2,
                 )
 
             if all_event_traces:
@@ -1983,22 +1975,18 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
     # And return to ui/components/waveform.py
     if all_event_traces:
         # Track completed workflow for CLI/Config runs
-        if workflow_type in (WorkflowType.RUN_FROM_CONFIG, WorkflowType.RUN_FROM_CLI):
-            track_event_once(
+        if HAS_TELEMETRY:
+            telemetry.track_event(
                 "workflow_download_completed",
-                dedupe_key=f"wf_completed:{workflow_type.value}",
                 params={"workflow_type": workflow_type.value, "download_type": DownloadType.EVENT.value},
-                ttl_seconds=2,
             )
         return all_event_traces, all_missing
     else:
         # Track failed workflow for CLI/Config runs
-        if workflow_type in (WorkflowType.RUN_FROM_CONFIG, WorkflowType.RUN_FROM_CLI):
-            track_event_once(
+        if HAS_TELEMETRY:
+            telemetry.track_event(
                 "workflow_download_failed",
-                dedupe_key=f"wf_failed:{workflow_type.value}",
                 params={"workflow_type": workflow_type.value, "download_type": DownloadType.EVENT.value, "reason": "no_event_traces"},
-                ttl_seconds=2,
             )
         return None
 
@@ -2034,19 +2022,19 @@ def run_main(
         >>> # Using configuration file
         >>> run_main(from_file="config.ini")
     """
-    track_event_once(
-        "waveform_download_started", 
-        dedupe_key=f"wf_started:{workflow_type.value}",
-        params= {
-            "workflow_type": workflow_type.value,
-        },
-        ttl_seconds=2,
-    )
     if not settings and from_file:
         settings = SeismoLoaderSettings()
         settings = settings.from_cfg_file(cfg_source=from_file)
 
     settings, db_manager = setup_paths(settings)
+
+    telemetry = init_telemetry(settings, db_manager.db_path)
+    telemetry.track_event(
+        "waveform_download_started", 
+        params= {
+            "workflow_type": workflow_type.value,
+        }
+    )
 
     # Load client URL mappings
     settings.client_url_mapping.load()
@@ -2066,13 +2054,13 @@ def run_main(
     # Process continuous data
     if download_type == DownloadType.CONTINUOUS:
         settings.station.selected_invs = get_stations(settings)
-        return run_continuous(settings, stop_event, workflow_type)
+        return run_continuous(settings, stop_event, workflow_type, telemetry)
         # run_continuous(settings) # this doesn't return anything
 
     # Process event-based data
     if download_type == DownloadType.EVENT:
         settings.event.selected_catalogs = get_events(settings, workflow_type)
         settings.station.selected_invs = get_stations(settings, workflow_type)
-        event_traces, missing = run_event(settings, stop_event, workflow_type) # this returns a stream containing all the downloaded traces, and a dictionary of what's missing
+        event_traces, missing = run_event(settings, stop_event, workflow_type, telemetry) # this returns a stream containing all the downloaded traces, and a dictionary of what's missing
 
     return None

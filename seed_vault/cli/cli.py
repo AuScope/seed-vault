@@ -27,7 +27,8 @@ def cli(ctx, file_path):
         telemetry = init_telemetry(settings, db_path)
         
         # Track app open event
-        telemetry.track_event("app_open")
+        if not file_path:
+            telemetry.track_event("app_open")
     except Exception as e:
         # Don't fail CLI execution if telemetry fails
         if os.getenv("DEBUG_TELEMETRY"):
