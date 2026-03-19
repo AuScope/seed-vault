@@ -52,7 +52,7 @@ class ContinuousFilterMenu:
         }
         self.last_button_pressed = None
         self.todo_nets = None
-        
+
         # Check if date range is valid
         self.validate_date_range()
 
@@ -72,7 +72,7 @@ class ContinuousFilterMenu:
         if start_time is None or end_time is None:
             st.session_state["date_range_valid"] = False
             return
-        
+
         # Convert to datetime objects with UTC timezone
         try:
             # Handle string inputs
@@ -82,13 +82,13 @@ class ContinuousFilterMenu:
             elif hasattr(start_time, 'tzinfo'):
                 if start_time.tzinfo is None:
                     start_time = start_time.replace(tzinfo=timezone.utc)
-            
+
             if isinstance(end_time, str):
                 end_time = datetime.fromisoformat(end_time).replace(tzinfo=timezone.utc)
             elif hasattr(end_time, 'tzinfo'):
                 if end_time.tzinfo is None:
                     end_time = end_time.replace(tzinfo=timezone.utc)
-            
+
             # Now we can safely compare
             st.session_state["date_range_valid"] = end_time > start_time
         except (ValueError, AttributeError, TypeError):
@@ -173,7 +173,7 @@ class ContinuousFilterMenu:
             col9, col10, col11, col12 = st.columns(4)
             # Row 4: Day controls
             #col13, col14, col15, col16 = st.columns(4)
-            
+
             # Year controls
             with col1:
                 if st.button("-Year", key="start-year-minus"):
@@ -224,7 +224,7 @@ class ContinuousFilterMenu:
                     self.settings.station.date_config.end_time = shift_time(
                         self.settings.station.date_config.end_time, 'month', 1)
                     self.validate_date_range()
-                    self.refresh_filters()                    
+                    self.refresh_filters()
             
             # Week controls
             with col9:
@@ -281,7 +281,7 @@ class ContinuousFilterMenu:
             with c1:
                 new_start_date = st.date_input("Start Date", min_value=min_date, max_value=max_date, value=start_date)
                 new_start_time = st.time_input("Start Time (UTC)", value=start_time)
-                
+
                 # Handle cases where only date or only time has changed
                 date_changed = new_start_date != start_date
                 time_changed = new_start_time != start_time
@@ -294,7 +294,7 @@ class ContinuousFilterMenu:
                     self.refresh_filters()
 
             with c2:
-                new_end_date = st.date_input("End Date", min_value=min_date, max_value=max_date, value=end_date)                
+                new_end_date = st.date_input("End Date", min_value=min_date, max_value=max_date, value=end_date)
                 new_end_time = st.time_input("End Time (UTC)", value=end_time)
                 
                 # Handle cases where only date or only time has changed
@@ -364,7 +364,7 @@ class ContinuousDisplay:
         self.settings = settings
         self.filter_menu = filter_menu
         self.console = ConsoleDisplay()
-        
+
     def process_continuous_data(self):
         """Process continuous waveform data in a background thread with logging.
 
@@ -424,7 +424,7 @@ class ContinuousDisplay:
 
         except Exception as e:
             print(f"Error: {str(e)}")  # This will be captured in the output
-            task_result["success"] = False         
+            task_result["success"] = False
         finally:
             # Flush any remaining content
             sys.stdout.flush()
@@ -556,7 +556,7 @@ class ContinuousDisplay:
             daemon=True
         )
         st.session_state["query_thread"].start()
-        
+
         st.session_state.update({
             "is_downloading": True,
             "query_done": False,
@@ -679,7 +679,7 @@ class ContinuousComponents:
             if st.session_state.get("polling_active"):
                 sleep(0.2)  # Shorter pause for more frequent updates
                 st.rerun()
-        
+
     def render(self):
         """Render the complete continuous waveform interface.
 

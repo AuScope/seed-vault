@@ -1012,7 +1012,7 @@ def archive_request(
             return
 
         time0 = time()
-        
+
         # Select appropriate client
         if request[0] in waveform_clients:
             wc = waveform_clients[request[0]]
@@ -1093,14 +1093,14 @@ def archive_request(
         while current_time < endtime:
             year = current_time.year
             doy = current_time.julday
-            
+
             next_day = current_time + 86400
             day_end = min(next_day - tr.stats.delta/3, endtime)
-            
+
             day_tr = tr.slice(current_time, day_end, nearest_sample=False)
             day_key = (year, doy, net, sta, loc, cha)
             traces_by_day[day_key] += day_tr
-            
+
             current_time = next_day
 
     # Process each day's data
@@ -1109,9 +1109,9 @@ def archive_request(
         full_sds_path = os.path.join(sds_path, str(year), net, sta, f"{cha}.D")
         filename = f"{net}.{sta}.{loc}.{cha}.D.{year}.{doy:03d}"
         full_path = os.path.join(full_sds_path, filename)
-        
+
         os.makedirs(full_sds_path, exist_ok=True)
-        
+
         if os.path.exists(full_path):
             try:
                 existing_st = streamread(full_path)
@@ -1213,8 +1213,8 @@ def get_selected_stations_at_channel_level(settings: SeismoLoaderSettings) -> Se
     """
     print("Running get_selected_stations_at_channel_level")
     
-    waveform_client = Client(settings.waveform.client)
-    station_client = Client(settings.station.client) if settings.station.client else waveform_client
+    waveform_client = Client(settings.waveform.client, user_agent='SEED-Vault')
+    station_client = Client(settings.station.client, user_agent='SEED-Vault') if settings.station.client else waveform_client
 
     invs = Inventory()
     for network in settings.station.selected_invs:
@@ -1270,13 +1270,13 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
     if starttime >= endtime:
         print("get_stations: Starttime greater than endtime!")
         return None
-    waveform_client = Client(settings.waveform.client)
+    waveform_client = Client(settings.waveform.client, user_agent='SEED-Vault')
 
     highest_sr_only = settings.station.highest_samplerate_only
     cha_pref = settings.waveform.channel_pref
     loc_pref = settings.waveform.location_pref
 
-    station_client = Client(settings.station.client) if settings.station.client else waveform_client
+    station_client = Client(settings.station.client, user_agent='SEED-Vault') if settings.station.client else waveform_client
 
     # Set default wildcards for unspecified codes
     net = settings.station.network or '*'
@@ -1328,7 +1328,7 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
             new_circle_searches = []
 
             circ_center_lat = sum(p.coords.lat for p in circle_searches) / len(circle_searches)
-        
+
             lon_radians = [np.radians(p.coords.lon) for p in circle_searches]
             avg_x = sum(np.cos(r) for r in lon_radians) / len(circle_searches)
             avg_y = sum(np.sin(r) for r in lon_radians) / len(circle_searches)
@@ -1383,7 +1383,7 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
 
         # Remove any events that may have been added by loosening geo searches. Also removes duplicates. 
         try:
-            inv = filter_inventory_by_geo_constraints(inv,geo_constraints_for_obspy)            
+            inv = filter_inventory_by_geo_constraints(inv,geo_constraints_for_obspy)
         except Exception as e:
             print("filter_inventory_by_geo_constraits issue:",e)
 
@@ -1407,7 +1407,7 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
     # Add forced stations
     if settings.station.force_stations: # a "SeismoQuery" object
         for sq in settings.station.force_stations:
-            try:               
+            try:
                 inv += station_client.get_stations(
                     network=sq.network,
                     station=sq.station,
@@ -1424,7 +1424,7 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
     # Apply final filters
     if highest_sr_only:
         inv = select_highest_samplerate(inv, minSR=5)
-    
+
     if cha_pref or loc_pref:
         inv = get_preferred_channels(inv, cha_pref, loc_pref)
 
@@ -1464,8 +1464,8 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
         print("get_events: Starttime greater than endtime!")
         return Catalog()
 
-    waveform_client = Client(settings.waveform.client)
-    event_client = Client(settings.event.client) if settings.event.client else waveform_client
+    waveform_client = Client(settings.waveform.client, user_agent='SEED-Vault')
+    event_client = Client(settings.event.client, user_agent='SEED-Vault') if settings.event.client else waveform_client
 
     # Check for local catalog first
     if settings.event.local_catalog:
@@ -1652,7 +1652,7 @@ def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event =
 
     starttime = UTCDateTime(settings.station.date_config.start_time)
     endtime = UTCDateTime(settings.station.date_config.end_time)
-    waveform_client = Client(settings.waveform.client)
+    waveform_client = Client(settings.waveform.client, user_agent='SEED-Vault')
 
     # Sanity check times
     endtime = min(endtime, UTCDateTime.now()-120)
@@ -1704,8 +1704,12 @@ def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event =
         if cred_net not in requested_networks:
             continue
         try:
-            new_client = Client(settings.waveform.client, 
-                user=cred.username.upper(), password=cred.password)
+            new_client = Client(
+                settings.waveform.client, 
+                user=cred.username.upper(),
+                password=cred.password,
+                user_agent='SEED-Vault'
+                )
             waveform_clients.update({cred_net:new_client})
         except:
             print("Issue creating client: %s %s via %s:%s" % (settings.waveform.client,
@@ -1788,7 +1792,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
     print(f"Running run_event\n-----------------")
 
     settings, db_manager = setup_paths(settings)
-    waveform_client = Client(settings.waveform.client)
+    waveform_client = Client(settings.waveform.client, user_agent='SEED-Vault')
 
     # Initialize travel time model
     try:
@@ -1868,11 +1872,11 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
             if not combined_requests:
                 print("DEBUG: combined requests is empty? here was pruned_requests",pruned_requests)
                 continue
-            
+
             # Setup authenticated clients
             waveform_clients = {'open': waveform_client}
             requested_networks = [req[0] for req in combined_requests]
-            
+
             for cred in settings.auths:
                 cred_net = cred.nslc_code.split('.')[0].upper()
                 if cred_net not in requested_networks:
@@ -1881,7 +1885,8 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
                     new_client = Client(
                         settings.waveform.client,
                         user=cred.username.upper(),
-                        password=cred.password
+                        password=cred.password,
+                        user_agent='SEED-Vault'
                     )
                     waveform_clients[cred_net] = new_client
                 except Exception as e:

@@ -26,9 +26,11 @@ Can run:
 - As web service
 - From the command line (CLI)
 
-#### User Guide 
+#### User Guide & Reference
 
 https://auscope.github.io/seed-vault
+
+TBA (appreciate the cite if you find this useful!)
 
 ---
 
@@ -36,7 +38,7 @@ https://auscope.github.io/seed-vault
 
 - 8 GB RAM
 - Python >= 3.10, tested up to 3.14
-- ObsPy (>=1.4.2), Streamlit (>=1.51), Plotly (>-5.24), Pandas (>=2.2.2), Matplotlib (>=3.8.5)
+- ObsPy (>=1.5.0), Streamlit (>=1.54), Plotly (>-5.24), Pandas (>=2.2.2), Matplotlib (>=3.8.5)
 
 # Install via pip (easy way)
 
@@ -76,6 +78,10 @@ Then can build via pip:
 
 ```
 python3 -m pip install ./seed-vault
+
+OR to install current master version
+
+python3 -m pip install git+https://github.com/AuScope/seed-vault.git
 ```
 
 Or,

@@ -304,7 +304,7 @@ class EventConfig(BaseModel):
     values. It is designed to store criteria for filtering earthquake events.
 
     Attributes:
-        client (Optional[str]): The FDSN client to use for retrieving earthquake data. Defaults to `"EARTHSCOPE"`.
+        client (Optional[str]): The FDSN client to use for retrieving earthquake data. Defaults to `"ISC"`.
         date_config (DateConfig): The date range for querying earthquake events.
         model (str): The seismic velocity model to use. Defaults to `"IASP91"`.
         min_depth (float): The minimum earthquake depth in kilometers. Defaults to `-5.0`.
@@ -328,7 +328,7 @@ class EventConfig(BaseModel):
         selected_catalogs (Optional[Any]): A list of user-selected earthquake catalogs.
         geo_constraint (Optional[List[GeometryConstraint]]): Geospatial constraints on earthquake events.
     """
-    client              : Optional   [str] = "EARTHSCOPE"
+    client              : Optional   [str] = "ISC"
     date_config         : DateConfig                 = DateConfig(
         start_time=(datetime.now() - timedelta(days=30)).isoformat(),        
         end_time=datetime.now().isoformat()

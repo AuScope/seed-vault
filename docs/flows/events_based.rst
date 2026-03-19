@@ -31,7 +31,7 @@ The event selection interface allows you to search for and select earthquake eve
    :end-before: **Rectangle Selection**
 
 **Filtering Options**:
-   * **FDSN Client**: Select a data provider (e.g., EARTHSCOPE)
+   * **FDSN Client**: Select a data provider (e.g., ISC)
 
 .. include:: ../shared/time_filters.rst
    :start-after: Time Filtering
