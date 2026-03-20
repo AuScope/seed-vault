@@ -908,10 +908,10 @@ class SeismoLoaderSettings(BaseModel):
             config=config,
             section=event_section,
             key="client",
-            default="EARTHSCOPE",
+            default="ISC",
             status_handler=status_handler,
             error_message=f"'client' is missing in the [{event_section}] section. Specify a client.",
-            warning_message=f"'client' is empty in the [{event_section}] section. Defaulting to 'EARTHSCOPE'.",
+            warning_message=f"'client' is empty in the [{event_section}] section. Defaulting to 'ISC'.",
             validation_fn=lambda x: bool(x.strip())
         )
 

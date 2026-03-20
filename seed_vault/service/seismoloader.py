@@ -999,7 +999,7 @@ def archive_request(
         - Groups traces by day to handle fragmented data efficiently
 
     Example:
-        >>> clients = {'IU': Client('IRIS'), 'open': Client('IRIS')}
+        >>> clients = {'IU': Client('EARTHSCOPE'), 'open': Client('EARTHSCOPE')}
         >>> request = ("IU", "ANMO", "00", "BHZ", "2020-01-01", "2020-01-02")
         >>> archive_request(request, clients, "/data/seismic", db_manager)
     """

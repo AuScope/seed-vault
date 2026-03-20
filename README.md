@@ -30,7 +30,7 @@ Can run:
 
 https://auscope.github.io/seed-vault
 
-TBA (appreciate the cite if you find this useful!)
+https://pubs.geoscienceworld.org/ssa/srl/article/doi/10.1785/0220250167/727708/SEED-Vault-A-New-Software-Package-for-Browsing (appreciate the cite if you find this useful!)
 
 ---
 
@@ -38,7 +38,7 @@ TBA (appreciate the cite if you find this useful!)
 
 - 8 GB RAM
 - Python >= 3.10, tested up to 3.14
-- ObsPy (>=1.5.0), Streamlit (>=1.54), Plotly (>-5.24), Pandas (>=2.2.2), Matplotlib (>=3.8.5)
+- ObsPy (>=1.5.0), Streamlit (>=1.55), Plotly (>-5.24), Pandas (>=2.2.2), Matplotlib (>=3.8.5)
 
 # Install via pip (easy way)
 
