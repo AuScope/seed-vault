@@ -9,8 +9,6 @@ https://docs.streamlit.io/
 https://pypi.org/project/streamlit-elements/
 https://github.com/okld/streamlit-elements?tab=readme-ov-file
 
-## Extra components
-https://arnaudmiribel.github.io/streamlit-extras/
 
 ## Router
 https://github.com/Mohamed-512/Extra-Streamlit-Components
@@ -34,8 +32,11 @@ https://www.youtube.com/watch?v=jbJpAdGlKVY
 
 # FSDN
 
+## Wilber3 (EARTHSCOPE event search)
+https://ds.iris.edu/wilber3/find_event
+
+## GMAP (EARTHSCOPE station search)
+https://ds.iris.edu/gmap/
+
 ## AusPass
 https://auspass.edu.au/fdsnws/
-
-## Wilbert (iris)
-https://ds.iris.edu/wilber3/find_stations/11887265

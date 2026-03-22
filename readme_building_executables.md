@@ -235,7 +235,7 @@ hiddenimports += [
     'obspy.core', 'obspy.clients', 'obspy.io', 'obspy.taup', 'obspy.imaging.cm', 'obspy.imaging.data',
     'obspy.signal', 'obspy.imaging', 'tqdm', 'streamlit-folium', 
     'pydantic', 'jupyter', 'seaborn', 'plotly',
-    'pandas', 'click', 'tabulate', 'streamlit-extras', 'streamlit-ace', 'decorator',
+    'pandas', 'click', 'tabulate', 'streamlit-ace', 'decorator',
 ]
 
 a = Analysis(
@@ -338,7 +338,7 @@ hiddenimports += [
     'obspy.core', 'obspy.clients', 'obspy.io', 'obspy.taup', 'obspy.imaging.cm', 'obspy.imaging.data',
     'obspy.signal', 'obspy.imaging', 'tqdm', 'streamlit-folium', 
     'pydantic', 'jupyter', 'seaborn', 'plotly',
-    'pandas', 'click', 'tabulate', 'streamlit-extras', 'streamlit-ace', 'decorator',
+    'pandas', 'click', 'tabulate', 'streamlit-ace', 'decorator',
 ]
 
 a = Analysis(
@@ -443,7 +443,7 @@ hiddenimports += [
     'obspy.core', 'obspy.clients', 'obspy.io', 'obspy.taup', 'obspy.imaging.cm', 'obspy.imaging.data',
     'obspy.signal', 'obspy.imaging', 'tqdm', 'streamlit-folium', 
     'pydantic', 'jupyter', 'seaborn', 'plotly',
-    'pandas', 'click', 'tabulate', 'streamlit-extras', 'streamlit-ace', 'decorator',
+    'pandas', 'click', 'tabulate', 'streamlit-ace', 'decorator',
 ]
 
 a = Analysis(
