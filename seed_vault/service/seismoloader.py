@@ -339,8 +339,10 @@ def select_highest_samplerate(inv, minSR=10, time=None):
                     continue
 
                 if time:
-                    max_sr = max(ch.sample_rate for ch in loc_group)
-                    filtered_channels.extend([ch for ch in loc_group if ch.sample_rate == max_sr])
+                    active_channels = [ch for ch in loc_group]
+                    if active_channels:
+                        max_sr = max(ch.sample_rate for ch in active_channels)
+                        filtered_channels.extend([ch for ch in active_channels if ch.sample_rate == max_sr])
                 else:
                     time_groups = {}
                     for channel in loc_group:
@@ -558,7 +560,7 @@ def collect_requests_event(
                 p_time, s_time, dist_km, dist_deg, azi = fetched_arrivals
                 t_start = p_time - abs(before_p_sec)
                 t_end = p_time + abs(after_p_sec)
-                p_arrivals[f"{net.code}.{sta.code}"] = p_time.timestamp
+                p_arrivals[f"{net.code}.{sta.code}"] = p_time
             else:
                 # Calculate new arrivals
                 dist_deg = locations2degrees(
@@ -579,7 +581,7 @@ def collect_requests_event(
                 t_end = (p_time + abs(after_p_sec)).timestamp
                 p_arrivals[f"{net.code}.{sta.code}"] = p_time.timestamp
 
-                # Save these new arrivals to insert into database
+                # save these new arrivals to insert into database
                 arrivals_per_eq.append((
                     str(eq.preferred_origin_id),
                     eq.magnitudes[0].mag,
@@ -592,7 +594,7 @@ def collect_requests_event(
                     model_name
                 ))
 
-            # Skip anything out of our search parameters
+            # skip anything out of our search parameters
             if dist_deg < min_radius:
                 print(f"    Skipping {net.code}.{sta.code} \t(distance {dist_deg:4.1f} < min_radius {min_radius:4.1f})")
                 continue
@@ -674,7 +676,7 @@ def combine_requests(
             combined_requests.append((
                 net,
                 ','.join(chunk_stas),
-                ','.join(sorted(chunk_locs)).lstrip(','), # empty location codes may have an extra comma in front
+                ','.join(sorted(chunk_locs)),
                 ','.join(sorted(chunk_chans)),
                 t0,
                 t1
@@ -854,7 +856,7 @@ def prune_requests(
             requests_needing_file_check = []
 
             for req in network_requests:
-                req_network, station, location, channel, start_str, end_str = req
+                network, station, location, channel, start_str, end_str = req
                 start_time = UTCDateTime(start_str)
                 end_time = UTCDateTime(end_str)
 
@@ -891,7 +893,7 @@ def prune_requests(
 
                 if need_to_check_files:
                     file_paths = get_sds_filenames(
-                        req_network, station, location, channel,
+                        network, station, location, channel,
                         start_time, end_time, sds_path
                     )
                     if file_paths:
@@ -917,7 +919,7 @@ def prune_requests(
 
             # Identify gaps for all requests
             for req, key, start_time, end_time in requests_needing_file_check:
-                req_network, station, location, channel, _, _ = req
+                network, station, location, channel, _, _ = req
 
                 if key in existing_data and existing_data[key]:
                     relevant_intervals = [
@@ -946,7 +948,7 @@ def prune_requests(
                             # Too many, request the full range once
                             if end_time - start_time >= min_request_window:
                                 pruned_requests.append((
-                                    req_network, station, location, channel,
+                                    network, station, location, channel,
                                     start_time.isoformat(),
                                     end_time.isoformat()
                                 ))
@@ -955,7 +957,7 @@ def prune_requests(
                             for gap_start, gap_end in gaps:
                                 if gap_end - gap_start >= min_request_window:
                                     pruned_requests.append((
-                                        req_network, station, location, channel,
+                                        network, station, location, channel,
                                         gap_start.isoformat(),
                                         gap_end.isoformat()
                                     ))
@@ -1416,8 +1418,7 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
                     level=settings.station.level.value
                 )
             except Exception as e:
-                print(f"Could not find requested station {sq.network}.{sq.station}"
-                f" at {settings.station.client}\n{e}")
+                print(f"Could not find requested station {net}.{sta} at {settings.station.client}\n{e}")
                 continue
 
     # Apply final filters
@@ -1840,7 +1841,6 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
             )
         except Exception as e:
             print(f"Issue running collect_requests_event in run_event:\n{e}")
-            continue
 
         # Update arrival database
         if new_arrivals:
@@ -2028,8 +2028,6 @@ def run_main(
     if download_type == DownloadType.EVENT:
         settings.event.selected_catalogs = get_events(settings)
         settings.station.selected_invs = get_stations(settings)
-        run_even_result = run_event(settings, stop_event) # this returns a stream containing all the downloaded traces, and a dictionary of what's missing
-        if run_event_result is not None:
-            event_traces, missing = run_event_result
+        event_traces, missing = run_event(settings, stop_event) # this returns a stream containing all the downloaded traces, and a dictionary of what's missing
 
     return None
