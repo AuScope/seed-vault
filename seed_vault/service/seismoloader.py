@@ -560,7 +560,7 @@ def collect_requests_event(
                 p_time, s_time, dist_km, dist_deg, azi = fetched_arrivals
                 t_start = p_time - abs(before_p_sec)
                 t_end = p_time + abs(after_p_sec)
-                p_arrivals[f"{net.code}.{sta.code}"] = p_time
+                p_arrivals[f"{net.code}.{sta.code}"] = p_time # n.b. already a timestamp
             else:
                 # Calculate new arrivals
                 dist_deg = locations2degrees(
@@ -676,7 +676,7 @@ def combine_requests(
             combined_requests.append((
                 net,
                 ','.join(chunk_stas),
-                ','.join(sorted(chunk_locs)),
+                ','.join(sorted(chunk_locs)), # n.b. ",00" is valid in FDSN, it searched both None and 00
                 ','.join(sorted(chunk_chans)),
                 t0,
                 t1
