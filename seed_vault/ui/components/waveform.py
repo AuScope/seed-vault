@@ -71,7 +71,7 @@ def get_tele_filter(tr):
     nyq = tr.stats.sampling_rate/2 - 0.02
     senstype = tr.stats.channel[1]
 
-    if senstype not in ['H','N','P']:
+    if senstype not in ['H','N','P','D']:
         return 0,0 # flagged elsewhere
 
     if distance_km < 50:
@@ -451,11 +451,12 @@ class WaveformDisplay:
         try:
             self.client = Client(self.settings.waveform.client)
         except ValueError as e:
-            st.error(f"Error: {str(e)} Waveform client is set to {self.settings.waveform.client}, which seems to not exist..? Please navigate to the settings page and use the Clients tab to add the client or fix the stored config.cfg file.")
+            st.error(f"Error: {str(e)} Waveform client is set to {self.settings.waveform.client}, which seems to not exist..? "
+                "Please navigate to the settings page and use the Clients tab to add the client or fix the stored config.cfg file.")
         self.ttmodel = TauPyModel("iasp91")
         self.stream = []
-        self.processed_cache = {}  # NEW: Cache for processed waveforms
-        self.figure_cache = {}  # NEW: Cache for matplotlib figures
+        self.processed_cache = {}  # Cache for processed waveforms
+        self.figure_cache = {}  # Cache for matplotlib figures
         self.missing_data = {}
         self.console = ConsoleDisplay()  # Add console display
 
@@ -594,7 +595,6 @@ class WaveformDisplay:
             stream_and_missing = run_event(self.settings, stop_event)
             if stream_and_missing:
                 self.stream, self.missing_data = stream_and_missing
-                #self.clear_cache()
                 success = True
                 print("Download completed successfully")
                 # If stopped via the cancel button, reset it continue to plotting as normal
@@ -730,9 +730,10 @@ class WaveformDisplay:
         if not stream:
             return
 
-        # NEW: Check figure cache first - use trace IDs for stable cache key
+        # Check figure cache first - use trace IDs for stable cache key
         trace_ids = sorted([f"{tr.stats.network}.{tr.stats.station}.{tr.stats.channel}_{tr.stats.starttime}" for tr in stream])
-        cache_key = f"event_{event.resource_id.id}_{page}_{hash(tuple(trace_ids))}_{self.filter_menu.display_limit}"
+        #cache_key = f"event_{event.resource_id.id}_{page}_{hash(tuple(trace_ids))}_{self.filter_menu.display_limit}"
+        cache_key = f"event_{event.resource_id.id}_{page}_{'|'.join(trace_ids)}_{self.filter_menu.display_limit}"
         if cache_key in self.figure_cache:
             return self.figure_cache[cache_key]
 
@@ -791,11 +792,11 @@ class WaveformDisplay:
                     station_info += f" {tr.stats.distance_km:.1f} km"
                 #adding event mag and region temporarily for debugging
                 if hasattr(tr.stats, 'event_time'):
-                    station_info += f", OT:{str(tr.stats.event_time)[0:19]}"                
+                    station_info += f", OT:{str(tr.stats.event_time)[0:19]}"
                 if hasattr(tr.stats, 'event_magnitude'):
                     station_info += f", M{tr.stats.event_magnitude:.1f}"
                 if hasattr(tr.stats, 'event_region'):
-                    station_info += f", {tr.stats.event_region}"                    
+                    station_info += f", {tr.stats.event_region}"
                 if hasattr(tr_windowed.stats, 'filterband'):
                     station_info += f", {tr_windowed.stats.filterband[0]}-{tr_windowed.stats.filterband[1]}Hz"
                 if hasattr(tr_windowed.stats, 'plotunit'):
@@ -856,9 +857,10 @@ class WaveformDisplay:
         if not stream:
             return
 
-        # NEW: Check figure cache first - use trace IDs for stable cache key
+        # Check figure cache first - use trace IDs for stable cache key
         trace_ids = sorted([f"{tr.stats.network}.{tr.stats.station}.{tr.stats.channel}_{tr.stats.starttime}" for tr in stream])
-        cache_key = f"station_{station_code}_{page}_{hash(tuple(trace_ids))}_{self.filter_menu.display_limit}"
+        #cache_key = f"station_{station_code}_{page}_{hash(tuple(trace_ids))}_{self.filter_menu.display_limit}"
+        cache_key = f"station_{station_code}_{page}_{'|'.join(trace_ids)}_{self.filter_menu.display_limit}"
         if cache_key in self.figure_cache:
             return self.figure_cache[cache_key]
 
@@ -1001,13 +1003,13 @@ class WaveformDisplay:
                 st.warning("No events in catalog?")
                 return
 
-            # a list of event resource ids
+            # A list of event resource ids
             existing_event_resource_ids = [eq.resource_id for eq in events]
 
-            # a list of EQ resource_ids to confirm what data actually exists
+            # A list of EQ resource_ids to confirm what data actually exists
             existing_data_resource_ids = list(set([tr.stats.resource_id for tr in self.stream]))
 
-            # map the events.. hanging onto the original indexes so users can keep track of what's happening
+            # Map the events.. hanging onto the original indexes so users can keep track of what's happening
             valid_events_with_indices = [(i, event) for i, event in enumerate(events)
                             if hasattr(event, 'resource_id') and event.resource_id in existing_data_resource_ids]
 
@@ -1029,8 +1031,9 @@ class WaveformDisplay:
                 format_func=lambda x: event_options[x]
             )
 
-            selected_event = valid_events[selected_event_idx]    
+            selected_event = valid_events[selected_event_idx]
             event_stream = Stream([tr for tr in self.stream if tr.stats.resource_id == selected_event.resource_id.id])
+            event_stream.merge(method=0, fill_value='interpolate') # for plotting, merge any bisected streams first
             filtered_stream = self.apply_filters(event_stream)
 
             if filtered_stream:

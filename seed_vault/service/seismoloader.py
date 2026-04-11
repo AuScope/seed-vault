@@ -523,6 +523,7 @@ def collect_requests_event(
     if highest_sr_only:
         sub_inv = select_highest_samplerate(sub_inv, minSR=5)
     
+    # I think this is being called twice but not a huge issue (TODO)
     if cha_pref or loc_pref:
         sub_inv = get_preferred_channels(sub_inv, cha_pref, loc_pref)
 
@@ -717,6 +718,11 @@ def get_missing_from_request(db_manager, eq_id: str, requests: List[Tuple], st: 
 
     result = {eq_id: {}}
 
+    # Build lookup set once for the stream, for speed
+    trace_keys = {
+        (tr.stats.network, tr.stats.station, tr.stats.location, tr.stats.channel) for tr in st
+    }
+
     # Process each request
     for request in requests:
         net, sta, loc, cha, t0, t1 = request #only using t0 really
@@ -729,12 +735,6 @@ def get_missing_from_request(db_manager, eq_id: str, requests: List[Tuple], st: 
         missing_channels = []
         total_combinations = 0
         missing_combinations = 0
-
-        # Build lookup set once for the stream, for speed
-        trace_keys = {
-            (tr.stats.network, tr.stats.station, tr.stats.location, tr.stats.channel) 
-            for tr in st
-        }
 
         # Check all combinations
         for location in locations:
@@ -2028,7 +2028,7 @@ def run_main(
     if download_type == DownloadType.EVENT:
         settings.event.selected_catalogs = get_events(settings)
         settings.station.selected_invs = get_stations(settings)
-        run_even_result = run_event(settings, stop_event) # this returns a stream containing all the downloaded traces, and a dictionary of what's missing
+        run_event_result = run_event(settings, stop_event) # this returns a stream containing all the downloaded traces, and a dictionary of what's missing
         if run_event_result is not None:
             event_traces, missing = run_event_result
 

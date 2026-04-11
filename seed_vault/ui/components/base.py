@@ -402,8 +402,8 @@ class BaseComponent:
 
         def _on_manual_date_change():
             """Callback for when user manually changes date inputs"""
-            start_date = st.session_state.get("station-pg-start-date")
-            end_date = st.session_state.get("station-pg-end-date")
+            start_date = st.session_state.get("event-pg-start-date")
+            end_date = st.session_state.get("event-pg-end-date")
             if start_date and end_date:
                 self.settings.event.date_config.start_time = datetime.combine(start_date, start_time)
                 self.settings.event.date_config.end_time = datetime.combine(end_date, end_time)
@@ -450,7 +450,7 @@ class BaseComponent:
                 with c1:
                     st.date_input("Start Date", min_value=min_date, max_value=max_date, key="event-pg-start-date", on_change=_on_manual_date_change)
                 with c2:
-                    st.date_input("End Date", min_value=min_date, max_value=max_date, key="station-pg-end-date", on_change=_on_manual_date_change)
+                    st.date_input("End Date", min_value=min_date, max_value=max_date, key="event-pg-end-date", on_change=_on_manual_date_change)
 
 
                 if self.settings.event.date_config.start_time > self.settings.event.date_config.end_time:
@@ -562,7 +562,7 @@ class BaseComponent:
                     if st.button('Last Week', key="station-set-last-week"):
                         self.settings.station.date_config.end_time, self.settings.station.date_config.start_time = get_time_interval('week')
                         st.session_state["station-pg-start-date"] = self.settings.station.date_config.start_time.date()
-                        st.session_state["station-pg-end-date"] = self.settings.station.date_config.end_time.date()                        
+                        st.session_state["station-pg-end-date"] = self.settings.station.date_config.end_time.date()
                         self.handle_manual_date_change()
 
                 # Re-read dates AFTER buttons may have changed them                
@@ -607,7 +607,7 @@ class BaseComponent:
                 )
 
                 inventory_level_tick = st.checkbox(
-                    "Include Instrument Response", 
+                    "Include Instrument Response",
                     value=self.settings.station.level == Levels.RESPONSE,
                     help="Download station metadata with full instrument response. Potentially makes download much larger. Use only if you need to export the fdsnXML or need to plot events with response removed.",
                     key="station-pg-instrument-response"
@@ -615,8 +615,6 @@ class BaseComponent:
                 self.settings.station.level = Levels.RESPONSE if inventory_level_tick else Levels.CHANNEL
 
                 self.render_map_buttons()
-
-        #self.refresh_filters() i don't think was needed
 
 
     # ====================
