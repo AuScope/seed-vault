@@ -587,7 +587,7 @@ class WaveformDisplay:
         sys.stdout = QueueLogger(original_stdout, log_queue)
         sys.stderr = QueueLogger(original_stderr, log_queue)
 
-        # Start fresh always otherwise it's a bit confusing
+        # Start fresh always otherwise it is a bit confusing
         self.clear_cache()
 
         try:

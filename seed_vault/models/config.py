@@ -289,15 +289,6 @@ class StationConfig(BaseModel):
             setattr(self, field_name, field.get_default())
 
 
-    # TODO: check if it makes sense to use SeismoLocation instead of separate
-    # props.
-    # seismo_location: List[SeismoLocation] = None
-
-    # FIXME: for now we just assume all values are 
-    # given in one string separated with "," -> e.g.
-    # channel = CH,HH,BH,EH
-
-
 class EventConfig(BaseModel):
     """
     The `EventConfig` class defines parameters for configuring earthquake event queries with default
@@ -349,7 +340,7 @@ class EventConfig(BaseModel):
     eventtype           : Optional[str] = None
     catalog             : Optional[str] = None
     contributor         : Optional[str] = None
-    updatedafter        : Optional[str] = None #this is a UTCDateTime object fwiw
+    updatedafter        : Optional[str] = None # a UTCDateTime object
     limit               : Optional[str] = None
     offset              : Optional[str] = None
 
@@ -512,7 +503,6 @@ class SeismoLoaderSettings(BaseModel):
             if val_type == "float":
                 return float(val)
             return val
-
 
     @classmethod
     def _is_none(cls, val):
@@ -853,7 +843,6 @@ class SeismoLoaderSettings(BaseModel):
             if level not in ['channel','response']:
                 level = Levels.CHANNEL
                 #status_handler.add_warning("input_parameters", f"'level' is empty in the [{station_section}] section. Defaulting to 'channel'.")
-
 
         # Parse date configurations
         date_config = DateConfig(

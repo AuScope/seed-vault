@@ -1,13 +1,3 @@
-"""
-The events service should get the events based on a selection (filter) settings.
-UI should generate the selection and pass it here. We need a single function
-here that gets the selection and runs Rob's script.
-
-We should also be able to support multi-select areas.
-
-@TODO: For now, dummy scripts are used.
-"""
-
 import pandas as pd
 import streamlit as st
 import requests
@@ -18,19 +8,12 @@ from seed_vault.models.config import SeismoLoaderSettings
 from seed_vault.service.seismoloader import get_events
 
 
-# @st.cache_data
-# def get_event_data(settings_json_str: str):
-
-#     settings = SeismoLoaderSettings.model_validate_json(settings_json_str)
-#     return get_events(settings)
-
-
 def remove_duplicate_events(events):
     unique_resource_ids = set()
     unique_events = Catalog()
 
     for event in events:
-        resource_id = event.resource_id.id #the .id makes it a string
+        resource_id = event.resource_id.id # the .id makes it a string
         if resource_id not in unique_resource_ids:
             unique_resource_ids.add(resource_id)
             unique_events.append(event)

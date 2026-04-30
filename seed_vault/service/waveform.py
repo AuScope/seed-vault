@@ -39,7 +39,7 @@ def check_is_archived(cursor, req: SeismoQuery):
     return True
 
 
-#only in use for run_event
+# Only in use for run_event
 def get_local_waveform(request: Tuple[str, str, str, str, str, str], settings: SeismoLoaderSettings) -> Optional[Stream]:
     """
     Get waveform data from a local client, handling comma-separated values for network, 

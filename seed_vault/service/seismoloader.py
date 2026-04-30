@@ -1602,7 +1602,10 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
     return catalog
 
 
-def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event = None):
+def run_continuous(
+    settings: SeismoLoaderSettings,
+    stop_event: threading.Event = None
+    ):
     """
     Retrieves continuous seismic data over long time intervals for a set of stations
     defined by the `inv` parameter. The function manages multiple steps including
@@ -1743,7 +1746,11 @@ def run_continuous(settings: SeismoLoaderSettings, stop_event: threading.Event =
     return True
 
 
-def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None):
+def run_event(
+    settings: SeismoLoaderSettings,
+    stop_event: threading.Event = None,
+    return_streams: bool = True
+    ):
     """
     Processes and downloads seismic event data for each event in the provided catalog using
     the specified settings and station inventory. The function manages multiple steps including
@@ -1769,12 +1776,12 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
         c. Check for existing data and prune redundant requests
         d. Download and archive new data
         e. Add event metadata to traces (arrivals, distances, azimuths)
-    4. Combine data into event streams with complete metadata
+    4. (if return_streams=True) Combine data into event streams with complete metadata
 
     Returns:
-    - List[obspy.Stream]: List of streams, each containing data for one event with
-      complete metadata including arrival times, distances, and azimuths. Returns None
-      if operation is canceled or no data is processed.
+    - When return_streams=True: Tuple[List[Trace], dict] of all event traces with metadata
+      and a missing-data report, or None if operation is canceled with no data processed.
+    - When return_streams=False: Tuple[None, dict] with just the missing-data report.
 
     Raises:
     - Exception: General exceptions from client creation, data retrieval, or processing
@@ -1802,6 +1809,10 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
     all_event_traces = []
     all_missing = {}
 
+    # Hardwire a sanity limit for GUI plotting
+    max_plot_traces = 900
+    cap_breach_warned = False
+
     for i, eq in enumerate(settings.event.selected_catalogs):
 
         if stop_event and stop_event.is_set():
@@ -1814,6 +1825,8 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
 
             if all_event_traces:
                 return all_event_traces, all_missing
+            elif not return_streams:
+                return None, all_missing
             else:
                 return None
 
@@ -1870,7 +1883,7 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
                 print(f"Issue with run_event > combine_requests:\n{e}")
 
             if not combined_requests:
-                print("DEBUG: combined requests is empty? here was pruned_requests",pruned_requests)
+                print("DEBUG: combined requests is empty? here was pruned_requests: ", pruned_requests)
                 continue
 
             # Setup authenticated clients
@@ -1907,51 +1920,57 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
                     print(f"Error archiving request {request}:\n {str(e)}")
                     continue
 
-        # Now load everything in from our archive
-        event_stream = Stream()
-        for request in requests:
-            try:
-                st = get_local_waveform(request, settings)
-                if st:
-                    # Add event metadata to traces
-                    arrivals = db_manager.fetch_arrivals_distances(
-                        eq.preferred_origin_id.id,
-                        request[0].upper(), # network
-                        request[1].upper()  # station
-                        )
+        event_stream = Stream() # remains empty in CLI mode
+        # Load archive data and attach metadata for plotting in GUI mode
+        if return_streams and len(all_event_traces) > max_plot_traces:
+            if not cap_breach_warned:
+                print(f"WARNING: plotting trace limit of {max_plot_traces} hit; "
+                    "remaining traces will be archived but not plotted.")
+                cap_breach_warned = True
+        elif return_streams:
+            for request in requests:
+                try:
+                    st = get_local_waveform(request, settings)
+                    if st:
+                        # Add event metadata to traces
+                        arrivals = db_manager.fetch_arrivals_distances(
+                            eq.preferred_origin_id.id,
+                            request[0].upper(), # network
+                            request[1].upper()  # station
+                            )
 
-                    if arrivals:
-                        for tr in st:
-                            tr.stats.resource_id = eq.resource_id.id
-                            tr.stats.p_arrival = arrivals[0]
-                            tr.stats.s_arrival = arrivals[1]
-                            tr.stats.distance_km = arrivals[2]
-                            tr.stats.distance_deg = arrivals[3]
-                            tr.stats.azimuth = arrivals[4]
-                            tr.stats.event_magnitude = eq.magnitudes[0].mag if hasattr(eq, 'magnitudes') and eq.magnitudes else 0.99
-                            tr.stats.event_region = event_region
-                            tr.stats.event_time = eq.origins[0].time
+                        if arrivals:
+                            for tr in st:
+                                tr.stats.resource_id = eq.resource_id.id
+                                tr.stats.p_arrival = arrivals[0]
+                                tr.stats.s_arrival = arrivals[1]
+                                tr.stats.distance_km = arrivals[2]
+                                tr.stats.distance_deg = arrivals[3]
+                                tr.stats.azimuth = arrivals[4]
+                                tr.stats.event_magnitude = eq.magnitudes[0].mag if hasattr(eq, 'magnitudes') and eq.magnitudes else 0.99
+                                tr.stats.event_region = event_region
+                                tr.stats.event_time = eq.origins[0].time
 
-                    event_stream.extend(st)
+                        event_stream.extend(st)
 
+                except Exception as e:
+                    print(f"Error reading data for {request[0].upper()}.{request[1].upper()}:\n {str(e)}")
+                    continue
 
-            except Exception as e:
-                print(f"Error reading data for {request[0].upper()}.{request[1].upper()}:\n {str(e)}")
-                continue
+            if event_stream:
+                all_event_traces.extend(event_stream)
 
-        # Now attempt to keep track of what data was missing. 
-        # Note that this is not catching out-of-bounds data, for better or worse (probably better)
-        if event_stream:
+        # Now attempt to keep track of what data was missing.
+        # In GUI mode event_stream is populated
+        try: 
+            missing = get_missing_from_request(db_manager,eq.resource_id.id,requests,event_stream)
+        except Exception as e:
+            print("get_missing_from_request issue:", e)
+            missing = None
 
-            all_event_traces.extend(event_stream)
+        if missing:
+            all_missing.update(missing)
 
-            try: 
-                missing = get_missing_from_request(db_manager,eq.resource_id.id,requests,event_stream)
-            except Exception as e:
-                print("get_missing_from_request issue:", e)
-
-            if missing:
-                all_missing.update(missing)
 
     # Final database cleanup
     try:
@@ -1963,6 +1982,10 @@ def run_event(settings: SeismoLoaderSettings, stop_event: threading.Event = None
     # And return to ui/components/waveform.py
     if all_event_traces:
         return all_event_traces, all_missing
+    # Or via CLI
+    elif not return_streams:
+        return None, all_missing
+    # Or ...?
     else:
         return None
 
@@ -2022,13 +2045,14 @@ def run_main(
     if download_type == DownloadType.CONTINUOUS:
         settings.station.selected_invs = get_stations(settings)
         return run_continuous(settings, stop_event)
-        # run_continuous(settings) # this doesn't return anything
 
     # Process event-based data
     if download_type == DownloadType.EVENT:
         settings.event.selected_catalogs = get_events(settings)
         settings.station.selected_invs = get_stations(settings)
-        run_event_result = run_event(settings, stop_event) # this returns a stream containing all the downloaded traces, and a dictionary of what's missing
+        # for CLI mode, set return_streams = False as a waste of memory.
+        # Keep 'missing' dict if wanted to report on it (TODO?), but unlikely to be that useful
+        run_event_result = run_event(settings, stop_event, return_streams=False)
         if run_event_result is not None:
             event_traces, missing = run_event_result
 
