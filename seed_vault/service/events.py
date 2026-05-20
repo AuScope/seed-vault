@@ -20,7 +20,6 @@ def remove_duplicate_events(events):
 
     return unique_events
 
-# @st.cache_data
 def get_event_data(settings: SeismoLoaderSettings):
     return remove_duplicate_events(get_events(settings))
 
@@ -33,7 +32,7 @@ def event_response_to_df(data):
         # Extract the preferred origin (location info)
         origin = event.preferred_origin() or event.origins[0]
         magnitude = event.preferred_magnitude() or event.magnitudes[0]
-        
+
         # Extract location (longitude, latitude, depth)
         longitude = origin.longitude
         latitude = origin.latitude

@@ -21,10 +21,10 @@ def is_in_enum(item, enum_class):
 def parse_inv(inv: Inventory):
     """
     Return 4 lists (net, sta, loc, cha) detailing the contents of an ObsPy inventory file
-    
+
     Args:
         inv (Inventory): ObsPy Inventory object
-        
+
     Returns:
         tuple: Four lists containing all network, station, location, and channel codes
     """
@@ -35,27 +35,23 @@ def parse_inv(inv: Inventory):
 
     if not inv:
         return networks, stations, locations, channels
-    
+
     for network in inv:
         networks.append(network.code)
-        
         for station in network:
             stations.append(station.code)
-            
             for channel in station:
                 if channel.location_code not in locations:
                     locations.append(channel.location_code)
-                
                 if channel.code not in channels:
                     channels.append(channel.code)
-    
+
     networks = sorted(list(set(networks)))
     stations = sorted(list(set(stations)))
     locations = sorted(list(set(locations)))
     channels = sorted(list(set(channels)))
-    
-    return networks, stations, locations, channels
 
+    return networks, stations, locations, channels
 
 
 def get_time_interval(interval_type: str, amount: int = 1):
@@ -88,7 +84,7 @@ def get_time_interval(interval_type: str, amount: int = 1):
     elif interval_type == "year":
         now = now.replace(second=0, microsecond=0)
         past = now - relativedelta(years=amount)
-        past = past.replace(hour=0, minute=0)        
+        past = past.replace(hour=0, minute=0)
     else:
         raise ValueError(f"Invalid interval type: {interval_type}. Choose from 'hour', 'day', 'week', 'month', 'year'.")
 
@@ -104,7 +100,7 @@ def shift_time(reftime, interval_type: str, amount: int = 1):
     Returns:
         shifted_datetime: The new datetime after the shift, capped at current time if shifting forward
     """
-        
+
     if interval_type == "hour":
         newtime = reftime + timedelta(hours=amount)
     elif interval_type == "day":
@@ -117,7 +113,7 @@ def shift_time(reftime, interval_type: str, amount: int = 1):
         newtime = reftime + relativedelta(years=amount)
     else:
         raise ValueError(f"Invalid interval type: {interval_type}. Choose from 'hour', 'day', 'week', 'month', 'year'.")
-    
+
     newtime = newtime.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=timezone.utc)
 
     if amount > 0:
@@ -204,7 +200,7 @@ def check_client_services(client_name: str, active_client=None):
             'station': True,
             'event': True,
             'dataselect': True
-        }        
+        }
 
     try:
         if active_client:
@@ -310,13 +306,13 @@ def filter_catalog_by_geo_constraints(catalog: Catalog, constraints) -> Catalog:
     Filter an ObsPy event catalog to include events within ANY of original search constraints. 
     This should be done to clean up any superfluous events that our reducted get_event calls
     may have introduced.
-    
+
     Parameters:
     -----------
     catalog : obspy.core.event.Catalog
         The input event catalog to filter
     constraints: settings.event.geo_constraint (whatever object type this is TODO)
-        
+
     Returns:
     --------
     obspy.core.event.Catalog
@@ -345,7 +341,7 @@ def filter_catalog_by_geo_constraints(catalog: Catalog, constraints) -> Catalog:
                 # Check latitude first since it's simpler
                 if not (geo.coords.min_lat <= event_lat <= geo.coords.max_lat):
                     continue
-                    
+
                 # Handle longitude, accounting for meridian crossing
                 lon_in_bounds = False
                 if geo.coords.min_lon <= geo.coords.max_lon:
@@ -356,7 +352,7 @@ def filter_catalog_by_geo_constraints(catalog: Catalog, constraints) -> Catalog:
                     # 1) Greater than min_lon (e.g., 170 to 180) or
                     # 2) Less than max_lon (e.g., -180 to -170)
                     lon_in_bounds = event_lon >= geo.coords.min_lon or event_lon <= geo.coords.max_lon
-                
+
                 if lon_in_bounds:
                     filtered_events.append(event)
                     break
@@ -369,7 +365,7 @@ def filter_catalog_by_geo_constraints(catalog: Catalog, constraints) -> Catalog:
                     geo.coords.min_radius = 0
 
                 distance = locations2degrees(event_lat, event_lon, geo.coords.lat, geo.coords.lon)
-                    
+
                 if geo.coords.min_radius <= distance <= geo.coords.max_radius:
                     filtered_events.append(event)
                     break
@@ -381,14 +377,14 @@ def filter_catalog_by_geo_constraints(catalog: Catalog, constraints) -> Catalog:
 def filter_inventory_by_geo_constraints(inventory: Inventory, constraints) -> Inventory:
     """
     Filter an ObsPy inventory to include stations within ANY of the original search constraints.
-    
+
     Parameters:
     -----------
     inventory : obspy.Inventory
         The input inventory to filter
     constraints: settings.event.geo_constraint
         List of geographical constraints
-        
+
     Returns:
     --------
     obspy.Inventory
@@ -402,11 +398,11 @@ def filter_inventory_by_geo_constraints(inventory: Inventory, constraints) -> In
 
     # Create new networks list for filtered inventory
     networks = []
-    
+
     for network in inventory:
         # Create new stations list for this network
         filtered_stations = []
-        
+
         for station in network:
 
             # Filter out duplicates while we're here
@@ -415,14 +411,14 @@ def filter_inventory_by_geo_constraints(inventory: Inventory, constraints) -> In
 
             station_lat = station.latitude
             station_lon = station.longitude
-            
+
             # Check each constraint
             for geo in constraints:
                 if geo.geo_type == GeoConstraintType.BOUNDING:
                     # Check latitude first
                     if not (geo.coords.min_lat <= station_lat <= geo.coords.max_lat):
                         continue
-                        
+
                     # Handle longitude, accounting for meridian crossing
                     lon_in_bounds = False
                     if geo.coords.min_lon <= geo.coords.max_lon:
@@ -431,34 +427,34 @@ def filter_inventory_by_geo_constraints(inventory: Inventory, constraints) -> In
                     else:
                         # Box crosses meridian
                         lon_in_bounds = station_lon >= geo.coords.min_lon or station_lon <= geo.coords.max_lon
-                    
+
                     if lon_in_bounds:
                         filtered_stations.append(station)
                         break  # Found a matching constraint, no need to check others
-                        
+
                 elif geo.geo_type == GeoConstraintType.CIRCLE:
                     if not geo.coords.max_radius:
                         geo.coords.max_radius = 180
                     if not geo.coords.min_radius:
                         geo.coords.min_radius = 0
-                        
+
                     distance = locations2degrees(station_lat, station_lon, 
                                               geo.coords.lat, geo.coords.lon)
-                        
+
                     if geo.coords.min_radius <= distance <= geo.coords.max_radius:
                         filtered_stations.append(station)
                         break
-                        
+
                 else:
                     filtered_stations.append(station)
-        
+
         # If we found any stations in this network, add the network to our result
         if filtered_stations:
             # Create a copy of the network with only the filtered stations
             filtered_network = network.copy()
             filtered_network.stations = filtered_stations
             networks.append(filtered_network)
-    
+
     # Create new inventory with only the networks that had matching stations
     return Inventory(networks=networks, source=inventory.source, sender=inventory.sender)
 
@@ -466,9 +462,9 @@ def filter_inventory_by_geo_constraints(inventory: Inventory, constraints) -> In
 def format_error(station, error):
     indent = " " * 13
     border = indent + "-" * 74
-    
+
     # Format the error message
     error_lines = str(error).split('\n')
     formatted_error = "\n".join(f"{indent}{line}" for line in error_lines)
-    
+
     return f"\n{indent}Station {station} Error:\n{formatted_error}\n"

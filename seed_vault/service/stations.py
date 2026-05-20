@@ -4,8 +4,6 @@ UI should generate the selection and pass it here. We need a single function
 here that gets the selection and runs Rob's script.
 
 We should also be able to support multi-select areas.
-
-@TODO: For now, dummy scripts are used.
 """
 
 import pandas as pd
@@ -32,10 +30,10 @@ def remove_duplicate_inventories(inventories):
     filtered_networks = []
     if inventories is None:
         return None
-    
+
     for network in inventories:
         unique_stations = []
-        
+
         for station in network:
             # Create a tuple representing the network-station pair
             network_station_pair = (network.code, station.code)
@@ -101,27 +99,6 @@ def station_response_to_df(inventory):
             }
 
             records.append(record)
-            
-            # for channel in station.channels:
-            #     channel_code = channel.code
-            #     channel_location = channel.location_code
-            #     depth = channel.depth
-            #     sensor = channel.sensor.description
-
-            #     record = {
-            #         'network': network.code,
-            #         'station': station_code,
-            #         'station_name': station_name,
-            #         'latitude': latitude,
-            #         'longitude': longitude,
-            #         'elevation': elevation,
-            #         'channel': channel_code,
-            #         'location': channel_location,
-            #         'depth': depth,
-            #         'sensor': sensor
-            #     }
-
-            #     records.append(record)
 
     return pd.DataFrame(records)
 
@@ -155,7 +132,7 @@ def inventory_to_bibtex(inventory, tmpfile):
         except requests.exceptions.RequestException as e:
             return # f"Error accessing the URL: {e}"
         except Exception as e:
-            return # f"Error: {e}"
+            return
 
     far_future = 2493072000 # timestamp for obspy.UTCDateTime(2049,1,1)
     with open(tmpfile, 'w') as output_file:
@@ -164,7 +141,7 @@ def inventory_to_bibtex(inventory, tmpfile):
             if network.end_date is None or network.end_date > far_future: # e.g., permanent network
                 fdsn_url = "https://www.fdsn.org/networks/detail/%s" % (network.code)
             else:
-                fdsn_url = "https://www.fdsn.org/networks/detail/%s_%s" % (network.code, startyear)            
+                fdsn_url = "https://www.fdsn.org/networks/detail/%s_%s" % (network.code, startyear)
 
             # the above is a little precarious. may have to try/except or at least warn people
 

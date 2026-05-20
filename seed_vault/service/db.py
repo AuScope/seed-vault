@@ -784,7 +784,7 @@ class DatabaseManager:
         Returns:
             bool: True if data exists for the specified parameters, False otherwise
         """
-        
+
         # Use the connection context manager from the DatabaseManager
         with self.connection() as conn:
             cursor = conn.cursor()
@@ -802,7 +802,7 @@ class DatabaseManager:
 
             cursor.execute(query, (netcode, stacode, location, channel, starttime, endtime))
             count = cursor.fetchone()[0]
-            
+
             return count > 0
 
 
