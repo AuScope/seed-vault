@@ -7,9 +7,34 @@ from seed_vault.service.db import clean_database
 dirname = os.path.dirname(__file__)
 par_dir = os.path.dirname(dirname)
 
-@click.group(invoke_without_command=True)
+
+class GroupWithSubcommandHelp(click.Group):
+    def format_commands(self, ctx, formatter):
+        commands = []
+        for name in self.list_commands(ctx):
+            cmd = self.get_command(ctx, name)
+            if cmd is None or cmd.hidden:
+                continue
+            commands.append((name, cmd))
+
+        if not commands:
+            return
+
+        with formatter.section("Commands"):
+            for name, cmd in commands:
+                formatter.write_text(f"{name}: {cmd.get_short_help_str()}")
+                # Render the subcommand's own help indented underneath
+                sub_ctx = click.Context(cmd, info_name=name, parent=ctx)
+                formatter.indent()
+                cmd.format_options(sub_ctx, formatter)
+                formatter.dedent()
+                formatter.write_paragraph()
+
+
+@click.group(cls=GroupWithSubcommandHelp, invoke_without_command=True)
 @click.option("-f", "--file", "file_path", type=click.Path(exists=True), required=False, help="Path to the config.cfg file.")
 @click.pass_context
+
 def cli(ctx, file_path):
     """Seed Vault CLI: A tool for seismic data processing."""
     if ctx.invoked_subcommand is None:

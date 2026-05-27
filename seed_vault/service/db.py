@@ -14,6 +14,7 @@ import fnmatch
 import multiprocessing
 from time import sleep
 from tqdm import tqdm
+from collections import defaultdict
 from datetime import datetime, timedelta
 from pathlib import Path
 from obspy import UTCDateTime,Stream
@@ -287,54 +288,84 @@ def populate_database_from_files(cursor, file_paths=[]):
         >>> conn.commit()
     """
     now = int(datetime.now().timestamp())
+
+    # Parse all files, group new spans by NSLC.
+    # new_spans[(net, sta, loc, chan)] = list of (start, end) strings
+    new_spans = defaultdict(list)
     for fp in file_paths:
         try:
             results = miniseed_to_db_elements(fp)
-        except Exception as e:
+        except Exception:
             print(f"error in miniseed_to_db_elements: {fp}")
             continue
 
-        for result in results:  # Process each tuple in the list
+        for result in results:
             if not result or len(result) != 6:
                 print(f"populate_database_from_files: invalid result: {result}")
+                continue
+            net, sta, loc, chan, start_s, end_s = result
+            new_spans[(net, sta, loc, chan)].append((start_s, end_s))
+
+    if not new_spans:
+        return
+
+    # Per NSLC group: merge new spans with existing overlaps in one shot
+    for (net, sta, loc, chan), spans in new_spans.items():
+        # Compute the bounding window of the new spans so we can pull
+        # every potentially-overlapping existing row in one SELECT.
+        new_min = min(s for s, _ in spans)
+        new_max = max(e for _, e in spans)
+
+        cursor.execute('''
+            SELECT id, starttime, endtime FROM archive_data
+            WHERE network = ? AND station = ? AND location = ? AND channel = ?
+            AND NOT (endtime < ? OR starttime > ?)
+        ''', (net, sta, loc, chan, new_min, new_max))
+        existing = cursor.fetchall()
+
+        # Build the full set of intervals (existing + new) as UTCDateTime pairs, then merge by sweep
+        intervals = [(UTCDateTime(s), UTCDateTime(e)) for _, s, e in existing]
+        intervals.extend((UTCDateTime(s), UTCDateTime(e)) for s, e in spans)
+        intervals.sort()
+
+        merged = []
+        cur_s, cur_e = intervals[0]
+        for s, e in intervals[1:]:
+            if s <= cur_e:  # overlap or touch — merge
+                if e > cur_e:
+                    cur_e = e
             else:
-                network, station, location, channel, start_timestamp, end_timestamp = result
+                merged.append((cur_s, cur_e))
+                cur_s, cur_e = s, e
+        merged.append((cur_s, cur_e))
 
-                # First check for existing overlapping spans
-                cursor.execute('''
-                    SELECT starttime, endtime FROM archive_data
-                    WHERE network = ? AND station = ? AND location = ? AND channel = ?
-                    AND NOT (endtime < ? OR starttime > ?)
-                ''', (network, station, location, channel, start_timestamp, end_timestamp))
+        # Delete only the existing rows that participated
+        if existing:
+            cursor.executemany(
+                'DELETE FROM archive_data WHERE id = ?',
+                [(row[0],) for row in existing],
+            )
 
-                overlaps = cursor.fetchall()
-                if overlaps:
-                    # Merge with existing spans
-                    start_timestamp = min(start_timestamp, min(row[0] for row in overlaps))
-                    end_timestamp = max(end_timestamp, max(row[1] for row in overlaps))
+        # Insert the merged spans
+        cursor.executemany('''
+            INSERT INTO archive_data
+            (network, station, location, channel, starttime, endtime, importtime)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', [(net, sta, loc, chan, s.isoformat(), e.isoformat(), now)
+              for s, e in merged])
 
-                    # Delete overlapping spans
-                    cursor.execute('''
-                        DELETE FROM archive_data
-                        WHERE network = ? AND station = ? AND location = ? AND channel = ?
-                        AND NOT (endtime < ? OR starttime > ?)
-                    ''', (network, station, location, channel, start_timestamp, end_timestamp))
-
-                # Insert the new or merged span
-                cursor.execute('''
-                    INSERT INTO archive_data
-                    (network, station, location, channel, starttime, endtime, importtime)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                ''', (network, station, location, channel, start_timestamp, end_timestamp, now))
 
 
 def clean_database(db_path):
-    # collection of cleanup routines
+    # Collection of cleanup routines
+    print(f"Starting cleanup of {db_path}... ", end='')
     db_manager = DatabaseManager(db_path)
     db_manager.reindex_tables()
+    print("finished reindexing, ", end='')
     db_manager.vacuum_database()
+    print("vacuuming, ", end='')
     db_manager.analyze_table()
-    print(f"finished reindexing, vacuuming, and analysing {db_path}")
+    print("and analysing. Done.")
 
 
 class DatabaseManager:
@@ -621,55 +652,76 @@ class DatabaseManager:
             cursor = conn.cursor()
 
             cursor.execute('''
-                SELECT id, network, station, location, channel, starttime, endtime, importtime
+                SELECT id, network, station, location, channel,
+                       starttime, endtime, importtime
                 FROM archive_data
                 ORDER BY network, station, location, channel, starttime
             ''')
 
-            all_data = cursor.fetchall()
             to_delete = []
             to_update = []
-            current_segment = None
 
-            for row in all_data:
-                id, network, station, location, channel, starttime, endtime, importtime = row
-                starttime = UTCDateTime(starttime)
-                endtime = UTCDateTime(endtime)
+            # current layout: [id, net, sta, loc, chan, start_s, end_s, imp, end_utc, changed]
+            current = None
 
-                if current_segment is None:
-                    current_segment = list(row)
-                else:
-                    if (network == current_segment[1] and
-                        station == current_segment[2] and
-                        location == current_segment[3] and
-                        channel == current_segment[4] and
-                        starttime - UTCDateTime(current_segment[6]) <= gap_tolerance):
+            for row in cursor:  # streams; no fetchall()
+                row_id, net, sta, loc, chan, start_s, end_s, imp = row
 
-                        current_segment[6] = max(endtime, UTCDateTime(current_segment[6])).isoformat()
-                        current_segment[7] = max(importtime, current_segment[7]) if importtime and current_segment[7] else None
-                        to_delete.append(id)
-                    else:
-                        to_update.append(tuple(current_segment))
-                        current_segment = list(row)
+                if current is None:
+                    current = [row_id, net, sta, loc, chan, start_s, end_s, imp, UTCDateTime(end_s), False]
+                    continue
+                same_nslc = (
+                    net == current[1] and sta == current[2]
+                    and loc == current[3] and chan == current[4]
+                )
 
-            if current_segment:
-                to_update.append(tuple(current_segment))
+                if same_nslc:
+                    start_utc = UTCDateTime(start_s)
+                    if start_utc - current[8] <= gap_tolerance:
+                        # Merge: extend the running segment.
+                        row_end_utc = UTCDateTime(end_s)
+                        if row_end_utc > current[8]:
+                            current[8] = row_end_utc
+                            current[6] = row_end_utc.isoformat()
+                            current[9] = True
 
-            cursor.executemany('''
-                UPDATE archive_data
-                SET endtime = ?, importtime = ?
-                WHERE id = ?
-            ''', [(row[6], row[7], row[0]) for row in to_update])
+                        if imp is not None and current[7] is not None:
+                            new_imp = max(imp, current[7])
+                            if new_imp != current[7]:
+                                current[7] = new_imp
+                                current[9] = True
+                        elif current[7] is not None:
+                            current[7] = None
+                            current[9] = True
+
+                        to_delete.append(row_id)
+                        continue
+
+                # No merge: flush previous if it changed, start a new run
+                if current[9]:
+                    to_update.append((current[6], current[7], current[0]))
+                current = [row_id, net, sta, loc, chan, start_s, end_s, imp,
+                           UTCDateTime(end_s), False]
+
+            # Tail
+            if current is not None and current[9]:
+                to_update.append((current[6], current[7], current[0]))
+
+            if to_update:
+                cursor.executemany(
+                    'UPDATE archive_data SET endtime = ?, importtime = ? WHERE id = ?',
+                    to_update,
+                )
 
             if to_delete:
-                for i in range(0, len(to_delete), 500):
-                    chunk = to_delete[i:i + 500]
-                    cursor.executemany(
-                        'DELETE FROM archive_data WHERE id = ?',
-                        [(id,) for id in chunk]
-                    )
+                cursor.executemany(
+                    'DELETE FROM archive_data WHERE id = ?',
+                    [(i,) for i in to_delete],
+                )
 
-        print(f"\nDatabase cleaned. Deleted {len(to_delete)} rows, updated {len(to_update)} rows.")
+        print(f"\nDatabase cleaned. "
+              f"Deleted {len(to_delete)} rows, updated {len(to_update)} rows.")
+
 
 
     def execute_query(self, query: str) -> Tuple[bool, str, Optional[pd.DataFrame]]:
