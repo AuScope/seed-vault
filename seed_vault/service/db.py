@@ -355,7 +355,6 @@ def populate_database_from_files(cursor, file_paths=[]):
               for s, e in merged])
 
 
-
 def clean_database(db_path):
     # Collection of cleanup routines
     print(f"Starting cleanup of {db_path}... ", end='')

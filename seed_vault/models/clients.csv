@@ -36,3 +36,4 @@ TEXNET,http://rtserve.beg.utexas.edu,true
 UIB-NORSAR,https://eida.geo.uib.no,true
 USGS,https://earthquake.usgs.gov,true
 USP,https://sismo.iag.usp.br,true
+LOCALHOST,http://localhost,false

@@ -145,7 +145,7 @@ class UrlMappings(BaseModel):
                     del URL_MAPPINGS[saved_ex['client']]
 
 
-            # Add inputted extra clients                
+            # Add the additional extra_clients
             for e in extra_clients:
                 try:
                     idx = list(df.client).index(e['client'])
@@ -156,13 +156,12 @@ class UrlMappings(BaseModel):
                         'url': e['url'],
                         'is_original': False
                     }
-            
+
 
         df.sort_values('client').to_csv(self.save_path, index=False)
 
         self.sync_maps(df)
 
-        # return df
     
     def sync_maps(self, df_maps):
         """
@@ -191,13 +190,11 @@ class UrlMappings(BaseModel):
         - Calls `save()` to ensure the client mappings are properly saved and updated.
         """
         self.maps = {}
-
         self.save()
 
         # self.df_maps = pd.read_csv(self.save_path)
-
         # self.sync_maps(self.df_maps)
-        
+
 
     def get_clients(self, client_type: ClientType = ClientType.ALL):
         """

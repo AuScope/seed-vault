@@ -44,7 +44,7 @@ class SettingsComponent:
             self.old_settings      = deepcopy(self.settings)
             save_filter(self.settings)
             st.rerun()
-    
+
     def render_auth(self):
         st.write("## Auth Records")
         # auths_lst = [item.model_dump() for item in settings.auths]
@@ -90,8 +90,6 @@ class SettingsComponent:
             else:
                 st.error("Duplicate values are superceded by the latest.")
 
-            # self.reset_is_new_cred_added()
-
 
     def render_db(self):
         try:
@@ -117,7 +115,7 @@ class SettingsComponent:
             with c2:
                 self.settings.processing.num_processes = int(st.number_input(
                     "Number of Processors", 
-                    value=self.settings.processing.num_processes, 
+                    value=self.settings.processing.num_processes,
                     min_value=0, 
                     help="Number of Processors >= 0. If set to zero, the app will use all available cpu to perform the operation."
                 ))
@@ -155,7 +153,7 @@ class SettingsComponent:
             df = pd.DataFrame([{"Client Name": k, "Url": v} for k,v in extra_clients.items()])
             if df.empty:
                 df = pd.DataFrame(columns=["Client Name", "Url"])
-            self.df_clients = st.data_editor(df, hide_index = True, num_rows = "dynamic")            
+            self.df_clients = st.data_editor(df, hide_index = True, num_rows = "dynamic")
             # st.write(extra_clients)
         with c2:
             st.write("## Existing Clients (via ObsPy)")

@@ -128,32 +128,30 @@ def shift_time(reftime, interval_type: str, amount: int = 1):
 
 def convert_to_datetime(value):
     """Convert a string or other value to a date and time object, handling different formats.
-    
+
     If only a date is provided, it defaults to 00:00:00 time.
 
     note that this returns a tuple of (date, time)
     """
     if isinstance(value, datetime):
+        if value.tzinfo is not None:
+            value = value.astimezone(timezone.utc)
         return value.date(), value.time()
-    elif isinstance(value, date):
-        return value, time(0, 0, 0)  # Default time if only date is given
-    elif isinstance(value, str):
+    if isinstance(value, UTCDateTime):
+        return value.date, value.time
+    if isinstance(value, date):
+        return value, time.min
+    if isinstance(value, str):
         try:
-            # Try full ISO format first (e.g., "2025-02-04T14:30:00" or "2025-02-04 14:30:00")
-            dt_obj = datetime.fromisoformat(value.replace("T", " "))
-            return dt_obj.date(), dt_obj.time()
+            dt = datetime.fromisoformat(value.replace("T", " "))
+            if dt.tzinfo is not None:
+                dt = dt.astimezone(timezone.utc)
+            return dt.date(), dt.time()
         except ValueError:
-            try:
-                # If only a date is provided, default to midnight (00:00:00)
-                dt_obj = datetime.strptime(value, "%Y-%m-%d")
-                return dt_obj.date(), time(0, 0, 0)
-            except ValueError:
-                st.error(f"Invalid datetime format: {value}. Expected ISO format 'YYYY-MM-DD' or 'YYYY-MM-DDTHH:MM:SS'.")
-                return date.today(), time(0, 0, 0)  # Default fallback
-    elif isinstance(value,UTCDateTime):
-        return value.date,value.time
-    
-    return date.today(), time(0, 0, 0)
+            st.error(f"Invalid datetime format: {value!r}. "
+                     "Expected 'YYYY-MM-DD' or 'YYYY-MM-DDTHH:MM:SS'.")
+            return date.today(), time.min
+    return date.today(), time.min
 
 
 def to_timestamp(time_obj: Union[int, float, datetime, date, UTCDateTime]) -> float:
@@ -179,15 +177,18 @@ def to_timestamp(time_obj: Union[int, float, datetime, date, UTCDateTime]) -> fl
     """
     if isinstance(time_obj, (int, float)):
         return float(time_obj)
-    elif isinstance(time_obj, datetime):
-        return time_obj.timestamp()
-    elif isinstance(time_obj, UTCDateTime):
+    if isinstance(time_obj, UTCDateTime):
         return time_obj.timestamp
-    elif isinstance(time_obj, date):
-        dt = datetime.combine(time_obj, datetime.min.time())
-        return dt.timestamp()
-    else:
-        raise ValueError(f"Unsupported time type: {type(time_obj)}")
+    if isinstance(time_obj, datetime):
+        if time_obj.tzinfo is not None:
+            time_obj = time_obj.astimezone(timezone.utc)
+        else:
+            time_obj = time_obj.replace(tzinfo=timezone.utc)
+        return time_obj.timestamp()
+    if isinstance(time_obj, date):
+        return datetime(time_obj.year, time_obj.month, time_obj.day,
+                        tzinfo=timezone.utc).timestamp()
+    raise ValueError(f"Unsupported time type: {type(time_obj)}")
 
 
 def check_client_services(client_name: str, active_client=None):

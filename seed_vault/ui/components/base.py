@@ -358,7 +358,7 @@ class BaseComponent:
         st.session_state.dates_manually_set = True
         st.session_state.auto_sync_dates = False
 
-    # note that times/time buttons are wrong for EVENT, but OK for station TODO
+
     def event_filter(self):
         """Displays and manages event filtering options in the Streamlit sidebar.
 
@@ -380,7 +380,6 @@ class BaseComponent:
         """
 
         # Check services for selected client
-        # TODO / copy from station settings when it works
         services = check_client_services(self.settings.event.client)
         is_service_available = bool(services.get('event'))
         if not is_service_available:
@@ -497,7 +496,7 @@ class BaseComponent:
         - Refreshes filters upon changes.
         """
 
-        # Check services for selected client (unlikely? not sure how long this takes, maybe we can bypass for known servers TODO)
+        # Check services for selected client
         services = check_client_services(self.settings.station.client)
         is_service_available = bool(services.get('station'))
         if not is_service_available:

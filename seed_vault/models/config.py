@@ -269,7 +269,7 @@ class StationConfig(BaseModel):
     network            : Optional   [ str           ] = "IU"
     station            : Optional   [ str           ] = "*"
     location           : Optional   [ str           ] = "*"
-    channel            : Optional   [ str           ] = "?H?,?N?"
+    channel            : Optional   [ str           ] = "?H?,?N?,?P?"
     highest_samplerate_only : bool = False
     selected_invs      : Optional   [Any] = None
     geo_constraint     : Optional   [ List          [GeometryConstraint]] = None
