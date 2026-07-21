@@ -1870,7 +1870,8 @@ def run_event(
             try:
                 pruned_requests = prune_requests(requests, db_manager, settings.sds_path)
             except Exception as e:
-                print(f"Issue with run_event > prune_requests:\n{e}")
+                print(f"Issue with run_event -> prune_requests:\n{e}")
+                pruned_requests = []
         
         if len(requests) > 0 and not pruned_requests:
             print(f"          ... All data already archived!")

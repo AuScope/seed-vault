@@ -37,7 +37,7 @@ def parse_time(time_str):
 
     try:
         return UTCDateTime(time_str).isoformat()
-    except:
+    except Exception:
         time_formats = [
             '%Y,%m,%d',         # Format like '2014,2,1'
             '%Y%j',             # Julian day format like '2014001'
@@ -45,7 +45,7 @@ def parse_time(time_str):
         ]
         for time_format in time_formats:
             try:
-                return datetime.strptime(time_str, time_format)
+                return datetime.strptime(time_str, time_format).isoformat()
             except ValueError:
                 continue
     return None

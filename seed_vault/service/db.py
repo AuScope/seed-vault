@@ -554,7 +554,7 @@ class DatabaseManager:
             cursor.execute(f"PRAGMA table_info({table_name})")
             columns = [col[1] for col in cursor.fetchall()]
 
-            query = """
+            query = f"""
                 SELECT * FROM {table_name}
                 WHERE importtime BETWEEN ? AND ?
                 ORDER BY importtime

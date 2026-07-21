@@ -43,7 +43,8 @@ def cli(ctx, file_path):
             run_main(from_file=file_path)
         else:
             path_to_run = os.path.join(par_dir, "ui", "app.py")
-            os.system(f"streamlit run {path_to_run} --server.runOnSave=true")
+            import subprocess
+            subprocess.run(["streamlit", "run", path_to_run,"--server.runOnSave=true"])
 
 
 @click.command(name="sync-db", help="Syncs the database with the local SDS repository.")

@@ -148,7 +148,7 @@ def inventory_to_bibtex(inventory, tmpfile):
             try:
                 text = get_bibtex(fdsn_url)
             except Exception as e:
-                print(f"Error fetching BibTeX for {network.code}_{year}: {e}")
+                print(f"Error fetching BibTeX for {network.code}_{startyear}: {e}")
                 text = None
 
             if text:

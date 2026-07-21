@@ -260,7 +260,7 @@ def get_sds_filenames(
     current_time = time_start
     filenames = []
     
-    while current_time <= time_end:
+    while current_time <= time_end.date:
         year = str(current_time.year)
         doy = str(current_time.julday).zfill(3)
         
@@ -372,6 +372,7 @@ def filter_catalog_by_geo_constraints(catalog: Catalog, constraints) -> Catalog:
                     break
             else:
                 filtered_events.append(event)
+                break
 
     return Catalog(events=filtered_events)
 
@@ -448,6 +449,7 @@ def filter_inventory_by_geo_constraints(inventory: Inventory, constraints) -> In
 
                 else:
                     filtered_stations.append(station)
+                    break
 
         # If we found any stations in this network, add the network to our result
         if filtered_stations:
