@@ -191,8 +191,16 @@ def to_timestamp(time_obj: Union[int, float, datetime, date, UTCDateTime]) -> fl
     raise ValueError(f"Unsupported time type: {type(time_obj)}")
 
 
-def check_client_services(client_name: str, active_client=None):
-    """Check which services are available for a given client name."""
+def check_client_services(client_name: str, active_client=None, url_mappings=None):
+    """Check which services are available for a given client name.
+
+    Args:
+        client_name: FDSN client name.
+        active_client: Already-constructed client to reuse, if any.
+        url_mappings: Optional UrlMappings; when given, the probe client is
+            built through its create_client() factory so that per-service
+            endpoint overrides (custom servers, issue #365) are honoured.
+    """
 
     # Short circuit for well-known servers
     has_all = ['GFZ','GEOFON','GEONET','INGV','SCEDC','NCEDC']
@@ -206,6 +214,8 @@ def check_client_services(client_name: str, active_client=None):
     try:
         if active_client:
             client = active_client # skip re-establishing if already have
+        elif url_mappings is not None:
+            client = url_mappings.create_client(client_name)
         else:
             client = Client(client_name, user_agent='SEED-Vault')
         available_services = client.services.keys()

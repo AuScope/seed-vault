@@ -17,7 +17,7 @@ def mock_settings():
 @pytest.fixture
 def mock_client():
     """Fixture for mock Client instance"""
-    with patch("seed_vault.service.seismoloader.Client") as MockClient:
+    with patch("seed_vault.models.url_mapping.Client") as MockClient:
         mock_instance = MockClient.return_value
         mock_instance.services = {
             "station": {
@@ -70,7 +70,7 @@ def test_get_stations(mock_settings, mock_client):
 
 def test_get_stations_no_service(mock_settings):
     """Test get_stations when the station service is unavailable"""
-    with patch("seed_vault.service.seismoloader.Client") as MockClient:
+    with patch("seed_vault.models.url_mapping.Client") as MockClient:
         mock_instance = MockClient.return_value
         mock_instance.services = {}  # No station service
 
@@ -81,7 +81,7 @@ def test_get_stations_no_service(mock_settings):
 
 def test_get_stations_no_data(mock_settings):
     """Test get_stations when no stations are found (FDSNNoDataException)"""
-    with patch("seed_vault.service.seismoloader.Client") as MockClient:
+    with patch("seed_vault.models.url_mapping.Client") as MockClient:
         mock_instance = MockClient.return_value
         mock_instance.services = {
             "station": {

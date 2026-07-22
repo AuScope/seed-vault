@@ -299,7 +299,7 @@ class WaveformFilterMenu:
                 self.refresh_filters()
 
             # Check services for selected client
-            services = check_client_services(self.settings.waveform.client)
+            services = check_client_services(self.settings.waveform.client, url_mappings=self.settings.client_url_mapping)
             if not services['dataselect']:
                 st.warning(f"⚠️ Warning: Selected client '{self.settings.waveform.client}' does not support WAVEFORM service. Please choose another client.")
 

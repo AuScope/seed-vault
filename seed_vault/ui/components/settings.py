@@ -146,15 +146,32 @@ class SettingsComponent:
 
     def render_clients(self):
         c1, c2 = st.columns([1,1])
-        extra_clients = self.settings.client_url_mapping.get_clients(client_type = ClientType.EXTRA) # load_extra_client()
+        extra_records = self.settings.client_url_mapping.get_extra_records()
         orig_clients  = self.settings.client_url_mapping.get_clients(client_type = ClientType.ORIGINAL)
+        col_map = {
+            "client": "Client Name",
+            "url": "Base Url",
+            "station_url": "Station URL (optional)",
+            "dataselect_url": "Dataselect URL (optional)",
+            "event_url": "Event URL (optional)",
+        }
         with c1:
             st.write("## Extra Clients")
-            df = pd.DataFrame([{"Client Name": k, "Url": v} for k,v in extra_clients.items()])
+            st.caption(
+                "Only fill the per-service URLs for servers whose FDSN services "
+                "are at non-standard paths (e.g. `http://arclink.ethz.ch/myfdsn/station/1`). "
+                "Leave them empty for standard FDSN servers."
+            )
+            df = pd.DataFrame(extra_records).rename(columns=col_map)
             if df.empty:
-                df = pd.DataFrame(columns=["Client Name", "Url"])
-            self.df_clients = st.data_editor(df, hide_index = True, num_rows = "dynamic")
-            # st.write(extra_clients)
+                df = pd.DataFrame(columns=list(col_map.values()))
+            self.df_clients = st.data_editor(
+                df, hide_index=True, num_rows="dynamic",
+                column_config={
+                    col_map["client"]: st.column_config.TextColumn(required=True),
+                    col_map["url"]: st.column_config.TextColumn(required=True),
+                },
+            )
         with c2:
             st.write("## Existing Clients (via ObsPy)")
             st.write(orig_clients)
@@ -244,7 +261,14 @@ class SettingsComponent:
                         self.reset_is_new_cred_added()
                         save_filter(self.settings)
                         df_copy = deepcopy(self.df_clients)
-                        df_copy = df_copy.rename(columns={"Client Name": 'client', "Url": 'url'})
+                        df_copy = df_copy.rename(columns={
+                            "Client Name": 'client',
+                            "Base Url": 'url',
+                            "Url": 'url',  # back-compat with old column name
+                            "Station URL (optional)": 'station_url',
+                            "Dataselect URL (optional)": 'dataselect_url',
+                            "Event URL (optional)": 'event_url',
+                        })
                         self.settings.client_url_mapping.save(df_copy.to_dict('records'))
                         with c3:
                             st.text("")

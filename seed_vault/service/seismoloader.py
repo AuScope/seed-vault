@@ -1211,8 +1211,8 @@ def get_selected_stations_at_channel_level(settings: SeismoLoaderSettings) -> Se
     """
     print("Running get_selected_stations_at_channel_level")
     
-    waveform_client = Client(settings.waveform.client, user_agent='SEED-Vault')
-    station_client = Client(settings.station.client, user_agent='SEED-Vault') if settings.station.client else waveform_client
+    waveform_client = settings.client_url_mapping.create_client(settings.waveform.client)
+    station_client = settings.client_url_mapping.create_client(settings.station.client) if settings.station.client else waveform_client
 
     invs = Inventory()
     for network in settings.station.selected_invs:
@@ -1268,13 +1268,13 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
     if starttime >= endtime:
         print("get_stations: Starttime greater than endtime!")
         return None
-    waveform_client = Client(settings.waveform.client, user_agent='SEED-Vault')
+    waveform_client = settings.client_url_mapping.create_client(settings.waveform.client)
 
     highest_sr_only = settings.station.highest_samplerate_only
     cha_pref = settings.waveform.channel_pref
     loc_pref = settings.waveform.location_pref
 
-    station_client = Client(settings.station.client, user_agent='SEED-Vault') if settings.station.client else waveform_client
+    station_client = settings.client_url_mapping.create_client(settings.station.client) if settings.station.client else waveform_client
 
     # Set default wildcards for unspecified codes
     net = settings.station.network or '*'
@@ -1462,8 +1462,8 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
         print("get_events: Starttime greater than endtime!")
         return Catalog()
 
-    waveform_client = Client(settings.waveform.client, user_agent='SEED-Vault')
-    event_client = Client(settings.event.client, user_agent='SEED-Vault') if settings.event.client else waveform_client
+    waveform_client = settings.client_url_mapping.create_client(settings.waveform.client)
+    event_client = settings.client_url_mapping.create_client(settings.event.client) if settings.event.client else waveform_client
 
     # Check for local catalog first
     if settings.event.local_catalog:
@@ -1653,7 +1653,7 @@ def run_continuous(
 
     starttime = UTCDateTime(settings.station.date_config.start_time)
     endtime = UTCDateTime(settings.station.date_config.end_time)
-    waveform_client = Client(settings.waveform.client, user_agent='SEED-Vault')
+    waveform_client = settings.client_url_mapping.create_client(settings.waveform.client)
 
     # Sanity check times
     endtime = min(endtime, UTCDateTime.now()-120)
@@ -1705,11 +1705,10 @@ def run_continuous(
         if cred_net not in requested_networks:
             continue
         try:
-            new_client = Client(
-                settings.waveform.client, 
+            new_client = settings.client_url_mapping.create_client(
+                settings.waveform.client,
                 user=cred.username.upper(),
                 password=cred.password,
-                user_agent='SEED-Vault'
                 )
             waveform_clients.update({cred_net:new_client})
         except:
@@ -1797,7 +1796,7 @@ def run_event(
     print(f"Running run_event\n-----------------")
 
     settings, db_manager = setup_paths(settings)
-    waveform_client = Client(settings.waveform.client, user_agent='SEED-Vault')
+    waveform_client = settings.client_url_mapping.create_client(settings.waveform.client)
 
     # Initialize travel time model
     try:
@@ -1896,11 +1895,10 @@ def run_event(
                 if cred_net not in requested_networks:
                     continue
                 try:
-                    new_client = Client(
+                    new_client = settings.client_url_mapping.create_client(
                         settings.waveform.client,
                         user=cred.username.upper(),
                         password=cred.password,
-                        user_agent='SEED-Vault'
                     )
                     waveform_clients[cred_net] = new_client
                 except Exception as e:
@@ -2029,7 +2027,12 @@ def run_main(
 
     # Load client URL mappings
     settings.client_url_mapping.load()
-    URL_MAPPINGS = settings.client_url_mapping.maps
+    # Ensure custom clients (base URLs + service mappings) are loaded and
+    # obspy's global URL_MAPPINGS is synced. NOTE: the previous bare
+    # assignment `URL_MAPPINGS = ...` only created a local variable and had
+    # no effect; client resolution now goes through
+    # settings.client_url_mapping.create_client() anyway.
+    settings.client_url_mapping.load()
 
     # Determine download type
     download_type = settings.download_type.value

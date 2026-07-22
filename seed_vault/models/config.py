@@ -13,7 +13,7 @@ from io import StringIO #new
 from obspy import UTCDateTime
 
 from .common import RectangleArea, CircleArea, StatusHandler
-from .url_mapping import UrlMappings
+from .url_mapping import UrlMappings, SERVICE_KEYS
 from seed_vault.enums.config import DownloadType, WorkflowType, GeoConstraintType, Levels
 
 
@@ -575,14 +575,14 @@ class SeismoLoaderSettings(BaseModel):
         db_path = cls._parse_database_section(config, sds_path, status_handler)
         processing_config, download_type = cls._parse_processing_section(config, status_handler)
         lst_auths = cls._parse_auth_section(config, status_handler)
+        lst_clients = cls._parse_clients_section(config, status_handler)
         waveform = cls._parse_waveform_section(config, status_handler)
         station_config = cls._parse_station_section(config, status_handler)
         event_config = cls._parse_event_section(config, status_handler, download_type)
 
         # status_handler.display()
 
-        # Return the populated SeismoLoaderSettings
-        return cls(
+        settings = cls(
             sds_path=sds_path,
             db_path=db_path,
             download_type=download_type,
@@ -593,6 +593,14 @@ class SeismoLoaderSettings(BaseModel):
             event=event_config,
             status_handler =status_handler
         )
+
+        # Register [CLIENTS] entries (base URLs + service overrides). merge=True:
+        # a config file adds/updates its clients without deleting extra clients
+        # the user configured via the GUI.
+        if lst_clients:
+            settings.client_url_mapping.save(extra_clients=lst_clients, merge=True)
+
+        return settings
 
     @classmethod
     def _load_config_file(cls, cfg_source, config):
@@ -676,6 +684,70 @@ class SeismoLoaderSettings(BaseModel):
             ]
         except Exception as e:
             status_handler.add_error("input_parameters", f"Error parsing [AUTH] section: {str(e)}")
+            return []
+
+
+    @classmethod
+    def _parse_clients_section(cls, config, status_handler):
+        """
+        Parse an optional [CLIENTS] section defining custom FDSN servers,
+        including per-service endpoint overrides for servers with
+        non-standard paths (issue #365). Syntax mirrors [AUTH]:
+
+            [CLIENTS]
+            ETHZ_ARCLINK = http://arclink.ethz.ch
+            ETHZ_ARCLINK.station = http://arclink.ethz.ch/myfdsn/station/1
+            ETHZ_ARCLINK.dataselect = http://arclink.ethz.ch/myfdsn/dataselect/1
+
+        A bare key sets the client's base URL; a '<name>.<service>' key
+        overrides one FDSN service ('station', 'dataselect' or 'event').
+
+        Returns:
+            List[dict]: records consumable by UrlMappings.save(extra_clients=...).
+        """
+        try:
+            if 'CLIENTS' not in config:
+                return []
+
+            records = {}
+            for key, value in config['CLIENTS'].items():
+                value = value.strip()
+                if not value:
+                    continue
+
+                if '.' in key:
+                    name, service = key.split('.', 1)
+                    service = service.strip().lower()
+                    name = name.strip()
+                    if service not in SERVICE_KEYS:
+                        status_handler.add_warning(
+                            "input_parameters",
+                            f"[CLIENTS] Unknown service '{service}' for client '{name}' "
+                            f"(expected one of {', '.join(SERVICE_KEYS)}); entry ignored."
+                        )
+                        continue
+                    records.setdefault(name, {'client': name, 'url': None})
+                    records[name][f"{service}_url"] = value
+                else:
+                    name = key.strip()
+                    records.setdefault(name, {'client': name, 'url': None})
+                    records[name]['url'] = value
+
+            # A service override without a base URL cannot build a client
+            valid = []
+            for name, rec in records.items():
+                if not rec.get('url'):
+                    status_handler.add_error(
+                        "input_parameters",
+                        f"[CLIENTS] Client '{name}' defines service URLs but no base URL. "
+                        f"Add '{name} = <base url>'."
+                    )
+                    continue
+                valid.append(rec)
+
+            return valid
+        except Exception as e:
+            status_handler.add_error("input_parameters", f"Error parsing [CLIENTS] section: {str(e)}")
             return []
 
 
@@ -1189,6 +1261,17 @@ class SeismoLoaderSettings(BaseModel):
             for auth in self.auths:
                 safe_add_to_config(config, 'AUTH', auth.nslc_code, f"{auth.username}:{auth.password}")
 
+        # Populate the [CLIENTS] section (custom servers, incl. per-service
+        # endpoint overrides for non-standard FDSN paths — issue #365)
+        extra_records = self.client_url_mapping.get_extra_records()
+        if extra_records:
+            config['CLIENTS'] = {}
+            for rec in extra_records:
+                safe_add_to_config(config, 'CLIENTS', rec['client'], rec['url'])
+                for service in SERVICE_KEYS:
+                    if rec.get(f"{service}_url"):
+                        safe_add_to_config(config, 'CLIENTS', f"{rec['client']}.{service}", rec[f"{service}_url"])
+
 
         # Populate the [WAVEFORM] section
         config['WAVEFORM'] = {}
@@ -1292,6 +1375,7 @@ class SeismoLoaderSettings(BaseModel):
             }, 
             'download_type': self.download_type.value if self.download_type else None,
             'auths': self.auths if self.auths else [],
+            'extra_clients': self.client_url_mapping.get_extra_records(),
             'waveform': {
                 'client': self.waveform.client if self.waveform and self.waveform.client else None,
                 'channel_pref': self.waveform.channel_pref if self.waveform else None,

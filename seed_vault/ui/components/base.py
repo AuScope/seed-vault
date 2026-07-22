@@ -380,7 +380,7 @@ class BaseComponent:
         """
 
         # Check services for selected client
-        services = check_client_services(self.settings.event.client)
+        services = check_client_services(self.settings.event.client, url_mappings=self.settings.client_url_mapping)
         is_service_available = bool(services.get('event'))
         if not is_service_available:
             st.warning(f"⚠️ Warning: Selected client '{self.settings.event.client}' does not support EVENT service. Please choose another client.")
@@ -497,7 +497,7 @@ class BaseComponent:
         """
 
         # Check services for selected client
-        services = check_client_services(self.settings.station.client)
+        services = check_client_services(self.settings.station.client, url_mappings=self.settings.client_url_mapping)
         is_service_available = bool(services.get('station'))
         if not is_service_available:
             st.warning(f"⚠️ Warning: Selected client '{self.settings.station.client}' does not support STATION service. Please choose another client.")
