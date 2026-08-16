@@ -429,10 +429,24 @@ class BaseComponent:
                 self.handle_manual_date_change()
 
         # Initialize widget keys if they don't exist yet
-        if "event-pg-start-date" not in st.session_state:
+        #if "event-pg-start-date" not in st.session_state:
+        #    st.session_state["event-pg-start-date"] = start_date
+        #if "event-pg-end-date" not in st.session_state:
+        #    st.session_state["event-pg-end-date"] = end_date
+
+        # Initialize widget keys if they don't exist yet. Default a fresh event
+        # search to a "Last Month" window (same values the Last Month button sets),
+        # unless the dates were already synced from a previous step.
+        if "event-pg-start-date" not in st.session_state or "event-pg-end-date" not in st.session_state:
+            if not st.session_state.get("dates_manually_set") and not self.settings.event.selected_catalogs:
+                end_dt, start_dt = get_time_interval('month')
+                self.settings.event.date_config.start_time = start_dt
+                self.settings.event.date_config.end_time = end_dt
+                start_date, start_time = convert_to_datetime(start_dt)
+                end_date, end_time = convert_to_datetime(end_dt)
             st.session_state["event-pg-start-date"] = start_date
-        if "event-pg-end-date" not in st.session_state:
             st.session_state["event-pg-end-date"] = end_date
+
 
         with st.sidebar:
             with st.expander("Filters", expanded=True):
@@ -546,9 +560,22 @@ class BaseComponent:
                 self.handle_manual_date_change()
 
         # Initialize widget keys if they don't exist yet
-        if "station-pg-start-date" not in st.session_state:
+        #if "station-pg-start-date" not in st.session_state:
+        #    st.session_state["station-pg-start-date"] = start_date
+        #if "station-pg-end-date" not in st.session_state:
+        #    st.session_state["station-pg-end-date"] = end_date
+
+        # Initialize widget keys if they don't exist yet. Default a fresh station
+        # search to a "Last Year" window (same values the Last Year button sets),
+        # unless the dates were already synced from a previous step.
+        if "station-pg-start-date" not in st.session_state or "station-pg-end-date" not in st.session_state:
+            if not st.session_state.get("dates_manually_set") and not self.settings.station.selected_invs:
+                end_dt, start_dt = get_time_interval('year')
+                self.settings.station.date_config.start_time = start_dt
+                self.settings.station.date_config.end_time = end_dt
+                start_date, start_time = convert_to_datetime(start_dt)
+                end_date, end_time = convert_to_datetime(end_dt)
             st.session_state["station-pg-start-date"] = start_date
-        if "station-pg-end-date" not in st.session_state:
             st.session_state["station-pg-end-date"] = end_date
 
         with st.sidebar:

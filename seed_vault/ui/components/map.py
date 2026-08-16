@@ -9,6 +9,7 @@ from matplotlib.colors import Normalize
 import matplotlib.cm as cm
 import matplotlib.colors as mcolors
 import matplotlib as mpl
+import io
 import time
 import numpy as np
 import pandas as pd
@@ -205,10 +206,9 @@ def add_circle_area(feature_group, coords):
 def _numeric_legend_png(col_color: str, vmin: float, vmax: float) -> bytes:
     """
     Render the continuous colorbar legend once and cache it as PNG bytes.
-    Building a matplotlib figure on every Streamlit rerun is slow (~100ms)
+    Building a matplotlib figure on every Streamlit rerun is slow
     and, without plt.close(), leaks figures for the whole session.
-    """
-    import io
+    """  
     fig, ax = plt.subplots(figsize=(1, 22))
     norm = mcolors.Normalize(vmin=vmin, vmax=vmax)
     colormap = mpl.colormaps['inferno_r']
@@ -231,7 +231,6 @@ def _categorical_legend_png(display_cats: tuple) -> bytes:
     Render the discrete-category legend once per unique category tuple and
     cache it as PNG bytes (figure is closed to avoid pyplot leaks).
     """
-    import io
     colors = mpl.colormaps['tab10'].resampled(len(display_cats))
     legend_category_color_map = {
         category: mcolors.rgb2hex(colors(i)[:3]) for i, category in enumerate(display_cats)
@@ -378,6 +377,7 @@ def add_marker_to_cluster(fg, latitude, longitude, color, edge_color, size, fill
             fill_opacity=fill_opacity,
         ))
 
+    """
     if step == Steps.STATION:
         fg.add_child(folium.RegularPolygonMarker(
             location=[latitude, longitude_360],
@@ -390,6 +390,40 @@ def add_marker_to_cluster(fg, latitude, longitude, color, edge_color, size, fill
             fill=True,
             fill_color=color,
             fill_opacity=fill_opacity,
+        ))
+    """
+    if step == Steps.STATION:
+        # Constant screen-size triangle via a CSS DivIcon. A Polygon is sized in
+        # geographic degrees, so it looks tiny when zoomed out and huge when zoomed
+        # in; RegularPolygonMarker gave constant pixel size but needs the external
+        # leaflet-dvf JS that streamlit-folium's iframe doesn't load. DivIcon is
+        # core Leaflet (renders like the event circles) and is screen-anchored, so
+        # the triangle stays the same size at every zoom.
+        px = int(round(size * 2))
+        half = px / 2
+        edge = 1.5  # black outline thickness in px; bump for a heavier edge
+        opx = px + int(round(edge * 2))
+        ohalf = opx / 2
+        tri_html = (
+            f'<div style="position:relative;width:{opx}px;height:{opx}px;">'
+            # back triangle = the black (edge_color) outline
+            f'<div style="position:absolute;left:0;top:0;width:0;height:0;'
+            f'border-left:{ohalf}px solid transparent;'
+            f'border-right:{ohalf}px solid transparent;'
+            f'border-bottom:{opx}px solid {edge_color};"></div>'
+            # front triangle = the fill, inset by the edge thickness
+            f'<div style="position:absolute;left:{edge}px;top:{edge*1.5}px;width:0;height:0;'
+            f'border-left:{half}px solid transparent;'
+            f'border-right:{half}px solid transparent;'
+            f'border-bottom:{px}px solid {color};'
+            f'opacity:{fill_opacity};"></div>'
+            f'</div>'
+        )
+        fg.add_child(folium.Marker(
+            location=[latitude, longitude_360],
+            icon=folium.DivIcon(html=tri_html, icon_size=(opx, opx),
+                                icon_anchor=(ohalf, opx * 2/3)),
+            popup=popup, tooltip=tooltip_text,
         ))
 
 

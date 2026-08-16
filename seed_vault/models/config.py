@@ -1,9 +1,10 @@
 import os
 import re
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import json
 from typing import IO, Dict, Optional, List, Tuple, Union, Any
-from datetime import date, timedelta, datetime
+from datetime import date, timedelta, timezone, datetime
+from dateutil.relativedelta import relativedelta
 from enum import Enum
 import configparser
 from configparser import ConfigParser
@@ -261,10 +262,11 @@ class StationConfig(BaseModel):
     client             : Optional   [ str] = "EARTHSCOPE"
     force_stations     : Optional   [ List          [SeismoQuery]] = []
     exclude_stations   : Optional   [ List          [SeismoQuery]] = []
-    date_config        : DateConfig                                = DateConfig(
-        start_time=(datetime.now() - timedelta(days=30)).isoformat(),
-        end_time=datetime.now().isoformat()
-    )
+    date_config         : DateConfig                 = Field(default_factory=lambda: DateConfig(
+        start_time=(datetime.now(timezone.utc).replace(second=0, microsecond=0)
+                    - relativedelta(years=1)).replace(hour=0, minute=0).isoformat(),
+        end_time=datetime.now(timezone.utc).replace(second=0, microsecond=0).isoformat(),
+    ))
     local_inventory    : Optional   [ str           ] = None
     network            : Optional   [ str           ] = "IU"
     station            : Optional   [ str           ] = "*"
@@ -320,10 +322,11 @@ class EventConfig(BaseModel):
         geo_constraint (Optional[List[GeometryConstraint]]): Geospatial constraints on earthquake events.
     """
     client              : Optional   [str] = "ISC"
-    date_config         : DateConfig                 = DateConfig(
-        start_time=(datetime.now() - timedelta(days=30)).isoformat(),        
-        end_time=datetime.now().isoformat()
-    )
+    date_config         : DateConfig                 = Field(default_factory=lambda: DateConfig(
+        start_time=(datetime.now(timezone.utc).replace(second=0, microsecond=0)
+                    - relativedelta(months=1)).replace(hour=0, minute=0).isoformat(),
+        end_time=datetime.now(timezone.utc).replace(second=0, microsecond=0).isoformat(),
+    ))
     model               : str = 'IASP91'
     min_depth           : float = -5.0
     max_depth           : float = 1000.0
