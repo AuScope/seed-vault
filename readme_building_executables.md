@@ -70,65 +70,9 @@ from PyInstaller.utils.hooks import copy_metadata
 datas = copy_metadata('streamlit')
 
 ```
-### 3. Fixing Dependencies
+## 3. Compile the App with PyInstaller
 
-#### 3.1 Modify Obspy imaging
-Navigate to obspy path in your virtual environment:
-```
-.venv\Lib\site-packages\obspy\imaging\cm.py
-```
-Older obspy releases call `matplotlib.cm.get_cmap()`, which was removed in Matplotlib 3.9+. If you hit an `AttributeError`/`ImportError` on `get_cmap` when building, modify `cm.py` as follows (swap `get_cmap(name)` for `matplotlib.colormaps[name]`):
-```python
-import matplotlib as mpl
-
-try:
-    _globals.update(_get_all_cmaps())
-    obspy_sequential = _globals["viridis"]
-    obspy_sequential_r = _globals["viridis_r"]
-except:
-    obspy_sequential = mpl.colormaps["viridis"]
-    obspy_sequential_r = mpl.colormaps["viridis_r"]
-obspy_divergent = mpl.colormaps["RdBu_r"]
-obspy_divergent_r = mpl.colormaps["RdBu"]
-#: PQLX colormap
-try:
-    pqlx = _get_cmap("pqlx.npz")
-except:
-    pqlx = mpl.colormaps['seismic']
-
-```
-**Note:** newer obspy releases (≥1.4.1) already ship this fix, so check your installed version before patching — you may not need this step at all.
-#### 3.2 Fix SciPy _distn_infrastructure.py Issue
-Navigate to the SciPy path in your virtual environment:
-```
-.venv\Lib\site-packages\scipy\stats\_distn_infrastructure.py
-```
-Modidfy  `_distn_infrastructure.py`:
-Find this problematic block:
-
-```python
-for obj in [s for s in dir() if s.startswith('_doc_')]:
-    exec(f"del {obj}")
-
-del obj  # THIS CAUSES THE ERROR
-```
-Replace it with:
-
-```python
-for obj in [s for s in dir() if s.startswith('_doc_')]:
-    exec(f"del {obj}")
-
-try:
-    del obj  # Only delete if it exists
-except NameError:
-    pass
-```
-
----
-
-## 4. Compile the App with PyInstaller
-
-### 4.1 Compilation Commands
+### 3.1 Compilation Commands
 Run the following command depending on your OS.
 
 ### For Linux
@@ -174,7 +118,7 @@ pyinstaller --name seed-vault \
 ```
 
 ---
-## 4.2 Modify the Spec File for Each Platform
+## 3.2 Modify the Spec File for Each Platform
 
 ### Linux Spec File
 For Linux, the `datas` and `hiddenimports` sections in the `.spec` file should look like this:
@@ -495,7 +439,7 @@ coll = COLLECT(
 
 ---
 
-## 4.3 Build the Executable
+## 3.3 Build the Executable
 
 Finally, to build the executable on any platform, run:
 ```bash
@@ -504,8 +448,7 @@ pyinstaller seed-vault.spec --clean
 
 ---
 
-
-## 5. Streamlit Configuration
+## 4. Streamlit Configuration
 
 Create the following configuration file for Streamlit to specify server options.
 
