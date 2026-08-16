@@ -1,4 +1,3 @@
-
 # Building Executables for macOS, Linux, and Windows - Running in Browser Option
 
 This readme outlines the steps to create executables for macOS, Linux, and Windows using **Python**, **Poetry**, and **PyInstaller**. The process is similar across platforms with some platform-specific adjustments.
@@ -30,9 +29,9 @@ For each platform (Linux, macOS, Windows):
 Once Poetry is installed, install all dependencies for your project:
 ```bash
 poetry install
-poetry shell
 poetry show --with dev
 ```
+To activate the virtual environment, use `poetry env activate` (Poetry 2.0+) and run the command it prints, or `eval $(poetry env activate)` on macOS/Linux to activate it directly. The older `poetry shell` command was moved out of Poetry core in 1.2+ — if you prefer it, install the plugin first: `poetry self add poetry-plugin-shell`.
 
 ---
 ## 2. Modifications for PyInstaller & Streamlit
@@ -54,7 +53,7 @@ if __name__ == '__main__':
 #### 2.1.2 Modify Streamlit's CLI
 Navigate to the Streamlit path in your virtual environment:
 ```
-.env\Lib\site-packages\streamlit\web\cli.py
+.venv\Lib\site-packages\streamlit\web\cli.py
 ```
 Add the following function to `cli.py`:
 ```python
@@ -76,30 +75,33 @@ datas = copy_metadata('streamlit')
 #### 3.1 Modify Obspy imaging
 Navigate to obspy path in your virtual environment:
 ```
-.env\Lib\site-packages\obspy\imaging\cm.py
+.venv\Lib\site-packages\obspy\imaging\cm.py
 ```
-Modidfy  `cm.py` as follows:
+Older obspy releases call `matplotlib.cm.get_cmap()`, which was removed in Matplotlib 3.9+. If you hit an `AttributeError`/`ImportError` on `get_cmap` when building, modify `cm.py` as follows (swap `get_cmap(name)` for `matplotlib.colormaps[name]`):
 ```python
+import matplotlib as mpl
+
 try:
     _globals.update(_get_all_cmaps())
     obspy_sequential = _globals["viridis"]
     obspy_sequential_r = _globals["viridis_r"]
 except:
-    obspy_sequential = get_cmap("viridis")
-    obspy_sequential_r = get_cmap("viridis_r")
-obspy_divergent = get_cmap("RdBu_r")
-obspy_divergent_r = get_cmap("RdBu")
+    obspy_sequential = mpl.colormaps["viridis"]
+    obspy_sequential_r = mpl.colormaps["viridis_r"]
+obspy_divergent = mpl.colormaps["RdBu_r"]
+obspy_divergent_r = mpl.colormaps["RdBu"]
 #: PQLX colormap
 try:
     pqlx = _get_cmap("pqlx.npz")
 except:
-    pqlx = get_cmap('seismic')
+    pqlx = mpl.colormaps['seismic']
 
 ```
+**Note:** newer obspy releases (≥1.4.1) already ship this fix, so check your installed version before patching — you may not need this step at all.
 #### 3.2 Fix SciPy _distn_infrastructure.py Issue
 Navigate to the SciPy path in your virtual environment:
 ```
-.env\Lib\site-packages\scipy\stats\_distn_infrastructure.py
+.venv\Lib\site-packages\scipy\stats\_distn_infrastructure.py
 ```
 Modidfy  `_distn_infrastructure.py`:
 Find this problematic block:

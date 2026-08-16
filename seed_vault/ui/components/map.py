@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
 import matplotlib.cm as cm
 import matplotlib.colors as mcolors
+import matplotlib as mpl
 import time
 import numpy as np
 import pandas as pd
@@ -36,7 +37,8 @@ def create_map(map_center=[-20 ,180.0], zoom_start=2, map_id=None):
     m = folium.Map(
         location=map_center,
         zoom_start=zoom_start,
-        # min_zoom=2, 
+        # min_zoom=2,
+        prefer_canvas=True,
         id=map_id,
     )
 
@@ -65,7 +67,7 @@ def create_map(map_center=[-20 ,180.0], zoom_start=2, map_id=None):
     ]
 
     folium.Polygon(
-        locations=[outer_boundary, active_area_hole],  
+        locations=[outer_boundary, active_area_hole],
         color=None,
         fill=True,
         fill_color="LightSteelBlue",
@@ -198,66 +200,115 @@ def add_circle_area(feature_group, coords):
             weight=2,
         ))
 
+
+@st.cache_data(show_spinner=False)
+def _numeric_legend_png(col_color: str, vmin: float, vmax: float) -> bytes:
+    """
+    Render the continuous colorbar legend once and cache it as PNG bytes.
+    Building a matplotlib figure on every Streamlit rerun is slow (~100ms)
+    and, without plt.close(), leaks figures for the whole session.
+    """
+    import io
+    fig, ax = plt.subplots(figsize=(1, 22))
+    norm = mcolors.Normalize(vmin=vmin, vmax=vmax)
+    colormap = mpl.colormaps['inferno_r']
+
+    fig.subplots_adjust(bottom=0.5)
+    colorbar = fig.colorbar(cm.ScalarMappable(norm=norm, cmap=colormap), cax=ax, orientation='vertical')
+    colorbar.set_label(f'Color range for {col_color}', fontsize=16)
+    colorbar.ax.invert_yaxis()  # put the deep colors at the bottom
+    colorbar.ax.tick_params(labelsize=14)
+
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", bbox_inches="tight", dpi=100)
+    plt.close(fig)
+    return buf.getvalue()
+
+
+@st.cache_data(show_spinner=False)
+def _categorical_legend_png(display_cats: tuple) -> bytes:
+    """
+    Render the discrete-category legend once per unique category tuple and
+    cache it as PNG bytes (figure is closed to avoid pyplot leaks).
+    """
+    import io
+    colors = mpl.colormaps['tab10'].resampled(len(display_cats))
+    legend_category_color_map = {
+        category: mcolors.rgb2hex(colors(i)[:3]) for i, category in enumerate(display_cats)
+    }
+
+    fig, ax = plt.subplots(figsize=(2, len(display_cats) * 0.5))
+    ax.axis('off')
+    legend_labels = [plt.Line2D([0], [0], color=color, lw=4)
+                     for color in legend_category_color_map.values()]
+    ax.legend(legend_labels, legend_category_color_map.keys(), loc='center', ncol=1, fontsize=24)
+
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", bbox_inches="tight", dpi=100)
+    plt.close(fig)
+    return buf.getvalue()
+
+
 def add_data_points(df, cols_to_disp, step: Steps, selected_idx=[], col_color=None, col_size=None):
     """
-    Add points to map
+    Add points to map.
+
+    Returns (feature_group, marker_info, legend_png_bytes_or_None).
+    Note the third element is now PNG bytes (render with st.image), not a
+    matplotlib Figure.
     """
     fg = folium.FeatureGroup(name="Marker " + step.value)
 
     marker_info = {}
+    selected_set = set(selected_idx)
 
-    # Handling the color map
-    fig = None
+    # Handling the color map: compute per-row colors vectorized, and build the
+    # legend as cached PNG bytes instead of a fresh matplotlib figure per rerun.
+    legend_png = None
+    row_colors = None
+
     if col_color is not None:
 
-        # Create legend with continuous colour range
         if pd.api.types.is_numeric_dtype(df[col_color]):
             fig, ax = plt.subplots(figsize=(1, 22))
-            # norm = mcolors.Normalize(vmin=df[col_color].min(), vmax=df[col_color].max())
             norm = mcolors.Normalize(vmin=-5, vmax=500)
-            colormap = cm.get_cmap('inferno_r')
+            colormap = mpl.colormaps['inferno_r']
 
-            fig.subplots_adjust(bottom=0.5)
-            colorbar = fig.colorbar(cm.ScalarMappable(norm=norm, cmap=colormap), cax=ax, orientation='vertical')
-            colorbar.set_label(f'Color range for {col_color}', fontsize=16)
-            colorbar.ax.invert_yaxis() # put the deep colors at the bottom
-            colorbar.ax.tick_params(labelsize=14)
+            # One vectorized call over the whole column instead of per-row
+            rgba = colormap(norm(df[col_color].to_numpy(dtype=float)))
+            row_colors = [mcolors.rgb2hex(c[:3]) for c in rgba]
+            legend_png = _numeric_legend_png(col_color, -5, 500)
+
 
         else:
-            # Create legend with discrete color range
             max_display_categories = 15 # Max number of categories in legend
-
             unique_categories = df[col_color].unique()
 
-            # If too many categories then truncate
             if len(unique_categories) > max_display_categories:
-                display_cats = unique_categories[:max_display_categories]
-                display_cats = np.append(display_cats, "...")
+                display_cats = np.append(unique_categories[:max_display_categories], "...")
             else:
                 display_cats = unique_categories
 
             # Create a colour map using 'display_cats'
-            colors = cm.get_cmap('tab10', len(display_cats))
+            colors = mpl.colormaps['tab10'].resampled(len(display_cats))
             legend_category_color_map = {category: mcolors.rgb2hex(colors(i)[:3]) for i, category in enumerate(display_cats)}
 
-            # Create legend
-            fig, ax = plt.subplots(figsize=(2, len(display_cats) * 0.5))
-            ax.axis('off')  # Hide the axis for categories
-            legend_labels = [plt.Line2D([0], [0], color=color, lw=4) for color in legend_category_color_map.values()]
-            legend = ax.legend(legend_labels, legend_category_color_map.keys(), loc='center', ncol=1, fontsize=24)
+            colors = mpl.colormaps['tab10'].resampled(len(display_cats))
+            category_color_map = {
+                category: mcolors.rgb2hex(colors(i)[:3])
+                for i, category in enumerate(unique_categories)
+            }
+            row_colors = df[col_color].map(category_color_map).tolist()
+            legend_png = _categorical_legend_png(tuple(str(c) for c in display_cats))
 
-            # Create a colour map for the geospatial map which has all unique categories
-            category_color_map = {category: mcolors.rgb2hex(colors(i)[:3]) for i, category in enumerate(unique_categories)}
 
     # Loop to create all the map markers
-    for index, row in df.iterrows():
+    for pos, (index, row) in enumerate(df.iterrows()):
         # Determine color
-        if col_color is None:
+        if row_colors is None:
             color = DEFAULT_COLOR_MARKER
-        elif pd.api.types.is_numeric_dtype(df[col_color]):
-            color = mcolors.rgb2hex(colormap(norm(row[col_color]))[:3])
         else:
-            color = category_color_map[row[col_color]]
+            color = row_colors[pos]
 
         # Determine marker size
         size = 5
@@ -270,17 +321,21 @@ def add_data_points(df, cols_to_disp, step: Steps, selected_idx=[], col_color=No
                 size = 2 + (10 * (row[col_size]) / (9))
             size = np.clip(size, 5, 15)
 
-        if index in selected_idx:
+        if index in selected_set:
             size = 1.2 *size
 
         # Determine edge color and fill opacity for selected markers
-        edge_color = 'black' if index in selected_idx else color
-        # size = 7 if index in selected_idx else size
-        fill_opacity = 1.0 if index in selected_idx else 0.2
+        edge_color = 'black' if index in selected_set else color
+        # size = 7 if index in selected_set else size
+        fill_opacity = 1.0 if index in selected_set else 0.2
 
-        # Create popup content
+
+        # Create popup content. Popups are lazy=True so the browser only
+        # instantiates the popup DOM when a marker is actually clicked, and the
+        # width is bounded (2650px forced Leaflet to do expensive reflow work).
         popup_content = create_popup(index, row, cols_to_disp, step)
-        popup = folium.Popup(html=popup_content, max_width=2650, min_width=200)
+        #popup = folium.Popup(html=popup_content, max_width=2650, min_width=200)
+        popup = folium.Popup(html=popup_content, max_width=400, min_width=200, lazy=True)
 
         tooltip_text = create_popup(index, row, cols_to_disp, step, truncate=True)
 
@@ -299,7 +354,7 @@ def add_data_points(df, cols_to_disp, step: Steps, selected_idx=[], col_color=No
         for k, v in cols_to_disp.items():
             marker_info[marker_key][v] = row[k]
 
-    return fg, marker_info, fig
+    return fg, marker_info, legend_png
 
 def lon_to_360(lon: float) -> float:
     return lon if lon >= 0 else lon + 360
@@ -337,7 +392,7 @@ def add_marker_to_cluster(fg, latitude, longitude, color, edge_color, size, fill
             fill_opacity=fill_opacity,
         ))
 
-                   
+
 def clear_map_layers(map_object):
     """
     Remove all FeatureGroup layers from the map object.
@@ -351,7 +406,7 @@ def clear_map_layers(map_object):
             for key in layers_to_remove:
                 map_object._children.pop(key)
         except Exception as e:
-            print(f"Error clearing map layers: {e}")     
+            print(f"Error clearing map layers: {e}")
 
 
 def get_marker_size(magnitude):
@@ -391,7 +446,7 @@ def get_color_map(df, c, offset=0.0, cmap='viridis'):
     """
     offset: 0.0 <= offset <= 1   -> it is used to lower the range of colors
     """
-    colormap = cm.get_cmap(cmap) 
+    colormap = mpl.colormaps[cmap]
     min_val, max_val = [df[c].min(), df[c].max()]
     norm = Normalize(vmin=min_val + offset * min_val, vmax=max_val - offset)
 

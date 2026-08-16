@@ -12,7 +12,8 @@ from obspy.core.inventory import Inventory, read_inventory
 from time import sleep
 import tempfile
 
-from seed_vault.ui.components.map import LON_RANGE_END, LON_RANGE_START, create_map, add_area_overlays, add_data_points, clear_map_layers, clear_map_draw,add_map_draw
+#from seed_vault.ui.components.map import LON_RANGE_END, LON_RANGE_START, create_map, add_area_overlays, add_data_points, clear_map_layers, clear_map_draw,add_map_draw
+from seed_vault.ui.components.map import LON_RANGE_END, LON_RANGE_START, create_map, add_area_overlays, add_data_points
 from seed_vault.ui.app_pages.helpers.common import get_selected_areas, save_filter
 
 from seed_vault.service.events import get_event_data, event_response_to_df
@@ -232,6 +233,28 @@ class BaseComponent:
         self.is_refreshing = False
         self.needs_rerun = False
 
+ 
+    # ====================
+    # BASE MAP LIFECYCLE
+    # ====================
+
+    def _get_base_map(self):
+        """Build a fresh base map each render.
+
+        NOTE: st_folium's feature_group_to_add requires a base map that has not
+        already been rendered; reusing a cached Map instance across reruns makes
+        the added feature groups (markers) silently fail to paint. So we rebuild
+        it each run — cheap relative to the marker work, and correct.
+        """
+        return create_map(
+            map_id=self.map_id,
+            zoom_start=self.map_view_zoom,
+            map_center=[
+                self.map_view_center.get("lat", -20.0),
+                self.map_view_center.get("lng", 180.0),
+            ],
+        )
+
 
     def request_rerun(self):
         """Mark that a rerun is needed but don't do it yet"""
@@ -250,10 +273,7 @@ class BaseComponent:
             if self.df_data_edit is not None:
                 self.sync_df_markers_with_df_edit()
 
-            # Small delay to batch multiple changes
-            if self.delay_selection > 0:
-                sleep(self.delay_selection)
-                self.delay_selection = 0
+            self.delay_selection = 0
 
             st.rerun()
 
@@ -848,7 +868,6 @@ class BaseComponent:
 
     def get_data_globally(self):
         self.clear_all_data()
-        clear_map_draw(self.map_disp)
         self.handle_get_data()        
         st.rerun()
 
@@ -866,19 +885,9 @@ class BaseComponent:
         try:
             geo_constraint = self.get_geo_constraint()
 
-            if recreate_map:
-                self.map_disp = create_map(
-                    map_id=self.map_id, 
-                    zoom_start=self.map_view_zoom,
-                    map_center=[
-                        self.map_view_center.get("lat", 0.0),
-                        self.map_view_center.get("lng", 0.0)
-                    ]
-                )
+            self.map_disp = self._get_base_map()
 
             if clear_draw:
-                #print("DEBUG: refresh_map clear_draw")
-                clear_map_draw(self.map_disp)
                 self.all_feature_drawings = geo_constraint
                 self.map_fg_area= add_area_overlays(areas=geo_constraint)
             else:
@@ -892,11 +901,9 @@ class BaseComponent:
             if selected_idx != None:
                 self.handle_update_data_points(selected_idx)
             else:
-                # @NOTE: Below is added to resolve triangle marker displays.
-                #        But it results in map blinking and hence a chance to
-                #        break the map.
                 if not clear_draw:
-                    clear_map_draw(self.map_disp)
+                    # Area overlays are delivered as a feature group via
+                    # feature_group_to_add, so no map mutation is needed here.
                     self.all_feature_drawings = geo_constraint
                     self.map_fg_area= add_area_overlays(areas=geo_constraint)
                 if get_data:
@@ -1055,7 +1062,9 @@ class BaseComponent:
     def get_selected_idx(self):
         if self.df_markers.empty:
             return []
-        mask = self.df_markers['is_selected']
+        mask = self.df_markers.get('is_selected')
+        if mask is None:
+            return []
         return self.df_markers[mask].index.tolist()
 
 
@@ -1074,18 +1083,10 @@ class BaseComponent:
         selected_idx = self.get_selected_idx()
         self.update_selected_data()
 
-        # Only clear and update marker layers, keep base map and areas intact
-        if self.map_disp and self.map_fg_marker:
-            # Clear only the marker feature group from the map
-            if hasattr(self.map_disp, '_children') and any('Marker' in str(child) for child in self.map_disp._children.values()):
-                layers_to_remove = [
-                    key for key, layer in self.map_disp._children.items()
-                    if isinstance(layer, folium.map.FeatureGroup) and 'Marker' in layer.layer_name
-                ]
-                for key in layers_to_remove:
-                    self.map_disp._children.pop(key)
-
-        # Re-add only the updated marker layer
+        # Markers are delivered via st_folium's feature_group_to_add, so
+        # rebuilding self.map_fg_marker is sufficient — the base map is never
+        # mutated (mutating _children changed the map's HTML hash and forced a
+        # full iframe re-render, which was a major source of lag/blinking).
         self.handle_update_data_points(selected_idx)
 
         if rerun:
@@ -1586,14 +1587,15 @@ class BaseComponent:
 
     def render_map(self):
 
-        if self.map_disp is None:
-            self.map_disp = create_map(map_id=f"init_{self.map_id}")
-        else:
-            clear_map_layers(self.map_disp)
+        # The base map is created once per epoch and kept identical across
+        # reruns (never mutated) so streamlit-folium can reuse the iframe and
+        # only swap the feature groups below. See _get_base_map().
+        self.map_disp = self._get_base_map()
 
         self.display_prev_step_selection_marker()
 
         feature_groups = [fg for fg in [self.map_fg_area, self.map_fg_marker, self.map_fg_prev_selected_marker] if fg is not None]
+
 
         info_display = f"ℹ️ Use **shape tools** to search **{self.TXT.STEP}s** in confined areas   "
         info_display += "\nℹ️ Use **Reload** button to refresh map if needed   "
@@ -1604,22 +1606,42 @@ class BaseComponent:
         st.caption(info_display)
 
         # Store previous interaction state
-        prev_clicked = st.session_state.get(f"{self.map_id}_last_clicked", None)
-        prev_center = st.session_state.get(f"{self.map_id}_last_center", None)        
+        prev_clicked = st.session_state.get(f"{self.map_id}_last_clicked", None)      
 
         c1, c2 = st.columns([18,1])
         with c1:
+
+            # Signal streamlit-folium to re-apply feature groups whenever the overlay
+            # content changes (markers, selection, or areas). Without this, the cached
+            # base map + static key make st_folium reuse its last render and drop the
+            # newly-built feature groups.
+            try:
+                sel = tuple(sorted(self.get_selected_idx()))
+            except Exception:
+                sel = ()
+            n_markers = 0 if self.df_markers is None else len(self.df_markers)
+            n_areas = len(self.all_feature_drawings or []) + len(self.all_current_drawings or [])
+
             self.map_output = st_folium(
                 self.map_disp, 
+                # Epoch in the key forces a clean remount only when drawings
+                # are explicitly cleared (see _bump_map_epoch).
                 key=f"map_{self.map_id}",
                 feature_group_to_add=feature_groups, 
+                # CRITICAL for responsiveness: only rerun the script when one
+                # of these values changes. Without this, every pan/zoom/hover
+                # returns new center/bounds values and triggers a full
+                # Streamlit rerun (rebuilding markers, legend, etc.).
+                returned_objects=["all_drawings", "last_object_clicked_popup"],
                 width='stretch'
                 # height=self.map_height
             )
 
         with c2:
             if self.fig_color_bar:
-                st.pyplot(self.fig_color_bar)
+                #st.pyplot(self.fig_color_bar)
+                # is cached png bytes object now
+                st.image(self.fig_color_bar)
 
         # @IMPORTANT NOTE: Streamlit-Folium does not provide a direct way to tag a Marker with
         #                  some metadata, including adding an id. The options are using PopUp
@@ -1649,14 +1671,20 @@ class BaseComponent:
                 st.session_state[drawings_key] = current_drawings
                 self.watch_all_drawings(current_drawings)
 
-            current_center = self.map_output.get("center", {})
             current_clicked = self.map_output.get('last_object_clicked_popup')
 
             # Only update if center actually changed (not just from resize)
-            if current_center != prev_center:
-                self.map_view_center = current_center
-                self.map_view_zoom = self.map_output.get("zoom", 2)
-                st.session_state[f"{self.map_id}_last_center"] = current_center
+            #if current_center != prev_center:
+            #    self.map_view_center = current_center
+            #    self.map_view_zoom = self.map_output.get("zoom", 2)
+            #    st.session_state[f"{self.map_id}_last_center"] = current_center
+
+            # NEW NOTE: center/zoom are intentionally NOT in returned_objects —
+            # returning them made every pan/zoom rerun the whole script. The
+            # view therefore persists client-side in the iframe; we only lose
+            # it on an explicit epoch bump (clearing drawings), where a reset
+            # to the initial view is acceptable.
+
 
             # Only process clicks if they're actually new
             if current_clicked != prev_clicked:
@@ -1799,8 +1827,6 @@ class BaseComponent:
             has_changed = not self.df_data_edit.equals(st.session_state[state_key])
 
         if has_changed:
-            if self.delay_selection > 0:
-                sleep(self.delay_selection)
             st.session_state[state_key] = self.df_data_edit.copy()
 
             if st.session_state.get('auto_refresh_enabled', True):
