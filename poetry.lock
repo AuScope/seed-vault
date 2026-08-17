@@ -2732,21 +2732,6 @@ pymysql = ["pymysql (<1) ; python_version < \"3\"", "pymysql ; python_version >=
 sqlcipher = ["sqlcipher3_binary ; python_version >= \"3\""]
 
 [[package]]
-name = "st-pages"
-version = "1.0.1"
-description = "An experimental version of Streamlit Multi-Page Apps"
-optional = false
-python-versions = "!=2.7.*,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,!=3.7.*,!=3.8.*,>=3.9"
-groups = ["main"]
-files = [
-    {file = "st_pages-1.0.1-py3-none-any.whl", hash = "sha256:9098fb4d96bc1dfa56cc2c56ef6fe44e607c69261ff4bceee1f6e9c1e0c2acb4"},
-    {file = "st_pages-1.0.1.tar.gz", hash = "sha256:2641cfbff1c768ff146858ed742d282b30a3a4c3e4f7717898705bbaee717736"},
-]
-
-[package.dependencies]
-streamlit = ">=1.36.0"
-
-[[package]]
 name = "starlette"
 version = "1.3.1"
 description = "The little ASGI library that shines."
@@ -2834,9 +2819,29 @@ description = "Render Folium objects in Streamlit"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
+markers = "python_version == \"3.10\""
 files = [
     {file = "streamlit_folium-0.26.2-py3-none-any.whl", hash = "sha256:6374a932e7d94806af122b89982c805ab0641a17a350d160cf74a96d5b8300c1"},
     {file = "streamlit_folium-0.26.2.tar.gz", hash = "sha256:721e712d6edddd0a87e65d7378ba38e467014f3f042b16ca170302c07169c351"},
+]
+
+[package.dependencies]
+branca = "*"
+folium = ">=0.13,<0.15.0 || >0.15.0"
+jinja2 = "*"
+streamlit = ">=1.13.0"
+
+[[package]]
+name = "streamlit-folium"
+version = "0.27.4"
+description = "Render Folium objects in Streamlit"
+optional = false
+python-versions = ">=3.11"
+groups = ["main"]
+markers = "python_version >= \"3.11\""
+files = [
+    {file = "streamlit_folium-0.27.4-py3-none-any.whl", hash = "sha256:0214076ff10e9417a5c1079920adbe91e35b9a844b3f45ee9c15277b91c7cb08"},
+    {file = "streamlit_folium-0.27.4.tar.gz", hash = "sha256:ff9572ed74d04164b391f59caad4ab022cbca99f27bbafe88dbd7251e4679598"},
 ]
 
 [package.dependencies]
@@ -3184,4 +3189,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.15"
-content-hash = "c4c789579dce0018387eac78d13f4ec301ce1166adca6066aea1c87c1eb76286"
+content-hash = "59b6ba83ea98fc871131716cf63c26b8021528101e7dd38088df303fb6319453"

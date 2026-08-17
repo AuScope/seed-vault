@@ -1,7 +1,6 @@
 import os
 from seed_vault.ui.components.waveform import WaveformComponents
 import streamlit as st
-import plotly.express as px
 import pandas as pd
 import queue
 
