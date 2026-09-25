@@ -250,10 +250,11 @@ def get_p_s_times(eq, dist_deg, ttmodel):
 
     eq_time = eq.origins[0].time
     eq_depth = eq.origins[0].depth / 1000  # depths are in meters for QuakeML
+    eq_elevation = max(-eq_depth,0) # km
 
     try:
         phasearrivals = ttmodel.get_travel_times(
-            source_depth_in_km=eq_depth,
+            source_depth_in_km=max(eq_depth,0),
             distance_in_degree=dist_deg,
             phase_list=['ttbasic']
         )
@@ -266,11 +267,15 @@ def get_p_s_times(eq, dist_deg, ttmodel):
     # "P" is whatever the first arrival is.. not necessarily literally uppercase P
     if phasearrivals[0]:
         p_arrival_time = eq_time + phasearrivals[0].time
+        if eq_elevation:
+            p_arrival_time += eq_elevation / 5.8
 
     # Now get "S"...
     for arrival in phasearrivals:
         if arrival.name.upper() == 'S' and s_arrival_time is None:
             s_arrival_time = eq_time + arrival.time
+            if eq_elevation:
+                s_arrival_time += eq_elevation / 3.4
         if p_arrival_time and s_arrival_time:
             break
 
