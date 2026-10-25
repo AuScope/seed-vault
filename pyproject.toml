@@ -26,7 +26,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Physics"
 ]
 dependencies = [
-    "streamlit (>=1.57,<2.0)",
+    "streamlit (>=1.66.1,<2.0)",
     "pandas (>=2.2.2,<4.0)",
     "folium (>=0.20.0,<0.21)",
     "requests (>=2.32.2,<3.0)",
