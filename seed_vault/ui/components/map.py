@@ -20,8 +20,9 @@ from seed_vault.models.config import GeometryConstraint
 from seed_vault.enums.ui import Steps
 from seed_vault.utils.constants import AREA_COLOR
 
-LON_RANGE_START = 0
-LON_RANGE_END = 360
+from seed_vault.utils.geo import (  # noqa: F401  (re-exported for legacy imports)
+    LON_RANGE_START, LON_RANGE_END, lon_to_360, normalize_bounds, normalize_circle,
+)
 
 DEFAULT_COLOR_MARKER = 'blue'
 
@@ -355,8 +356,6 @@ def add_data_points(df, cols_to_disp, step: Steps, selected_idx=[], col_color=No
 
     return fg, marker_info, legend_png
 
-def lon_to_360(lon: float) -> float:
-    return lon if lon >= 0 else lon + 360
 
 def add_marker_to_cluster(fg, latitude, longitude, color, edge_color, size, fill_opacity, popup, tooltip_text, step):
     """
@@ -579,104 +578,3 @@ class AddMapDraw(MacroElement):
         // More cases for other types like circles, polylines, etc., can be added here
         {% endmacro %}
         """)
-
-
-def normalize_bounds(geometry_constraint: GeometryConstraint) -> List[GeometryConstraint]:
-    """
-    Split bounds of a GeometryConstraint that crosses the active window boundary, 
-    and normalize everything between LON_RANGE_START and LON_RANGE_END.
-    """
-    rect_bounds = geometry_constraint.coords
-    lat_min, lon_min = rect_bounds.min_lat, rect_bounds.min_lon
-    lat_max, lon_max = rect_bounds.max_lat, rect_bounds.max_lon
-    start_lon = LON_RANGE_START
-    end_lon = LON_RANGE_END
-
-    if lon_min >= start_lon and lon_max <= end_lon:
-        return [geometry_constraint]
-
-    elif lon_min < end_lon and lon_max > end_lon:
-        left_rectangle = GeometryConstraint(
-            coords=RectangleArea(
-                min_lat=lat_min,
-                max_lat=lat_max,
-                min_lon=lon_min,
-                max_lon=end_lon,
-                color=rect_bounds.color,
-            )
-        )
-        right_rectangle = GeometryConstraint(
-            coords=RectangleArea(
-                min_lat=lat_min,
-                max_lat=lat_max,
-                min_lon=start_lon,
-                max_lon=lon_max - end_lon,
-                color=rect_bounds.color,
-            )
-        )
-        return [left_rectangle, right_rectangle]
-
-    elif lon_min < start_lon and lon_max <= end_lon:
-        left_rectangle = GeometryConstraint(
-            coords=RectangleArea(
-                min_lat=lat_min,
-                max_lat=lat_max,
-                min_lon=lon_min + end_lon,
-                max_lon=end_lon,
-                color=rect_bounds.color,
-            )
-        )
-        right_rectangle = GeometryConstraint(
-            coords=RectangleArea(
-                min_lat=lat_min,
-                max_lat=lat_max,
-                min_lon=start_lon,
-                max_lon=lon_max,
-                color=rect_bounds.color,
-            )
-        )
-        return [left_rectangle, right_rectangle]
-
-    elif lon_min < start_lon and lon_max < start_lon:
-        normalized_rectangle = GeometryConstraint(
-            coords=RectangleArea(
-                min_lat=lat_min,
-                max_lat=lat_max,
-                min_lon=lon_min + end_lon,
-                max_lon=lon_max + end_lon,
-                color=rect_bounds.color,
-            )
-        )
-        return [normalized_rectangle]
-
-    elif lon_min > end_lon and lon_max > end_lon:
-        normalized_rectangle = GeometryConstraint(
-            coords=RectangleArea(
-                min_lat=lat_min,
-                max_lat=lat_max,
-                min_lon=lon_min - end_lon,
-                max_lon=lon_max - end_lon,
-                color=rect_bounds.color,
-            )
-        )
-        return [normalized_rectangle]
-
-def normalize_circle(geometry_constraint: GeometryConstraint) -> List[GeometryConstraint]:
-    """
-    Normalize circle center longitude into [0, 360) range.
-    """
-    circle = geometry_constraint.coords
-    center_lat, center_lon, radius = circle.lat, circle.lon, circle.max_radius
-
-    norm_lon = center_lon % 360
-
-    normalized_circle = GeometryConstraint(
-        coords=CircleArea(
-            lat=center_lat,
-            lon=norm_lon,
-            max_radius=radius,
-            min_radius=circle.min_radius,
-            color=circle.color,
-        )
-    )
-    return [normalized_circle]

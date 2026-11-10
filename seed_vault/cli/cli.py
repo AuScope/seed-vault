@@ -1,5 +1,6 @@
 import click
 import os
+import sys
 from seed_vault.service.seismoloader import run_main
 from seed_vault.service.db import populate_database_from_sds
 from seed_vault.service.db import clean_database
@@ -36,15 +37,35 @@ class GroupWithSubcommandHelp(click.Group):
 @click.pass_context
 
 def cli(ctx, file_path):
-    """Seed Vault CLI: A tool for seismic data processing."""
+    """Seed Vault CLI: A tool for seismic data processing.
+
+    With no arguments, opens the desktop application.
+    """
     if ctx.invoked_subcommand is None:
         if file_path:
             click.echo(f"Processing file: {file_path}")
             run_main(from_file=file_path)
         else:
-            path_to_run = os.path.join(par_dir, "ui", "app.py")
-            import subprocess
-            subprocess.run(["streamlit", "run", path_to_run,"--server.runOnSave=true"])
+            from seed_vault.qt.app import main as gui_main
+            raise SystemExit(gui_main([sys.argv[0]]))
+
+
+@click.command(name="gui", help="Open the desktop application (default when no command is given).")
+def run_gui():
+    from seed_vault.qt.app import main as gui_main
+    raise SystemExit(gui_main([sys.argv[0]]))
+cli.add_command(run_gui, name="gui")
+
+
+@click.command(name="web", help="Run the legacy browser (Streamlit) interface. Requires: pip install 'seed-vault[web]'.")
+def run_web():
+    import importlib.util
+    import subprocess
+    if importlib.util.find_spec("streamlit") is None:
+        raise click.ClickException("The web interface needs the optional extra: pip install 'seed-vault[web]'")
+    path_to_run = os.path.join(par_dir, "ui", "app.py")
+    subprocess.run([sys.executable, "-m", "streamlit", "run", path_to_run, "--server.runOnSave=true"])
+cli.add_command(run_web, name="web")
 
 
 @click.command(name="sync-db", help="Syncs the database with the local SDS repository.")

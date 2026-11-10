@@ -1,9 +1,8 @@
 import os
-import json
 
 from pathlib import Path
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Optional, Any
 from obspy.clients.fdsn.header import URL_MAPPINGS
 import pandas as pd
@@ -12,6 +11,22 @@ from seed_vault.enums.common import ClientType
 
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
+
+CLIENTS_CSV_PATH = os.path.join(current_directory, "clients.csv")
+
+# Optional per-service URL columns in clients.csv (see seed_vault.service.fdsn_client).
+SERVICE_COLUMNS = ["dataselect", "event", "station"]
+CSV_COLUMNS = ["client", "url", "is_original"] + SERVICE_COLUMNS
+
+
+def _normalise_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Add missing service columns (older clients.csv files) and blank out NaNs."""
+    for col in SERVICE_COLUMNS:
+        if col not in df.columns:
+            df[col] = ""
+    df[SERVICE_COLUMNS] = df[SERVICE_COLUMNS].fillna("").astype(str)
+    df["url"] = df["url"].fillna("").astype(str)
+    return df
 
 class UrlMapping(BaseModel):
     """
@@ -59,7 +74,8 @@ class UrlMappings(BaseModel):
     """
     maps: Optional[dict] = {}
     df_maps: Optional[Any] = None
-    save_path: Path  = os.path.join(current_directory,"clients.csv")
+    # Resolved at construction time so the location can be overridden (e.g. in tests).
+    save_path: Path  = Field(default_factory=lambda: CLIENTS_CSV_PATH)
 
     def check_saved_clients(self, df: pd.DataFrame) -> pd.DataFrame:
         """
@@ -82,6 +98,10 @@ class UrlMappings(BaseModel):
             
             if row['client'] not in URL_MAPPINGS and row['is_original']:
                 continue
+            # ObsPy's composite pseudo-clients (e.g. "EARTHSCOPE+USGS") route different
+            # services to different servers; list the real servers individually instead.
+            if row['is_original'] and '+' in str(row['client']):
+                continue
 
             chk_clients.append(row)
 
@@ -91,7 +111,7 @@ class UrlMappings(BaseModel):
         # Check if a client exist in URL_MAPPINGS that does not exist
         # in saved clients
         for client, url in URL_MAPPINGS.items():
-            if client not in curr_clients:
+            if client not in curr_clients and '+' not in client:
                 df_chk.loc[len(df_chk)] = {
                     'client': client, 
                     'url': url,
@@ -128,7 +148,9 @@ class UrlMappings(BaseModel):
 
             df = pd.DataFrame(lst_mappings)
 
+        df = _normalise_columns(df)
         df = self.check_saved_clients(df)
+        df = _normalise_columns(df)
 
         if extra_clients is not None:
 
@@ -145,20 +167,26 @@ class UrlMappings(BaseModel):
                     del URL_MAPPINGS[saved_ex['client']]
 
 
-            # Add the additional extra_clients
+            # Add the additional extra_clients (with optional per-service URLs)
             for e in extra_clients:
-                try:
+                # Only overwrite service columns that were supplied, so callers that
+                # just pass {client, url} (e.g. the legacy web UI) keep existing mappings.
+                services = {col: (e.get(col) or "") for col in SERVICE_COLUMNS if col in e}
+                if e['client'] in list(df.client):
                     idx = list(df.client).index(e['client'])
-                    df.loc[idx, 'url'] = e['url']
-                except Exception as err: 
+                    df.loc[idx, 'url'] = e.get('url') or ""
+                    for col, val in services.items():
+                        df.loc[idx, col] = val
+                else:
                     df.loc[len(df)] = {
-                        'client': e['client'], 
-                        'url': e['url'],
-                        'is_original': False
+                        'client': e['client'],
+                        'url': e.get('url') or "",
+                        'is_original': False,
+                        **{col: services.get(col, "") for col in SERVICE_COLUMNS},
                     }
 
 
-        df.sort_values('client').to_csv(self.save_path, index=False)
+        df[CSV_COLUMNS].sort_values('client').to_csv(self.save_path, index=False)
 
         self.sync_maps(df)
 
@@ -175,10 +203,16 @@ class UrlMappings(BaseModel):
         """
         self.df_maps = df_maps   
         for row in df_maps.to_dict('records'):
-            self.maps[row['client']] = row['url']
+            url = row['url']
+            if not url:
+                url = next((row[c] for c in SERVICE_COLUMNS if row.get(c) and row[c].lower() != "none"), "")
+            self.maps[row['client']] = url
     
         URL_MAPPINGS.update(self.maps)
-        self.maps = URL_MAPPINGS
+        # Expose ObsPy's mappings minus its composite pseudo-clients ("A+B"), unless the
+        # user deliberately saved one under that name.
+        known = set(df_maps.client)
+        self.maps = {k: v for k, v in URL_MAPPINGS.items() if k in known or '+' not in k}
 
 
     def load(self):
@@ -223,3 +257,9 @@ class UrlMappings(BaseModel):
             return {c['client']: c['url'] for c in self.df_maps.to_dict('records') if not c['is_original']}
         
         raise ValueError(f"Unknown client_type: {client_type}")
+
+    def get_extra_client_details(self) -> List[dict]:
+        """User-added clients as dicts: client, url, dataselect, event, station."""
+        self.load()
+        return [{k: ("" if c.get(k) is None else str(c.get(k))) for k in ["client", "url"] + SERVICE_COLUMNS}
+                for c in self.df_maps.to_dict('records') if not c['is_original']]

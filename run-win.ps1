@@ -11,6 +11,6 @@ Write-Output "Activating virtual environment..."
 # Set the PYTHONPATH to include the root directory of your package
 $env:PYTHONPATH = "${env:PYTHONPATH};$(Get-Location)"
 
-# Run Streamlit app
-Write-Output "Running Streamlit app..."
-streamlit run seed_vault/ui/app.py
+# Run the desktop app
+Write-Output "Starting SEED Vault..."
+python -m seed_vault.qt

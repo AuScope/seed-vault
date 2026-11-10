@@ -7,7 +7,6 @@ We should also be able to support multi-select areas.
 """
 
 import pandas as pd
-import streamlit as st
 import requests
 from obspy.core.inventory import Inventory, Network
 

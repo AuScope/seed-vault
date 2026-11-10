@@ -171,3 +171,6 @@ data/
 seed_vault/service/config.cfg
 
 requirements.txt
+
+# Qt GUI test artefacts
+tests/qt_screenshots/

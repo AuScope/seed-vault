@@ -1,8 +1,7 @@
-from streamlit.web import cli
-import os
+"""Entry point for frozen (PyInstaller) builds: launches the desktop app."""
+import sys
 
-script_path = os.path.join(os.path.dirname(__file__), "seed_vault/ui/app.py")
+from seed_vault.qt.app import main
 
-if __name__ == '__main__':
-    cli._main_run_clExplicit(script_path, is_hello=False)   
-    # cli._main_run_clExplicit('seed_vault/ui/1_🌎_main_flows.py', is_hello=False)
+if __name__ == "__main__":
+    sys.exit(main())

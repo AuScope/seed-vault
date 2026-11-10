@@ -25,7 +25,8 @@ from obspy.core.stream import read as streamread
 from obspy.core.inventory import read_inventory,Inventory
 from obspy.core.event import read_events,Event,Catalog
 
-from obspy.clients.fdsn import Client
+from obspy.clients.fdsn import Client  # noqa: F401 (re-exported)
+from seed_vault.service.fdsn_client import make_client
 from obspy.taup import TauPyModel
 from obspy.geodetics.base import locations2degrees,gps2dist_azimuth
 from obspy.clients.fdsn.header import URL_MAPPINGS, FDSNNoDataException
@@ -1216,8 +1217,8 @@ def get_selected_stations_at_channel_level(settings: SeismoLoaderSettings) -> Se
     """
     print("Running get_selected_stations_at_channel_level")
     
-    waveform_client = Client(settings.waveform.client, user_agent='SEED-Vault')
-    station_client = Client(settings.station.client, user_agent='SEED-Vault') if settings.station.client else waveform_client
+    waveform_client = make_client(settings.waveform.client)
+    station_client = make_client(settings.station.client) if settings.station.client else waveform_client
 
     invs = Inventory()
     for network in settings.station.selected_invs:
@@ -1273,13 +1274,13 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
     if starttime >= endtime:
         print("get_stations: Starttime greater than endtime!")
         return None
-    waveform_client = Client(settings.waveform.client, user_agent='SEED-Vault')
+    waveform_client = make_client(settings.waveform.client)
 
     highest_sr_only = settings.station.highest_samplerate_only
     cha_pref = settings.waveform.channel_pref
     loc_pref = settings.waveform.location_pref
 
-    station_client = Client(settings.station.client, user_agent='SEED-Vault') if settings.station.client else waveform_client
+    station_client = make_client(settings.station.client) if settings.station.client else waveform_client
 
     # Set default wildcards for unspecified codes
     net = settings.station.network or '*'
@@ -1467,8 +1468,8 @@ def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
         print("get_events: Starttime greater than endtime!")
         return Catalog()
 
-    waveform_client = Client(settings.waveform.client, user_agent='SEED-Vault')
-    event_client = Client(settings.event.client, user_agent='SEED-Vault') if settings.event.client else waveform_client
+    waveform_client = make_client(settings.waveform.client)
+    event_client = make_client(settings.event.client) if settings.event.client else waveform_client
 
     # Check for local catalog first
     if settings.event.local_catalog:
@@ -1658,7 +1659,7 @@ def run_continuous(
 
     starttime = UTCDateTime(settings.station.date_config.start_time)
     endtime = UTCDateTime(settings.station.date_config.end_time)
-    waveform_client = Client(settings.waveform.client, user_agent='SEED-Vault')
+    waveform_client = make_client(settings.waveform.client)
 
     # Sanity check times
     endtime = min(endtime, UTCDateTime.now()-120)
@@ -1710,16 +1711,15 @@ def run_continuous(
         if cred_net not in requested_networks:
             continue
         try:
-            new_client = Client(
-                settings.waveform.client, 
-                user=cred.username.upper(),
+            new_client = make_client(
+                settings.waveform.client,
+                user=cred.username,
                 password=cred.password,
-                user_agent='SEED-Vault'
                 )
             waveform_clients.update({cred_net:new_client})
         except:
-            print("Issue creating client: %s %s via %s:%s" % (settings.waveform.client,
-                cred.nslc_code, cred.username, cred.password))
+            print("Issue creating client: %s %s via user %s" % (settings.waveform.client,
+                cred.nslc_code, cred.username))
             continue
 
     # Archive to disk and updated database
@@ -1802,7 +1802,7 @@ def run_event(
     print(f"Running run_event\n-----------------")
 
     settings, db_manager = setup_paths(settings)
-    waveform_client = Client(settings.waveform.client, user_agent='SEED-Vault')
+    waveform_client = make_client(settings.waveform.client)
 
     # Initialize travel time model
     try:
@@ -1901,11 +1901,10 @@ def run_event(
                 if cred_net not in requested_networks:
                     continue
                 try:
-                    new_client = Client(
+                    new_client = make_client(
                         settings.waveform.client,
-                        user=cred.username.upper(),
+                        user=cred.username,
                         password=cred.password,
-                        user_agent='SEED-Vault'
                     )
                     waveform_clients[cred_net] = new_client
                 except Exception as e:

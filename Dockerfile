@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir poetry
 COPY pyproject.toml poetry.lock* ./
 
 RUN poetry config virtualenvs.create false \
-    && poetry install --no-interaction --no-ansi
+    && poetry install --no-interaction --no-ansi --extras web
 RUN pip install jupyter seaborn
 
 COPY . .
@@ -23,4 +23,4 @@ EXPOSE 8501 8888
 ENV PYTHONPATH=/app
 
 # Run the Streamlit app
-CMD ["sh", "-c", "poetry run streamlit run seed_vault/ui/main.py & jupyter notebook --ip=0.0.0.0 --port=8888 --no-browser --allow-root"]
+CMD ["sh", "-c", "poetry run streamlit run seed_vault/ui/app.py & jupyter notebook --ip=0.0.0.0 --port=8888 --no-browser --allow-root"]

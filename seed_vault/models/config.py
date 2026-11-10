@@ -1,6 +1,6 @@
 import os
 import re
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, field_serializer
 import json
 from typing import IO, Dict, Optional, List, Tuple, Union, Any
 from datetime import date, timedelta, timezone, datetime
@@ -214,9 +214,9 @@ class WaveformConfig(BaseModel):
 
     def set_default(self):
         """Resets all fields to their default values."""
-        self.__fields_set__.clear()
-        for field_name, field in self.__fields__.items():
-            setattr(self, field_name, field.get_default())
+        self.model_fields_set.clear()
+        for field_name, field in type(self).model_fields.items():
+            setattr(self, field_name, field.get_default(call_default_factory=True))
 
 class GeometryConstraint(BaseModel):
     """
@@ -273,22 +273,18 @@ class StationConfig(BaseModel):
     location           : Optional   [ str           ] = "*"
     channel            : Optional   [ str           ] = "?H?,?N?,?P?"
     highest_samplerate_only : bool = False
-    selected_invs      : Optional   [Any] = None
+    # Runtime-only ObsPy Inventory; never serialised.
+    selected_invs      : Optional   [Any] = Field(default=None, exclude=True)
     geo_constraint     : Optional   [ List          [GeometryConstraint]] = None
     include_restricted : bool       = False
     level              : Levels     = Levels        .CHANNEL
 
-    class Config:
-        json_encoders = {
-            Any: lambda v: None  
-        }
-        exclude = {"selected_invs"}
 
     def set_default(self):
         """Resets all fields to their default values."""
-        self.__fields_set__.clear()
-        for field_name, field in self.__fields__.items():
-            setattr(self, field_name, field.get_default())
+        self.model_fields_set.clear()
+        for field_name, field in type(self).model_fields.items():
+            setattr(self, field_name, field.get_default(call_default_factory=True))
 
 
 class EventConfig(BaseModel):
@@ -347,21 +343,17 @@ class EventConfig(BaseModel):
     limit               : Optional[str] = None
     offset              : Optional[str] = None
 
-    selected_catalogs   : Optional[Any] = None
+    # Runtime-only ObsPy Catalog; never serialised.
+    selected_catalogs   : Optional[Any] = Field(default=None, exclude=True)
 
     geo_constraint      : Optional[List[GeometryConstraint]] = None
 
-    class Config:
-        json_encoders = {
-            Any: lambda v: None  
-        }
-        exclude = {"selected_catalogs"}
 
     def set_default(self):
         """Resets all fields to their default values."""
-        self.__fields_set__.clear()
-        for field_name, field in self.__fields__.items():
-            setattr(self, field_name, field.get_default())      
+        self.model_fields_set.clear()
+        for field_name, field in type(self).model_fields.items():
+            setattr(self, field_name, field.get_default(call_default_factory=True))      
 
 
 class PredictionData(BaseModel):
@@ -381,6 +373,10 @@ class PredictionData(BaseModel):
     station_id: str
     p_arrival: datetime
     s_arrival: datetime
+
+    @field_serializer("p_arrival", "s_arrival", when_used="json")
+    def _iso(self, v: datetime) -> str:
+        return v.isoformat()
 
 
 class SeismoLoaderSettings(BaseModel):
@@ -426,6 +422,8 @@ class SeismoLoaderSettings(BaseModel):
         from_pickle_file(cls, pickle_path: str) -> "SeismoLoaderSettings":
             Loads a `SeismoLoaderSettings` instance from a pickle file.
     """
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     sds_path          : str                                   = "SVdata/SDS"
     db_path           : str                                   = "SVdata/database.sqlite"
     download_type     : DownloadType                          = DownloadType.EVENT
@@ -1385,11 +1383,6 @@ class SeismoLoaderSettings(BaseModel):
         """
         key = f"{resource_id}|{station_id}"
         return self.predictions.get(key)
-    class Config:
-        arbitrary_types_allowed = True       
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
 
     def to_pickle(self, pickle_path: str) -> None:
         """

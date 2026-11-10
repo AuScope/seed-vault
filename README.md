@@ -23,8 +23,9 @@ Runs on:
 
 Can run:
 
-- As web service
+- As a desktop application (Qt / PySide6)
 - From the command line (CLI)
+- As a web service (legacy Streamlit interface, optional – see below)
 
 #### User Guide & Reference
 
@@ -38,13 +39,30 @@ https://pubs.geoscienceworld.org/ssa/srl/article/doi/10.1785/0220250167/727708/S
 
 - 8 GB RAM
 - Python >= 3.10, tested up to 3.14
-- ObsPy (>=1.5.0), Streamlit (>=1.55), Plotly (>-5.24), Pandas (>=2.2.2), Matplotlib (>=3.8.5)
+- ObsPy (>=1.5.0), PySide6 (>=6.6), Pandas (>=2.2.2), Matplotlib (>=3.8.5)
 
 # Install via pip (easy way)
 
 ```
 python3 -m pip install seed-vault
 ```
+
+Then start the desktop app with:
+
+```
+seed-vault
+```
+
+(`seed-vault-gui` does the same without a console window on Windows, and `python -m seed_vault.qt` also works.)
+
+The previous browser-based (Streamlit) interface is still available during the transition:
+
+```
+python3 -m pip install "seed-vault[web]"
+seed-vault web
+```
+
+On Linux the desktop app needs the usual Qt system libraries; on a minimal install you may need e.g. `apt install libxcb-cursor0 libnss3 libxkbcommon-x11-0 libegl1`.
 
 NB:
 
@@ -125,7 +143,8 @@ seed-vault/
 │   ├── scripts/       # Example CLI scripts
 │   ├── service/       # Services for logic and backend processing
 │   ├── tests/         # Test data and utilities
-│   ├── ui/            # UI components (Streamlit files)
+│   ├── qt/            # Desktop application (PySide6)
+│   ├── ui/            # Legacy browser UI (Streamlit, optional)
 │   ├── utils/         # Utility functions and helpers
 │
 └── pyproject.toml     # Project configuration file

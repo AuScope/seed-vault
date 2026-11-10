@@ -15,7 +15,8 @@ from seed_vault.ui.components.display_log import ConsoleDisplay
 from seed_vault.ui.app_pages.helpers.common import save_filter
 
 from obspy import Stream, Trace, UTCDateTime
-from obspy.clients.fdsn import Client
+from obspy.clients.fdsn import Client  # noqa: F401
+from seed_vault.service.fdsn_client import make_client
 from obspy.taup import TauPyModel
 
 import matplotlib.pyplot as plt
@@ -449,7 +450,7 @@ class WaveformDisplay:
         self.filter_menu = filter_menu
 
         try:
-            self.client = Client(self.settings.waveform.client)
+            self.client = make_client(self.settings.waveform.client)
         except ValueError as e:
             st.error(f"Error: {str(e)} Waveform client is set to {self.settings.waveform.client}, which seems to not exist..? "
                 "Please navigate to the settings page and use the Clients tab to add the client or fix the stored config.cfg file.")

@@ -1,5 +1,4 @@
 import pandas as pd
-import streamlit as st
 import requests
 
 from obspy.core.event import Catalog

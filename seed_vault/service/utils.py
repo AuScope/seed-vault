@@ -3,10 +3,9 @@ from typing import Any, Dict, List, Tuple, Optional, Union
 from datetime import datetime, date, time, timedelta, timezone
 from dateutil.relativedelta import relativedelta
 
-import streamlit as st
 
 from obspy import UTCDateTime
-from obspy.clients.fdsn import Client
+from seed_vault.service.fdsn_client import make_client
 from obspy.core.inventory import Inventory
 from obspy.core.event import Event,Catalog
 from obspy.geodetics import locations2degrees
@@ -148,8 +147,8 @@ def convert_to_datetime(value):
                 dt = dt.astimezone(timezone.utc)
             return dt.date(), dt.time()
         except ValueError:
-            st.error(f"Invalid datetime format: {value!r}. "
-                     "Expected 'YYYY-MM-DD' or 'YYYY-MM-DDTHH:MM:SS'.")
+            print(f"Invalid datetime format: {value!r}. "
+                  "Expected 'YYYY-MM-DD' or 'YYYY-MM-DDTHH:MM:SS'.")
             return date.today(), time.min
     return date.today(), time.min
 
@@ -207,7 +206,7 @@ def check_client_services(client_name: str, active_client=None):
         if active_client:
             client = active_client # skip re-establishing if already have
         else:
-            client = Client(client_name, user_agent='SEED-Vault')
+            client = make_client(client_name)
         available_services = client.services.keys()
         return {
             'station': 'station' in available_services,
@@ -215,7 +214,7 @@ def check_client_services(client_name: str, active_client=None):
             'dataselect': 'dataselect' in available_services
         }
     except Exception as e:
-        st.error(f"Error checking client services: {str(e)}")
+        print(f"Error checking client services: {str(e)}")
         return {
             'station': False,
             'event': False,

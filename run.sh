@@ -12,6 +12,6 @@ fi
 # Set the PYTHONPATH to include the root directory of your package
 export PYTHONPATH="${PYTHONPATH}:$(pwd)"
 
-# Run Streamlit app
-echo "Running Streamlit app..."
-streamlit run seed_vault/ui/app.py
+# Run the desktop app
+echo "Starting SEED Vault..."
+python -m seed_vault.qt
