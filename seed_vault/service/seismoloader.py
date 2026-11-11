@@ -120,6 +120,94 @@ def read_config(config_file: str) -> CustomConfigParser:
     return processed_config
 
 
+def event_origin(eq: Event):
+    """The origin to use for an event: its preferred origin, else the first one."""
+    return eq.preferred_origin() or eq.origins[0]
+
+
+def event_cache_key(eq: Event) -> str:
+    """Key for cached arrivals in the database: the ID of the origin actually used.
+
+    For events whose preferred origin is set this equals ``str(eq.preferred_origin_id)``,
+    which is what older databases used, so existing caches stay valid. Unlike that
+    value it is never the literal string "None", which every event lacking a
+    preferred origin used to share.
+    """
+    return str(event_origin(eq).resource_id)
+
+
+def event_magnitude(eq: Event) -> Optional[float]:
+    mag = eq.preferred_magnitude() or (eq.magnitudes[0] if eq.magnitudes else None)
+    return mag.mag if mag is not None else None
+
+
+def parse_pref_list(value) -> Optional[List[str]]:
+    """'HH,BH, EH' -> ['HH', 'BH', 'EH']; lists pass through; empty -> None.
+
+    The settings store channel/location priorities as comma-separated strings, but
+    the selection code needs lists (iterating a string yields single characters).
+    """
+    if value is None:
+        return None
+    if isinstance(value, str):
+        items = [v.strip() for v in value.split(",")]
+    else:
+        items = [str(v).strip() for v in value]
+    items = [v for v in items if v != ""]
+    return items or None
+
+
+def _merge_intervals(intervals):
+    out = []
+    for a, b in sorted(intervals):
+        if out and a <= out[-1][1]:
+            out[-1] = (out[-1][0], max(out[-1][1], b))
+        else:
+            out.append((a, b))
+    return out
+
+
+def _preferred_channel_intervals(net, sta, time0, time1, cha_pref, loc_pref):
+    """For one station, which channel to fetch over which part of [time0, time1].
+
+    Channel/location priorities are applied separately within every interval
+    between channel epoch boundaries, so stations that closed before ``time1`` and
+    stations whose instruments changed during the range are handled correctly
+    (previously the choice was made once, at ``time1`` only).
+    Returns {(location, channel, epoch_start, epoch_end): [(start, end), ...]}.
+    """
+    # (UTCDateTime isn't hashable, so dedupe on timestamps)
+    stamps = {time0.timestamp: time0, time1.timestamp: time1}
+    for cha in sta:
+        for t in (cha.start_date, cha.end_date):
+            if t is not None and time0 < t < time1:
+                stamps[t.timestamp] = t
+    bounds = [stamps[k] for k in sorted(stamps)]
+    one_station = Inventory(networks=[net.copy()], source="")
+    one_station.networks[0].stations = [sta]
+    chosen = defaultdict(list)
+    for a, b in zip(bounds[:-1], bounds[1:]):
+        if b - a <= 0:
+            continue
+        mid = a + (b - a) / 2
+        picked = get_preferred_channels(one_station, cha_pref, loc_pref, mid)
+        if not picked:
+            continue
+        for p_net in picked:
+            for p_sta in p_net:
+                for cha in p_sta:
+                    if not cha.is_active(time=mid):
+                        continue
+                    c0 = max(a, cha.start_date) if cha.start_date else a
+                    c1 = min(b, cha.end_date) if cha.end_date else b
+                    if c0 < c1:
+                        key = (cha.location_code, cha.code,
+                               cha.start_date.timestamp if cha.start_date else None,
+                               cha.end_date.timestamp if cha.end_date else None)
+                        chosen[key].append((c0, c1))
+    return {k: _merge_intervals(v) for k, v in chosen.items()}
+
+
 def collect_requests(inv, time0, time1, days_per_request=3, 
                      cha_pref=None, loc_pref=None):
     """
@@ -176,13 +264,34 @@ def collect_requests(inv, time0, time1, days_per_request=3,
         return requests
 
     # Filter by preferred channels if specified
-    if cha_pref or loc_pref:
-        # We are filtering by end time (time1) which is a bit more safe than start time,
-        #  though still potentially an issue if the XML metadata's time ranges are poorly defined
-        sub_inv = get_preferred_channels(sub_inv, cha_pref, loc_pref, time1)
-        if not sub_inv:
-            print("ERROR in collect_requests: cha_pref and/or loc_pref removed all stations from inventory")
-            return requests
+    cha_pref, loc_pref = parse_pref_list(cha_pref), parse_pref_list(loc_pref)
+    use_prefs = bool(cha_pref or loc_pref)
+
+    def add_windows(net_code, sta_code, loc_code, cha_code, start, end):
+        current_start = start
+        while current_start < end:
+            window_end = min(current_start + timedelta(days=days_per_request, microseconds=-1), end)
+            requests.append((net_code, sta_code, loc_code, cha_code,
+                             current_start.isoformat() + "Z", window_end.isoformat() + "Z"))
+            current_start = window_end + timedelta(microseconds=1)
+
+    for net in sub_inv:
+        for sta in net:
+            if use_prefs:
+                # choose preferred channels separately for each part of the range
+                per_channel = _preferred_channel_intervals(net, sta, time0, time1, cha_pref, loc_pref)
+                for (loc_code, cha_code, _, _), spans in per_channel.items():
+                    for a, b in spans:
+                        add_windows(net.code, sta.code, loc_code, cha_code, a, b)
+                continue
+            for cha in sta:
+                channel_start = max(time0, cha.start_date if cha.start_date else time0)
+                channel_end = min(time1, cha.end_date if cha.end_date else time1)
+                if channel_start >= channel_end:
+                    continue
+                add_windows(net.code, sta.code, cha.location_code, cha.code, channel_start, channel_end)
+
+    return requests
 
     # Process each network, station, and channel
     for net in sub_inv:
@@ -249,8 +358,9 @@ def get_p_s_times(eq, dist_deg, ttmodel):
         >>> p_time, s_time = get_p_s_times(earthquake, 45.3, model)
     """
 
-    eq_time = eq.origins[0].time
-    eq_depth = eq.origins[0].depth / 1000  # depths are in meters for QuakeML
+    origin = event_origin(eq)
+    eq_time = origin.time
+    eq_depth = (origin.depth or 0) / 1000  # depths are in meters for QuakeML
     eq_elevation = max(-eq_depth,0) # km
 
     try:
@@ -266,7 +376,7 @@ def get_p_s_times(eq, dist_deg, ttmodel):
     p_arrival_time = None
     s_arrival_time = None
     # "P" is whatever the first arrival is.. not necessarily literally uppercase P
-    if phasearrivals[0]:
+    if phasearrivals:
         p_arrival_time = eq_time + phasearrivals[0].time
         if eq_elevation:
             p_arrival_time += eq_elevation / 5.8
@@ -367,6 +477,16 @@ def select_highest_samplerate(inv, minSR=10, time=None):
     return inv
 
 
+def _rank_position(code: str, ranks: Optional[List[str]]) -> int:
+    """Index of the first entry in ``ranks`` matching channel ``code`` (len(ranks) if none)."""
+    if not ranks:
+        return 0
+    for i, r in enumerate(ranks):
+        if (len(r) == 2 and code[:2] == r) or fnmatch.fnmatchcase(code, r):
+            return i
+    return len(ranks)
+
+
 def get_preferred_channels(
     inv: Inventory,
     cha_rank: Optional[List[str]] = None,
@@ -401,6 +521,7 @@ def get_preferred_channels(
         >>> loc_rank = ['00', '10', '']
         >>> filtered = get_preferred_channels(inventory, cha_rank, loc_rank)
     """
+    cha_rank, loc_rank = parse_pref_list(cha_rank), parse_pref_list(loc_rank)
     if not cha_rank and not loc_rank:
         return inv
 
@@ -441,12 +562,10 @@ def get_preferred_channels(
                     if not chan.is_active(time):
                         continue
 
-                    cha_code = chan.code[:-1]
-
-                    # Get ranking positions
-                    cha_position = len(cha_rank) if cha_rank is None else \
-                        len(cha_rank) if cha_code not in cha_rank else cha_rank.index(cha_code)
-                    loc_position = len(loc_rank) if loc_rank is None else \
+                    # Get ranking positions. Entries may be band+instrument codes ("HH")
+                    # or full channel patterns ("HH?", "BH1", "BHN").
+                    cha_position = _rank_position(chan.code, cha_rank)
+                    loc_position = 0 if not loc_rank else \
                         len(loc_rank) if chan.location_code not in loc_rank else loc_rank.index(chan.location_code)
 
                     # Update if better ranking found
@@ -522,8 +641,9 @@ def collect_requests_event(
     cha_pref = settings.waveform.channel_pref
     loc_pref = settings.waveform.location_pref
 
-    origin = eq.origins[0]
+    origin = event_origin(eq)
     ot = origin.time
+    cache_key = event_cache_key(eq)
     sub_inv = inv.select(time=ot)
 
     if highest_sr_only:
@@ -556,9 +676,10 @@ def collect_requests_event(
 
             # Check for existing arrivals
             fetched_arrivals = db_manager.fetch_arrivals_distances(
-                str(eq.preferred_origin_id),
+                cache_key,
                 net.code,
-                sta.code
+                sta.code,
+                model=model_name
             )
 
             if fetched_arrivals:
@@ -588,11 +709,11 @@ def collect_requests_event(
 
                 # Save these new arrivals to insert into database
                 arrivals_per_eq.append((
-                    str(eq.preferred_origin_id),
-                    eq.magnitudes[0].mag,
-                    origin.latitude, origin.longitude, origin.depth/1000,
+                    cache_key,
+                    event_magnitude(eq),
+                    origin.latitude, origin.longitude, (origin.depth or 0)/1000,
                     ot.timestamp,
-                    net.code, sta.code, sta.latitude, sta.longitude, sta.elevation/1000,
+                    net.code, sta.code, sta.latitude, sta.longitude, (sta.elevation or 0)/1000,
                     sta_start, sta_end,
                     dist_deg, dist_m/1000, azi, p_time.timestamp,
                     s_time.timestamp if s_time else None,
@@ -660,33 +781,29 @@ def combine_requests(
     if max_stations_per_day is None or max_stations_per_day > 25:
         max_stations_per_day = 25
 
-    groups = defaultdict(list)
+    # Combine only stations that want exactly the same (location, channels) in the
+    # same window. Merging the union of different stations' locations/channels into
+    # one request would also fetch every other station's channels, defeating the
+    # channel/location priorities.
+    wanted = defaultdict(set)    # (net, sta, loc, t0, t1) -> {channels}
     for net, sta, loc, chan, t0, t1 in requests:
-        groups[(net, t0, t1)].append((sta, loc, chan))
+        wanted[(net, sta, loc, t0, t1)].add(chan)
+    groups = defaultdict(list)   # (net, loc, channels, t0, t1) -> [stations]
+    for (net, sta, loc, t0, t1), chans in wanted.items():
+        groups[(net, loc, tuple(sorted(chans)), t0, t1)].append(sta)
 
     combined_requests = []
-    for (net, t0, t1), items in groups.items():
-
-        stas = sorted(set(sta for sta, _, _ in items))
-        locs = set(loc for _, loc, _ in items)
-        chans = set(chan for _, _, chan in items)
-
+    for (net, loc, chans, t0, t1), stas in groups.items():
+        stas = sorted(set(stas))
         for i in range(0, len(stas), max_stations_per_day):
-            chunk_stas = stas[i:i + max_stations_per_day]
-
-            chunk_items = [(s, l, c) for s, l, c in items if s in chunk_stas]
-            chunk_locs = set(l for _, l, _ in chunk_items)
-            chunk_chans = set(c for _, _, c in chunk_items)
-            
             combined_requests.append((
                 net,
-                ','.join(chunk_stas),
-                ','.join(sorted(chunk_locs)), # n.b. ",00" is valid in FDSN, it searched both None and 00
-                ','.join(sorted(chunk_chans)),
+                ','.join(stas[i:i + max_stations_per_day]),
+                loc,
+                ','.join(chans),
                 t0,
                 t1
             ))
-
     return combined_requests
 
 
@@ -974,6 +1091,33 @@ def prune_requests(
     return pruned_requests
 
 
+def client_for_station(waveform_clients: Dict[str, Client], network: str, station: str) -> Client:
+    """Client to use for one station: "NET.STA" credentials, then "NET", then the open client."""
+    net, sta = network.strip().upper(), station.strip().upper()
+    return waveform_clients.get(f"{net}.{sta}") or waveform_clients.get(net) or waveform_clients['open']
+
+
+def build_waveform_clients(settings: SeismoLoaderSettings, open_client: Client,
+                           requested_networks) -> Dict[str, Client]:
+    """Open client plus one authenticated client per credential, keyed by its full code.
+
+    Credentials may be network-level ("NN") or station-level ("NN.STA"); each gets
+    its own client, so two station-level logins in one network no longer overwrite
+    each other.
+    """
+    clients = {'open': open_client}
+    requested = {n.upper() for n in requested_networks}
+    for cred in settings.auths or []:
+        code = cred.nslc_code.strip().upper()
+        if code.split('.')[0] not in requested:
+            continue
+        try:
+            clients[code] = make_client(settings.waveform.client, user=cred.username, password=cred.password)
+        except Exception as e:
+            print(f"Issue creating client for {code} (user {cred.username}):\n {str(e)}")
+    return clients
+
+
 def archive_request(
     request: Tuple[str, str, str, str, str, str],
     waveform_clients: Dict[str, Client],
@@ -1017,13 +1161,12 @@ def archive_request(
 
         time0 = time()
 
-        # Select appropriate client
-        if request[0] in waveform_clients:
-            wc = waveform_clients[request[0]]
-        elif request[0] + '.' + request[1] in waveform_clients:
-            wc = waveform_clients[request[0] + '.' + request[1]]
-        else:
-            wc = waveform_clients['open']
+        # Select the client per station: station-level credentials ("NN.STA") win
+        # over network-level ones ("NN"), which win over the open client.
+        stations = [x.strip().upper() for x in request[1].split(',') if x.strip()]
+        clients_for = {sta_: client_for_station(waveform_clients, request[0], sta_) for sta_ in stations}
+        wc = clients_for[stations[0]]
+        single_client = len({id(c) for c in clients_for.values()}) == 1
 
         kwargs = {
             'network': request[0].strip().upper(),
@@ -1038,13 +1181,12 @@ def archive_request(
         if 'minimumlength' in wc.services['dataselect'].keys():
             kwargs['minimumlength'] = 3.0
 
-        # Handle long station lists
-        if len(request[1]) > 24:
+        # Handle long station lists, or stations needing different credentials
+        if len(request[1]) > 24 or not single_client:
             st = Stream()
-            split_stations = [x.strip() for x in request[1].split(',')]
-            for s in split_stations:
+            for s in stations:
                 try:
-                    st += wc.get_waveforms(
+                    st += clients_for[s].get_waveforms(
                         station=s,
                         **{k: v for k, v in kwargs.items() if k != 'station'}
                     )
@@ -1734,7 +1876,7 @@ def run_continuous(
     endtime = min(endtime, UTCDateTime.now()-120)
     if starttime > endtime:
         print("run_continuous: Starttime greater than endtime!")
-        return True
+        return False
 
     # Collect requests
     print("Collecting, combining, and pruning requests against database... ")
@@ -1743,8 +1885,9 @@ def run_continuous(
         cha_pref=settings.waveform.channel_pref,loc_pref=settings.waveform.location_pref)
 
     if not requests:
-        print("ERROR: No requests returned! This shouldn't happen, likely issue in collect_requests.")
-        return True
+        print("No data requests could be made: none of the selected channels were operating "
+              "in the requested time range.")
+        return False
 
     # Remove any for data we already have (requires updated db)
     # If force_redownload is flagged, then ignore request pruning
@@ -1771,25 +1914,8 @@ def run_continuous(
     combined_requests = combine_requests(pruned_requests,
                         max_stations_per_day=settings.waveform.stations_per_request)
 
-    waveform_clients= {'open':waveform_client} #now a dictionary
-    requested_networks = [ele[0] for ele in combined_requests]
-
-    # May only work for network-wide credentials at the moment (99% use case)
-    for cred in settings.auths:
-        cred_net = cred.nslc_code.split('.')[0].upper()
-        if cred_net not in requested_networks:
-            continue
-        try:
-            new_client = make_client(
-                settings.waveform.client,
-                user=cred.username,
-                password=cred.password,
-                )
-            waveform_clients.update({cred_net:new_client})
-        except:
-            print("Issue creating client: %s %s via user %s" % (settings.waveform.client,
-                cred.nslc_code, cred.username))
-            continue
+    waveform_clients = build_waveform_clients(
+        settings, waveform_client, [ele[0] for ele in combined_requests])
 
     # Archive to disk and updated database
     for request in combined_requests:
@@ -1914,13 +2040,13 @@ def run_event(
         print(
             f"Processing event {i+1}/{len(settings.event.selected_catalogs)} | "
             f"{event_region:^35} | "
-            f"{str(eq.origins[0].time)[0:16]} "
-            f"({eq.origins[0].latitude:.2f},{eq.origins[0].longitude:.2f})"
+            f"{str(event_origin(eq).time)[0:16]} "
+            f"({event_origin(eq).latitude:.2f},{event_origin(eq).longitude:.2f})"
         )
 
         # Nothing to download if none of the selected stations were operating at the origin time
         try:
-            ot_ts = (eq.preferred_origin() or eq.origins[0]).time.timestamp
+            ot_ts = event_origin(eq).time.timestamp
             if not np.any((station_intervals[:, 0] <= ot_ts) & (ot_ts <= station_intervals[:, 1])):
                 print("    Skipping: none of the selected stations were operating at this origin time")
                 continue
@@ -1966,28 +2092,15 @@ def run_event(
                 combined_requests = combine_requests(pruned_requests, max_stations_per_day=25)
             except Exception as e:
                 print(f"Issue with run_event > combine_requests:\n{e}")
+                combined_requests = []
 
             if not combined_requests:
                 print("DEBUG: combined requests is empty? here was pruned_requests: ", pruned_requests)
                 continue
 
             # Setup authenticated clients
-            waveform_clients = {'open': waveform_client}
-            requested_networks = [req[0] for req in combined_requests]
-
-            for cred in settings.auths:
-                cred_net = cred.nslc_code.split('.')[0].upper()
-                if cred_net not in requested_networks:
-                    continue
-                try:
-                    new_client = make_client(
-                        settings.waveform.client,
-                        user=cred.username,
-                        password=cred.password,
-                    )
-                    waveform_clients[cred_net] = new_client
-                except Exception as e:
-                    print(f"Issue creating client for {cred_net}:\n {str(e)}")
+            waveform_clients = build_waveform_clients(
+                settings, waveform_client, [req[0] for req in combined_requests])
 
             # Process requests
             for request in combined_requests:
@@ -2018,7 +2131,7 @@ def run_event(
                     if st:
                         # Add event metadata to traces
                         arrivals = db_manager.fetch_arrivals_distances(
-                            eq.preferred_origin_id.id,
+                            event_cache_key(eq),
                             request[0].upper(), # network
                             request[1].upper()  # station
                             )
@@ -2031,9 +2144,10 @@ def run_event(
                                 tr.stats.distance_km = arrivals[2]
                                 tr.stats.distance_deg = arrivals[3]
                                 tr.stats.azimuth = arrivals[4]
-                                tr.stats.event_magnitude = eq.magnitudes[0].mag if hasattr(eq, 'magnitudes') and eq.magnitudes else 0.99
+                                mag = event_magnitude(eq)
+                                tr.stats.event_magnitude = mag if mag is not None else 0.99
                                 tr.stats.event_region = event_region
-                                tr.stats.event_time = eq.origins[0].time
+                                tr.stats.event_time = event_origin(eq).time
 
                         event_stream.extend(st)
 

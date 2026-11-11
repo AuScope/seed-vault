@@ -199,6 +199,7 @@ def populate_database_from_sds(sds_path, db_path,
     
     # Process files with or without multiprocessing
     # TODO TODO TODO ensure cross platform compatibility with windows especially
+    to_insert_db = None
     if num_processes > 1:
         try:
             with multiprocessing.Pool(processes=num_processes) as pool:
@@ -208,8 +209,8 @@ def populate_database_from_sds(sds_path, db_path,
 
         except Exception as e:
             print(f"Multiprocessing failed: {str(e)}. Falling back to single-process execution.")
-            num_processes = 1
-    else:
+            to_insert_db = None
+    if to_insert_db is None:
         to_insert_db = []
         for fp in tqdm(file_paths, desc="Scanning %s..." % sds_path):
             to_insert_db.extend(miniseed_to_db_elements(fp))
@@ -406,38 +407,44 @@ class DatabaseManager:
         Raises:
             sqlite3.OperationalError: If database connection fails after all retries.
         """
-        retry_count = 0
+        # Retry only while *opening* the connection. A @contextmanager generator may
+        # yield exactly once: retrying around the yield turned any "database is
+        # locked" error raised in the caller's block into
+        # "RuntimeError: generator didn't stop after throw()". Lock waits inside the
+        # block are handled by sqlite's own busy timeout (timeout=20 below).
         delay = initial_delay
-
-        while retry_count < max_retries:
+        conn = None
+        for attempt in range(max_retries):
             try:
                 conn = sqlite3.connect(self.db_path, timeout=20)
-                # Wise to increase cache_size if your database grows very large / can afford it. mmap seems to be less important
                 conn.execute('PRAGMA journal_mode = WAL')
                 conn.execute('PRAGMA synchronous = NORMAL')
                 conn.execute('PRAGMA cache_size = -256000')  # 256MB
                 conn.execute('PRAGMA mmap_size = 256000000')  # 256MB
                 conn.execute('PRAGMA temp_store = MEMORY')
                 conn.execute('PRAGMA page_size = 8192')
-                yield conn
-                conn.commit()
-                return
+                break
             except sqlite3.OperationalError as e:
-                if "database is locked" in str(e):
-                    retry_count += 1
-                    if retry_count >= max_retries:
-                        print(f"Failed to connect to database after {max_retries} retries.")
-                        raise
-                    print(f"Database is locked. Retrying in {delay} seconds...")
-                    sleep(delay)
-                    delay *= 2  # Exponential backoff
-                    delay += random.uniform(0, 1)  # Add jitter
-                else:
-                    raise
-            finally:
-                if 'conn' in locals():
+                if conn is not None:
                     conn.close()
+                    conn = None
+                if "database is locked" in str(e) and attempt < max_retries - 1:
+                    print(f"Database is locked. Retrying in {delay:.1f} seconds...")
+                    sleep(delay)
+                    delay = delay * 2 + random.uniform(0, 1)  # exponential backoff with jitter
+                    continue
+                if "database is locked" in str(e):
+                    print(f"Failed to connect to database after {max_retries} retries.")
+                raise
 
+        try:
+            yield conn
+            conn.commit()
+        except BaseException:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
 
     def setup_database(self):
         """
@@ -736,26 +743,27 @@ class DatabaseManager:
                 - str: Status message or error description
                 - Optional[pd.DataFrame]: Results for SELECT queries, None otherwise
         """
-        modify_commands = {'INSERT', 'UPDATE', 'DELETE', 'DROP', 'CREATE', 'ALTER', 'TRUNCATE'}
-        first_word = query.strip().split()[0].upper()
-        is_select = first_word == 'SELECT'
+        modify_commands = {'INSERT', 'UPDATE', 'DELETE', 'DROP', 'CREATE', 'ALTER', 'TRUNCATE', 'REPLACE'}
+        query = (query or "").strip()
+        if not query:
+            return True, "Error executing query: the query is empty.", None
+        first_word = query.split()[0].upper()
 
         try:
             with self.connection() as conn:
-                if is_select:
-                    df = pd.read_sql_query(query, conn)
+                cursor = conn.cursor()
+                cursor.execute(query)
+                # Decide by what the statement returns, not its first word, so
+                # WITH ... SELECT, PRAGMA and EXPLAIN results are shown too.
+                if cursor.description is not None:
+                    columns = [d[0] for d in cursor.description]
+                    df = pd.DataFrame.from_records(cursor.fetchall(), columns=columns)
                     return False, f"Query executed successfully. {len(df)} rows returned.", df
-                else:
-                    cursor = conn.cursor()
-                    cursor.execute(query)
-
-                    if first_word in modify_commands:
-                        return False, f"Query executed successfully. Rows affected: {cursor.rowcount}", None
-                    return False, "Query executed successfully.", None
-
+                if first_word in modify_commands:
+                    return False, f"Query executed successfully. Rows affected: {cursor.rowcount}", None
+                return False, "Query executed successfully.", None
         except Exception as e:
             return True, f"Error executing query: {str(e)}", None
-
 
     def bulk_insert_archive_data(self, archive_list: List[Tuple]) -> int:
         """
@@ -935,7 +943,7 @@ class DatabaseManager:
 
 
     def fetch_arrivals_distances(
-    self, resource_id: str, netcode: str, stacode: str
+    self, resource_id: str, netcode: str, stacode: str, model: Optional[str] = None
     ) -> Optional[Tuple[float, float, float, float, float]]:    
         """
         Retrieve arrival times and distance metrics for a specific event and station.
@@ -944,6 +952,8 @@ class DatabaseManager:
             resource_id: Unique identifier for the seismic event.
             netcode: Network code for the station.
             stacode: Station code.
+            model: Optional travel-time model name; when given, only arrivals
+                computed with that model are returned.
 
         Returns:
             Optional[Tuple[float, float, float, float, float]]: Tuple containing
@@ -957,11 +967,17 @@ class DatabaseManager:
         """
         with self.connection() as conn:
             cursor = conn.cursor()
-            cursor.execute('''
+            query = '''
                 SELECT p_arrival, s_arrival, dist_km, dist_deg, azimuth 
                 FROM arrival_data 
                 WHERE resource_id = ? AND s_netcode = ? AND s_stacode = ?
-            ''', (resource_id, netcode, stacode))
+            '''
+            params = [resource_id, netcode, stacode]
+            if model:
+                # arrivals computed with a different travel-time model are stale
+                query += " AND UPPER(model) = UPPER(?)"
+                params.append(model)
+            cursor.execute(query, params)
             result = cursor.fetchone()
             if result:
                 return (result[0], result[1], result[2], result[3], result[4])
