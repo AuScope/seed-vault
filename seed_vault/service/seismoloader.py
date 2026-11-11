@@ -34,7 +34,7 @@ from obspy.io.mseed.headers import InternalMSEEDWarning
 warnings.filterwarnings("ignore", category=InternalMSEEDWarning)
 
 from seed_vault.models.config import SeismoLoaderSettings, SeismoQuery, convert_geo_to_minus180_180
-from seed_vault.enums.config import DownloadType, GeoConstraintType
+from seed_vault.enums.config import DownloadType, GeoConstraintType, WorkflowType
 from seed_vault.service.utils import is_in_enum,get_sds_filenames,to_timestamp,\
     filter_inventory_by_geo_constraints,filter_catalog_by_geo_constraints,format_error
 from seed_vault.service.db import DatabaseManager,stream_to_db_elements,miniseed_to_db_elements,\
@@ -1435,7 +1435,76 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
     print("     ...got stations")
     return inv
 
+def station_activity_intervals(inv: Optional[Inventory]) -> np.ndarray:
+    """Operating intervals of every station in ``inv`` as an (N, 2) array of POSIX times.
+
+    Follows ObsPy's ``Inventory.select(time=...)`` semantics: a station counts as
+    operating at ``t`` when its network, station and (if it lists channels) at least
+    one channel epoch all contain ``t``. Missing start/end dates are open-ended.
+    """
+    lo_default, hi_default = -np.inf, np.inf
+    out = []
+    for net in inv or []:
+        n0 = net.start_date.timestamp if net.start_date else lo_default
+        n1 = net.end_date.timestamp if net.end_date else hi_default
+        for sta in net:
+            s0 = max(n0, sta.start_date.timestamp if sta.start_date else lo_default)
+            s1 = min(n1, sta.end_date.timestamp if sta.end_date else hi_default)
+            if not sta.channels:
+                if s0 <= s1:
+                    out.append((s0, s1))
+                continue
+            for cha in sta:
+                c0 = max(s0, cha.start_date.timestamp if cha.start_date else lo_default)
+                c1 = min(s1, cha.end_date.timestamp if cha.end_date else hi_default)
+                if c0 <= c1:
+                    out.append((c0, c1))
+    return np.array(out, dtype=float).reshape(-1, 2)
+
+
+def filter_catalog_by_station_activity(catalog: Catalog, inv: Optional[Inventory]) -> Tuple[Catalog, int]:
+    """Keep only events at whose origin time at least one station in ``inv`` was operating.
+
+    Returns ``(filtered_catalog, n_removed)``. With no inventory the catalog is returned unchanged.
+    """
+    if not inv or not catalog:
+        return catalog, 0
+    intervals = station_activity_intervals(inv)
+    kept = Catalog(events=None)
+    removed = 0
+    for ev in catalog:
+        try:
+            t = (ev.preferred_origin() or ev.origins[0]).time.timestamp
+        except Exception:
+            kept.append(ev)          # no usable origin time: don't guess
+            continue
+        if intervals.size and np.any((intervals[:, 0] <= t) & (t <= intervals[:, 1])):
+            kept.append(ev)
+        else:
+            removed += 1
+    return kept, removed
+
+
 def get_events(settings: SeismoLoaderSettings) -> List[Catalog]:
+    """
+    Retrieve seismic event catalogs based on configured criteria.
+
+    In the station-based workflow (events searched around already-selected
+    stations), events that occurred while none of those stations were
+    operating are dropped, since no waveforms could be downloaded for them.
+    See :func:`_query_events` for the search itself.
+    """
+    catalog = _query_events(settings)
+    if (settings.selected_workflow == WorkflowType.STATION_BASED
+            and settings.station.selected_invs and catalog):
+        catalog, removed = filter_catalog_by_station_activity(catalog, settings.station.selected_invs)
+        if removed:
+            print(f"Removed {removed} event(s) that occurred when none of the selected stations were operating; "
+                  f"{len(catalog)} remain.")
+    return catalog
+
+
+def _query_events(settings: SeismoLoaderSettings) -> List[Catalog]:
     """
     Retrieve seismic event catalogs based on configured criteria.
 
@@ -1813,6 +1882,7 @@ def run_event(
 
     all_event_traces = []
     all_missing = {}
+    station_intervals = station_activity_intervals(settings.station.selected_invs)
 
     # Hardwire a sanity limit for GUI plotting
     max_plot_traces = 900
@@ -1847,6 +1917,15 @@ def run_event(
             f"{str(eq.origins[0].time)[0:16]} "
             f"({eq.origins[0].latitude:.2f},{eq.origins[0].longitude:.2f})"
         )
+
+        # Nothing to download if none of the selected stations were operating at the origin time
+        try:
+            ot_ts = (eq.preferred_origin() or eq.origins[0]).time.timestamp
+            if not np.any((station_intervals[:, 0] <= ot_ts) & (ot_ts <= station_intervals[:, 1])):
+                print("    Skipping: none of the selected stations were operating at this origin time")
+                continue
+        except Exception:
+            pass  # fall through to the normal per-station checks
 
         # Collect requests for this event
         try:
