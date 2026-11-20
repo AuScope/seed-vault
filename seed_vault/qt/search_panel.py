@@ -501,8 +501,15 @@ class SearchPanel(QWidget):
         self.banner.hide()
         fetch = get_event_data if self.step == Steps.EVENT else get_station_data
         self._task = run_task(fetch, self.settings, on_success=self._on_search_result,
-                              on_error=self._on_search_error, on_done=self._on_search_done)
+                              on_error=self._on_search_error, on_done=self._on_search_done,
+                              on_log=self._on_search_log)
         self.set_busy(True)
+
+    def _on_search_log(self, text: str):
+        # The server is rate-limiting us: say so, otherwise the search just looks stuck.
+        for line in text.splitlines():
+            if "HTTP 429" in line:
+                self.banner.warning(line.strip(" ⏳!"))
 
     def _on_search_done(self):
         self._task = None

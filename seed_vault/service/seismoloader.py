@@ -26,7 +26,7 @@ from obspy.core.inventory import read_inventory,Inventory
 from obspy.core.event import read_events,Event,Catalog
 
 from obspy.clients.fdsn import Client  # noqa: F401 (re-exported)
-from seed_vault.service.fdsn_client import make_client
+from seed_vault.service.fdsn_client import ErrorTally, classify_error, make_client
 from obspy.taup import TauPyModel
 from obspy.geodetics.base import locations2degrees,gps2dist_azimuth
 from obspy.clients.fdsn.header import URL_MAPPINGS, FDSNNoDataException
@@ -1098,7 +1098,7 @@ def client_for_station(waveform_clients: Dict[str, Client], network: str, statio
 
 
 def build_waveform_clients(settings: SeismoLoaderSettings, open_client: Client,
-                           requested_networks) -> Dict[str, Client]:
+                           requested_networks, stop_event=None) -> Dict[str, Client]:
     """Open client plus one authenticated client per credential, keyed by its full code.
 
     Credentials may be network-level ("NN") or station-level ("NN.STA"); each gets
@@ -1113,6 +1113,7 @@ def build_waveform_clients(settings: SeismoLoaderSettings, open_client: Client,
             continue
         try:
             clients[code] = make_client(settings.waveform.client, user=cred.username, password=cred.password)
+            clients[code].stop_event = stop_event
         except Exception as e:
             print(f"Issue creating client for {code} (user {cred.username}):\n {str(e)}")
     return clients
@@ -1122,7 +1123,8 @@ def archive_request(
     request: Tuple[str, str, str, str, str, str],
     waveform_clients: Dict[str, Client],
     sds_path: str,
-    db_manager: DatabaseManager
+    db_manager: DatabaseManager,
+    error_tally: Optional[ErrorTally] = None,
 ) -> None:
     """
     Download seismic data for a request and archive it in SDS format.
@@ -1191,10 +1193,11 @@ def archive_request(
                         **{k: v for k, v in kwargs.items() if k != 'station'}
                     )
                 except Exception as e:
-                    if 'code: 204' in str(e):
+                    label = error_tally.record(e, s) if error_tally is not None else classify_error(e)
+                    if label == "204 No data":
                         print(f"\n        No data for station {s}")
                     else:
-                        print(format_error(s,e))
+                        print(f"      ! [{label}]" + format_error(s, e))
         else:
             st = wc.get_waveforms(**kwargs)
 
@@ -1210,10 +1213,11 @@ def archive_request(
         st.traces = [tr for tr in st if len(tr.data) > 1]
 
     except Exception as e:
-        if 'code: 204' in str(e):
+        label = error_tally.record(e, request[1]) if error_tally is not None else classify_error(e)
+        if label == "204 No data":
             print(f"      ~ No data available")
         else:
-            print(format_error(request[1].upper(),e))
+            print(f"      ! [{label}]" + format_error(request[1].upper(), e))
         return
 
     if not st:
@@ -1380,6 +1384,96 @@ def get_selected_stations_at_channel_level(settings: SeismoLoaderSettings) -> Se
     return settings
 
 
+def _code_patterns(value: Optional[str]) -> List[str]:
+    """'00,--' -> ['00', '']; empty/None -> ['*'] (FDSN '--' means a blank location code)."""
+    items = [v.strip() for v in str(value or "").split(",") if v.strip()]
+    return [("" if v == "--" else v) for v in items] or ["*"]
+
+
+def _matches(code: str, patterns: List[str]) -> bool:
+    code = code or ""
+    return any(fnmatch.fnmatchcase(code, p) for p in patterns)
+
+
+def filter_inventory_codes(inv: Optional[Inventory], location: Optional[str], channel: Optional[str]) -> Optional[Inventory]:
+    """Keep only channels whose location and channel codes match the (comma-separated,
+    wildcard) filters. Stations left without channels, and empty networks, are dropped."""
+    if inv is None:
+        return None
+    loc_p, cha_p = _code_patterns(location), _code_patterns(channel)
+    if loc_p == ["*"] and cha_p == ["*"]:
+        return inv
+    out = inv.copy()
+    for net in out:
+        kept_stations = []
+        for sta in net:
+            if not sta.channels:          # station-level inventory: nothing to filter on
+                kept_stations.append(sta)
+                continue
+            sta.channels = [c for c in sta if _matches(c.location_code, loc_p) and _matches(c.code, cha_p)]
+            if sta.channels:
+                kept_stations.append(sta)
+        net.stations = kept_stations
+    out.networks = [n for n in out if n.stations]
+    return out
+
+
+def merge_inventories(a: Inventory, b: Inventory) -> Inventory:
+    """a + b without duplicating stations/channels that appear in both."""
+    def ts(t):  # UTCDateTime isn't hashable
+        return t.timestamp if t is not None else None
+    merged = a.copy()
+    nets = {(n.code, ts(n.start_date)): n for n in merged}
+    for net_b in b:
+        key = (net_b.code, ts(net_b.start_date))
+        if key not in nets:
+            merged.networks.append(net_b.copy())
+            nets[key] = merged.networks[-1]
+            continue
+        net_a = nets[key]
+        stas = {(s.code, ts(s.start_date)): s for s in net_a}
+        for sta_b in net_b:
+            skey = (sta_b.code, ts(sta_b.start_date))
+            if skey not in stas:
+                net_a.stations.append(sta_b.copy())
+                stas[skey] = net_a.stations[-1]
+                continue
+            sta_a = stas[skey]
+            have = {(c.location_code, c.code, ts(c.start_date)) for c in sta_a}
+            sta_a.channels += [c for c in sta_b if (c.location_code, c.code, ts(c.start_date)) not in have]
+    return merged
+
+
+def get_forced_stations(settings: SeismoLoaderSettings, station_client: Client, kwargs: dict,
+                        location_filter: str, channel_filter: str) -> Optional[Inventory]:
+    """Fetch the configured ``force_stations``, applying the same location/channel filters
+    as the main search (a forced entry's own location/channel codes narrow them further)."""
+    forced = None
+    for sq in settings.station.force_stations:
+        query = dict(kwargs)
+        query.update(network=sq.network or '*', station=sq.station or '*',
+                     location=location_filter if sq.location is None else sq.location,
+                     channel=sq.channel or channel_filter)
+        label = sq.cmb_str or f"{sq.network}.{sq.station}"
+        try:
+            part = station_client.get_stations(**query)
+        except FDSNNoDataException:
+            print(f"Forced station {label}: nothing matching the location/channel filters "
+                  f"at {settings.station.client}")
+            continue
+        except Exception as e:
+            print(f"Could not find requested station {label} at {settings.station.client} "
+                  f"[{classify_error(e)}]\n{e}")
+            continue
+        part = filter_inventory_codes(part, location_filter, channel_filter)
+        if part is None or not part.networks:
+            print(f"Forced station {label}: no channels match location '{location_filter}' / "
+                  f"channel '{channel_filter}'")
+            continue
+        forced = part if forced is None else merge_inventories(forced, part)
+    return forced
+
+
 def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
     """
     Retrieve station inventory based on configured criteria.
@@ -1538,34 +1632,24 @@ def get_stations(settings: SeismoLoaderSettings) -> Optional[Inventory]:
             inv = station_client.get_stations(**kwargs)
         except FDSNNoDataException:
             print(f"No stations found at {station_client.base_url} with given parameters")
-            return None
-
-    if inv is None:
-        print("No inventory returned (!?)")
-        return None
+            inv = None   # forced stations may still be added below
 
     # Apply station exclusions
-    if settings.station.exclude_stations: # a "SeismoQuery" object
+    if inv is not None and settings.station.exclude_stations: # a "SeismoQuery" object
         for sq in settings.station.exclude_stations:
             inv = inv.remove(network=sq.network, station=sq.station,
                 location=sq.location, channel=sq.channel)
 
-    # Add forced stations
+    # Add forced stations. They bypass the geographic search, but still obey the
+    # location/channel filters, the current date range and the restricted/level settings.
     if settings.station.force_stations: # a "SeismoQuery" object
-        for sq in settings.station.force_stations:
-            try:
-                inv += station_client.get_stations(
-                    network=sq.network,
-                    station=sq.station,
-                    location='*' if sq.location is None else sq.location,
-                    channel=sq.channel or '*',
-                    starttime=sq.starttime,
-                    endtime=sq.endtime,
-                    level=settings.station.level.value
-                )
-            except Exception as e:
-                print(f"Could not find requested station {sq.network}.{sq.station} at {settings.station.client}\n{e}")
-                continue
+        forced = get_forced_stations(settings, station_client, kwargs, loc, cha)
+        if forced is not None and forced.networks:
+            inv = forced if inv is None else merge_inventories(inv, forced)
+
+    if inv is None:
+        print("No inventory returned (!?)")
+        return None
 
     # Apply final filters
     if highest_sr_only:
@@ -1871,6 +1955,8 @@ def run_continuous(
     starttime = UTCDateTime(settings.station.date_config.start_time)
     endtime = UTCDateTime(settings.station.date_config.end_time)
     waveform_client = make_client(settings.waveform.client)
+    waveform_client.stop_event = stop_event   # makes HTTP 429 waits cancellable
+    error_tally = ErrorTally()
 
     # Sanity check times
     endtime = min(endtime, UTCDateTime.now()-120)
@@ -1915,7 +2001,7 @@ def run_continuous(
                         max_stations_per_day=settings.waveform.stations_per_request)
 
     waveform_clients = build_waveform_clients(
-        settings, waveform_client, [ele[0] for ele in combined_requests])
+        settings, waveform_client, [ele[0] for ele in combined_requests], stop_event=stop_event)
 
     # Archive to disk and updated database
     for request in combined_requests:
@@ -1923,9 +2009,10 @@ def run_continuous(
         print("Requesting: ", request)
         sleep(0.05) # to help ctrl-C out if needed
         try:
-            archive_request(request, waveform_clients, settings.sds_path, db_manager)
+            archive_request(request, waveform_clients, settings.sds_path, db_manager, error_tally)
         except Exception as e:
-            print(f"Continuous request not successful: {request} with exception:\n{e}")
+            label = error_tally.record(e, request[1])
+            print(f"Continuous request not successful: {request} [{label}]:\n{e}")
             continue
 
         # Check for cancellation before each individual request
@@ -1934,6 +2021,8 @@ def run_continuous(
         # This is the only time consuming step so probably the only sensible place for a cancel break
         if stop_event and stop_event.is_set():
             print("Run cancelled!")
+            if error_tally:
+                print(error_tally.summary())
             db_manager.join_continuous_segments(settings.processing.gap_tolerance)
             return True
 
@@ -1943,6 +2032,7 @@ def run_continuous(
     except Exception as e:
         print(f"! Error with join_continuous_segments:\n{e}")
 
+    print(error_tally.summary())
     return True
 
 
@@ -1998,6 +2088,8 @@ def run_event(
 
     settings, db_manager = setup_paths(settings)
     waveform_client = make_client(settings.waveform.client)
+    waveform_client.stop_event = stop_event   # makes HTTP 429 waits cancellable
+    error_tally = ErrorTally()
 
     # Initialize travel time model
     try:
@@ -2018,6 +2110,8 @@ def run_event(
 
         if stop_event and stop_event.is_set():
             print("\nCancelling run_event!")
+            if error_tally:
+                print(error_tally.summary())
             try:
                 print("\n~~ Cleaning up database ~~")
                 db_manager.join_continuous_segments(settings.processing.gap_tolerance)
@@ -2100,7 +2194,7 @@ def run_event(
 
             # Setup authenticated clients
             waveform_clients = build_waveform_clients(
-                settings, waveform_client, [req[0] for req in combined_requests])
+                settings, waveform_client, [req[0] for req in combined_requests], stop_event=stop_event)
 
             # Process requests
             for request in combined_requests:
@@ -2111,10 +2205,12 @@ def run_event(
                         request,
                         waveform_clients,
                         settings.sds_path,
-                        db_manager
+                        db_manager,
+                        error_tally,
                     )
                 except Exception as e:
-                    print(f"Error archiving request {request}:\n {str(e)}")
+                    label = error_tally.record(e, request[1])
+                    print(f"Error archiving request {request} [{label}]:\n {str(e)}")
                     continue
 
         event_stream = Stream() # remains empty in CLI mode
@@ -2176,6 +2272,8 @@ def run_event(
         db_manager.join_continuous_segments(settings.processing.gap_tolerance)
     except Exception as e:
         print(f"! Error with join_continuous_segments: {str(e)}")
+
+    print(error_tally.summary())
 
     # And return to ui/components/waveform.py
     if all_event_traces:

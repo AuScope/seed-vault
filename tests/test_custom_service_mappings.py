@@ -127,7 +127,7 @@ def test_plain_extra_client_and_builtin_unchanged(clients_csv):
     assert row["url"] == "https://example.org" and not service_mappings_from_row(row)
     # built-in shortcuts still go straight to ObsPy (no network: skip discovery)
     c = make_client("GEOFON", _discover_services=False)
-    assert type(c).__name__ == "Client" and "geofon" in c.base_url
+    assert type(c) is fdsn_client.SeedVaultClient and "geofon" in c.base_url   # rate-limited, no custom mappings
 
 
 def test_saving_without_service_keys_keeps_mappings(clients_csv):
