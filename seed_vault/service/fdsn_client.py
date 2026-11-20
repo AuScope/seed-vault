@@ -23,7 +23,7 @@ from urllib.parse import urlparse
 
 from obspy.clients.fdsn import Client
 from obspy.clients.fdsn.client import WADLParser, download_url
-from obspy.clients.fdsn.header import DEFAULT_SERVICES, FDSNException
+from obspy.clients.fdsn.header import DEFAULT_SERVICES, FDSNException, FDSNNoDataException
 
 SERVICES = ("dataselect", "event", "station")
 DISABLED = "none"
@@ -134,6 +134,20 @@ class RateLimitedOpener:
         return getattr(self._opener, name)
 
 
+def _is_empty_body(data) -> bool:
+    if data is None:
+        return True
+    if isinstance(data, (bytes, bytearray, str)):
+        return len(data) == 0
+    getbuffer = getattr(data, "getbuffer", None)
+    if getbuffer is not None:
+        try:
+            return getbuffer().nbytes == 0
+        except Exception:
+            return False
+    return False
+
+
 class SeedVaultClient(Client):
     """ObsPy FDSN client whose HTTP requests wait out 429 responses (see RateLimitedOpener).
 
@@ -145,6 +159,15 @@ class SeedVaultClient(Client):
         super()._set_opener(user, password)
         if not isinstance(self._url_opener, RateLimitedOpener):
             self._url_opener = RateLimitedOpener(self._url_opener, self)
+
+    def _download(self, url, *args, **kwargs):
+        """Some servers (e.g. EPOSFR) answer "no data" with HTTP 200 and an empty body
+        instead of 204. ObsPy only recognises 204, then fails trying to parse zero
+        bytes as miniSEED. Treat an empty successful response as "no data"."""
+        data = super()._download(url, *args, **kwargs)
+        if _is_empty_body(data):
+            raise FDSNNoDataException("No data available for request (HTTP 200 with an empty body).")
+        return data
 
 
 # --------------------------------------------------------------------------

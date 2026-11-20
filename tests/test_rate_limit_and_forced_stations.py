@@ -270,3 +270,48 @@ def test_forced_station_with_no_matching_channels_is_dropped(capsys):
     with patch.object(sl, "make_client", return_value=client):
         assert sl.get_stations(s) is None
     assert "no channels match" in capsys.readouterr().out
+
+
+# ---------------------------------------------------------------- empty 200 = no data
+@pytest.fixture
+def empty_200_server(monkeypatch):
+    """Answers every query the way EPOSFR answers "no data": HTTP 200, empty body."""
+    monkeypatch.setenv("NO_PROXY", "127.0.0.1,localhost")
+    monkeypatch.setenv("no_proxy", "127.0.0.1,localhost")
+
+    class H(BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200)
+            self.send_header("Content-Type", "application/vnd.fdsn.mseed")
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+
+        def log_message(self, *a):
+            pass
+    httpd = ThreadingHTTPServer(("127.0.0.1", 0), H)
+    threading.Thread(target=httpd.serve_forever, daemon=True).start()
+    yield f"http://127.0.0.1:{httpd.server_address[1]}"
+    httpd.shutdown()
+
+
+@pytest.mark.parametrize("call", [
+    lambda c: c.get_waveforms("ND", "OUENC", "00", "BH?", UTCDateTime(2013, 2, 6, 11, 56), UTCDateTime(2013, 2, 6, 12, 13)),
+    lambda c: c.get_events(starttime=UTCDateTime(2013, 1, 1), endtime=UTCDateTime(2013, 2, 1)),
+    lambda c: c.get_stations(network="ND"),
+])
+def test_empty_200_is_treated_as_no_data(empty_200_server, call):
+    with pytest.raises(FDSNNoDataException):
+        call(fc.SeedVaultClient(empty_200_server, _discover_services=False))
+
+
+def test_empty_200_in_archive_request_counts_as_no_data(empty_200_server, tmp_path, capsys):
+    s = SeismoLoaderSettings.create_default()
+    s.sds_path, s.db_path = str(tmp_path / "sds"), str(tmp_path / "db.sqlite")
+    tally = fc.ErrorTally()
+    req = ("ND", "OUENC", "00", "BHE,BHN,BHZ,HHE,HHN,HHZ,LHE,LHN,LHZ",
+           "2013-02-06T11:56:25.182481+00:00", "2013-02-06T12:13:15.182481+00:00")
+    sl.archive_request(req, {"open": fc.SeedVaultClient(empty_200_server, _discover_services=False)},
+                       s.sds_path, sl.setup_paths(s)[1], tally)
+    assert tally.counts == {"204 No data": 1}
+    out = capsys.readouterr().out
+    assert "No data available" in out and "mini-SEED record" not in out
