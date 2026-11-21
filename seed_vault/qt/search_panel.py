@@ -509,7 +509,7 @@ class SearchPanel(QWidget):
         # The server is rate-limiting us: say so, otherwise the search just looks stuck.
         for line in text.splitlines():
             if "HTTP 429" in line:
-                self.banner.warning(line.strip(" ⏳!"))
+                self.banner.warning(line.strip(" ~!"))
 
     def _on_search_done(self):
         self._task = None

@@ -115,7 +115,7 @@ class RateLimitedOpener:
                 retry_after = parse_retry_after(e.headers.get("Retry-After") if e.headers else None)
                 wait = max(MIN_429_WAIT, retry_after or 0.0)
                 if attempt >= MAX_429_RETRIES or wait > MAX_429_WAIT:
-                    print(f"      ! {host}: HTTP 429 Too Many Requests – giving up on this request "
+                    print(f"      ! {host}: HTTP 429 Too Many Requests - giving up on this request "
                           f"(server asked to wait {_fmt_wait(wait)}"
                           f"{'' if attempt < MAX_429_RETRIES else f' after {attempt} retries'}).")
                     raise
@@ -123,7 +123,7 @@ class RateLimitedOpener:
                 with _host_lock:
                     _host_not_before[host] = max(_host_not_before.get(host, 0.0), time.time() + wait)
                 source = "Retry-After" if retry_after is not None else "no Retry-After header"
-                print(f"      ⏳ {host}: HTTP 429 Too Many Requests – waiting {_fmt_wait(wait)} "
+                print(f"      ~ {host}: HTTP 429 Too Many Requests - waiting {_fmt_wait(wait)} "
                       f"({source}; minimum {MIN_429_WAIT:.0f} s) before retry {attempt}/{MAX_429_RETRIES}")
                 try:
                     e.close()
@@ -218,7 +218,7 @@ class ErrorTally:
     def summary(self) -> str:
         if not self.counts:
             return "No download errors."
-        parts = [f"{label} ×{n}" for label, n in self.counts.most_common()]
+        parts = [f"{label}: {n}" for label, n in self.counts.most_common()]
         return "Download errors by type: " + ", ".join(parts)
 
     def __bool__(self):
